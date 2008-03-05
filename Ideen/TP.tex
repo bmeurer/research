@@ -1,0 +1,400 @@
+% General
+
+\newcommand{\name}[1]{{\text{\it #1\/}}}
+%\newcommand{\name}[1]{\mathit{#1}}
+
+%\newcommand{\bfbox}[1]{\mathbf{#1}}
+
+\newcommand{\I}{{\cal I}}
+
+% Proof trees
+
+\newcounter{tree}
+\newcounter{node}[tree]
+
+\newlength{\treeindent}
+\newlength{\nodeindent}
+\newlength{\nodesep}
+
+\newcommand{\refnode}[1]
+ {\ref{\thetree.#1}}
+
+\newcommand{\contextcolor}{\color{blue}}
+
+\definecolor{darkgreen}{rgb}{0.1,0.5,0}
+\definecolor{redexcolor}{rgb}{0.7,1,0}
+
+\newcommand{\resulttypecolor}{\color{darkgreen}}
+
+\newcommand{\resultcolor}{\color{blue}}
+
+\newcommand{\byrulecolor}{\color{red}}
+
+\newcommand{\marked}[1]{\colorbox{redexcolor}{$#1$}}
+
+\newcommand{\smallsteparrow}[1]{\stackrel{\mbox{\scriptsize\byrulecolor (#1)}}{\longrightarrow}}
+
+\newcommand{\byrule}[1]{\hspace{-5mm}\byrulecolor\mbox{\scriptsize\ #1}}
+
+\newif\ifarrows 
+\arrowsfalse 
+
+\newcommand{\arrow}[3]
+  {\ifarrows
+   \ncangle[angleA=-90,angleB=#1]{<-}{\thetree.#2}{\thetree.#3}
+   \else
+   \fi}
+
+\newcommand{\node}[4]
+ {\ifarrows
+   \else \refstepcounter{node}
+         \noindent\hspace{\treeindent}\hspace{#2\nodeindent}
+         \rnode{\thetree.#1}{\makebox[6mm]{(\thenode)}}\label{\thetree.#1}
+         $\blong 
+          #3 \\ 
+          \byrule{#4} 
+          \elong$
+         \vspace{\nodesep}
+   \fi}
+
+\newcommand{\dummyarrow}[3]
+  {\arrow{#1}{#2}{#3dummy}}
+
+\newcommand{\dummynode}[2]
+ {\ifarrows 
+  \else \noindent\hspace{\treeindent}\hspace{#2\nodeindent}
+         \rnode{\thetree.#1dummy}{\makebox[6mm]{(\refnode{#1})}}\label{\thetree.#1dummy}
+         $\ldots$
+         \vspace{\nodesep}
+   \fi}
+
+\newcommand{\mktree}[1]
+ {\stepcounter{tree} #1 \arrowstrue #1 \arrowsfalse}
+
+\fboxrule=0mm
+
+\newcommand{\cenv}[1]{\fbox{$\begin{array}{|ll|}\hline #1 \\\hline\end{array}$}}
+
+
+% Special Symbols
+
+\newcommand{\uminus}{\widetilde{\ }}
+\renewcommand{\uminus}{-\!}
+\newcommand{\nop}{()}
+
+% Im X-Symbol-Manual empfohlen
+
+\newcommand{\nsubset}{\not\subset}
+%\newcommand{\textflorin}{\textit{f}}
+\newcommand{\setB}{{\mathord{\mathbb B}}}
+\newcommand{\setC}{{\mathord{\mathbb C}}}
+\newcommand{\setN}{{\mathord{\mathbb N}}}
+\newcommand{\setQ}{{\mathord{\mathbb Q}}}
+\newcommand{\setR}{{\mathord{\mathbb R}}}
+\newcommand{\setZ}{{\mathord{\mathbb Z}}}
+\newcommand{\coloncolon}{\mathrel{::}}
+
+% Eigene (k\"urzere) Befehle
+
+\newcommand{\pfi}{\varphi}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\eval}{\Downarrow}
+\newcommand{\pto}{\hookrightarrow}
+\newcommand{\emp}{\emptyset}
+\newcommand{\sleq}{\subseteq}
+\newcommand{\sgeq}{\supseteq}
+\newcommand{\sqleq}{\sqsubseteq}
+\newcommand{\sqgeq}{\sqsupseteq}
+\newcommand{\lub}{\bigsqcup}
+\newcommand{\glb}{\bigsqcap}
+\newcommand{\lsem}{\llbracket}
+\newcommand{\rsem}{\rrbracket}
+\newcommand{\impl}{\models}
+\newcommand{\step}{\vdash}
+\newcommand{\tr}{\triangleright}
+\newcommand{\cc}{\coloncolon}
+
+
+% Names (lower case italic)
+
+\newcommand{\exn}{\name{exn}}
+\newcommand{\id}{\name{id}}
+\newcommand{\op}{\name{op}}
+
+\newcommand{\true}{\name{true}}
+\newcommand{\false}{\name{false}}
+\newcommand{\Not}{\name{not}}
+
+\newcommand{\sol}[3]{\name{solution}\,(#1,#2,#3)}
+%\newcommand{\unify}{\name{unify}\,}
+
+\newcommand{\Fst}{\name{fst}}
+\newcommand{\Snd}{\name{snd}}
+
+\newcommand{\Hd}{\name{hd}}
+\newcommand{\Tl}{\name{tl}}
+\newcommand{\Cons}{\name{cons}}
+\newcommand{\Empty}{\name{is\_empty}}
+
+\newcommand{\dom}[1]{\name{dom}(#1)}
+\newcommand{\free}[1]{\name{free}\,(#1)}
+
+% Names (upper case italic)
+
+\newcommand{\Bool}{\name{Bool}}
+\newcommand{\Btype}{\name{BType}}
+
+\newcommand{\Conf}{\name{Conf}}
+\newcommand{\Const}{\name{Const}}
+
+\newcommand{\Dec}{\name{Dec}}
+
+\newcommand{\Env}{\name{Env}}
+\newcommand{\Exn}{\name{Exn}}
+\newcommand{\EP}{\name{EP}}
+\newcommand{\Exp}{\name{Exp}}
+
+\newcommand{\Id}{\name{Id}}
+\newcommand{\Int}{\name{Int}}
+
+\newcommand{\Lexp}{\name{LExp}}
+\newcommand{\Loc}{\name{Loc}}
+
+\newcommand{\Op}{\name{Op}}
+
+\newcommand{\Type}{\name{Type}}
+\newcommand{\Tvar}{\name{TVar}}
+\newcommand{\teqns}[3]{\name{teqns}\,(#1,#2,#3)}
+\newcommand{\tvar}[1]{\name{tvar}\,(#1)}
+\newcommand{\unify}[1]{\name{unify}\,(#1)}
+
+\newcommand{\Ptype}{\name{PType}}
+\newcommand{\Ltype}{\name{LType}}
+
+\newcommand{\Unit}{\name{Unit}}
+
+\newcommand{\Val}{\name{Val}}
+
+% keywords
+
+\newcommand{\z}{\textbf{int}}
+\newcommand{\bool}{\textbf{bool}}
+\newcommand{\unit}{\textbf{unit}}
+\newcommand{\blist}{\textbf{list}}
+\newcommand{\bref}{\textbf{ref}}
+\newcommand{\ltype}[1]{#1\,\blist}
+\newcommand{\reftype}[1]{#1\,\bref}
+
+\renewcommand{\div}{\mathbin{\textbf{div}}}
+\newcommand{\sel}{\mathbin{.}}
+%\newcommand{\mod}{\mathbin{\textbf{mod}}}
+\renewcommand{\mod}{\text{mod}}
+
+\newcommand{\bif}{\textbf{if}}
+\newcommand{\bthen}{\textbf{then}}
+\newcommand{\belse}{\textbf{else}}
+
+\newcommand{\blet}{\textbf{let}}
+\newcommand{\bin}{\textbf{in}}
+\newcommand{\bend}{\textbf{end}}
+
+\newcommand{\bval}{\textbf{val}}
+\newcommand{\brec}{\textbf{rec}}
+\newcommand{\bfun}{\textbf{fun}}
+\newcommand{\band}{\textbf{and}}
+\newcommand{\btype}{\textbf{type}}
+
+%\newcommand{\andalso}[2]{#1\,\&\&\,#2}
+%\newcommand{\orelse}[2]{#1\,\|\,#2}
+\newcommand{\andalso}{\&\&}
+\newcommand{\orelse}{\|}
+\newcommand{\bandalso}{\textbf{andalso}}
+\newcommand{\borelse}{\textbf{orelse}}
+
+\newcommand{\bwhile}{\textbf{while}}
+\newcommand{\bdo}{\textbf{do}}
+\newcommand{\bfor}{\textbf{for}}
+
+\newcommand{\brepeat}{\textbf{repeat}}
+\newcommand{\buntil}{\textbf{until}}
+
+\newcommand{\barray}{\textbf{array}}
+\newcommand{\bof}{\textbf{of}}
+
+\newcommand{\bclass}{\textbf{class}}
+
+\newcommand{\app}[2]{#1\,#2}
+\newcommand{\bift}[2]{\bif\ #1\ \bthen\ #2}
+\newcommand{\bifte}[3]{\bif\ #1\ \bthen\ #2\ \belse\ #3}
+\newcommand{\Bifte}[3]{\blong\bif\ #1\\\bthen\ #2\\\belse\ #3\elong}
+\newcommand{\bwd}[2]{\bwhile\ #1\ \bdo\ #2}
+\newcommand{\bru}[2]{\brepeat\ #1\ \buntil\ #2}
+
+
+\newcommand{\blie}[2]{\blet\ #1\ \bin\ #2 \ \bend}
+\newcommand{\vdec}[2]{#1 = #2}
+\newcommand{\rec}[2]{\brec\ #1.\ #2}
+\newcommand{\recdots}[2]{\brec\ #1.\ \ldots}
+\newcommand{\abstr}[2]{\lambda #1.\,#2}
+\newcommand{\appl}[2]{#1\,#2}
+
+\newcommand{\Ref}{\name{ref}}
+\newcommand{\Deref}{\,!\,}
+
+\newcommand{\alloc}{\name{alloc}}
+\newcommand{\Store}{\name{Store}}
+
+
+
+
+% Typing rules 
+
+\newcommand{\tj}[2]{#1\cc#2}
+\newcommand{\ctj}[2]{\tj{#1}{{\resulttypecolor #2}}}
+\newcommand{\Tj}[3]{#1 \, \triangleright \, #2\cc#3}
+\newcommand{\cTj}[3]{\Tj{{\contextcolor #1}}{#2}{{\resulttypecolor #3}}}
+\newcommand{\cbig}[2]{#1 \ \eval\ {\resultcolor #2}}
+\newcommand{\cBig}[2]{#1 \\ \eval\ {\resultcolor #2}}
+\newcommand{\Clos}[2]{\name{Closure}_{#1}(#2)}
+
+\newcommand{\Tjl}[3]{#1 \,\tr_l\, #2\cc#3}
+\newcommand{\Tjm}[3]{#1 \,\tr_m\, #2\cc#3}
+\newcommand{\Tjh}[2]{#1 \tr  #2}
+
+\newcommand{\brule}[1]{\begin{markiere}[#1]}
+\newcommand{\erule}{\end{markiere}}
+
+\newcommand{\regel}[2]{\ \begin{array}{@{}c@{}} #1 \\ \hline #2
+ \end{array}\ }
+
+\newcommand{\reason}[1]{\ \mbox{#1}}
+\newcommand{\Reason}[1]{\vspace{1mm}\\ \mbox{ #1}}
+
+
+% Program verification
+
+\newcommand{\conj}{\,\land\,}
+\newcommand{\Conj}{\bigwedge}
+\newcommand{\disj}{\,\lor\,}
+\newcommand{\Disj}{\bigvee\,}
+\newcommand{\all}[1]{\forall{#1}.\,}
+\newcommand{\ex}[1]{\exists{#1}.\,}
+
+\newcommand{\power}[1]{\wp(#1)}
+
+\newcommand{\disjoint}[2]{\name{disj}(#1,#2)}
+\newcommand{\cont}[2]{#1 \mapsto #2}
+\newcommand{\DEF}{\name{DEF}}
+
+\newcommand{\ret}[2]{{\bf returns}\ #1.\, #2}
+\newcommand{\tc}[2]{#1\,\{#2\}}
+\newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
+
+% Index
+
+\newcommand{\define}[1]{{\em #1\/}\index{#1}}
+\newcommand{\Define}[2]{{\em #1\/}\index{#2}}
+\newcommand{\Index}[1]{\index{#1}}
+\newcommand{\notation}[1]{#1\index{#1}}
+\newcommand{\engl}[1]{(engl.: \define{#1})}
+\newcommand{\Engl}[2]{(engl.: \Define{#1}{#2})}
+
+% Theorems etc.
+
+\newtheorem{theorem}{Satz}
+\newtheorem{corollary}{Korollar}
+\newtheorem{definition}{Definition:}
+%\newtheorem{example}{Beispiel:}
+%\newtheorem{examples}{Beispiele:}
+\newtheorem{lemma}[theorem]{Lemma}
+
+%\renewcommand{\thedefinition}{}
+%\renewcommand{\theexample}{}
+%\renewcommand{\theexamples}{}
+\renewcommand{\theenumi}{\rm (\alph{enumi})}
+\renewcommand{\labelenumi}{\theenumi}
+
+%\newcommand{\enumarabic}{\renewcommand{\theenumi}{\rm (\arabic{enumi})}}
+
+%\newcommand{\bcoro}[1]{\begin{corollary}\label{cor:#1}}
+%\newcommand{\ecoro}{\end{corollary}}
+
+\newcommand{\brdef}[1]{\begin{definition}\label{def:#1}\rm}
+\newcommand{\erdef}{\end{definition}}
+
+%\newcommand{\blemm}[1]{\begin{lemma}\label{lem:#1}}
+%\newcommand{\bLemm}[2]{\begin{lemma}[#2]\label{lem:#1}\index{#2}}
+%\newcommand{\elemm}{\end{lemma}}
+
+%\newcommand{\btheo}[1]{\begin{theorem}\label{th:#1}}
+%\newcommand{\bTheo}[2]{\begin{theorem}[#2]\label{th:#1}\index{#2}}
+%\newcommand{\etheo}{\end{theorem}}
+
+%\newcommand{\litem}[1]{\item\label{it:#1}}
+%\newcommand{\ritem}[1]{\ref{it:#1}}
+
+
+% Grammars
+
+\newcommand{\bgram}{\[\begin{array}{rrlll}}
+\newcommand{\egram}{\end{array}\]}
+
+\newcommand{\is}{& ::= &}
+\newcommand{\al}{\\ & \mid &}
+\newcommand{\n}{\vspace{2mm}\\}
+
+
+
+
+% Other Environments
+
+\newcommand{\bcase}{\left\{\!\!\!\begin{array}{ll}}
+\newcommand{\ecase}{\end{array}\right.}
+\newcommand{\benum}{\begin{enumerate}}
+\newcommand{\eenum}{\end{enumerate}}
+\newcommand{\beqns}{\[\begin{array}{rcll}}
+\newcommand{\eeqns}{\end{array}\]}
+\newcommand{\bitem}{\begin{itemize}}
+\newcommand{\eitem}{\end{itemize}}
+\newcommand{\blong}{\!\!\begin{array}[t]{l}}
+\newcommand{\elong}{\end{array}}
+\newcommand{\btabl}{\begin{tabular}}
+\newcommand{\etabl}{\end{tabular}}
+\newcommand{\brexa}{\begin{example}\enumarabic\rm}
+\newcommand{\erexa}{\end{example}}
+\newcommand{\brexs}{\begin{examples}\enumarabic\rm}
+\newcommand{\erexs}{\end{examples}}
+
+
+% German abbreviations
+
+\newcommand{\abk}[1]{#1.\ }
+\newcommand{\bzw}{\abk{bzw}}
+\newcommand{\bzgl}{\abk{bzgl}}
+\newcommand{\das}{\abk{d.h}}
+\newcommand{\evtl}{\abk{evtl}}
+\newcommand{\usw}{\abk{usw}}
+\newcommand{\vgl}{\abk{vgl}}
+\newcommand{\zb}{\abk{z.B}}
+
+
+\newcommand{\infix}[3]{#2\mathbin{#1}#3}
+
+\newcommand{\bli}[3]{\blet\ \vdec{#1}{#2}\ \bin\ #3}
+
+\newcommand{\Bli}[3]{\begin{array}[t]{@{}l}
+                     \blet\ \vdec{#1}{#2}\\\bin\ #3
+                     \end{array}}
+
+\newcommand{\Vdec}[2]{\begin{array}[t]{@{}l}
+                      #1 = \\
+                      \ #2
+                      \end{array}}
+
+\newcommand{\BLI}[3]{\begin{array}[t]{@{}l}
+                     \blet\ \Vdec{#1}{#2}\\\bin\ #3
+                     \end{array}}
+
+\newcommand{\Abstr}[2]{\begin{array}[t]{@{}l}
+                       \lambda #1.\\\ \ #2
+                       \end{array}}

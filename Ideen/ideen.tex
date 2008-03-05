@@ -1,0 +1,129 @@
+\documentclass[12pt,a4paper,bigheadings]{scrartcl}
+
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[ngerman]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{mathpartir}
+\usepackage{ngerman}
+%\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{scrpage2}
+\usepackage{stmaryrd}
+%\usepackage[DIV13,BCOR5mm]{typearea}
+\usepackage{url}
+\usepackage[all]{xy}
+
+%% TP-Makros
+\include{TP}
+
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+\newcommand{\assn}{\textbf{assn}}
+\newcommand{\prop}{\textbf{prop}}
+\newcommand{\expr}{\textbf{expr}}
+
+\begin{document}
+
+\section*{Ideensammlung}
+
+\paragraph*{Vorgegeben:}
+\begin{itemize}
+  \item Menge $\Id$
+  \item Menge $\Type$
+  \item Mengen $\Loc^\tau$, $\Loc = \bigcup\limits_{\tau\in\Type} \Loc^\tau$
+\end{itemize}
+
+\paragraph*{Definitionen:}
+\begin{itemize}
+  \item Menge $\Exp$ der Ausdr"ucke
+  \item Menge $\Val$ der Werte
+  \item Typumgebungen $\Gamma$ wie "ublich
+  \item $\Val^\tau = \{v\in\Val\,|\,\tj{v}{\tau}\}$, also alle abgeschlossenen
+        Werte vom Typ $\tau$
+  \item Umgebungen $\rho: \Id \pto \Val$
+  \item $\rho$ {\em passt zu} $\Gamma$, geschrieben $\Gamma \models \rho$,
+        wenn gilt:
+        \begin{itemize}
+          \item $\dom{\rho} = \dom{\Gamma}$
+          \item $\forall \id\in\dom{\rho}: \rho(\id) \in \Val^{\Gamma(\id)}$
+        \end{itemize}
+\end{itemize}
+
+\paragraph*{Semantische Bereiche:}
+\begin{itemize}
+  \item $\semantic{\tau\,\assn} = \Val^\tau \times \Store \pto \Bool$
+  \item $\semantic{\unit\,\assn} = \Val^\unit \times \Store \pto \Bool \cong \Store \pto \Bool = \semantic{\assn}$
+  \item $\semantic{\tau\,\expr} = \Store \pto \Val^\tau \times \Store$
+\end{itemize}
+
+\paragraph*{Totale Korrektheit:}
+\begin{itemize}
+  \item $\Tj{\Gamma}{\triple{p}{e}{\ret{\id:\tau}{q}}}{\prop}$
+  \item $\semantic{\Tj{\Gamma}{p}{\assn}} \rho: \Store \pto \Bool$
+  \item $\semantic{\Tj{\Gamma}{\ret{\id:\tau}{q}}{\tau\,\assn}}: \Val^\tau \times \Store \pto \Bool$
+  \item $\semantic{\Tj{\Gamma}{e}{\tau\,\expr}}\rho: \Store \pto \Val^\tau \times \Store$
+\end{itemize}
+
+\noindent
+Seien $f\in\semantic{\tau\,\expr}$, $\phi\in\semantic{\assn}$,
+$\psi\in\semantic{\tau\,\assn}$. $f$ heisst genau dann {\em total korrekt} bzgl.
+$\phi$ und $\psi$, wenn gilt:
+\[
+  \forall \sigma\in\dom{\phi}: \phi\,\sigma = \true
+  \Rightarrow \exists (v,\sigma')\in\dom{\psi}: f\sigma = (v,\sigma') \wedge \psi(v,\sigma')=\true.
+\]
+{\em Totale Korrektheit} kann dann einfach als logisches Pr"adikat verwendet
+werden.
+\[\begin{array}{rl}
+  & \semantic{\Tj{\Gamma}{\triple{p}{e}{\ret{\id:\tau}{q}}}{\prop}}\rho = \true
+    \\
+  \Leftrightarrow & \semantic{\Tj{\Gamma}{e}{\tau\,\expr}}\rho \\
+  & \text{ total korrekt bzgl.} 
+    \semantic{\Tj{\Gamma}{p}{\assn}}\rho \\
+  & \text{ und } \semantic{\Tj{\Gamma}{\ret{\id:\tau}{q}}{\tau\,\assn}}\rho
+\end{array}\]
+
+
+\section*{29.02.2008}
+
+\subsection*{Semantik der Logik}
+
+Jedem logischen Typ $\pi \in \Ltype$ wird ein semantischer Bereich $\semantic{\pi}$ zugeordnet,
+insb.:
+\[\begin{array}{rcl}
+  \semantic{\tau} & = & \Val^\tau \\
+  \semantic{\assn} & = & \Store \pto \Bool
+                    \quad \quad (= \semantic{\unit\,\assn} = \Val^\unit \times \Store \pto \Bool) \\
+  \semantic{\tau\,\assn} & = & \Val^\tau \times \Store \pto \Bool \\
+  \semantic{\tau\,\expr} & = & \Store \pto \Val^\tau \times \Store
+\end{array}\]
+Eine Funktion $f \in \semantic{\tau\,\expr}$ heisst {\em total korrekt} bzgl. $\phi \in \semantic{\assn}$
+und $\psi\in\semantic{\tau\,\assn}$, wenn f"ur alle $\sigma \in \dom{\phi}$ gilt:
+\begin{quote}
+  Wenn $\phi(\sigma)=\true$, dann ist $\sigma\in\dom{f}$ und $\psi(\app{f}{\sigma}) = \true$.
+\end{quote}
+Eine {\em Umgebung} ist eine endliche partielle Funktion $\rho: \Id \pto \bigcup_{\pi\in\Ltype}\semantic{\pi}$.
+$\rho$ {\em passt} zur Typumgebung $\Gamma$ -- geschrieben $\Gamma \models \rho$ -- wenn gilt:
+\begin{itemize}
+  \item $\dom{\rho} = \dom{\Gamma}$
+  \item $\rho(\id) \in \semantic{\Gamma(\id)}$ f"ur alle $\id \in \dom{\rho}$
+\end{itemize}
+
+
+\end{document}
