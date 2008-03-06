@@ -126,4 +126,68 @@ $\rho$ {\em passt} zur Typumgebung $\Gamma$ -- geschrieben $\Gamma \models \rho$
 \end{itemize}
 
 
+\section*{05.03.2008}
+
+\subsection*{TCs in Pre-/Post-conditions}
+
+Zweistufige Syntax f"ur Hoare-Formeln, wo totale Korrektheit nur auf oberster Ebene erlaubt ist,
+also insbesondere nicht in Pre-/Post-conditions, wird nicht funktionieren. Beispielsweise l"asst
+sich der Counter umschreiben zu
+\[\begin{array}{rl}
+  \exists c:\langle\ldots\rangle.\exists x:\reftype{\z}.
+  & (\forall i:\z. \{!x=i\}\ c\#\name{inc}\ \{!x=i+1\}) \\
+  \wedge & \{\true\}\ \name{new\_counter\_1}\,(\,)\ \{\ret{c_1}{c_1=c}\}
+\end{array}\]
+aber dann besagt die Spezifikation, dass $\name{new\_counter\_1}$ immer den gleichen counter
+liefert. D.h. man wird wohl doch TCs in Pre-/Post-conditions zulassen m"ussen.
+
+\subsection*{Neue Idee}
+
+Dann k"onnte man eine einfache Syntax f"ur Assertions und Hoare-Formeln entwerfen. Dabei ist
+eine Hoare-Formel nur ein Spezialfall einer Assertion, genauer eine Assertion von Typ $\bool$.
+
+\bgram
+p \is p_1 \wedge p_2
+  \al \neg p_1
+  \al \forall id:\hat{\pi}. p_1 \quad\quad \text{$\hat{\pi}$ ist eingeschr"anktes $\pi$}
+  \al \app{p_1}{p_2}
+  \al f \in F
+  \al \id \in \Id
+  \al v \in \bigcup_{\tau\in\Type} \Val^\tau
+  \al p_1 = p_2
+  \al \abstr{\id_1:\tau_1,\ldots,\id_n:\tau_n}{p_1} \quad (n \ge 1)
+  \al \triple{p_1}{e}{p_2}
+  \n
+\egram
+
+\noindent
+Die TC wird durch $\triple{p_1}{e}{p_2}$ dargestellt. Hierbei wird, wie zuvor definiert, implizit
+"uber alle Stores quantifiziert. D.h. f"ur alle (passenden) $\sigma$ gilt: Wenn $p_1$ f"ur $\sigma$
+gilt, dann terminiert $e$ und es gilt $p_2$ (formal unsauber).
+
+Die Menge $\Ltype$ der logischen Typen (f"ur Assertions) enth"alt dann zumindest:
+
+\bgram
+\pi \is \tau
+    \al \pi_1 * \ldots * \pi_n \quad (n \ge 1)
+    \al \pi_1 \xrightarrow{t} \pi_2
+    \n
+\egram
+
+\noindent
+Wobei in $\tau$ noch der Spezielle Typ $\textbf{store}$ enthalten sein muss, mglw.
+als polymorpher Typ.
+
+\[
+  \regel{\Tj{\Gamma[\tau_1/\id_1,\ldots,\tau_n/\id_n]}{p_1}{\tau}}
+        {\Tj{\Gamma}{\abstr{\id_i:\tau_i}{p_1}}{\tau_1*\ldots*\tau_n\xrightarrow{t}\tau}}
+\]
+\[
+  \regel{\Tj{\Gamma}{p}{\textbf{store}\xrightarrow{t}\bool} \quad
+         \Tj{\Gamma}{e}{\tau} \quad
+         \Tj{\Gamma}{q}{\tau*\textbf{store}\xrightarrow{t}\bool}}
+        {\Tj{\Gamma}{\triple{p}{e}{q}}{\bool}}
+\]
+
+
 \end{document}
