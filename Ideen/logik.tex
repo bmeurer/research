@@ -1,0 +1,380 @@
+\documentclass[12pt,a4paper,bigheadings]{scrartcl}
+
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[ngerman]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{mathpartir}
+\usepackage{ngerman}
+%\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{scrpage2}
+\usepackage{stmaryrd}
+%\usepackage[DIV13,BCOR5mm]{typearea}
+\usepackage{url}
+\usepackage[all]{xy}
+
+%% TP-Makros
+\include{TP}
+
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+\newcommand{\assn}{\ensuremath{\mathbf{assn}}}
+\newcommand{\atype}[1]{#1\,\assn}
+\newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
+\newcommand{\etype}[1]{#1\,\bexpr}
+\newcommand{\Stype}{\name{SType}}
+\newcommand{\locns}{\name{locns}}
+\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
+\renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
+\newcommand{\view}[1]{\ensuremath{\app{\name{view}}{#1}}}
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+
+
+\begin{document}
+
+\section{Syntax der Logik}
+
+\subsection{Typen}
+
+Sei $\Type$ die Menge aller {\em Typen} $\tau$ der Programmiersprache. Darauf definieren wir 
+\begin{itemize}
+  \item die Menge $\Stype$ aller {\em statischen Typen} $\theta$ und
+  \item die Menge $\Ltype$ aller {\em logischen Typen} $\pi$
+\end{itemize}
+durch
+\[\bgram
+\theta  \is \tau
+        \al \ltype{\theta}
+        \al \theta_1 \tto \theta_2
+        \al \theta_1 \times \ldots \times \theta_n \quad (n \ge 2)
+        \n
+\pi \is \theta
+    \al \etype{\tau}
+    \al \atype{\theta}
+    \n
+\egram\]
+Statt $\atype{\unit}$ schreiben wir kurz $\assn$.
+
+\subsection{Terme und Formeln}
+
+Sei $\Exp$ die Menge aller {\em Ausdr"ucke} $e$ und $\Val$ die Menge aller {\em Werte} $v$
+der Programmiersprache (wobei angenommen wird, dass $\Id \subseteq \Val$). Darauf definieren wir 
+\begin{itemize}
+  \item die Menge $F$ aller {\em Funktionszeichen} $f$,
+  \item die Menge \name{Term} aller {\em Terme} $t$,
+  \item die Menge \name{Assn} aller {\em assertions} $p,q,r,s$ sowie
+  \item die Menge \name{Formula} aller {\em (Hoare-)Formeln} $h$
+\end{itemize}
+durch
+\[\bgram
+f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons \mid \Hd \mid \Tl
+  \n
+t \is v
+  \al f
+  \al \app{t_1}{t_2}
+  \al \abstr{\id:\theta}{t}
+  \al (t_1,\ldots,t_n)  \quad (n \ge 2)
+  \n
+p,q,r,s \is t_1 = t_2
+        \al t_1 \mapsto t_2
+        \al \disjoint{p}{v}
+        \al \app{p}{t}
+        \al \abstr{\id:\theta}{p}
+        \al \neg p
+        \al p_1 \wedge p_2
+        \al \exists \id:\theta. p
+        \al h
+        \n
+h \is \triple{p}{e}{q}
+  \al \view{p}
+  \al \neg h
+  \al h_1 \wedge h_2
+  \al \exists \id:\theta. h
+\egram\]
+
+
+\section{Typregeln f"ur die Logik}
+
+Der Begriff {\em Typumgebung} wird verallgemeinert f"ur die Logik. Eine {\em Typumgebung} ist
+damit eine partielle Funktion
+\[
+  \Gamma: \Id \pto \Stype
+\]
+mit endlichem Definitionsbereich. {\em Typurteile} f"ur die Logik sind von der Form
+\[\begin{array}{l}
+  \Tj{\Gamma}{e}{\etype{\tau}} \\
+  \Tj{\Gamma}{t}{\theta} \\
+  \Tj{\Gamma}{p}{\atype{\theta}} \\
+  \Tjh{\Gamma}{h}
+\end{array}\]
+Ein Typurteil $\Tj{\Gamma}{e}{\etype{\tau}}$ f"ur Ausdr"ucke der Programmiersprache hei"st
+g"ultig, wenn das entsprechende Typurteil $\Tj{\Gamma}{e}{\tau}$ herleitbar ist. F"ur die
+"ubrigen Typurteile werden neue Typregeln ben"otigt.
+
+Die g"ultigen Typurteile f"ur assertions erhalten wir mit den Regeln \\[3mm]
+\begin{tabular}{rl}
+  \RN{A-Eq} & $\regel{\Tj{\Gamma}{t_1}{\theta} \quad \Tj{\Gamma}{t_2}{\theta}}
+                     {\Tj{\Gamma}{t_1 = t_2}{\assn}}$ \\[1mm]
+  \RN{A-App} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}} \quad \Tj{\Gamma}{t}{\theta}}
+                      {\Tj{\Gamma}{\app{p}{t}}{\assn}}$ \\[1mm]
+  \RN{A-Content} & $\regel{\Tj{\Gamma}{t_1}{\reftype{\tau}} \quad \Tj{\Gamma}{t_2}{\tau}}
+                          {\Tj{\Gamma}{t_1 \mapsto t_2}{\assn}}$ \\[1mm]
+  \RN{A-Abstr} & $\regel{\Tj{\Gamma[\theta/\id]}{p}{\assn}}
+                        {\Tj{\Gamma}{\abstr{\id:\theta}{p}}{\atype{\theta}}}$ \\[1mm]
+  \RN{A-Disjoint} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}} \quad \Tj{\Gamma}{v}{\tau}}
+                           {\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}$ \\[1mm]
+  \RN{A-Not} & $\regel{\Tj{\Gamma}{p}{\assn}}
+                      {\Tj{\Gamma}{\neg p}{\assn}}$ \\[1mm]
+  \RN{A-And} & $\regel{\Tj{\Gamma}{p_1}{\assn} \quad \Tj{\Gamma}{p_2}{\assn}}
+                      {\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}$ \\[1mm]
+  \RN{A-Exists} & $\regel{\Tj{\Gamma[\theta/\id]}{p}{\assn}}
+                         {\Tj{\Gamma}{\exists \id:\theta.p}{\assn}}$ \\[1mm]
+  \RN{A-Hoare} & $\regel{\Tjh{\Gamma}{h}}
+                        {\Tj{\Gamma}{h}{\assn}}$
+\end{tabular} \\[3mm]
+die g"ultigen Typurteile f"ur Terme erhalten wir mit den Regeln \\[3mm]
+\begin{tabular}{rl}
+  \RN{T-Val} & $\regel{\Tj{\Gamma}{v}{\etype{\tau}}}
+                      {\Tj{\Gamma}{v}{\tau}}$ \\[1mm]
+  \RN{T-Func} & $\regel{\tj{f}{\theta}}
+                       {\Tj{\Gamma}{f}{\theta}}$ \\[1mm]
+  \RN{T-App} & $\regel{\Tj{\Gamma}{t_1}{\theta \tto \theta'} \quad \Tj{\Gamma}{t_2}{\theta}}
+                      {\Tj{\Gamma}{\app{t_1}{t_2}}{\theta'}}$ \\[1mm]
+  \RN{T-Abstr} & $\regel{\Tj{\Gamma[\theta/\id]}{t}{\theta'}}
+                        {\Tj{\Gamma}{\abstr{\id:\theta}{t}}{\theta \tto \theta'}}$ \\[1mm]
+  \RN{T-Tuple} & $\regel{\Tj{\Gamma}{t_i}{\theta_i} \text{ f"ur alle } i=1,\ldots,n}
+                        {\Tj{\Gamma}{(t_1,\ldots,t_n)}{\theta_1\times\ldots\times\theta_n}}$
+\end{tabular} \\[3mm]
+und die g"ultigen Typurteile f"ur Hoare-Formeln mit \\[3mm]
+\begin{tabular}{rl}
+  \RN{H-Tc} & $\regel{\Tj{\Gamma}{p}{\assn} \quad \Tj{\Gamma}{e}{\etype{\tau}} \quad \Tj{\Gamma}{q}{\atype{\tau}}}
+                     {\Tjh{\Gamma}{\triple{p}{e}{q}}}$ \\[1mm]
+  \RN{H-View} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}}}
+                       {\Tjh{\Gamma}{\view{p}}}$ \\[1mm]
+  \RN{H-Not} & $\regel{\Tjh{\Gamma}{h}}
+                      {\Tjh{\Gamma}{\neg h}}$ \\[1mm]
+  \RN{H-And} & $\regel{\Tjh{\Gamma}{h_1} \quad \Tjh{\Gamma}{h_2}}
+                      {\Tjh{\Gamma}{h_1 \wedge h_2}}$ \\[1mm]
+  \RN{H-Exists} & $\regel{\Tjh{\Gamma[\theta/\id]}{h}}
+                         {\Tjh{\Gamma}{\exists \id:\theta.h}}$
+\end{tabular}
+
+
+\section{Semantik der Logik}
+
+\subsection{Semantische Bereiche}
+
+Es werden die folgenden {\em semantischen Bereiche} $\semantic{\pi}$ f"ur die logischen Typen $\pi$
+definiert:
+\[\begin{array}{rcl}
+  \semantic{\tau} & = & \Val^\tau = \{v\in\Val\,|\,\tj{v}{\tau}\} \\
+  \semantic{\ltype{\theta}} & = & ?????? \\
+  \semantic{\theta_1 \tto \theta_2} & = & \semantic{\theta_1} \to \semantic{\theta_2} \\
+  \semantic{\theta_1\times\ldots\times\theta_n}&=&\semantic{\theta_1}\times\ldots\times\semantic{\theta_n} \\
+  \semantic{\etype{\tau}} & = & \Store \pto \semantic{\tau} \times \Store \\
+  \semantic{\atype{\theta}} & = & \semantic{\theta} \times \Store \pto \Bool
+\end{array}\]
+Da $\semantic{\unit} = \Val^\unit = \{()\}$ und $\{()\}\times\Store$ isomorph zu
+$\Store$ benutzen wir abk"urzend $\semantic{\assn}=\Store\pto\Bool$ und vernachl"assigen
+an den entsprechenden Stellen das $\unit$-Element.
+
+\begin{definition}[Totale Korrektheit]
+  Seien $\tau\in\Type$, $f\in\semantic{\etype{\tau}}$, $\phi\in\semantic{\assn}$ und
+  $\psi\in\semantic{\atype{\tau}}$. $f$ heisst {\em total korrekt} bzgl. $\phi$ und
+  $\psi$ gdw.:
+  \[\begin{array}{l}
+    \forall \sigma\in\dom{\phi}.
+    \bigl[
+      \phi\,\sigma = \true 
+      \Rightarrow \exists(v,\sigma')\in\dom{\psi}.f\,\sigma = (v,\sigma')\wedge \psi\,(v,\sigma')=\true
+    \bigr]
+  \end{array}\]
+\end{definition}
+
+\subsection{Semantik von Termen und Formeln}
+
+Eine {\em Umgebung} ist eine partielle Abbildung $\rho:\Id\pto\bigcup_{\tau\in\Type} \Val^\tau$.
+Eine Umgebung $\rho$ {\em passt} zu einer Typumgebung $\Gamma$, geschrieben $\Gamma \models \rho$,
+wenn gilt:
+\begin{itemize}
+  \item $\dom{\rho} = \dom{\Gamma}$
+  \item $\rho(\id) \in \Val^{\Gamma(\id)}$ f"ur alle $\id\in\dom{\rho}$
+\end{itemize}
+Die Menge aller zu $\Gamma$ passenden Umgebungen ist:
+\[
+  \Env_\Gamma := \{\rho\,|\,\Gamma \models \rho\}
+\]
+
+\noindent
+Ein Zustand $\sigma$ {\em passt} zu einer Umgebung $\rho$, geschrieben $\rho \models \sigma$,
+wenn gilt:
+\begin{itemize}
+  \item $\locns(\rho(\id)) \subseteq \dom{\sigma}$ f"ur alle $\id\in\dom{\rho}$
+  \item $\locns(\sigma(X)) \subseteq \dom{\sigma}$ f"ur alle $X\in\dom{\sigma}$
+\end{itemize}
+Die Menge aller zu $\rho$ passenden Zust"ande $\Store_\rho$ ist def. durch:
+\[
+  \Store_\rho := \{\sigma\,|\,\rho\models\sigma\}
+\]
+
+\noindent
+Den Typurteilen f"ur Ausdr"ucke, Terme und Formeln wird nun eine Semantik zugeordnet:
+\begin{itemize}
+  \item $\semantic{\Tj{\Gamma}{e}{\etype{\tau}}}:\Env_\Gamma \to \semantic{\etype{\tau}}$, \\
+        mit $\dom{\semantic{\Tj{\Gamma}{e}{\etype{\tau}}}\,\rho} = \Store_\rho$
+        f"ur alle $\rho\in\Env_\Gamma$
+  \item $\semantic{\Tj{\Gamma}{t}{\theta}}:\Env_\Gamma \to \semantic{\theta}$
+  \item $\semantic{\Tj{\Gamma}{p}{\atype{\theta}}}: \Env_\Gamma \to \semantic{\atype{\theta}}$, \\
+        mit $\dom{\semantic{\Tj{\Gamma}{p}{\atype{\theta}}}\,\rho} = \semantic{\theta}\times\Store_\rho$
+        f"ur alle $\rho\in\Env_\Gamma$
+  \item $\semantic{\Tjh{\Gamma}{h}}: \Env_\Gamma \to \Bool$
+\end{itemize}
+
+\noindent
+F"ur Ausdr"ucke kann die Semantik wahlweise "uber small oder big step Semantik definiert
+werden, z.B.
+\[\begin{array}{rcl}
+  \semantic{\Tj{\Gamma}{e}{\etype{\tau}}}\,\rho\,\sigma = (v,\sigma')
+  & :\Leftrightarrow &
+  (e\rho,\sigma) \Downarrow (v,\sigma')
+\end{array}\]
+wobei $e \rho$ der Ausdruck ist, der aus $e$ entsteht, indem alle durch $\rho$ spezifizierten
+Substitutionen ausgef"uhrt werden. Da $\Gamma \models \rho$, ist $e \rho$ somit ein abgeschlossener
+Ausdruck vom Typ $\tau$.
+
+\pagebreak[3] \noindent
+Die Semantik von Termen ist definiert durch:
+\[\begin{array}{rcl}
+  \semantic{\Tj{\Gamma}{v}{\tau}}\,\rho
+  & := &
+  v\,\rho 
+  \\
+  \semantic{\Tj{\Gamma}{f}{\theta}}\,\rho
+  & := &
+  \semantic{\tj{f}{\theta}} \\
+  && \text{wobei die Semantik hier noch zu def. ist}
+  \\
+  \semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\theta}}\,\rho
+  & := &
+  (\semantic{\Tj{\Gamma}{t_1}{\theta'\tto\theta}}\,\rho)\,(\semantic{\Tj{\Gamma}{t_2}{\theta'}}\,\rho)
+  \\
+  \semantic{\Tj{\Gamma}{\abstr{\id:\theta}{t}}{\theta\tto\theta'}}\,\rho
+  & := &
+  f: \semantic{\theta\tto\theta'},
+  d \mapsto \semantic{\Tj{\Gamma[\theta/\id]}{t}{\theta'}}\,(\rho[d/\id])
+  \\
+  \semantic{\Tj{\Gamma}{(t_1,\ldots,t_n)}{\theta_1\times\ldots\times\theta_2}}\,\rho
+  & := &
+  (\semantic{\Tj{\Gamma}{t_1}{\theta_1}}\,\rho,\ldots,\semantic{\Tj{\Gamma}{t_2}{\theta_2}}\,\rho)
+\end{array}\]
+
+\pagebreak[3] \noindent
+Die Semantik von assertions ist wie folgt induktiv definiert:
+\[\begin{array}{rcl}
+  \semantic{\Tj{\Gamma}{t_1 = t_2}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma}{t_1}{\theta}}\,\rho = \semantic{\Tj{\Gamma}{t_2}{\theta}}\,\rho \\
+  && \text{wobei die Gleichheit hier noch zu def. ist}
+  \\
+  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \text{ex. } X\in\dom{\sigma} \text{ mit } X = \semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho \\
+  && \text{und } \sigma(X) = \semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho
+  \\
+  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \text{ex. endl. } L \subseteq \Loc \text{ so dass } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho \\
+  && \text{$L$-definierbar ist, und } \\
+  && \name{reach}(L,\sigma) \cap \name{reachable}(\locns(v))=\emptyset
+  \\
+  \semantic{\Tj{\Gamma}{\app{p}{t}}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  (\semantic{\Tj{\Gamma}{p}{\atype{\theta}}}\,\rho)\,(\semantic{\Tj{\Gamma}{t}{\theta}}\,\rho,\sigma)=\true
+  \\
+  \semantic{\Tj{\Gamma}{\abstr{\id:\theta}{p}}{\atype{\theta}}}\,\rho\,(d,\sigma) = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma[\theta/\id]}{p}{\assn}}\,(\rho[d/\id])\,\sigma = \true
+  \\
+  \semantic{\Tj{\Gamma}{\neg p}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \false
+  \\
+  \semantic{\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \true \text{ und } \\
+  && \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \true
+  \\
+  \semantic{\Tj{\Gamma}{\exists \id:\theta.p}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \text{ex. } d\in\semantic{\theta} \text{ so dass } \\
+  && \semantic{\Tj{\Gamma[\theta/\id]}{p}{\assn}}\,(\rho[d/\id])\,\sigma = \true
+  \\
+  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho\,\sigma = \true
+  & :\Leftrightarrow &
+  \semantic{\Tjh{\Gamma}{h}}\,\rho = \true
+\end{array}\]
+
+\noindent
+Die Semantik von Hoare-Formeln ist dann definiert durch:
+\[\begin{array}{rcl}
+  \semantic{\Tjh{\Gamma}{\triple{p}{e}{q}}}\,\rho = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma}{e}{\etype{\tau}}}\,\rho \text{ total korrekt bzgl. } \\
+  && \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho \text{ und } \semantic{\Tj{\Gamma}{q}{\atype{\tau}}}\,\rho
+  \\
+  \semantic{\Tjh{\Gamma}{\view{p}}}\,\rho = \true
+  & :\Leftrightarrow &
+  \text{ex. endl. } L \subseteq \Loc \text{ so dass } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho \\
+  && \text{$L$-definierbar ist}
+  \\
+  \semantic{\Tjh{\Gamma}{\neg h}}\,\rho = \true
+  & :\Leftrightarrow &
+  \semantic{\Tjh{\Gamma}{h}}\,\rho = \false
+  \\
+  \semantic{\Tjh{\Gamma}{h_1 \wedge h_2}}\,\rho = \true
+  & :\Leftrightarrow &
+  \semantic{\Tjh{\Gamma}{h_1}}\,\rho = \true \text{ und }
+  \semantic{\Tjh{\Gamma}{h_2}}\,\rho = \true
+  \\
+  \semantic{\Tjh{\Gamma}{\exists \id:\theta.h}}\,\rho = \true
+  & :\Leftrightarrow &
+  \text{ex. } d \in \semantic{\theta} \text{ so dass }
+  \semantic{\Tjh{\Gamma[\theta/\id]}{h}}\,(\rho[d/\id])=\true
+\end{array}\]
+
+\pagebreak[3]
+\begin{definition}[Modell] \
+  \begin{itemize}
+    \item $\rho$ heisst {\em Modell} von $\Tjh{\Gamma}{h}$, wenn $\semantic{\Tjh{\Gamma}{h}}\,\rho = \true$
+          gilt, geschrieben als $\rho \models \Tjh{\Gamma}{h}$.
+    \item Gilt $\rho \models \Tjh{\Gamma}{h}$ f"ur alle $\rho\in\Env_\Gamma$, so schreiben wir
+          $\models \Tjh{\Gamma}{h}$ und nennen  $\Tjh{\Gamma}{h}$ {\em g"ultig}.
+    \item Ist $\Gamma = [\,]$, so schreiben wir $\models h$.
+  \end{itemize}
+\end{definition}
+
+
+\section{Kalk"ul}
+
+Ableitbarkeit: $\vdash h$
+
+\subsection{Regeln}
+
+
+\end{document}
