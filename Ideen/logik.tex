@@ -83,7 +83,7 @@ der Programmiersprache (wobei angenommen wird, dass $\Id \subseteq \Val$). Darau
 \end{itemize}
 durch
 \[\bgram
-f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons \mid \Hd \mid \Tl
+f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons
   \n
 t \is v
   \al f
@@ -91,8 +91,7 @@ t \is v
   \al \abstr{\id:\theta}{t}
   \al (t_1,\ldots,t_n)  \quad (n \ge 2)
   \n
-p,q,r,s \is t_1 = t_2
-        \al t_1 \mapsto t_2
+p,q,r,s \is t_1 \mapsto t_2
         \al \disjoint{p}{v}
         \al \app{p}{t}
         \al \abstr{\id:\theta}{p}
@@ -102,6 +101,7 @@ p,q,r,s \is t_1 = t_2
         \al h
         \n
 h \is \triple{p}{e}{q}
+  \al t_1 = t_2
   \al \view{p}
   \al \neg h
   \al h_1 \wedge h_2
@@ -129,8 +129,6 @@ g"ultig, wenn das entsprechende Typurteil $\Tj{\Gamma}{e}{\tau}$ herleitbar ist.
 
 Die g"ultigen Typurteile f"ur assertions erhalten wir mit den Regeln \\[3mm]
 \begin{tabular}{rl}
-  \RN{A-Eq} & $\regel{\Tj{\Gamma}{t_1}{\theta} \quad \Tj{\Gamma}{t_2}{\theta}}
-                     {\Tj{\Gamma}{t_1 = t_2}{\assn}}$ \\[1mm]
   \RN{A-App} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}} \quad \Tj{\Gamma}{t}{\theta}}
                       {\Tj{\Gamma}{\app{p}{t}}{\assn}}$ \\[1mm]
   \RN{A-Content} & $\regel{\Tj{\Gamma}{t_1}{\reftype{\tau}} \quad \Tj{\Gamma}{t_2}{\tau}}
@@ -163,6 +161,8 @@ die g"ultigen Typurteile f"ur Terme erhalten wir mit den Regeln \\[3mm]
 \end{tabular} \\[3mm]
 und die g"ultigen Typurteile f"ur Hoare-Formeln mit \\[3mm]
 \begin{tabular}{rl}
+  \RN{H-Eq} & $\regel{\Tj{\Gamma}{t_1}{\theta} \quad \Tj{\Gamma}{t_2}{\theta}}
+                     {\Tjh{\Gamma}{t_1 = t_2}}$ \\[1mm]
   \RN{H-Tc} & $\regel{\Tj{\Gamma}{p}{\assn} \quad \Tj{\Gamma}{e}{\etype{\tau}} \quad \Tj{\Gamma}{q}{\atype{\tau}}}
                      {\Tjh{\Gamma}{\triple{p}{e}{q}}}$ \\[1mm]
   \RN{H-View} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}}}
@@ -174,6 +174,59 @@ und die g"ultigen Typurteile f"ur Hoare-Formeln mit \\[3mm]
   \RN{H-Exists} & $\regel{\Tjh{\Gamma[\theta/\id]}{h}}
                          {\Tjh{\Gamma}{\exists \id:\theta.h}}$
 \end{tabular}
+
+
+\section{Speicherzust"ande und Erreichbarkeit}
+
+F"ur jeden Typ $\tau$ sei eine unendliche Menge $\Loc^\tau$ definiert, deren Elemente $X,Y,\ldots$
+als {\em Speicherpl"atze} vom Typ $\tau$ bezeichnet werden. Es wird vorausgesetzt, dass die Mengen
+$\Loc^\tau$ paarweise disjunkt sind und darauf ist definiert
+\[
+  \Loc = \bigcup_{\tau\in\Type} \Loc^\tau
+\]
+Wir schreiben $\locns{e}$ f"ur die Menge aller im Ausdruck $e$ (syntaktisch) vorkommenden Speicherpl"atze
+und $\Val^\tau$ f"ur die Menge aller abgeschlossenen Werte vom Typ $\tau$ (wobei Abgeschlossenheit sich
+hier nur auf die Bezeichner $\Id$ beschr"ankt). Unter einem {\em Speicherzustand} verstehen wir eine
+endliche partielle Funktion
+\[
+  \sigma: \Loc \pto \bigcup_{\tau\in\Type} \semantic{\tau}
+\]
+f"ur die gilt:
+\begin{itemize}
+  \item $\sigma(\Loc^\tau) \subseteq \Val^\tau$ f"ur alle $\tau\in\Type$
+  \item $\locns(\sigma(X)) \subseteq \dom{\sigma}$ f"ur alle $X\in\Loc$
+\end{itemize}
+Demzufolge ist ein Zustand per Definition stets {\em wohlgetypt} und in sich abgeschlossen,
+d.h. er enth"alt keine {\em dangling references}.
+
+Mit $\Store$ bezeichnen wir die Menge aller Speicherzust"ande und f"ur jede endliche Menge
+$L \subseteq \Loc$ definieren wir
+\[
+  \Store(L) = \{\sigma\in\Store\,|\,L\subseteq\dom{\sigma}\}
+\]
+F"ur $\sigma\in\Store(L)$ seien die Mengen $\name{reach}_i(L,\sigma)\subseteq \Loc$ f"ur alle
+$i\in\setN$ und die Menge $\name{reach}(L,\sigma)\subseteq\Loc$ definiert durch
+\[\begin{array}{rcl}
+  \name{reach}_0(L,\sigma) & = & L \\
+  \name{reach}_{i+1}(L,\sigma) & = & \name{reach}_i(L,\sigma)
+             \cup \bigcup_{X\in\name{reach}_i(L,\sigma)} \locns(\sigma(X)) \\
+  \name{reach}(L,\sigma) & = & \bigcup_{i\in\setN} \name{reach}_i(L,\sigma)
+\end{array}\]
+$\name{reach}(L,\sigma)$ enth"alt alle Speicherpl"atze, die man von der Menge $L$ aus im
+Zustand $\sigma$ erreichen kann. Da ein Zustand $\sigma\in\Store(L)$ keine dangling references
+enth"alt, gilt stets
+\[
+  \name{reach}(L,\sigma) \subseteq \dom{\sigma}.
+\]
+
+\begin{definition}[$L$-"Aquivalenz]
+  Zwei Zust"ande $\sigma,\sigma'\in\Store(L)$ hei"sen {\em $L$-"aquivalent}, geschrieben
+  $\sigma \equiv_L \sigma'$, wenn gilt:
+  \begin{enumerate}
+    \item $\name{reach}(L,\sigma) = \name{reach}(L,\sigma')$
+    \item $\sigma$ und $\sigma'$ stimmen auf $\name{reach}(L,\sigma)$ "uberein.
+  \end{enumerate}
+\end{definition}
 
 
 \section{Semantik der Logik}
@@ -287,11 +340,6 @@ Die Semantik von Termen ist definiert durch:
 \pagebreak[3] \noindent
 Die Semantik von assertions ist wie folgt induktiv definiert:
 \[\begin{array}{rcl}
-  \semantic{\Tj{\Gamma}{t_1 = t_2}{\assn}}\,\rho\,\sigma = \true
-  & :\Leftrightarrow &
-  \semantic{\Tj{\Gamma}{t_1}{\theta}}\,\rho = \semantic{\Tj{\Gamma}{t_2}{\theta}}\,\rho \\
-  && \text{wobei die Gleichheit hier noch zu def. ist}
-  \\
   \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma = \true
   & :\Leftrightarrow &
   \text{ex. } X\in\dom{\sigma} \text{ mit } X = \semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho \\
@@ -333,6 +381,11 @@ Die Semantik von assertions ist wie folgt induktiv definiert:
 \noindent
 Die Semantik von Hoare-Formeln ist dann definiert durch:
 \[\begin{array}{rcl}
+  \semantic{\Tjh{\Gamma}{t_1 = t_2}}\,\rho = \true
+  & :\Leftrightarrow &
+  \semantic{\Tj{\Gamma}{t_1}{\theta}}\,\rho = \semantic{\Tj{\Gamma}{t_2}{\theta}}\,\rho \\
+  && \text{wobei die Gleichheit hier noch zu def. ist}
+  \\
   \semantic{\Tjh{\Gamma}{\triple{p}{e}{q}}}\,\rho = \true
   & :\Leftrightarrow &
   \semantic{\Tj{\Gamma}{e}{\etype{\tau}}}\,\rho \text{ total korrekt bzgl. } \\
