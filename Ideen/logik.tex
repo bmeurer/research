@@ -39,6 +39,7 @@
 \newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
 \newcommand{\etype}[1]{#1\,\bexpr}
 \newcommand{\Stype}{\name{SType}}
+\newcommand{\Sptype}{\name{SPType}}
 \newcommand{\locns}{\name{locns}}
 \newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
 \renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
@@ -71,6 +72,16 @@ durch
 \egram\]
 Statt $\atype{\unit}$ schreiben wir kurz $\assn$.
 
+Eine wichtige Teilmenge von $\Stype$ ist die Menge $\Sptype$ der {\em primitiven statischen Typen} $\gamma$,
+definiert durch:
+\[\bgram
+\gamma  \is \beta
+        \al \ltype{\theta}
+        \al \gamma_1 \tto \gamma_2
+        \al \gamma_1 \times \ldots \times \gamma_n \quad (n \ge 2)
+        \n
+\egram\]
+
 \subsection{Terme und Formeln}
 
 Sei $\Exp$ die Menge aller {\em Ausdr"ucke} $e$ und $\Val$ die Menge aller {\em Werte} $v$
@@ -78,7 +89,7 @@ der Programmiersprache (wobei angenommen wird, dass $\Id \subseteq \Val$). Darau
 \begin{itemize}
   \item die Menge $F$ aller {\em Funktionszeichen} $f$,
   \item die Menge \name{Term} aller {\em Terme} $t$,
-  \item die Menge \name{Assn} aller {\em assertions} $p,q,r,s$ sowie
+  \item die Menge \name{Assn} aller {\em assertions} $p,q$ sowie
   \item die Menge \name{Formula} aller {\em (Hoare-)Formeln} $h$
 \end{itemize}
 durch
@@ -91,15 +102,15 @@ t \is v
   \al \abstr{\id:\theta}{t}
   \al (t_1,\ldots,t_n)  \quad (n \ge 2)
   \n
-p,q,r,s \is t_1 \mapsto t_2
-        \al \disjoint{p}{v}
-        \al \app{p}{t}
-        \al \abstr{\id:\theta}{p}
-        \al \neg p
-        \al p_1 \wedge p_2
-        \al \exists \id:\theta. p
-        \al h
-        \n
+p,q \is t_1 \mapsto t_2
+    \al \disjoint{p}{v}
+    \al \app{p}{t}
+    \al \abstr{\id:\theta}{p}
+    \al \neg p
+    \al p \wedge q
+    \al \exists \id:\theta. p
+    \al h
+    \n
 h \is \triple{p}{e}{q}
   \al t_1 = t_2
   \al \view{p}
@@ -107,6 +118,29 @@ h \is \triple{p}{e}{q}
   \al h_1 \wedge h_2
   \al \exists \id:\theta. h
 \egram\]
+wobei f"ur die assertions $p,q$ eine wichtige Einschr"ankung gilt:
+\begin{quote}
+  In einer assertion der Form $\neg p$ darf $p$ keine Teilassertions der Form
+  $\exists \id:\theta.q$ mit $\theta \not\in \Sptype$ enthalten; oder positiv
+  ausgedr"uckt, $p$ darf nur noch $\exists$-Formeln der Gestalt $\exists \id:\gamma.q$
+  enthalten.
+\end{quote}
+Die Idee hierbei ist, dass die assertions $p,q$ {\em allokations-invariant} sein
+sollen, d.h. eine assertion, die vor einer Allokation gilt, soll auch nach einer
+Allokation noch gelten. Dies erreicht man dadurch, indem man $\forall$-Quantifizierung
+"uber Locations (und Objekte/Funktionen, die ja Locations enthalten k"onnen), verbietet.
+Bspw. w"are die assertion
+\[
+  \forall x:\reftype{\z}. (\exists y:\z. x \mapsto y) \Rightarrow x \mapsto 0
+\]
+nicht allokations-invariant, denn angenommen diese Formel gilt als Preconditions
+f"ur den Ausdruck
+\[
+  \bref\,1
+\]
+dann gilt sie aber nachher definitiv nicht mehr. Solche
+Aussagen, die "uber alle vorhandenen Speichereintr"age quantifizieren sind ohnehin
+wenig sinnvoll.
 
 
 \section{Typregeln f"ur die Logik}
@@ -421,6 +455,17 @@ Die Semantik von Hoare-Formeln ist dann definiert durch:
     \item Ist $\Gamma = [\,]$, so schreiben wir $\models h$.
   \end{itemize}
 \end{definition}
+
+
+\subsection{Zusammenh"ange}
+
+\begin{lemma}[Allokations-Invarianz]
+  F"ur alle $\tau\in\Type$, $y\in\semantic{\tau}$, $p \in \semantic{\assn}$ mit
+  $x \not \in \free{p}$ gilt:
+  \[
+    \models \Tjh{\Gamma}{\triple{p}{\bref\,y}{\ret{x:\reftype{\tau}}{p}}}
+  \]
+\end{lemma}
 
 
 \section{Kalk"ul}
