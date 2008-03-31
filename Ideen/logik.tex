@@ -38,8 +38,8 @@
 \newcommand{\atype}[1]{#1\,\assn}
 \newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
 \newcommand{\etype}[1]{#1\,\bexpr}
-\newcommand{\Stype}{\name{SType}}
-\newcommand{\Sptype}{\name{SPType}}
+\newcommand{\Dtype}{\name{DType}}
+\newcommand{\Atype}{\name{AType}}
 \newcommand{\locns}{\name{locns}}
 \newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
 \renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
@@ -55,31 +55,22 @@
 
 Sei $\Type$ die Menge aller {\em Typen} $\tau$ der Programmiersprache. Darauf definieren wir 
 \begin{itemize}
-  \item die Menge $\Stype$ aller {\em statischen Typen} $\theta$ und
+  \item die Menge $\Dtype$ aller {\em Datentypen} $\delta$,
+  \item die Menge $\Atype$ aller {\em assertion types} $\theta$ und
   \item die Menge $\Ltype$ aller {\em logischen Typen} $\pi$
 \end{itemize}
 durch
 \[\bgram
-\theta  \is \tau
-        \al \ltype{\theta}
-        \al \theta_1 \tto \theta_2
-        \al \theta_1 \times \ldots \times \theta_n \quad (n \ge 2)
+\delta  \is \tau
+        \al \delta_1 \tto \delta_2
+        \al \delta_1 \times \ldots \times \delta_n \quad (n \ge 2)
+        \n
+\theta  \is \assn
+        \al \delta \tto \theta
         \n
 \pi \is \theta
     \al \etype{\tau}
-    \al \atype{\theta}
     \n
-\egram\]
-Statt $\atype{\unit}$ schreiben wir kurz $\assn$.
-
-Eine wichtige Teilmenge von $\Stype$ ist die Menge $\Sptype$ der {\em primitiven statischen Typen} $\gamma$,
-definiert durch:
-\[\bgram
-\gamma  \is \beta
-        \al \ltype{\theta}
-        \al \gamma_1 \tto \gamma_2
-        \al \gamma_1 \times \ldots \times \gamma_n \quad (n \ge 2)
-        \n
 \egram\]
 
 \subsection{Terme und Formeln}
@@ -94,53 +85,52 @@ der Programmiersprache (wobei angenommen wird, dass $\Id \subseteq \Val$). Darau
 \end{itemize}
 durch
 \[\bgram
-f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons
+f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons \mid \ldots
   \n
 t \is v
   \al f
   \al \app{t_1}{t_2}
-  \al \abstr{\id:\theta}{t}
+  \al \abstr{\id:\delta}{t}
   \al (t_1,\ldots,t_n)  \quad (n \ge 2)
   \n
 p,q \is t_1 \mapsto t_2
     \al \disjoint{p}{v}
     \al \app{p}{t}
-    \al \abstr{\id:\theta}{p}
+    \al \abstr{\id:\delta}{p}
     \al \neg p
     \al p \wedge q
-    \al \exists \id:\theta. p
+    \al \exists \id:\theta\in[t]. p
     \al h
     \n
 h \is \triple{p}{e}{q}
   \al t_1 = t_2
-  \al \view{p}
   \al \neg h
   \al h_1 \wedge h_2
-  \al \exists \id:\theta. h
+  \al \exists \id:\delta. h
 \egram\]
-wobei f"ur die assertions $p,q$ eine wichtige Einschr"ankung gilt:
-\begin{quote}
-  In einer assertion der Form $\neg p$ darf $p$ keine Teilassertions der Form
-  $\exists \id:\theta.q$ mit $\theta \not\in \Sptype$ enthalten; oder positiv
-  ausgedr"uckt, $p$ darf nur noch $\exists$-Formeln der Gestalt $\exists \id:\gamma.q$
-  enthalten.
-\end{quote}
-Die Idee hierbei ist, dass die assertions $p,q$ {\em allokations-invariant} sein
-sollen, d.h. eine assertion, die vor einer Allokation gilt, soll auch nach einer
-Allokation noch gelten. Dies erreicht man dadurch, indem man $\forall$-Quantifizierung
-"uber Locations (und Objekte/Funktionen, die ja Locations enthalten k"onnen), verbietet.
-Bspw. w"are die assertion
-\[
-  \forall x:\reftype{\z}. (\exists y:\z. x \mapsto y) \Rightarrow x \mapsto 0
-\]
-nicht allokations-invariant, denn angenommen diese Formel gilt als Preconditions
-f"ur den Ausdruck
-\[
-  \bref\,1
-\]
-dann gilt sie aber nachher definitiv nicht mehr. Solche
-Aussagen, die "uber alle vorhandenen Speichereintr"age quantifizieren sind ohnehin
-wenig sinnvoll.
+%wobei f"ur die assertions $p,q$ eine wichtige Einschr"ankung gilt:
+%\begin{quote}
+%  In einer assertion der Form $\neg p$ darf $p$ keine Teilassertions der Form
+%  $\exists \id:\theta.q$ mit $\theta \not\in \name{SPtype}$ enthalten; oder positiv
+%  ausgedr"uckt, $p$ darf nur noch $\exists$-Formeln der Gestalt $\exists \id:\gamma.q$
+%  enthalten.
+%\end{quote}
+%Die Idee hierbei ist, dass die assertions $p,q$ {\em allokations-invariant} sein
+%sollen, d.h. eine assertion, die vor einer Allokation gilt, soll auch nach einer
+%Allokation noch gelten. Dies erreicht man dadurch, indem man $\forall$-Quantifizierung
+%"uber Locations (und Objekte/Funktionen, die ja Locations enthalten k"onnen), verbietet.
+%Bspw. w"are die assertion
+%\[
+%  \forall x:\reftype{\z}. (\exists y:\z. x \mapsto y) \Rightarrow x \mapsto 0
+%\]
+%nicht allokations-invariant, denn angenommen diese Formel gilt als Preconditions
+%f"ur den Ausdruck
+%\[
+%  \bref\,1
+%\]
+%dann gilt sie aber nachher definitiv nicht mehr. Solche
+%Aussagen, die "uber alle vorhandenen Speichereintr"age quantifizieren sind ohnehin
+%wenig sinnvoll.
 
 
 \section{Typregeln f"ur die Logik}
@@ -148,13 +138,13 @@ wenig sinnvoll.
 Der Begriff {\em Typumgebung} wird verallgemeinert f"ur die Logik. Eine {\em Typumgebung} ist
 damit eine partielle Funktion
 \[
-  \Gamma: \Id \pto \Stype
+  \Gamma: \Id \pto \Atype
 \]
 mit endlichem Definitionsbereich. {\em Typurteile} f"ur die Logik sind von der Form
 \[\begin{array}{l}
   \Tj{\Gamma}{e}{\etype{\tau}} \\
-  \Tj{\Gamma}{t}{\theta} \\
-  \Tj{\Gamma}{p}{\atype{\theta}} \\
+  \Tj{\Gamma}{t}{\delta} \\
+  \Tj{\Gamma}{p}{\theta} \\
   \Tjh{\Gamma}{h}
 \end{array}\]
 Ein Typurteil $\Tj{\Gamma}{e}{\etype{\tau}}$ f"ur Ausdr"ucke der Programmiersprache hei"st
@@ -163,20 +153,20 @@ g"ultig, wenn das entsprechende Typurteil $\Tj{\Gamma}{e}{\tau}$ herleitbar ist.
 
 Die g"ultigen Typurteile f"ur assertions erhalten wir mit den Regeln \\[3mm]
 \begin{tabular}{rl}
-  \RN{A-App} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}} \quad \Tj{\Gamma}{t}{\theta}}
-                      {\Tj{\Gamma}{\app{p}{t}}{\assn}}$ \\[1mm]
+  \RN{A-App} & $\regel{\Tj{\Gamma}{p}{\delta \tto \theta} \quad \Tj{\Gamma}{t}{\delta}}
+                      {\Tj{\Gamma}{\app{p}{t}}{\theta}}$ \\[1mm]
   \RN{A-Content} & $\regel{\Tj{\Gamma}{t_1}{\reftype{\tau}} \quad \Tj{\Gamma}{t_2}{\tau}}
                           {\Tj{\Gamma}{t_1 \mapsto t_2}{\assn}}$ \\[1mm]
-  \RN{A-Abstr} & $\regel{\Tj{\Gamma[\theta/\id]}{p}{\assn}}
-                        {\Tj{\Gamma}{\abstr{\id:\theta}{p}}{\atype{\theta}}}$ \\[1mm]
-  \RN{A-Disjoint} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}} \quad \Tj{\Gamma}{v}{\tau}}
+  \RN{A-Abstr} & $\regel{\Tj{\Gamma[\delta/\id]}{p}{\theta}}
+                        {\Tj{\Gamma}{\abstr{\id:\delta}{p}}{\delta \to \theta}}$ \\[1mm]
+  \RN{A-Disjoint} & $\regel{\Tj{\Gamma}{p}{\theta} \quad \Tj{\Gamma}{v}{\tau}}
                            {\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}$ \\[1mm]
   \RN{A-Not} & $\regel{\Tj{\Gamma}{p}{\assn}}
                       {\Tj{\Gamma}{\neg p}{\assn}}$ \\[1mm]
   \RN{A-And} & $\regel{\Tj{\Gamma}{p_1}{\assn} \quad \Tj{\Gamma}{p_2}{\assn}}
                       {\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}$ \\[1mm]
   \RN{A-Exists} & $\regel{\Tj{\Gamma[\theta/\id]}{p}{\assn}}
-                         {\Tj{\Gamma}{\exists \id:\theta.p}{\assn}}$ \\[1mm]
+                         {\Tj{\Gamma}{\exists \id:\theta\in[t].p}{\assn}}$ \\[1mm]
   \RN{A-Hoare} & $\regel{\Tjh{\Gamma}{h}}
                         {\Tj{\Gamma}{h}{\assn}}$
 \end{tabular} \\[3mm]
@@ -184,29 +174,27 @@ die g"ultigen Typurteile f"ur Terme erhalten wir mit den Regeln \\[3mm]
 \begin{tabular}{rl}
   \RN{T-Val} & $\regel{\Tj{\Gamma}{v}{\etype{\tau}}}
                       {\Tj{\Gamma}{v}{\tau}}$ \\[1mm]
-  \RN{T-Func} & $\regel{\tj{f}{\theta}}
-                       {\Tj{\Gamma}{f}{\theta}}$ \\[1mm]
-  \RN{T-App} & $\regel{\Tj{\Gamma}{t_1}{\theta \tto \theta'} \quad \Tj{\Gamma}{t_2}{\theta}}
-                      {\Tj{\Gamma}{\app{t_1}{t_2}}{\theta'}}$ \\[1mm]
-  \RN{T-Abstr} & $\regel{\Tj{\Gamma[\theta/\id]}{t}{\theta'}}
-                        {\Tj{\Gamma}{\abstr{\id:\theta}{t}}{\theta \tto \theta'}}$ \\[1mm]
-  \RN{T-Tuple} & $\regel{\Tj{\Gamma}{t_i}{\theta_i} \text{ f"ur alle } i=1,\ldots,n}
-                        {\Tj{\Gamma}{(t_1,\ldots,t_n)}{\theta_1\times\ldots\times\theta_n}}$
+  \RN{T-Func} & $\regel{\tj{f}{\delta}}
+                       {\Tj{\Gamma}{f}{\delta}}$ \\[1mm]
+  \RN{T-App} & $\regel{\Tj{\Gamma}{t_1}{\delta \tto \delta'} \quad \Tj{\Gamma}{t_2}{\delta}}
+                      {\Tj{\Gamma}{\app{t_1}{t_2}}{\delta'}}$ \\[1mm]
+  \RN{T-Abstr} & $\regel{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}
+                        {\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta \tto \delta'}}$ \\[1mm]
+  \RN{T-Tuple} & $\regel{\Tj{\Gamma}{t_i}{\delta_i} \text{ f"ur alle } i=1,\ldots,n}
+                        {\Tj{\Gamma}{(t_1,\ldots,t_n)}{\delta_1\times\ldots\times\delta_n}}$
 \end{tabular} \\[3mm]
 und die g"ultigen Typurteile f"ur Hoare-Formeln mit \\[3mm]
 \begin{tabular}{rl}
-  \RN{H-Eq} & $\regel{\Tj{\Gamma}{t_1}{\theta} \quad \Tj{\Gamma}{t_2}{\theta}}
+  \RN{H-Eq} & $\regel{\Tj{\Gamma}{t_1}{\delta} \quad \Tj{\Gamma}{t_2}{\delta}}
                      {\Tjh{\Gamma}{t_1 = t_2}}$ \\[1mm]
-  \RN{H-Tc} & $\regel{\Tj{\Gamma}{p}{\assn} \quad \Tj{\Gamma}{e}{\etype{\tau}} \quad \Tj{\Gamma}{q}{\atype{\tau}}}
+  \RN{H-Tc} & $\regel{\Tj{\Gamma}{p}{\assn} \quad \Tj{\Gamma}{e}{\etype{\tau}} \quad \Tj{\Gamma}{q}{\tau} \tto \assn}
                      {\Tjh{\Gamma}{\triple{p}{e}{q}}}$ \\[1mm]
-  \RN{H-View} & $\regel{\Tj{\Gamma}{p}{\atype{\theta}}}
-                       {\Tjh{\Gamma}{\view{p}}}$ \\[1mm]
   \RN{H-Not} & $\regel{\Tjh{\Gamma}{h}}
                       {\Tjh{\Gamma}{\neg h}}$ \\[1mm]
   \RN{H-And} & $\regel{\Tjh{\Gamma}{h_1} \quad \Tjh{\Gamma}{h_2}}
                       {\Tjh{\Gamma}{h_1 \wedge h_2}}$ \\[1mm]
-  \RN{H-Exists} & $\regel{\Tjh{\Gamma[\theta/\id]}{h}}
-                         {\Tjh{\Gamma}{\exists \id:\theta.h}}$
+  \RN{H-Exists} & $\regel{\Tjh{\Gamma[\delta/\id]}{h}}
+                         {\Tjh{\Gamma}{\exists \id:\delta.h}}$
 \end{tabular}
 
 
@@ -267,11 +255,10 @@ enth"alt, gilt stets
 
 \subsection{Semantische Bereiche}
 
-Es werden die folgenden {\em semantischen Bereiche} $\semantic{\pi}$ f"ur die logischen Typen $\pi$
+Es werden die folgenden {\em semantischen Bereiche} $\semantic{\pi}$ f"ur Typen 
 definiert:
 \[\begin{array}{rcl}
   \semantic{\tau} & = & \Val^\tau = \{v\in\Val\,|\,\tj{v}{\tau}\} \\
-  \semantic{\ltype{\theta}} & = & ?????? \\
   \semantic{\theta_1 \tto \theta_2} & = & \semantic{\theta_1} \to \semantic{\theta_2} \\
   \semantic{\theta_1\times\ldots\times\theta_n}&=&\semantic{\theta_1}\times\ldots\times\semantic{\theta_n} \\
   \semantic{\etype{\tau}} & = & \Store \pto \semantic{\tau} \times \Store \\
