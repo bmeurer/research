@@ -455,14 +455,17 @@ Die Semantik von Hoare-Formeln ist dann definiert durch:
     \item Im Fall von $\phi = \bigl(\semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\bigr)$ ist zu zeigen,
           dass ein endl. $L\subseteq\Loc$ existiert, so dass $\phi$ $L$-definierbar ist und $\dom{\phi}=\Store_L$.
           Nach I.V. existieren endl. $L_1,L_2\subseteq\Loc$, so dass
-          \[\begin{array}{c}
-            \bigl(\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\bigr) \in \semantic{\reftype{\tau}}_{L_1}
+          \[\begin{array}{rcl}
+            X = \bigl(\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho\bigr) &\in& \semantic{\reftype{\tau}}_{L_1}
           \end{array}\]
           und
-          \[\begin{array}{c}
-            \bigl(\semantic{\Tj{\Gamma}{t_2}{\tau}}\bigr) \in \semantic{\tau}_{L_2}
+          \[\begin{array}{rcl}
+            v = \bigl(\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho\bigr) &\in& \semantic{\tau}_{L_2}
           \end{array}\]
-          gilt.
+          gilt. Sei also $L = L_1 \cup L_2$. Offensichtlich gilt $\dom{\phi} = \Store_L$. Bleibt zu zeigen, dass
+          $\phi$ auch $L$-definierbar ist. Seien dazu $\sigma,\sigma'\in\dom{\phi}$ mit $\sigma \equiv_L \sigma'$.
+          Nach I.V. gilt $\locns(X) \subseteq L_1 \subseteq L$, also $X \in L$ und somit
+          $X\in\dom{\sigma}\cap\dom{\sigma'}$, also gilt nach Definition $\sigma(X) = \sigma'(X)$, was zu zeigen war.
   \end{itemize}
   Die "ubrigen F"alle sind "`links zum Leser"'.
 \end{beweis}
