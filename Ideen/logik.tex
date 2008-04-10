@@ -41,7 +41,10 @@
 \newcommand{\Dtype}{\name{DType}}
 \newcommand{\Atype}{\name{AType}}
 \newcommand{\Assn}{\name{Assn}}
+\newcommand{\Term}{\name{Term}}
 \newcommand{\locns}{\name{locns}}
+\newcommand{\reach}{\name{reach}}
+\newcommand{\reachable}{\name{reachable}}
 \newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
 \renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
 \newcommand{\view}[1]{\ensuremath{\app{\name{view}}{#1}}}
@@ -163,7 +166,7 @@ Die g"ultigen Typurteile f"ur assertions erhalten wir mit den Regeln \\[3mm]
 \end{tabular} \\[3mm]
 die g"ultigen Typurteile f"ur Terme erhalten wir mit den Regeln \\[3mm]
 \begin{tabular}{rl}
-  \RN{T-Val} & $\regel{\Tje{\Gamma}{v}{\tau}}
+  \RN{T-Val} & $\regel{\Tje{\Gamma}{v}{\tau} \quad \locns(v)=\emptyset}
                       {\Tj{\Gamma}{v}{\tau}}$ \\[1mm]
   \RN{T-Func} & $\regel{\tj{f}{\delta}}
                        {\Tj{\Gamma}{f}{\delta}}$ \\[1mm]
@@ -215,6 +218,7 @@ $L \subseteq \Loc$ definieren wir
 \[
   \Store_L = \{\sigma\in\Store\,|\,L\subseteq\dom{\sigma}\}
 \]
+
 F"ur $\sigma\in\Store_L$ seien die Mengen $\name{reach}_i(L,\sigma)\subseteq \Loc$ f"ur alle
 $i\in\setN$ und die Menge $\name{reach}(L,\sigma)\subseteq\Loc$ definiert durch
 \[\begin{array}{rcl}
@@ -230,20 +234,59 @@ enth"alt, gilt stets
   \name{reach}(L,\sigma) \subseteq \dom{\sigma}.
 \]
 
-\begin{definition}[$L$-"Aquivalenz]
-  Zwei Zust"ande $\sigma,\sigma'\in\Store_L$ hei"sen {\em $L$-"aquivalent}, geschrieben
-  $\sigma \equiv_L \sigma'$, wenn gilt:
+\begin{lemma} \label{lemma:Store_L_und_reach}
+  Seien $L,L'\subseteq\Loc$ endl., $L \subseteq L'$ und $\sigma,\sigma'\in\Store_{L'}$. Dann gilt:
   \begin{enumerate}
-    \item $\name{reach}(L,\sigma) = \name{reach}(L,\sigma')$
-    \item $\sigma$ und $\sigma'$ stimmen auf $\name{reach}(L,\sigma)$ "uberein.
+    \item $\Store_{L'} \subseteq \Store_{L}$
+    \item $\reach(L,\sigma) \subseteq \reach(L',\sigma)$
+    \item Wenn $\reach(L',\sigma) = \reach(L',\sigma')$ und $\sigma(X) = \sigma'(X)$ f.a.
+          $X\in\reach(L',\sigma)$, dann $\reach(L,\sigma) = \reach(L,\sigma')$
   \end{enumerate}
+\end{lemma}
+
+\begin{beweis} \
+  \begin{enumerate}
+    \item Sei $\sigma''\in\Store_{L'}$, dann gilt $L' \subseteq \dom{\sigma''}$. Aus $L \subseteq L'$ folgt
+          $L\subseteq\dom{\sigma''}$, also $\sigma''\in\Store_L$.
+    \item Straight-forward induction.
+    \item Straight-forward induction.
+  \end{enumerate}
+\end{beweis}
+
+\begin{definition}[$L$-"Aquivalenz]
+  Sei $L \subseteq \Loc$ endlich. Zwei Zust"ande $\sigma,\sigma'\in\Store$ hei"sen {\em $L$-"aquivalent}, geschrieben
+  $\sigma \equiv_L \sigma'$, wenn entweder
+  \begin{itemize}
+    \item $\sigma = \sigma'$, oder
+    \item $\sigma,\sigma'\in\Store_L$, $\name{reach}(L,\sigma) = \name{reach}(L,\sigma')$
+          und $\sigma(X) = \sigma'(X)$ f"ur alle $X \in \reach(L,\sigma)$
+  \end{itemize}
+  gilt.
 \end{definition}
 
+\begin{lemma} \label{lemma:L_Aequivalenz}
+  Seien $L,L'\subseteq\Loc$ endl. mit $L \subseteq L'$ und $\sigma,\sigma'\in\Store$. Wenn $\sigma \equiv_{L'} \sigma'$,
+  dann $\sigma \equiv_L \sigma'$.
+\end{lemma}
+
+\begin{beweis}
+  Klar f"ur $\sigma = \sigma'$. Sonst folgt die Behauptung mit Lemma~\ref{lemma:Store_L_und_reach}.
+\end{beweis}
+
 \begin{definition}[$L$-Definierbarkeit]
-  Sei $\phi : \Store \pto \Bool$ und sei weiter $L$ eine endl. Teilmenge von $\Loc$.
-  $\phi$ hei"st {\em $L$-definierbar}, wenn f"ur alle $\sigma,\sigma'\in\dom{\phi}$ mit
+  Sei $\phi : \Store \to \Bool$ und sei weiter $L$ eine endl. Teilmenge von $\Loc$.
+  $\phi$ hei"st {\em $L$-definierbar}, wenn f"ur alle $\sigma,\sigma'\in\Store$ mit
   $\sigma \equiv_L \sigma'$ gilt: $\phi\,\sigma = \phi\,\sigma'$.
 \end{definition}
+
+\begin{lemma} \label{lemma:L_Definierbarkeit}
+  Seien $L,L'\subseteq\Loc$ mit $L \subseteq L'$ und sei $\phi:\Store \to \Bool$. Ist $\phi$ $L$-definierbar,
+  so ist $\phi$ ebenfalls $L'$-definierbar.
+\end{lemma}
+
+\begin{beweis}
+  Folgt leicht mit Lemma~\ref{lemma:L_Aequivalenz}.
+\end{beweis}
 
 
 \section{Semantik der Logik}
@@ -255,11 +298,28 @@ sematische Bereiche $\semantic{\pi}_L$ und definiert. Daraus ergeben sich die ei
 semantischen Bereiche $\semantic{\pi} = \bigcup\limits_{L \text{ endl.}} \semantic{\pi}_L$.
 \[\begin{array}{rcl}
   \semantic{\tau}_L &:=& \{v \in \Val^\tau\,|\,\locns(v) \subseteq L\} \\
-  \semantic{\assn}_L &:=& \{\phi:\Store\pto\Bool\,|\,\text{$\phi$ ist $L$-definierbar und $\dom{\phi}=\Store_L$}\} \\
+  \semantic{\assn}_L &:=& \{\phi:\Store\to\Bool\,|\,\text{$\phi$ ist $L$-definierbar und $\dom{\phi}=\Store_L$}\} \\
   \semantic{\delta\tto\pi}_L &:=& \{f:\semantic{\delta}\to\semantic{\pi}\,|\,
                                     f(\semantic{\delta}_{L'}) \subseteq \semantic{\pi}_{L\cup L'}
                                     \text{ f"ur alle endl. $L'\subseteq\Loc$}\} 
 \end{array}\]
+
+\begin{lemma}
+  Seien $L,L'\subseteq\Loc$ endl. und $\pi\in\Ltype$. Wenn $L\subseteq L'$, dann
+  $\semantic{\pi}_{L} \subseteq \semantic{\pi}_{L'}$.
+\end{lemma}
+
+\begin{beweis}
+  Induktion "uber die Struktur von $\pi$:
+  \begin{itemize}
+    \item Sei $v \in \semantic{\tau}_L$, dann ist $\locns(v)\subseteq L \subseteq L'$, also auch $v\in\semantic{\tau}_{L'}$.
+    \item Sei $\phi \in \semantic{\assn}_L$, dann ist $\phi$ $L$-definierbar und nach Lemma~\ref{lemma:L_Definierbarkeit}
+          ebenfalls $L'$-definierbar, also auch $\phi \in \semantic{\assn}_{L'}$.
+    \item Sei $f\in\semantic{\delta \tto \pi}_L$, dann gilt $f(\semantic{\delta}_{L''}) \subseteq \semantic{\pi}_{L\cup L''}$
+          f.a. endl. $L''\subseteq\Loc$. Nach I.V. gilt $\semantic{\pi}_{L\cup L''} \subseteq \semantic{\pi}_{L'\cup L''}$,
+          also $f\in\semantic{\delta \tto \pi}_{L'}$.
+  \end{itemize}
+\end{beweis}
 
 \begin{definition}[Totale Korrektheit]
   Seien $\tau\in\Type$, $f:\Store \pto \bigl(\semantic{\tau} \times \Store\bigr)$,
@@ -350,16 +410,9 @@ Die Semantik von Termen ist definiert durch:
 \pagebreak[3] \noindent
 Die Semantik von assertions ist wie folgt induktiv definiert:
 \[\begin{array}{rcl}
-  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho\,\sigma
   & := &
-  \true, \text{ gdw. ex. } X\in\dom{\sigma} \text{ mit } X = \semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho \\
-  && \text{und } \sigma(X) = \semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho
-  \\
-  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho\,\sigma
-  & := &
-  \true, \text{ gdw. ex. endl. } L \subseteq \Loc \text{ mit }
-         (\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho) \in\semantic{\theta}_L, \\
-      && \sigma\in\Store_L \text{ und } \name{reach}(L,\sigma) \cap \name{reachable}(\locns(v))=\emptyset
+  \semantic{\Tjh{\Gamma}{h}}\,\rho
   \\
   \semantic{\Tj{\Gamma}{\app{p}{t}}{\theta}}\,\rho
   & := &
@@ -369,23 +422,51 @@ Die Semantik von assertions ist wie folgt induktiv definiert:
   & := &
   \semantic{\Tj{\Gamma[\delta/\id]}{p}{\theta}}\,(\rho[d/\id])
   \\
+  \\
+  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma
+  & := &
+    \bcase
+      \true, & \text{wenn ex. $X\in\dom{\sigma}$ mit } X = \semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho \\
+             & \text{und } \sigma(X) = \semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho \\
+      \false, & \text{sonst}
+    \ecase
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho\,\sigma
+  & := &
+    \bcase
+      \true, & \text{wenn ex. endl. $L,L'\subseteq\Loc$ mit } (v\rho)\in\semantic{\tau}_{L} \\
+             & \text{und } (\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho)\in\semantic{\theta}_{L'}, \text{ so dass } \\
+             & \reach(L,\sigma) \cap \reach(L',\sigma) = \emptyset \\
+      \false, & \text{sonst}
+    \ecase
+  \\
+  \\
   \semantic{\Tj{\Gamma}{\neg p}{\assn}}\,\rho\,\sigma
   & := &
-  \true, \text{ gdw. } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \false
+    \bcase
+      \true, & \text{wenn } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \false \\
+      \false, & \text{wenn } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \true
+    \ecase
+  \\
   \\
   \semantic{\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}\,\rho\,\sigma
   & := &
-  \true, \text{ gdw. } \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \true \\
-  && \text{und } \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \true
+    \bcase
+      \true, & \text{wenn } \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \true \\
+             & \text{und } \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \true \\
+      \false, & \text{wenn } \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \false \\
+             & \text{oder } \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \false
+    \ecase
+  \\
   \\
   \semantic{\Tj{\Gamma}{\exists \id:\pi \in [v].p}{\assn}}\,\rho\,\sigma
   & := &
-  \true, \text{ gdw. ex. $d\in\semantic{\pi}_{\locns(v)}$, so dass} \\
-  && \semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[d/\id])\,\sigma = \true
-  \\
-  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho\,\sigma
-  & := &
-  \true, \text{ gdw. } \semantic{\Tjh{\Gamma}{h}}\,\rho = \true
+    \bcase
+      \true, & \text{wenn ex. $d\in\semantic{\pi}_{\locns(v)}$, so dass} \\
+             & \semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[d/\id])\,\sigma = \true \\
+      \false, & \text{sonst}
+    \ecase
 \end{array}\]
 
 \noindent
@@ -416,58 +497,36 @@ Die Semantik von Hoare-Formeln ist dann definiert durch:
   \semantic{\Tjh{\Gamma[\delta/\id]}{h}}\,(\rho[d/\id])=\true
 \end{array}\]
 
-\begin{satz}[Wohldefiniertheit der Semantikfunktion]
-  Die Semantikfunktionen
+\begin{satz}[Wohldefiniertheit der Semantik]
+  Sei $L\subseteq\Loc$ endl., $\Gamma\in\TEnv$, $\rho\in\Env_\Gamma$ mit $\rho(\id)\in\semantic{\Gamma(\id)}_L$ f.a.
+  $\id\in\dom{\rho}$. Dann gilt:
   \begin{itemize}
-    \item $\semantic{\Tje{\Gamma}{e}{\tau}} : \Env_\Gamma \to\bigl( \Store \pto (\semantic{\tau}\times\Store) \bigr)$,
-    \item $\semantic{\Tj{\Gamma}{t}{\delta}} : \Env_\Gamma \to \semantic{\delta}$,
-    \item $\semantic{\Tj{\Gamma}{p}{\theta}} : \Env_\Gamma \to \semantic{\theta}$, und
-    \item $\semantic{\Tjh{\Gamma}{h}} : \Env_\Gamma \to \Bool$
+    \item F"ur alle $t\in\Term$, $\delta\in\Dtype$ mit $\Tj{\Gamma}{t}{\delta}$ gilt
+          $(\semantic{\Tj{\Gamma}{t}{\delta}}\,\rho)\in\semantic{\delta}_L$.
+    \item F"ur alle $p\in\Assn$, $\theta\in\Atype$ mit $\Tj{\Gamma}{p}{\theta}$ gilt
+          $(\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho)\in\semantic{\theta}_L$.
   \end{itemize}
-  sind wohldefiniert.
 \end{satz}
 
 \begin{beweis}
-  Klar f"ur $\semantic{\Tje{\Gamma}{e}{\tau}}$ und $\semantic{\Tjh{\Gamma}{h}}$. Die anderen beiden
-  F"alle zeigen wir durch simultane Induktion "uber $p$ und $t$.
+  Simult. Induktion "uber $t$ und $p$ (oder die Typurteile):
   \begin{itemize}
-    \item $\semantic{\Tj{\Gamma}{v}{\tau}}$ und $\semantic{\Tj{\Gamma}{f}{\delta}}$ sind trivial.
+    \item $\semantic{\Tj{\Gamma}{v}{\tau}}\,\rho = (v\,\rho) \in \semantic{\tau}_L$, da $\locns(v) = \emptyset$.
 
-    \item F"ur $\semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\delta}}\,\rho$ gilt nach I.V., dass
-          $\semantic{\Tj{\Gamma}{t_1}{\delta'\tto\delta}}\,\rho$ und
-          $\semantic{\Tj{\Gamma}{t_2}{\delta'}}\,\rho$ wohldefiniert sind, also ist gem"a"s
-          Definition der semantischen Bereiche auch die Applikation wohldefiniert.
+    \item F"ur $\phi = (\semantic{\Tj{\Gamma}{t_1 \mapsto t_2}{\assn}}\,\rho)$ sind nach I.V.
+          $(\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho)$ und $(\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho)$
+          wohldefiniert. Es ist zu zeigen, dass $\phi$ $L$-definierbar ist.
 
-    \item F"ur $\semantic{\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta\tto\delta'}}\,\rho\,d$ ist nach I.V.
-          $\semantic{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}\,(\rho[d/\id])$ wohldefiniert. Es bleibt zu
-          zeigen, dass ein endl. $L\subseteq\Loc$ existiert f"ur das $f\in\semantic{\delta\tto\delta'}_L$ gilt,
-          wobei $f$ die Funktion
-          \[\begin{array}{rl}
-            f: \semantic{\delta} \to \semantic{\delta'}, & d \mapsto
-            \semantic{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}\,(\rho[d/\id])
-          \end{array}\]
-          bezeichnet. Nach I.V. existiert ein endl. $L\subseteq\Loc$, so dass f"ur alle $d\in\semantic{\delta}$
-          \[\begin{array}{c}
-            f(d) \in \semantic{\delta'}_L
-          \end{array}\]
-          gilt, also insbesondere auch f"ur alle $d\in\semantic{\delta}_{L'}$ mit $L'\subseteq L$.
-
-    \item Im Fall von $\phi = \bigl(\semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\bigr)$ ist zu zeigen,
-          dass ein endl. $L\subseteq\Loc$ existiert, so dass $\phi$ $L$-definierbar ist und $\dom{\phi}=\Store_L$.
-          Nach I.V. existieren endl. $L_1,L_2\subseteq\Loc$, so dass
-          \[\begin{array}{rcl}
-            X = \bigl(\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho\bigr) &\in& \semantic{\reftype{\tau}}_{L_1}
-          \end{array}\]
-          und
-          \[\begin{array}{rcl}
-            v = \bigl(\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho\bigr) &\in& \semantic{\tau}_{L_2}
-          \end{array}\]
-          gilt. Sei also $L = L_1 \cup L_2$. Offensichtlich gilt $\dom{\phi} = \Store_L$. Bleibt zu zeigen, dass
-          $\phi$ auch $L$-definierbar ist. Seien dazu $\sigma,\sigma'\in\dom{\phi}$ mit $\sigma \equiv_L \sigma'$.
-          Nach I.V. gilt $\locns(X) \subseteq L_1 \subseteq L$, also $X \in L$ und somit
-          $X\in\dom{\sigma}\cap\dom{\sigma'}$, also gilt nach Definition $\sigma(X) = \sigma'(X)$, was zu zeigen war.
+          Seien dazu o.B.d.A. $\sigma,\sigma'\in\Store_L$ mit $\reach(L,\sigma)=\reach(L,\sigma')$ und
+          $\sigma(Y) = \sigma'(Y)$ f.a. $Y\in\reach(L,\sigma)$. Bleibt zu zeigen, dass $\phi\,\sigma=\phi\,\sigma'$:
+          \begin{itemize}
+            \item Angenommen $\phi\,\sigma=\true$, dann ex. ein $X \in \dom{\sigma}$ mit
+                  $X=(\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho) \in \semantic{\reftype{\tau}}_L \subseteq L$ und
+                  $\sigma(X) = (\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho)$. Nach Vor. gilt aber $\sigma(X)=\sigma'(X)$,
+                  also folgt $\phi\,\sigma'=\true$.
+            \item Analog f"ur die Gegenrichtung.
+          \end{itemize}
   \end{itemize}
-  Die "ubrigen F"alle sind "`links zum Leser"'.
 \end{beweis}
 
 \begin{definition}[Modell] \
