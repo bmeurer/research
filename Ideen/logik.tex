@@ -297,11 +297,11 @@ F"ur alle Typen $\pi$ und alle endl. $L \subseteq \Loc$ werden induktiv $L$-defi
 sematische Bereiche $\semantic{\pi}_L$ und definiert. Daraus ergeben sich die eigentlichen
 semantischen Bereiche $\semantic{\pi} = \bigcup\limits_{L \text{ endl.}} \semantic{\pi}_L$.
 \[\begin{array}{rcl}
-  \semantic{\tau}_L &:=& \{v \in \Val^\tau\,|\,\locns(v) \subseteq L\} \\
-  \semantic{\assn}_L &:=& \{\phi:\Store\to\Bool\,|\,\text{$\phi$ ist $L$-definierbar und $\dom{\phi}=\Store_L$}\} \\
-  \semantic{\delta\tto\pi}_L &:=& \{f:\semantic{\delta}\to\semantic{\pi}\,|\,
-                                    f(\semantic{\delta}_{L'}) \subseteq \semantic{\pi}_{L\cup L'}
-                                    \text{ f"ur alle endl. $L'\subseteq\Loc$}\} 
+  \semantic{\tau}_L &:=& \{(L',v)\,|\,v \in \Val^\tau \text{ und $L' \subseteq L$, so dass } \locns(v) \subseteq L'\} \\
+  \semantic{\assn}_L &:=& \{(L',\phi)\,|\,\phi:\Store\to\Bool\text{ und $L'\subseteq L$, so dass $\phi$ $L'$-definierbar ist}\} \\
+  \semantic{\delta\tto\pi}_L &:=& \{(L',f)\,|\,f:\semantic{\delta}\to\semantic{\pi} \text{ und $L' \subseteq L$, so dass }
+                                    f(\semantic{\delta}_{L''}) \subseteq \semantic{\pi}_{L'\cup L''}
+                                    \text{ f.a. endl. $L''\subseteq\Loc$}\} 
 \end{array}\]
 
 \begin{lemma}
@@ -310,15 +310,7 @@ semantischen Bereiche $\semantic{\pi} = \bigcup\limits_{L \text{ endl.}} \semant
 \end{lemma}
 
 \begin{beweis}
-  Induktion "uber die Struktur von $\pi$:
-  \begin{itemize}
-    \item Sei $v \in \semantic{\tau}_L$, dann ist $\locns(v)\subseteq L \subseteq L'$, also auch $v\in\semantic{\tau}_{L'}$.
-    \item Sei $\phi \in \semantic{\assn}_L$, dann ist $\phi$ $L$-definierbar und nach Lemma~\ref{lemma:L_Definierbarkeit}
-          ebenfalls $L'$-definierbar, also auch $\phi \in \semantic{\assn}_{L'}$.
-    \item Sei $f\in\semantic{\delta \tto \pi}_L$, dann gilt $f(\semantic{\delta}_{L''}) \subseteq \semantic{\pi}_{L\cup L''}$
-          f.a. endl. $L''\subseteq\Loc$. Nach I.V. gilt $\semantic{\pi}_{L\cup L''} \subseteq \semantic{\pi}_{L'\cup L''}$,
-          also $f\in\semantic{\delta \tto \pi}_{L'}$.
-  \end{itemize}
+  Trivial.
 \end{beweis}
 
 \begin{definition}[Totale Korrektheit]
@@ -327,15 +319,6 @@ semantischen Bereiche $\semantic{\pi} = \bigcup\limits_{L \text{ endl.}} \semant
   {\em total korrekt} bzgl. $\phi$ und $\psi$, wenn f"ur alle $\sigma\in\dom{\phi}$
   mit $\phi\,\sigma=\true$ ein $v\in\Val^\tau$ und ein $\sigma'\in\dom{\psi\,v}$
   existieren, so dass $f\,\sigma = (v,\sigma')$ und $\psi\,v\,\sigma'=\true$ gilt.
-%  \[\begin{array}{l}
-%    \forall \sigma\in\dom{\phi}.
-%    \bigl[
-%      \phi\,\sigma = \true 
-%      \Rightarrow
-%      \exists v\in\Val^\tau.
-%      \exists \sigma'\in\dom{\psi\,v}.f\,\sigma = (v,\sigma')\wedge \psi\,v\,\sigma'=\true
-%    \bigr]
-%  \end{array}\]
 \end{definition}
 
 
@@ -391,82 +374,65 @@ Die Semantik von Termen ist definiert durch:
 \[\begin{array}{rcl}
   \semantic{\Tj{\Gamma}{v}{\tau}}\,\rho
   & := &
-  v\,\rho 
+  (\locns(v), v\,\rho)
   \\
   \semantic{\Tj{\Gamma}{f}{\delta}}\,\rho
   & := &
-  \semantic{\tj{f}{\delta}} \\
+  (\emptyset,\semantic{\tj{f}{\delta}}) \\
   && \text{wobei die Semantik hier noch zu def. ist}
   \\
   \semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\delta}}\,\rho
   & := &
-  (\semantic{\Tj{\Gamma}{t_1}{\delta'\tto\delta}}\,\rho)\,(\semantic{\Tj{\Gamma}{t_2}{\delta'}}\,\rho)
+  (L_1 \cup L_2, d_1\,d_2) \text{ wobei } (\semantic{\Tj{\Gamma}{t_1}{\delta'\tto\delta}}\,\rho) = (L_1,d_1) \\
+  && \text{und } (\semantic{\Tj{\Gamma}{t_2}{\delta'}}\,\rho) = (L_2,d_2)
   \\
-  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta\tto\delta'}}\,\rho\,d
-  & := &
-  \semantic{\Tj{\Gamma[\delta/\id]}{t}{\theta'}}\,(\rho[d/\id])
+  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta\tto\delta'}}\,\rho
+  & := & \bigl(\bigcup \{ L\setminus L' \,|\,(L,d) = f(L',d') \}, f\bigr) \text{ wobei} \\
+  && f: \semantic{\delta} \to \semantic{\delta'}, (L',d) \mapsto \semantic{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}\,(\rho[(L',d)/\id])
 \end{array}\]
 
 \pagebreak[3] \noindent
 Die Semantik von assertions ist wie folgt induktiv definiert:
 \[\begin{array}{rcl}
-  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho
   & := &
-  \semantic{\Tjh{\Gamma}{h}}\,\rho
+  (???, \phi) \text{ mit } \phi(\sigma) = (\semantic{\Tjh{\Gamma}{h}}\,\rho)
   \\
   \semantic{\Tj{\Gamma}{\app{p}{t}}{\theta}}\,\rho
   & := &
-  (\semantic{\Tj{\Gamma}{p}{\delta \tto \theta}}\,\rho)\,(\semantic{\Tj{\Gamma}{t}{\delta}}\,\rho)
+  (L \cup L', f\,d) \text{ wobei } (\semantic{\Tj{\Gamma}{p}{\delta \tto \theta}}\,\rho) = (L,f) \\
+  && \text{und } (\semantic{\Tj{\Gamma}{t}{\delta}}\,\rho) = (L',d)
   \\
-  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{p}}{\delta \tto \theta}}\,\rho\,d
+  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{p}}{\delta \tto \theta}}\,\rho
   & := &
-  \semantic{\Tj{\Gamma[\delta/\id]}{p}{\theta}}\,(\rho[d/\id])
+  \bigl(\bigcup \{ L\setminus L'\,|\, (L,d) = f(L',d') \},f\bigr) \text{ wobei } \\
+  && f: \semantic{\delta} \to \semantic{\theta}, (L',d) \mapsto \semantic{\Tj{\Gamma[\delta/\id]}{p}{\theta}}\,(\rho[(L',d)/\id]) 
   \\
-  \\
-  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho
   & := &
-    \bcase
-      \true, & \text{wenn ex. $X\in\dom{\sigma}$ mit } X = \semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho \\
-             & \text{und } \sigma(X) = \semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho \\
-      \false, & \text{sonst}
-    \ecase
+  (L_1 \cup L_2,\phi) \text{ wobei $\phi(\sigma) = \true$ gdw. ex. $X\in\dom{\sigma}$ mit} \\
+  && (L_1,X) = (\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho) \text{ und } (L_2,\sigma(X)) = (\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho)
   \\
-  \\
-  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho
   & := &
-    \bcase
-      \true, & \text{wenn ex. endl. $L,L'\subseteq\Loc$ mit } (v\rho)\in\semantic{\tau}_{L} \\
-             & \text{und } (\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho)\in\semantic{\theta}_{L'}, \text{ so dass } \\
-             & \reach(L,\sigma) \cap \reach(L',\sigma) = \emptyset \\
-      \false, & \text{sonst}
-    \ecase
+  (L_1 \cup L_2,\phi) \text{ wobei $\phi(\sigma)=\true$ gdw. } (L_1,d) = (\semantic{\Tj{\Gamma}{v}{\tau}}\,\rho), \\
+  && (L_2,f) = (\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho) \text{ und } \reach(L_1,\sigma) \cap \reach(L_2,\sigma) = \emptyset
   \\
-  \\
-  \semantic{\Tj{\Gamma}{\neg p}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{\neg p}{\assn}}\,\rho
   & := &
-    \bcase
-      \true, & \text{wenn } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \false \\
-      \false, & \text{wenn } \semantic{\Tj{\Gamma}{p}{\assn}}\,\rho\,\sigma = \true
-    \ecase
+  (L,\phi) \text{ mit } \phi(\sigma) = \true \text{ gdw. } \psi(\sigma) = \false, \\
+  && \text{wobei } (L,\psi) = (\semantic{\Tj{\Gamma}{p}{\assn}}\,\rho)
   \\
-  \\
-  \semantic{\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}\,\rho
   & := &
-    \bcase
-      \true, & \text{wenn } \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \true \\
-             & \text{und } \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \true \\
-      \false, & \text{wenn } \semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho\,\sigma = \false \\
-             & \text{oder } \semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho\,\sigma = \false
-    \ecase
+  (L_1 \cup L_2, \phi) \text{ mit } \phi(\sigma) = \true \text{ gdw. } \psi_1(\sigma) = \true \text{ und} \\
+  && \psi_2(\sigma) = \true, \text{ wobei } (L_1,\psi_1) = (\semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho) \\
+  && \text{und } (L_2,\psi_2) = (\semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho)
   \\
-  \\
-  \semantic{\Tj{\Gamma}{\exists \id:\pi \in [v].p}{\assn}}\,\rho\,\sigma
+  \semantic{\Tj{\Gamma}{\exists \id:\pi \in [v].p}{\assn}}\,\rho
   & := &
-    \bcase
-      \true, & \text{wenn ex. $d\in\semantic{\pi}_{\locns(v)}$, so dass} \\
-             & \semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[d/\id])\,\sigma = \true \\
-      \false, & \text{sonst}
-    \ecase
+  (L,\phi) \text{ mit } \phi(\sigma) = \true \text{ gdw. ex. } (L',d)\in\semantic{\pi}_{\locns(v)}, \\
+  && \text{so dass } (\semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[(L',d)/\id)\,\sigma = \true
 \end{array}\]
 
 \noindent
