@@ -1,0 +1,279 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+%\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+%\usepackage{scrpage2}
+\usepackage{stmaryrd}
+\usepackage{url}
+
+%% LaTeX macros
+\include{macros}
+
+
+\begin{document}
+
+
+%%
+%% The programming language
+%%
+
+\chapter{The programming language}
+
+As target language, we use call-by-value PCF with unit, records and imperative concepts.
+
+
+%%
+%% Abstract syntax
+%%
+
+\section{Abstract syntax}
+
+We assume that an infinite set of variables $x \in \Var$ and an infinite
+set of names $m\in \Member$ is given, not necessarily disjoint.
+Variables are used to abstract expressions; programs are considered equal modulo
+renaming of bound variables. Names $m$ are used to name fields in records. These
+names are always free and not subject to $\alpha$-conversion.
+$\Bool = \{\true,\false\}$ is the set of boolean constants $b$,
+$\Int$ is a set of integer constants $z$; we do not distinguish
+between integer values and their program representation.
+
+\begin{definition}[Types]
+  The set $\Type$ of all {\em types} $\tau$ is defined by the context-free grammar
+  \[\GRbeg
+  \tau \GRis \tbool \GRmid \tint \GRmid \tunit
+          \GRal \tref{\tau}
+          \GRal \tarrow{\tau_1}{\tau_2}
+          \GRal \trecord{m_1:\tau_1,\ldots,m_n:\tau_n},
+  \GRend\]
+  with distinct member names $m_1,\ldots,m_n$ for record types.
+\end{definition}
+
+We assume an infinite set $\Loc^\tau$ of {\em $\tau$-locations} for each type $\tau \in \Type$,
+where the sets $\Loc^\tau$ are required to be disjoint. Given those sets,
+$\Loc = \bigcup_{\tau\in\Type} \Loc^\tau$ is the set of all {\em locations} $l$.
+
+\begin{definition}[Expressions]
+  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
+  are defined by the grammars
+  \[\GRbeg
+    \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+    c \GRis z \GRmid b \GRmid \unit \GRmid l \GRmid \cref \GRmid !
+             \GRmid \assign \GRmid \fix,
+  \GRend\]
+  the set $\Exp$ of {\em expressions} $e$ is defined by
+  \[\GRbeg
+    e \GRis c \GRmid x \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+           \GRmid \ifte{e_0}{e_1}{e_2}
+           \GRal \proj{e}{l} \GRmid \record{m_1=e_1,\ldots,m_n=e_n}
+  \GRend\]
+  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+  \[\GRbeg
+    v \GRis c \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \record{m_1=v_1,\ldots,m_n=v_n}
+  \GRend\]
+  with distinct member names $m_1,\ldots,m_n$ for records.
+\end{definition}
+
+$\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if both $\free{e}=\emptyset$
+and $\locns{e}=\emptyset$ holds, that is if $e$ contains neither unbound variables nor
+locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
+considered for the logic later are valid programs (i.e. programmers aren't permitted to access
+abritrary memory locations).
+
+
+%%
+%% Static semantics
+%%
+
+\section{Static semantics}
+
+The static semantics of the programming language are defined by the typing relation
+$\Tj{\Gamma}{e}{\tau}$.
+
+\begin{definition}[Typing relation]
+  A {\em typing judgement} is a formula $\Tj{\Gamma}{e}{\tau}$ where
+  \begin{itemize}
+    \item $\Gamma:\Var \pto \Type$, $\dom{\Gamma}$ is finite
+    \item $e\in\Exp$ and
+    \item $\tau\in\Type$.
+  \end{itemize}
+\end{definition}
+
+We write $\tj{e}{\tau}$ for $\Tj{[\,]}{e}{\tau}$. The set $\Exp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$
+includes the closed expressions of type $\tau$. Likewise $\Val^\tau = \Exp^\tau \cap \Val$ includes
+the closed values of type $\tau$.
+
+
+%%
+%% Operational semantics
+%%
+
+\section{Operational semantics}
+
+\begin{definition}[Store] \label{definition:Store} \
+  \begin{enumerate}
+    \item A {\em store} is a partial function $\sigma:\Loc \pto \bigcup_{\tau\in\Type} \Val^\tau$ with
+          \begin{itemize}
+            \item $\sigma(\Loc^\tau) \subseteq \Val^\tau$ for all $\tau \in \Type$, and
+            \item $\locns{\sigma(\Loc)} \subseteq \dom{\sigma}$.
+          \end{itemize}
+
+    \item For each finite $L \subseteq \Loc$ the set of {\em $L$-stores} is defined as
+          \[\begin{array}{l}
+            \Store_L = \{\sigma\,|\,\text{$\sigma$ is a store with $L\subseteq\dom{\sigma}$}\}.
+          \end{array}\]
+
+    \item $\Store = \bigcup_{L\subseteq\Loc,L\text{ finite}} \Store_L$ denotes the set of all {\em stores}.
+  \end{enumerate}
+\end{definition}
+
+We thereby require stores to be well-typed and closed by definition, i.e. we don't permit {\em dangling
+references} within stores.
+
+\begin{definition}[Configuration]
+  Let $e\in\Exp$ and $\sigma\in\Store$. The pair $(e,\sigma)$ is a {\em configuration}
+  if $\locns{e} \subseteq \dom{\sigma}$.
+\end{definition}
+
+The stores $\sigma$ are already guarantied to be closed due to definition~\ref{definition:Store} and
+now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
+include {\em dangling references} to unallocated store cells.
+
+\begin{definition}[Big step semantics]
+  Let $e\in\Exp$, $v\in\Val$ and $\sigma,\sigma'\in\Store$. A {\em big step} is a formula
+  $(e,\sigma) \Downarrow (v,\sigma')$. A big step is said to be valid if it was derived with the
+  big step rules given {\bf somewhere else}.
+\end{definition}
+
+\begin{corollary}
+  Let $e\in\Exp$, $v\in\Val$ and $\sigma,\sigma'\in\Store$. If $(e,\sigma)$ is a configuration
+  and $(e,\sigma) \Downarrow (v,\sigma')$, then
+  \begin{enumerate}
+    \item $(v,\sigma')$ is also a configuration, and
+    \item $\dom{\sigma} \subseteq \dom{\sigma'}$.
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  Straight forward induction.
+\end{proof}
+
+The big step semantic is thereby well-defined with regard to configurations, i.e. it preserves
+the configuration property. In the remainder
+we thereby consider only pairs $(e,\sigma)$ that are valid configurations. In addition we
+assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
+
+\begin{lemma}
+  Let $e\in\Exp$, $v\in\Val$ and $\sigma_1,\sigma_2\in\Store$ with $\grph{\sigma_1} \subseteq \grph{\sigma_2}$.
+  \begin{enumerate}
+    \item For every $\sigma_1'\in\Store$ with $(e,\sigma_1) \Downarrow (v,\sigma_1')$ there exists a
+          $\sigma_2'\in\Store$ so that $(e,\sigma_2) \Downarrow (v,\sigma_2')$ and
+          $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
+
+    \item For every $\sigma_2'\in\Store$ with $(e,\sigma_2) \Downarrow (v,\sigma_2')$ there exists a
+          $\sigma_1'\in\Store$ so that $(e,\sigma_1) \Downarrow (v,\sigma_1')$ and
+          $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
+
+
+%%
+%% The assertion language
+%%
+
+\chapter{The assertion language}
+
+
+%%
+%% Semantics of the logic
+%%
+
+\section{Semantics of the logic}
+
+\begin{definition}[Reachability]
+  Let $L\subseteq\Loc$ finite and $\sigma\in\Store_L$. By induction we define sets $\reachn{i}{L}{\sigma} \in \Loc$
+  \begin{itemize}
+    \item $\reachn{0}{L}{\sigma} = L$
+    \item $\reachn{i+1}{L}{\sigma} = \reachn{i}{L}{\sigma} \cup \bigcup_{l\in\reachn{i}{L}{\sigma}} \locns{\sigma(l)}$.
+  \end{itemize}
+  The set $\reach{L}{\sigma} = \bigcup_{i\in\N} \reachn{i}{L}{\sigma}$ includes all locations in $\sigma$ reachable
+  by $L$.
+\end{definition}
+
+Since a store $\sigma\in\Store_L$ is always closed by definition, it is trivial that
+$\reach{L}{\sigma} \subseteq \dom{\sigma}$ holds.
+
+\begin{lemma}
+  For all finite $L,L'\subseteq\Loc$ with $L \subseteq L'$ and $\sigma,\sigma'\in\Store_{L'}$ we have:
+  \begin{enumerate}
+    \item $\Store_{L'} \subseteq \Store_L$
+    \item $\reach{L}{\sigma} \subseteq \reach{L'}{\sigma}$
+    \item If $\reach{L'}{\sigma} = \reach{L'}{\sigma'}$ and $\sigma(l) = \sigma'(l)$ for every $l\in\reach{L'}{\sigma}$,
+          then $\reach{L}{\sigma} = \reach{L}{\sigma'}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Trivial.
+\end{proof}
+
+\begin{definition}[$L$-similarity, $L$-equivalence, $L$-definability]
+  Given a finite set $L \subseteq \Loc$ we define:
+  \begin{enumerate}
+    \item Two stores $\sigma,\sigma'\in\Store$ with $L \subseteq \dom{\sigma} \cup \dom{\sigma'}$ are
+          {\em $L$-similar}, denoted $\sigma \simeq_L \sigma'$, if $\sigma(l)=\sigma'(l)$ for every
+          $l \in L$.
+
+    \item Two stores $\sigma,\sigma'\in\Store_L$ are {\em $L$-equivalent}, denoted $\sigma \equiv_L \sigma'$,
+          if
+          \begin{itemize}
+            \item $\reach{L}{\sigma} = \reach{L}{\sigma'}$ and
+            \item $\sigma \simeq_{\reach{L}{\sigma}} \sigma'$.
+          \end{itemize}
+
+    \item A predicate $\phi:\Store_{L'} \to \Bool$ with $L' \subseteq L$ is said to be {\em $L$-definable} if
+          $\app{\phi}{\sigma} = \app{\phi}{\sigma'}$ holds for all
+          stores $\sigma,\sigma'\in\Store_L$ with $\sigma \equiv_L \sigma'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{lemma}
+  Assume finite sets $L,L'\subseteq\Loc$ with $L \subseteq L'$.
+  \begin{enumerate}
+    \item $\sigma \simeq_{L'} \sigma'$ implies $\sigma \simeq_L \sigma'$ for all $\sigma,\sigma'\in\Store$.
+    \item $\sigma \equiv_{L'} \sigma'$ implies $\sigma \equiv_L \sigma'$ for all $\sigma,\sigma'\in\Store_{L'}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Trivial.
+\end{proof}
+
+
+\end{document}

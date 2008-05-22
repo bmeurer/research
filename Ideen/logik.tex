@@ -30,169 +30,78 @@
 \usepackage{url}
 \usepackage[all]{xy}
 
-%% TP-Makros
-\include{TP}
+%% BM-Makros
+\include{BM}
 
-\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
-\newcommand{\assn}{\ensuremath{\mathbf{assn}}}
-\newcommand{\atype}[1]{#1\,\assn}
-\newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
-\newcommand{\TEnv}{\name{TEnv}}
-\newcommand{\Dtype}{\name{DType}}
-\newcommand{\Atype}{\name{AType}}
-\newcommand{\Assn}{\name{Assn}}
-\newcommand{\Term}{\name{Term}}
-\newcommand{\locns}{\name{locns}}
-\newcommand{\reach}{\name{reach}}
-\newcommand{\grph}[1]{\name{graph}(#1)}
-\newcommand{\reachable}{\name{reachable}}
-\newcommand{\supp}{\name{supp}}
-\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
-\renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
-\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
-\newcommand{\Tje}[3]{#1 \,\tr_e\, #2\cc#3}
-\newcommand{\TC}[4]{#1 \models \{#2\}\,#3\,\{#4\}}
+%\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+%\newcommand{\assn}{\ensuremath{\mathbf{assn}}}
+%\newcommand{\atype}[1]{#1\,\assn}
+%\newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
+%\newcommand{\TEnv}{\name{TEnv}}
+%\newcommand{\Dtype}{\name{DType}}
+%\newcommand{\Atype}{\name{AType}}
+%\newcommand{\Assn}{\name{Assn}}
+%\newcommand{\Term}{\name{Term}}
+%\newcommand{\locns}[1]{\name{locns}(#1)}
+%\newcommand{\reach}[1]{\name{reach}(#1)}
+%\newcommand{\grph}[1]{\name{graph}(#1)}
+%\newcommand{\reachable}[1]{\name{reachable}(#1)}
+%\newcommand{\supp}[1]{\name{supp}(#1)}
+%\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
+%\renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
+%\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+%\newcommand{\Tje}[3]{#1 \,\tr_e\, #2\cc#3}
+%\newcommand{\TC}[4]{#1 \models \{#2\}\,#3\,\{#4\}}
 
 
 \begin{document}
 
 
-\section{Speicherzust"ande und Erreichbarkeit}
+%%
+%% Die Programmiersprache
+%%
 
-F"ur jeden Typ $\tau$ sei eine unendliche Menge $\Loc^\tau$ definiert, deren Elemente $X,Y,\ldots$
-als {\em Speicherpl"atze} vom Typ $\tau$ bezeichnet werden. Es wird vorausgesetzt, dass die Mengen
-$\Loc^\tau$ paarweise disjunkt sind und darauf ist definiert
-\[
-  \Loc = \bigcup_{\tau\in\Type} \Loc^\tau
-\]
-Wir schreiben $\locns{e}$ f"ur die Menge aller im Ausdruck $e$ (syntaktisch) vorkommenden Speicherpl"atze
-und $\Val^\tau$ f"ur die Menge aller abgeschlossenen Werte vom Typ $\tau$ (wobei Abgeschlossenheit sich
-hier nur auf die Bezeichner $\Id$ beschr"ankt) und $\Exp^\tau$ f"ur die Menge aller abgeschlossenen
-Ausdr"ucke vom Typ $\tau$.
+\section{Die Programmiersprache}
 
-\begin{definition}[Speicherzustand] \
-  \begin{enumerate}
-    \item Eine partielle Funktion $\sigma: \Loc \pto \bigcup_{\tau\in\Type} \semantic{\tau}$ hei"st
-          {\em Speicherzustand}, wenn gilt:
-          \begin{itemize}
-            \item $\sigma(\Loc^\tau) \subseteq \Val^\tau$ f"ur alle $\tau\in\Type$
-            \item $\locns(\sigma(\Loc)) \subseteq \dom{\sigma}$
-          \end{itemize}
+\subsection{Syntax}
 
-    \item F"ur alle endlichen $L \subseteq \Loc$ definieren wir eine Menge aller {\em $L$-Speicherzust"ande}
-          $\Store_L = \{\sigma\,|\,\text{$\sigma$ Speicherzustand mit $L\subseteq\dom{\sigma}$}\}$.
-
-    \item Die Menge aller Speicherzust"ande ist dann $\Store = \bigcup_{L\subseteq\Loc,\text{ $L$ endl.}} \Store_L$.
-  \end{enumerate}
-\end{definition}
-Demzufolge ist ein Zustand per Definition stets {\em wohlgetypt} und in sich abgeschlossen,
-d.h. er enth"alt keine {\em dangling references}.
-
-F"ur $\sigma\in\Store_L$ seien die Mengen $\reach_i(L,\sigma)\subseteq \Loc$ f"ur alle
-$i\in\setN$ und die Menge $\reach(L,\sigma)\subseteq\Loc$ definiert durch
-\[\begin{array}{rcl}
-  \reach_0(L,\sigma) & = & L \\
-  \reach_{i+1}(L,\sigma) & = & \reach_i(L,\sigma)
-             \cup \bigcup_{X\in\reach_i(L,\sigma)} \locns(\sigma(X)) \\
-  \reach(L,\sigma) & = & \bigcup_{i\in\setN} \reach_i(L,\sigma)
-\end{array}\]
-$\reach(L,\sigma)$ enth"alt alle Speicherpl"atze, die man von der Menge $L$ aus im
-Zustand $\sigma$ erreichen kann. Da ein Zustand $\sigma\in\Store_L$ keine dangling references
-enth"alt, gilt stets
-\[
-  \reach(L,\sigma) \subseteq \dom{\sigma}.
-\]
-
-\begin{lemma} \label{lemma:Store_L_und_reach}
-  Seien $L,L'\subseteq\Loc$ endl., $L \subseteq L'$ und $\sigma,\sigma'\in\Store_{L'}$. Dann gilt:
-  \begin{enumerate}
-    \item $\Store_{L'} \subseteq \Store_{L}$
-    \item $\reach(L,\sigma) \subseteq \reach(L',\sigma)$
-    \item Wenn $\reach(L',\sigma) = \reach(L',\sigma')$ und $\sigma(X) = \sigma'(X)$ f.a.
-          $X\in\reach(L',\sigma)$, dann $\reach(L,\sigma) = \reach(L,\sigma')$
-  \end{enumerate}
-\end{lemma}
-
-\begin{beweis} \
-  \begin{enumerate}
-    \item Sei $\sigma''\in\Store_{L'}$, dann gilt $L' \subseteq \dom{\sigma''}$. Aus $L \subseteq L'$ folgt
-          $L\subseteq\dom{\sigma''}$, also $\sigma''\in\Store_L$.
-    \item Straight-forward induction.
-    \item Straight-forward induction.
-  \end{enumerate}
-\end{beweis}
-
-\begin{definition}[$L$-"Ahnlichkeit]
-  Seien $\sigma,\sigma'\in\Store$ und $L \subseteq \dom{\sigma} \cap \dom{\sigma'}$. $\sigma$ und $\sigma'$
-  heissen {\em $L$-"ahnlich}, geschrieben $\sigma \simeq_L \sigma'$, wenn $\sigma(X) = \sigma'(X)$ f"ur
-  alle $X \in L$ gilt.
+\begin{definition}[Typen der Programmiersprache] \label{definition:Typen_der_Programmiersprache}
+  Die Menge $\setType$ aller \Define{Typen}{Typ} $\tau$ ist durch die kontextfreie Grammatik
+  \[\GRbeg
+  \tau \GRis \typeBool \GRmid \typeInt \GRmid \typeUnit \GRmid \typeArrow{\tau_1}{\tau_2}
+  \GRend\]
+  definiert.
 \end{definition}
 
-\begin{lemma} \label{lemma:L_Aehnlichkeit}
-  Seien $L,L'\subseteq\Loc$ mit $L \subseteq L'$ und $\sigma,\sigma'\in\Store$. Wenn $\sigma \simeq_{L'} \sigma$,
-  dann $\sigma \simeq_L \sigma'$.
-\end{lemma}
-
-\begin{beweis}
-  Trivial.
-\end{beweis}
-
-\begin{definition}[$L$-"Aquivalenz]
-  Sei $L \subseteq \Loc$ endlich. Zwei Zust"ande $\sigma,\sigma'\in\Store_L$ hei"sen {\em $L$-"aquivalent}, geschrieben
-  $\sigma \equiv_L \sigma'$, wenn gilt:
-  \begin{enumerate}
-    \item $\reach(L,\sigma) = \reach(L,\sigma')$
-    \item $\sigma \simeq_{\reach(L,\sigma)} \sigma'$
-  \end{enumerate}
+\begin{definition}[Abstrakte Syntax der Programmiersprache] \label{definition:Abstrakte_Syntax_der_Programmiersprache}
+  Zu jedem Typ $\tau\in\setType$ sei eine unendliche Menge $\setLoc^\tau$ von
+  \Define{$\tau$-Speicherpl"atzen}{$\tau$-Speicherplatz}
+  vorgegeben, wobei vorausgesetzt wird, dass die Mengen $\setLoc^\tau$ paarweise disjunkt
+  sind. Die Menge $\setLoc$ aller \Define{Speicherpl"atze}{Speicherplatz} $\loc$ ist definiert durch
+  \[
+    \setLoc = \bigcup_{\tau\in\setType} \setLoc^\tau.
+  \]
+  Die Menge $\setOp$ aller Operatoren $\op$ ist definiert durch die kontextfreie Grammatik
+  \[\begin{array}{rrcccccccccl}
+  \op \GRis + & \mid & - & \mid &  *  &      &     &      &
+      \GRal < & \mid & > & \mid & \le & \mid & \ge & \mid & =
+      \GRal :=
+  \end{array}\]
+  die Menge $\setConst$ aller Konstanten $c$ durch
+  \[\GRbeg
+  c \GRis () \GRmid b \GRmid n \GRmid \op \GRmid \loc
+  \GRend\]
+  und die Menge $\setExp$ aller \Define{Ausdr\"ucke}{Ausdruck} $e$ von \Lf\ durch
+  \[\GRbeg
+  e \GRis c
+    \GRal x
+    \GRal \expApp{e_1}{e_2}
+    \GRal \expAbstr{x}{e_1}
+    \GRal \expRec{x}{e_1}
+    \GRal \expLet{x}{e_1}{e_2}
+    \GRal \expCond{e_0}{e_1}{e_2}
+  \GRend\]
 \end{definition}
 
-\begin{lemma} \label{lemma:L_Aequivalenz}
-  Seien $L,L'\subseteq\Loc$ endl. mit $L \subseteq L'$ und $\sigma,\sigma'\in\Store_{L'}$. Wenn $\sigma \equiv_{L'} \sigma'$,
-  dann $\sigma \equiv_L \sigma'$.
-\end{lemma}
-
-\begin{beweis}
-  Folgt leicht mit Lemma~\ref{lemma:Store_L_und_reach} und Lemma~\ref{lemma:L_Aehnlichkeit}.
-\end{beweis}
-
-\begin{definition}[$L$-Definierbarkeit]
-  Sei $L \subseteq \Loc$ endl. und $\phi:\Store\pto\Bool$.
-  $\phi$ hei"st {\em $L$-definierbar}, wenn f"ur alle $\sigma,\sigma'\in\dom{\phi}$ mit
-  $\sigma \equiv_L \sigma'$ gilt: $\phi\,\sigma = \phi\,\sigma'$.
-\end{definition}
-
-\begin{lemma} \label{lemma:L_Definierbarkeit}
-  Seien $L,L'\subseteq\Loc$ mit $L \subseteq L'$ und sei $\phi:\Store \pto \Bool$. Ist $\phi$ $L$-definierbar,
-  so ist $\phi$ ebenfalls $L'$-definierbar.
-\end{lemma}
-
-\begin{beweis}
-  Folgt leicht mit Lemma~\ref{lemma:L_Aequivalenz}.
-\end{beweis}
-
-
-\section{Big step Semantik}
-
-\begin{definition}[Konfiguration]
-  Seien $e\in\Exp$ und $\sigma\in\Store$.
-  Das Paar $(e,\sigma)$ hei"st {\em Konfiguration}, wenn $\locns(e) \subseteq \dom{\sigma}$.
-\end{definition}
-
-Die Speicherzust"ande $\sigma$ selbst sind schon per Definition abgeschlossen.
-
-\begin{lemma}[Wohldefiniertheit der big step Semantik]
-  Seien $e\in\Exp$, $v\in\Val$ und $\sigma,\sigma'\in\Store$. Ist $(e,\sigma)$ eine Konfiguration
-  und gilt $(e,\sigma) \Downarrow (v,\sigma')$, so ist auch $(v,\sigma')$ eine Konfiguration.
-\end{lemma}
-
-\begin{lemma}
-  Seien $\sigma_1,\sigma_2\in\Store$ mit $\grph{\sigma_1} \subseteq \grph{\sigma_2}$. Dann gilt:
-  \begin{enumerate}
-    \item Wenn $(e,\sigma_1) \Downarrow (v,\sigma_1')$, dann existiert ein $\sigma_2'\in\Store$ mit
-          $(e,\sigma_2) \Downarrow (v,\sigma_2')$ und $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
-    \item Wenn $(e,\sigma_2) \Downarrow (v,\sigma_2')$, dann existiert ein $\sigma_1'\in\Store$ mit
-          $(e,\sigma_1) \Downarrow (v,\sigma_1')$ und $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
-  \end{enumerate}
-\end{lemma}
 
 \end{document}

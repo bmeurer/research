@@ -1,0 +1,621 @@
+\documentclass[12pt,a4paper,bigheadings]{scrartcl}
+
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[ngerman]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{mathpartir}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{scrpage2}
+\usepackage{stmaryrd}
+%\usepackage[DIV13,BCOR5mm]{typearea}
+\usepackage{url}
+\usepackage[all]{xy}
+
+%% TP-Makros
+\include{TP}
+
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+\newcommand{\assn}{\ensuremath{\mathbf{assn}}}
+\newcommand{\atype}[1]{#1\,\assn}
+\newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
+\newcommand{\TEnv}{\name{TEnv}}
+\newcommand{\Dtype}{\name{DType}}
+\newcommand{\Atype}{\name{AType}}
+\newcommand{\Assn}{\name{Assn}}
+\newcommand{\Term}{\name{Term}}
+\newcommand{\locns}{\name{locns}}
+\newcommand{\reach}{\name{reach}}
+\newcommand{\grph}[1]{\name{graph}(#1)}
+\newcommand{\reachable}{\name{reachable}}
+\newcommand{\supp}{\name{supp}}
+\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
+\renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+\newcommand{\Tje}[3]{#1 \,\tr_e\, #2\cc#3}
+\newcommand{\TC}[4]{#1 \models \{#2\}\,#3\,\{#4\}}
+
+
+\begin{document}
+
+
+\section{Speicherzust"ande und Erreichbarkeit}
+
+F"ur jeden Typ $\tau$ sei eine unendliche Menge $\Loc^\tau$ definiert, deren Elemente $X,Y,\ldots$
+als {\em Speicherpl"atze} vom Typ $\tau$ bezeichnet werden. Es wird vorausgesetzt, dass die Mengen
+$\Loc^\tau$ paarweise disjunkt sind und darauf ist definiert
+\[
+  \Loc = \bigcup_{\tau\in\Type} \Loc^\tau
+\]
+Wir schreiben $\locns{e}$ f"ur die Menge aller im Ausdruck $e$ (syntaktisch) vorkommenden Speicherpl"atze
+und $\Val^\tau$ f"ur die Menge aller abgeschlossenen Werte vom Typ $\tau$ (wobei Abgeschlossenheit sich
+hier nur auf die Bezeichner $\Id$ beschr"ankt) und $\Exp^\tau$ f"ur die Menge aller abgeschlossenen
+Ausdr"ucke vom Typ $\tau$.
+
+\begin{definition}[Speicherzustand] \
+  \begin{enumerate}
+    \item Eine partielle Funktion $\sigma: \Loc \pto \bigcup_{\tau\in\Type} \semantic{\tau}$ hei"st
+          {\em Speicherzustand}, wenn gilt:
+          \begin{itemize}
+            \item $\sigma(\Loc^\tau) \subseteq \Val^\tau$ f"ur alle $\tau\in\Type$
+            \item $\locns(\sigma(\Loc)) \subseteq \dom{\sigma}$
+          \end{itemize}
+
+    \item F"ur alle endlichen $L \subseteq \Loc$ definieren wir eine Menge aller {\em $L$-Speicherzust"ande}
+          $\Store_L = \{\sigma\,|\,\text{$\sigma$ Speicherzustand mit $L\subseteq\dom{\sigma}$}\}$.
+
+    \item Die Menge aller Speicherzust"ande ist dann $\Store = \bigcup_{L\subseteq\Loc,\text{ $L$ endl.}} \Store_L$.
+  \end{enumerate}
+\end{definition}
+Demzufolge ist ein Zustand per Definition stets {\em wohlgetypt} und in sich abgeschlossen,
+d.h. er enth"alt keine {\em dangling references}.
+
+F"ur $\sigma\in\Store_L$ seien die Mengen $\reach_i(L,\sigma)\subseteq \Loc$ f"ur alle
+$i\in\setN$ und die Menge $\reach(L,\sigma)\subseteq\Loc$ definiert durch
+\[\begin{array}{rcl}
+  \reach_0(L,\sigma) & = & L \\
+  \reach_{i+1}(L,\sigma) & = & \reach_i(L,\sigma)
+             \cup \bigcup_{X\in\reach_i(L,\sigma)} \locns(\sigma(X)) \\
+  \reach(L,\sigma) & = & \bigcup_{i\in\setN} \reach_i(L,\sigma)
+\end{array}\]
+$\reach(L,\sigma)$ enth"alt alle Speicherpl"atze, die man von der Menge $L$ aus im
+Zustand $\sigma$ erreichen kann. Da ein Zustand $\sigma\in\Store_L$ keine dangling references
+enth"alt, gilt stets
+\[
+  \reach(L,\sigma) \subseteq \dom{\sigma}.
+\]
+
+\begin{lemma} \label{lemma:Store_L_und_reach}
+  Seien $L,L'\subseteq\Loc$ endl., $L \subseteq L'$ und $\sigma,\sigma'\in\Store_{L'}$. Dann gilt:
+  \begin{enumerate}
+    \item $\Store_{L'} \subseteq \Store_{L}$
+    \item $\reach(L,\sigma) \subseteq \reach(L',\sigma)$
+    \item Wenn $\reach(L',\sigma) = \reach(L',\sigma')$ und $\sigma(X) = \sigma'(X)$ f.a.
+          $X\in\reach(L',\sigma)$, dann $\reach(L,\sigma) = \reach(L,\sigma')$
+  \end{enumerate}
+\end{lemma}
+
+\begin{beweis} \
+  \begin{enumerate}
+    \item Sei $\sigma''\in\Store_{L'}$, dann gilt $L' \subseteq \dom{\sigma''}$. Aus $L \subseteq L'$ folgt
+          $L\subseteq\dom{\sigma''}$, also $\sigma''\in\Store_L$.
+    \item Straight-forward induction.
+    \item Straight-forward induction.
+  \end{enumerate}
+\end{beweis}
+
+\begin{definition}[$L$-"Ahnlichkeit]
+  Seien $\sigma,\sigma'\in\Store$ und $L \subseteq \dom{\sigma} \cap \dom{\sigma'}$. $\sigma$ und $\sigma'$
+  heissen {\em $L$-"ahnlich}, geschrieben $\sigma \simeq_L \sigma'$, wenn $\sigma(X) = \sigma'(X)$ f"ur
+  alle $X \in L$ gilt.
+\end{definition}
+
+\begin{lemma} \label{lemma:L_Aehnlichkeit}
+  Seien $L,L'\subseteq\Loc$ mit $L \subseteq L'$ und $\sigma,\sigma'\in\Store$. Wenn $\sigma \simeq_{L'} \sigma$,
+  dann $\sigma \simeq_L \sigma'$.
+\end{lemma}
+
+\begin{beweis}
+  Trivial.
+\end{beweis}
+
+\begin{definition}[$L$-"Aquivalenz]
+  Sei $L \subseteq \Loc$ endlich. Zwei Zust"ande $\sigma,\sigma'\in\Store_L$ hei"sen {\em $L$-"aquivalent}, geschrieben
+  $\sigma \equiv_L \sigma'$, wenn gilt:
+  \begin{enumerate}
+    \item $\reach(L,\sigma) = \reach(L,\sigma')$
+    \item $\sigma \simeq_{\reach(L,\sigma)} \sigma'$
+  \end{enumerate}
+\end{definition}
+
+\begin{lemma} \label{lemma:L_Aequivalenz}
+  Seien $L,L'\subseteq\Loc$ endl. mit $L \subseteq L'$ und $\sigma,\sigma'\in\Store_{L'}$. Wenn $\sigma \equiv_{L'} \sigma'$,
+  dann $\sigma \equiv_L \sigma'$.
+\end{lemma}
+
+\begin{beweis}
+  Folgt leicht mit Lemma~\ref{lemma:Store_L_und_reach} und Lemma~\ref{lemma:L_Aehnlichkeit}.
+\end{beweis}
+
+\begin{definition}[$L$-Definierbarkeit]
+  Sei $L \subseteq \Loc$ endl. und $\phi:\Store\pto\Bool$.
+  $\phi$ hei"st {\em $L$-definierbar}, wenn f"ur alle $\sigma,\sigma'\in\dom{\phi}$ mit
+  $\sigma \equiv_L \sigma'$ gilt: $\phi\,\sigma = \phi\,\sigma'$.
+\end{definition}
+
+\begin{lemma} \label{lemma:L_Definierbarkeit}
+  Seien $L,L'\subseteq\Loc$ mit $L \subseteq L'$ und sei $\phi:\Store \pto \Bool$. Ist $\phi$ $L$-definierbar,
+  so ist $\phi$ ebenfalls $L'$-definierbar.
+\end{lemma}
+
+\begin{beweis}
+  Folgt leicht mit Lemma~\ref{lemma:L_Aequivalenz}.
+\end{beweis}
+
+
+\section{Big step Semantik}
+
+\begin{definition}[Konfiguration]
+  Seien $e\in\Exp$ und $\sigma\in\Store$.
+  Das Paar $(e,\sigma)$ hei"st {\em Konfiguration}, wenn $\locns(e) \subseteq \dom{\sigma}$.
+\end{definition}
+
+Die Speicherzust"ande $\sigma$ selbst sind schon per Definition abgeschlossen.
+
+\begin{lemma}[Wohldefiniertheit der big step Semantik]
+  Seien $e\in\Exp$, $v\in\Val$ und $\sigma,\sigma'\in\Store$. Ist $(e,\sigma)$ eine Konfiguration
+  und gilt $(e,\sigma) \Downarrow (v,\sigma')$, so ist auch $(v,\sigma')$ eine Konfiguration.
+\end{lemma}
+
+\begin{lemma}
+  Seien $\sigma_1,\sigma_2\in\Store$ mit $\grph{\sigma_1} \subseteq \grph{\sigma_2}$. Dann gilt:
+  \begin{enumerate}
+    \item Wenn $(e,\sigma_1) \Downarrow (v,\sigma_1')$, dann existiert ein $\sigma_2'\in\Store$ mit
+          $(e,\sigma_2) \Downarrow (v,\sigma_2')$ und $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
+    \item Wenn $(e,\sigma_2) \Downarrow (v,\sigma_2')$, dann existiert ein $\sigma_1'\in\Store$ mit
+          $(e,\sigma_1) \Downarrow (v,\sigma_1')$ und $\grph{\sigma_1'} \subseteq \grph{\sigma_2'}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma} \label{lemma:big_steps_und_dom_sigma}
+  Seien $e\in\Exp$, $v\in\Val$ und $\sigma,\sigma'\in\Store$. Wenn
+  $(e,\sigma) \Downarrow (v,\sigma')$, dann gilt $\dom{\sigma} \subseteq \dom{\sigma'}$.
+\end{lemma}
+
+
+\section{Syntax der Logik}
+
+\subsection{Typen}
+
+Sei $\Type$ die Menge aller {\em Typen} $\tau$ der Programmiersprache. Darauf definieren wir 
+\begin{itemize}
+  \item die Menge $\Dtype$ aller {\em Datentypen} $\delta$,
+  \item die Menge $\Atype$ aller {\em assertion types} $\theta$ und
+  \item die Menge $\Ltype$ aller {\em logischen Typen} $\pi$
+\end{itemize}
+durch
+\[\bgram
+\delta  \is \tau
+        \al \delta_1 \tto \delta_2
+        \n
+\theta  \is \assn
+        \al \delta \tto \theta
+        \n
+\pi \is \delta
+    \al \theta
+    \n
+\egram\]
+
+\subsection{Terme und Formeln}
+
+Sei $\Exp$ die Menge aller {\em Ausdr"ucke} $e$ und $\Val$ die Menge aller {\em Werte} $v$
+der Programmiersprache (wobei angenommen wird, dass $\Id \subseteq \Val$). Darauf definieren wir 
+\begin{itemize}
+  \item die Menge $F$ aller {\em Funktionszeichen} $f$,
+  \item die Menge \name{Term} aller {\em Terme} $t$,
+  \item die Menge \name{Assn} aller {\em assertions} $p,q$ sowie
+  \item die Menge \name{Formula} aller {\em (Hoare-)Formeln} $h$
+\end{itemize}
+durch
+\[\bgram
+f \is + \mid - \mid * \mid < \mid > \mid \le \mid \ge \mid \Cons \mid \ldots
+  \n
+t \is v
+  \al f
+  \al \app{t_1}{t_2}
+  \al \abstr{\id:\delta}{t}
+  \n
+p,q \is t_1 \mapsto t_2
+    \al \disjoint{p}{v}
+    \al \app{p}{t}
+    \al \abstr{\id:\delta}{p}
+    \al \neg p
+    \al p \wedge q
+    \al \exists \id:\pi\in[v]. p
+    \al h
+    \n
+h \is \triple{p}{e}{q}
+  \al t_1 = t_2
+  \al \neg h
+  \al h_1 \wedge h_2
+  \al \exists \id:\delta. h
+\egram\]
+
+\subsubsection{Syntaktischer Zucker}
+
+Unter anderem folgende Konventionen:
+\[\begin{array}{rcl}
+  \triple{p}{e}{\ret{\id:\tau}{q}} &\equiv& \triple{p}{e}{\abstr{\id:\tau}{q}} \\
+  \{p\} &\equiv& \triple{\true}{()}{\ret{u:\unit}{p}} \\
+  && \text{mit $u \not \in \free{p}$}
+\end{array}\]
+Mglw. k"onnte man dar"uberhinaus:
+\[\begin{array}{rcl}
+  \exists \id:\delta.h &\equiv& \{\exists \id:\delta\in [\true]. h\}
+\end{array}\]
+W"are noch zu pr"ufen, z.B. indem man zun"achst die Hoare-Formel beibeh"alt und
+dann anhand der Semantik zeigt, dass "aquivalent.
+
+
+\section{Typregeln f"ur die Logik}
+
+Der Begriff {\em Typumgebung} wird verallgemeinert f"ur die Logik. Eine {\em Typumgebung} ist
+damit eine partielle Funktion
+\[
+  \Gamma: \Id \pto \Ltype
+\]
+mit endlichem Definitionsbereich. {\em Typurteile} f"ur die Logik sind von der Form
+\[\begin{array}{l}
+  \Tje{\Gamma}{e}{\tau} \\
+  \Tj{\Gamma}{t}{\delta} \\
+  \Tj{\Gamma}{p}{\theta} \\
+  \Tjh{\Gamma}{h}
+\end{array}\]
+F"ur Typurteile $\Tje{\Gamma}{e}{\tau}$ der Programmiersprache gelten die "ublichen Typregeln.
+F"ur die "ubrigen Typurteile werden neue Typregeln ben"otigt.
+
+Die g"ultigen Typurteile f"ur assertions erhalten wir mit den Regeln \\[3mm]
+\begin{tabular}{rl}
+  \RN{P-App} & $\regel{\Tj{\Gamma}{p}{\delta \tto \theta} \quad \Tj{\Gamma}{t}{\delta}}
+                      {\Tj{\Gamma}{\app{p}{t}}{\theta}}$ \\[1mm]
+  \RN{P-Content} & $\regel{\Tj{\Gamma}{t_1}{\reftype{\tau}} \quad \Tj{\Gamma}{t_2}{\tau}}
+                          {\Tj{\Gamma}{t_1 \mapsto t_2}{\assn}}$ \\[1mm]
+  \RN{P-Abstr} & $\regel{\Tj{\Gamma[\delta/\id]}{p}{\theta}}
+                        {\Tj{\Gamma}{\abstr{\id:\delta}{p}}{\delta \tto \theta}}$ \\[1mm]
+  \RN{P-Disjoint} & $\regel{\Tj{\Gamma}{v}{\tau} \quad \Tj{\Gamma}{p}{\theta}}
+                           {\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}$ \\[1mm]
+  \RN{P-Not} & $\regel{\Tj{\Gamma}{p}{\assn}}
+                      {\Tj{\Gamma}{\neg p}{\assn}}$ \\[1mm]
+  \RN{P-And} & $\regel{\Tj{\Gamma}{p_1}{\assn} \quad \Tj{\Gamma}{p_2}{\assn}}
+                      {\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}$ \\[1mm]
+  \RN{P-Exists} & $\regel{\Tj{\Gamma}{v}{\tau} \quad \Tj{\Gamma[\pi/\id]}{p}{\assn}}
+                         {\Tj{\Gamma}{\exists \id:\pi\in[v].p}{\assn}}$ \\[1mm]
+  \RN{P-Hoare} & $\regel{\Tjh{\Gamma}{h}}
+                        {\Tj{\Gamma}{h}{\assn}}$
+\end{tabular} \\[3mm]
+die g"ultigen Typurteile f"ur Terme erhalten wir mit den Regeln \\[3mm]
+\begin{tabular}{rl}
+  \RN{T-Val} & $\regel{\Tje{\Gamma}{v}{\tau} \quad \locns(v)=\emptyset}
+                      {\Tj{\Gamma}{v}{\tau}}$ \\[1mm]
+  \RN{T-Func} & $\regel{\tj{f}{\delta}}
+                       {\Tj{\Gamma}{f}{\delta}}$ \\[1mm]
+  \RN{T-App} & $\regel{\Tj{\Gamma}{t_1}{\delta \tto \delta'} \quad \Tj{\Gamma}{t_2}{\delta}}
+                      {\Tj{\Gamma}{\app{t_1}{t_2}}{\delta'}}$ \\[1mm]
+  \RN{T-Abstr} & $\regel{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}
+                        {\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta \tto \delta'}}$ \\[1mm]
+\end{tabular} \\[3mm]
+und die g"ultigen Typurteile f"ur Hoare-Formeln mit \\[3mm]
+\begin{tabular}{rl}
+  \RN{H-Eq} & $\regel{\Tj{\Gamma}{t_1}{\delta} \quad \Tj{\Gamma}{t_2}{\delta}}
+                     {\Tjh{\Gamma}{t_1 = t_2}}$ \\[1mm]
+  \RN{H-Tc} & $\regel{\Tj{\Gamma}{p}{\assn} \quad \Tje{\Gamma}{e}{\tau} \quad \Tj{\Gamma}{q}{\tau} \tto \assn}
+                     {\Tjh{\Gamma}{\triple{p}{e}{q}}}$ \\[1mm]
+  \RN{H-Not} & $\regel{\Tjh{\Gamma}{h}}
+                      {\Tjh{\Gamma}{\neg h}}$ \\[1mm]
+  \RN{H-And} & $\regel{\Tjh{\Gamma}{h_1} \quad \Tjh{\Gamma}{h_2}}
+                      {\Tjh{\Gamma}{h_1 \wedge h_2}}$ \\[1mm]
+  \RN{H-Exists} & $\regel{\Tjh{\Gamma[\delta/\id]}{h}}
+                         {\Tjh{\Gamma}{\exists \id:\delta.h}}$
+\end{tabular}
+
+
+\section{Semantik der Logik}
+
+\subsection{Semantische Bereiche}
+
+F"ur alle Typen $\pi$ und alle endl. $L \subseteq \Loc$ werden induktiv $L$-definierbare
+sematische Bereiche $\semantic{\pi}_L$ und definiert. Daraus ergeben sich die eigentlichen
+semantischen Bereiche $\semantic{\pi} = \bigcup\limits_{L \text{ endl.}} \semantic{\pi}_L$.
+\[\begin{array}{rcl}
+  \semantic{\tau}_L &:=& \{v \in \Val^\tau\,|\,\locns(v) = L\} \\
+  \semantic{\assn}_L &:=& \{\phi:\Store\pto\Bool\,|\,\text{$\phi$ ist $L$-definierbar und $\dom{\phi} = \Store_L$}\} \\
+  \semantic{\delta \tto \pi} &:=& \{f:\semantic{\delta}\to\semantic{\pi}\,|\,
+                                       \text{$f(\semantic{\delta}_{L'}) \subseteq \semantic{\pi}_{L\cup L'}$ f.a. endl. $L'\subseteq\Loc$}\}
+\end{array}\]
+
+\begin{definition}[Support]
+  F"ur alle $d \in \semantic{\pi}$ wird induktiv eine Menge $\supp(d) \subseteq \Loc$ definiert:
+  \[\begin{array}{rcl}
+    \supp(v) &:=& \locns(v) \\
+    \supp(\phi) &:=& L \text{ mit } \dom{\phi} = \Store_L \\
+    \supp(f) &:=& \bigcap_{d\in\semantic{\delta}} \supp(f\,d)
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}[Support]
+  F"ur alle $\pi\in\Ltype$, $d\in\semantic{\pi}$ und $L \subseteq \Loc$ endl. gilt:
+  Wenn $d \in \semantic{\pi}_L$, dann $L = \supp(d)$.
+\end{lemma}
+
+\begin{beweis}
+  Beweis durch Induktion:
+  \begin{enumerate}
+    \item $v \in \semantic{\tau}_L$ gdw. $\locns(v) = L$ gdw. $\supp(v) = L$.
+
+    \item $\phi \in \semantic{\assn}_L$ gdw. $\phi$ ist $L$-definierbar und $\dom{\phi} = \Store_L$.
+          Letzteres bedeutet aber nichts anderes als $\supp(\phi) = L$.
+
+    \item $f \in \semantic{\delta \tto \pi}_L$ gdw. $f(\semantic{\delta}_{L'}) \subseteq \semantic{\pi}_{L\cup L'}$
+          f.a. endl. $L' \subseteq \Loc$. D.h. f.a. $d \in \semantic{\delta}_{L'}$ gilt $(f\,d) \in \semantic{\pi}_{L \cup L'}$.
+          Nach I.V. folgt $L \cup L' = \supp(f\,d)$. Daraus folgt unmittelbar
+          $L = \bigcap_{L'\text{ endl.}, d\in\semantic{\delta}_{L'}} \supp(f\,d)
+             = \bigcap_{d\in\semantic{\delta}} \supp(f\,d) = \supp(f)$.
+  \end{enumerate}
+\end{beweis}
+
+\begin{korollar}
+  F"ur alle $\pi\in\Ltype$, $L,L' \subseteq \Loc$ endl. gilt:
+  Wenn $\semantic{\pi}_L \cap \semantic{\pi}_{L'} \ne \emptyset$, dann $L = L'$.
+\end{korollar}
+
+\begin{beweis}
+  Sei $d \in \semantic{\pi}$ mit $d \in \semantic{\pi}_L$ und $d \in \semantic{\pi}_{L'}$.
+  Dann gilt $L = \supp(d) = L'$.
+\end{beweis}
+
+
+\subsection{Totale Korrektheit}
+
+\begin{definition}[Totale Korrektheit]
+  Seien $\tau\in\Type$, $e\in\Exp^\tau$,
+  $\phi \in \semantic{\assn}$, $\psi \in \semantic{\tau \tto \assn}$
+  und $L \subseteq \Loc$.
+  $e$ hei"st {\em $L$-total korrekt} bzgl. $\phi$ und $\psi$, wenn f"ur alle
+  $\sigma\in\Store_L$ mit $\phi\,\sigma=\true$ ein $v\in\Val^\tau$ und ein
+  $\sigma'\in\Store_L$ existieren, so dass $(e,\sigma) \Downarrow (v,\sigma')$ und
+  $\psi\,v\,\sigma'=\true$ gilt. Hierf"ur schreiben wir $\TC{L}{\phi}{e}{\psi}$.
+\end{definition}
+
+Statt {\em $L$-total korrekt} schreiben wir kurz {\em $L$-korrekt}.
+
+\begin{lemma}[Totale Korrektheit]
+  Seien $\tau\in\Type$, $e \in \Exp^\tau$, $\phi\in\semantic{\assn}$,
+  $\psi \in \semantic{\tau\tto\assn}$ und $L \subseteq \Loc$ endl.
+  mit $\TC{L}{\phi}{e}{\psi}$. Dann gilt:
+  \begin{enumerate}
+    \item $\TC{L'}{\phi}{e}{\psi}$ f"ur alle endl. $L' \subseteq \Loc$ mit $L \subseteq L'$.
+    \item $\TC{L'}{\phi}{e}{\psi}$ mit $L' = \supp(\phi) \cup \locns(e) \cup \supp(\psi)$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{beweis}
+  F"ur alle $\sigma \in \Store_L$ mit $\phi\,\sigma = \true$ existiert ein $v\in\Val^\tau$ und
+  ein $\sigma'\in\Store_L$, so dass $(e,\sigma) \Downarrow (v,\sigma')$ gilt mit $\psi\,v\,\sigma'=\true$.
+  \begin{enumerate}
+    \item Da $L \subseteq L'$ folgt unmittelbar, dass erst recht f"ur alle $\sigma\in\Store_{L'}$ mit
+          $\phi\,\sigma=\true$ solche $v\in\Val^\tau$ und $\sigma'\in\Store_L$ existieren.
+          Nach Lemma~\ref{lemma:big_steps_und_dom_sigma} gilt $\dom{\sigma} \subseteq \dom{\sigma'}$, also
+          insbesondere $L' \subseteq \dom{\sigma} \subseteq \dom{\sigma'}$, und somit folgt
+          $\sigma'\in\Store_{L'}$.
+
+    \item {\bf TODO}
+  \end{enumerate}
+\end{beweis}
+
+
+\subsection{Semantik von Termen und Formeln}
+
+Eine {\em Umgebung} ist eine partielle Abbildung $\rho:\Id\pto\bigcup_{\tau\in\Type} \Val^\tau$.
+Eine Umgebung $\rho$ {\em passt} zu einer Typumgebung $\Gamma$, geschrieben $\Gamma \models \rho$,
+wenn gilt:
+\begin{itemize}
+  \item $\dom{\rho} = \dom{\Gamma}$
+  \item $\rho(\id) \in \Val^{\Gamma(\id)}$ f"ur alle $\id\in\dom{\rho}$
+\end{itemize}
+Die Menge aller zu $\Gamma$ passenden Umgebungen ist:
+\[
+  \Env_\Gamma := \{\rho\,|\,\Gamma \models \rho\}
+\]
+
+\noindent
+Ein Zustand $\sigma$ {\em passt} zu einer Umgebung $\rho$, geschrieben $\rho \models \sigma$,
+wenn gilt:
+\begin{itemize}
+  \item $\locns(\rho(\id)) \subseteq \dom{\sigma}$ f"ur alle $\id\in\dom{\rho}$
+  \item $\locns(\sigma(X)) \subseteq \dom{\sigma}$ f"ur alle $X\in\dom{\sigma}$
+\end{itemize}
+Die Menge aller zu $\rho$ passenden Zust"ande $\Store_\rho$ ist def. durch:
+\[
+  \Store_\rho := \{\sigma\,|\,\rho\models\sigma\}
+\]
+
+\noindent
+Den (g"ultigen) Typurteilen f"ur Ausdr"ucke, Terme und Formeln wird nun eine Semantik zugeordnet:
+\begin{itemize}
+  \item $\semantic{\Tj{\Gamma}{t}{\delta}}:\Env_\Gamma \to \semantic{\delta}$
+  \item $\semantic{\Tj{\Gamma}{p}{\theta}}:\Env_\Gamma \to \semantic{\theta}$
+  \item $\semantic{\Tjh{\Gamma}{h}}: \Env_\Gamma \to \Bool$
+\end{itemize}
+
+\pagebreak[3] \noindent
+Die Semantik von Termen ist definiert durch:
+\[\begin{array}{rcl}
+  \semantic{\Tj{\Gamma}{v}{\tau}}\,\rho
+  & := &
+  v\,\rho
+  \\
+  \semantic{\Tj{\Gamma}{f}{\delta}}\,\rho
+  & := &
+  \semantic{\tj{f}{\delta}} \\
+  && \text{wobei die Semantik hier noch zu def. ist}
+  \\
+  \semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\delta}}\,\rho
+  & := &
+  (\semantic{\Tj{\Gamma}{t_1}{\delta'\tto\delta}}\,\rho)\,(\semantic{\Tj{\Gamma}{t_2}{\delta'}}\,\rho)
+  \\
+  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{t}}{\delta\tto\delta'}}\,\rho\,d
+  & := & 
+  \semantic{\Tj{\Gamma[\delta/\id]}{t}{\delta'}}\,(\rho[d/\id])
+\end{array}\]
+
+\pagebreak[3] \noindent
+Die Semantik von assertions ist wie folgt induktiv definiert:
+\[\begin{array}{rcl}
+  \semantic{\Tj{\Gamma}{h}{\assn}}\,\rho\,\sigma
+  & := &
+  \semantic{\Tjh{\Gamma}{h}}\,\rho
+  \\
+  \semantic{\Tj{\Gamma}{\app{p}{t}}{\theta}}\,\rho
+  & := &
+  (\semantic{\Tj{\Gamma}{p}{\delta \tto \theta}}\,\rho) (\semantic{\Tj{\Gamma}{t}{\delta}}\,\rho)
+  \\
+  \semantic{\Tj{\Gamma}{\abstr{\id:\delta}{p}}{\delta \tto \theta}}\,\rho\,d
+  & := &
+  \semantic{\Tj{\Gamma[\delta/\id]}{p}{\theta}}\,(\rho[d/\id]) 
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{t_1\mapsto t_2}{\assn}}\,\rho\,\sigma
+  & := &
+  \bcase
+    \uparrow, & \text{falls } \sigma \not\in \Store_{\supp(v_1) \cup \supp(v_2)} \\
+    \true, & \text{falls ex. $X\in\dom{\sigma}$ mit } X = v_1 \text{ und } \sigma(X) = v_2 \\
+    \false, & \text{sonst}
+  \ecase \\
+  && \text{mit } v_1 = (\semantic{\Tj{\Gamma}{t_1}{\reftype{\tau}}}\,\rho), v_2 = (\semantic{\Tj{\Gamma}{t_2}{\tau}}\,\rho)
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{\disjoint{p}{v}}{\assn}}\,\rho\,\sigma
+  & := &
+  \bcase
+    \uparrow, & \text{falls } \sigma \not\in \Store_{L \cup L'} \\
+    \true, & \text{falls } \reach(L,\sigma) \cap \reach(L',\sigma) = \emptyset\\
+    \false, & \text{sonst}
+  \ecase \\
+  && \text{mit } L = \supp(\semantic{\Tj{\Gamma}{v}{\tau}}\,\rho), L' = \supp(\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho)
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{\neg p}{\assn}}\,\rho\,\sigma
+  & := &
+  \bcase
+    \uparrow, & \text{falls } \sigma \not\in \Store_{\supp(\semantic{\Tj{\Gamma}{p}{\assn}}\,\rho)} \\
+    \true, & \text{falls } (\semantic{\Tj{\Gamma}{p}{\assn}}\,\rho) = \false \\
+    \false, & \text{sonst}
+  \ecase
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{p_1 \wedge p_2}{\assn}}\,\rho\,\sigma
+  & := &
+  \bcase
+    \uparrow, & \text{falls } \sigma \not\in \Store_{\supp(d_1) \cup \supp(d_2)} \\
+    \true, & \text{falls } d_1 = \true \text{ und } d_2 = \true \\
+    \false, & \text{sonst}
+  \ecase \\
+  && \text{mit } d_1 = (\semantic{\Tj{\Gamma}{p_1}{\assn}}\,\rho), d_2 = (\semantic{\Tj{\Gamma}{p_2}{\assn}}\,\rho)
+  \\
+  \\
+  \semantic{\Tj{\Gamma}{\exists \id:\pi \in [v].p}{\assn}}\,\rho\,\sigma
+  & := &
+  \bcase
+    \true, & \text{falls ex. $d\in\semantic{\pi}_{\locns(v)}$ mit} \\
+           & (\semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[d/\id)\,\sigma = \true \\
+    \false, & \text{falls f.a. $d\in\semantic{\pi}_{\locns(v)}$ gilt} \\
+            & (\semantic{\Tj{\Gamma[\pi/\id]}{p}{\assn}}\,(\rho[d/\id)\,\sigma = \false \\
+    \uparrow, & \text{sonst}
+  \ecase
+\end{array}\]
+
+\noindent
+Die Semantik von Hoare-Formeln ist dann definiert durch:
+\[\begin{array}{rcl}
+  \semantic{\Tjh{\Gamma}{t_1 = t_2}}\,\rho
+  & := &
+  \true, \text{ gdw. } \semantic{\Tj{\Gamma}{t_1}{\theta}}\,\rho = \semantic{\Tj{\Gamma}{t_2}{\theta}}\,\rho \\
+  && \text{wobei die Gleichheit hier noch zu def. ist}
+  \\
+  \semantic{\Tjh{\Gamma}{\triple{p}{e}{q}}}\,\rho 
+  & := &
+  \true, \text{ gdw. } \TC{L}{\phi}{(e\,\rho)}{\psi}, \text{ wobei } \phi=\semantic{\Tj{\Gamma}{p}{\assn}}, \\
+  && \psi=\semantic{\Tj{\Gamma}{q}{\tau\tto\assn}\,\rho} \text{ und }
+  L = \supp(\psi) \cup \supp(e\,\rho) \cup \supp(\psi)
+
+  \\
+  \semantic{\Tjh{\Gamma}{\neg h}}\,\rho
+  & := &
+  \true, \text{ gdw. } \semantic{\Tjh{\Gamma}{h}}\,\rho = \false
+  \\
+  \semantic{\Tjh{\Gamma}{h_1 \wedge h_2}}\,\rho
+  & := &
+  \true, \text{ gdw. } \semantic{\Tjh{\Gamma}{h_1}}\,\rho = \true \text{ und }
+  \semantic{\Tjh{\Gamma}{h_2}}\,\rho = \true
+  \\
+  \semantic{\Tjh{\Gamma}{\exists \id:\delta.h}}\,\rho
+  & := &
+  \true, \text{ gdw. ex. } d \in \semantic{\delta} \text{ so dass }
+  \semantic{\Tjh{\Gamma[\delta/\id]}{h}}\,(\rho[d/\id])=\true
+\end{array}\]
+
+\begin{satz}[Wohldefiniertheit der Semantik]
+  Sei $\Gamma \in \TEnv$ und $\rho \in \Env_\Gamma$. Dann gilt:
+  \begin{enumerate}
+    \item F"ur alle $t \in \Term$, $\delta \in \Dtype$ mit $\Tj{\Gamma}{t}{\delta}$ gilt
+          $(\semantic{\Tj{\Gamma}{t}{\delta}}\,\rho)\in\semantic{\delta}$.
+    \item F"ur alle $p \in \Assn$, $\theta \in \Atype$ mit $\Tj{\Gamma}{p}{\theta}$ gilt
+          $(\semantic{\Tj{\Gamma}{p}{\theta}}\,\rho)\in\semantic{\theta}$.
+  \end{enumerate}
+\end{satz}
+
+\begin{beweis}
+\end{beweis}
+
+\begin{definition}[Modell] \
+  \begin{itemize}
+    \item $\rho$ heisst {\em Modell} von $\Tjh{\Gamma}{h}$, wenn $\semantic{\Tjh{\Gamma}{h}}\,\rho = \true$
+          gilt, geschrieben als $\rho \models \Tjh{\Gamma}{h}$.
+    \item Gilt $\rho \models \Tjh{\Gamma}{h}$ f"ur alle $\rho\in\Env_\Gamma$, so schreiben wir
+          $\models \Tjh{\Gamma}{h}$ und nennen  $\Tjh{\Gamma}{h}$ {\em g"ultig}.
+    \item Ist $\Gamma = [\,]$, so schreiben wir $\models h$.
+  \end{itemize}
+\end{definition}
+
+
+\subsection{Zusammenh"ange}
+
+\begin{lemma}[Allokations-Invarianz]
+  F"ur alle $\Gamma\in\TEnv$, $\tau\in\Type$, $y\in\semantic{\tau}$, $p \in\Assn$ mit
+  $x \not \in \free{p}$ und $\Tjh{\Gamma}{\triple{p}{\bref\,y}{\ret{x:\reftype{\tau}}{p}}}$ gilt:
+  \[
+    \models \Tjh{\Gamma}{\triple{p}{\bref\,y}{\ret{x:\reftype{\tau}}{p}}}
+  \]
+\end{lemma}
+
+
+
+\end{document}
