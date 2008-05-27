@@ -14,6 +14,15 @@
 
 
 %%
+%% Misc
+%%
+
+\newcommand{\coloncolon}{\mathrel{::}}
+\newcommand{\pto}{\hookrightarrow}
+\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
+
+
+%%
 %% Sets
 %%
 
@@ -32,6 +41,14 @@
 \newcommand{\Type}{\nstyle{Type}}
 \newcommand{\Val}{\nstyle{Val}}
 
+\newcommand{\AType}{\nstyle{AType}}
+\newcommand{\DType}{\nstyle{DType}}
+\newcommand{\LType}{\nstyle{LType}}
+
+\newcommand{\Assn}{\nstyle{Assn}}
+\newcommand{\Formula}{\nstyle{Formula}}
+\newcommand{\Term}{\nstyle{Term}}
+
 
 %%
 %% Functions (TODO - DeclareMathOperator)
@@ -41,8 +58,10 @@
 \newcommand{\free}[1]{\ensuremath{\nstyle{free}\,(#1)}}
 \newcommand{\locns}[1]{\ensuremath{\nstyle{locns}\,(#1)}}
 \newcommand{\grph}[1]{\ensuremath{\nstyle{graph}\,(#1)}}
+\newcommand{\supp}[1]{\ensuremath{\nstyle{supp}\,(#1)}}
 \newcommand{\reach}[2]{\ensuremath{\nstyle{reach}\,(#1,#2)}}
 \newcommand{\reachn}[3]{\ensuremath{\nstyle{reach}_{#1}\,(#2,#3)}}
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
 
 
 %%
@@ -56,10 +75,12 @@
 %% Types
 %%
 
+\newcommand{\tassn}{\pstyle{assn}}
 \newcommand{\tunit}{\pstyle{unit}}
 \newcommand{\tbool}{\pstyle{bool}}
 \newcommand{\tint}{\pstyle{int}}
 \newcommand{\tarrow}[2]{#1\to#2}
+\newcommand{\ttarrow}[2]{#1\tto#2}
 \newcommand{\trecord}[1]{\left\{#1\right\}}
 \newcommand{\tref}[1]{#1\,\pstyle{ref}}
 
@@ -86,6 +107,8 @@
 \newcommand{\record}[1]{\left\{#1\right\}}
 \newcommand{\proj}[2]{#1.#2}
 
+\newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
+
 
 %%
 %% Grammars
@@ -99,14 +122,6 @@
 \newcommand{\GRnl}{\vspace{2mm}\\}
 \newcommand{\GRmid}{\,\mid\,}
 \newcommand{\GRtext}[1]{\hfill & \text{#1}}
-
-
-%%
-%% Misc
-%%
-
-\newcommand{\coloncolon}{\mathrel{::}}
-\newcommand{\pto}{\hookrightarrow}
 
 
 %%

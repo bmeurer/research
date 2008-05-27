@@ -198,7 +198,8 @@ assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
 \end{lemma}
 
 \begin{proof}
-  {\bf TODO}
+  {\bf TODO}: The first case won't work for the (REF) rule, because $\sigma_2$ may already include
+  the allocated location.
 \end{proof}
 
 
@@ -211,10 +212,57 @@ assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
 
 
 %%
-%% Semantics of the logic
+%% Syntax of the assertion language
+%%
+
+\section{Syntax of the assertion language}
+
+Based on the types $\tau$ of the programming language, we define
+\begin{itemize}
+  \item the set $\DType$ of {\em data types} $\delta$ and
+  \item the set $\LType$ of {\em logic types} $\pi$
+\end{itemize}
+using the context-free grammar given below:
+\[\GRbeg
+  \delta \GRis \tau \GRmid \ttarrow{\delta_1}{\delta_2} \\
+  \pi \GRis \tassn \GRmid \delta \GRmid \ttarrow{\delta}{\pi}
+\GRend\]
+Given an appropriate set $F$ of predefined {\em function symbols} $f$, we
+define
+\begin{itemize}
+  \item the set $\Term$ of {\em terms} $t$ and
+  \item the set $\Assn$ of {\em assertions} $p,q$
+\end{itemize}
+using the following grammar:
+\[\GRbeg
+  p,q \GRis x
+      \GRal v
+      \GRal f
+      \GRal p \mapsto q
+      \GRal p \leadsto q
+      \GRal \app{p}{q}
+      \GRal \abstr{x:\delta}{p}
+      \GRal \neg p
+      \GRal p \wedge q
+      \GRal \exists x:\pi \in [p]. q
+      \GRal p = q
+      \GRal \triple{p}{e}{q}
+\GRend\]
+
+
+%%
+%% Axiomatic semantics
 %%
 
 \section{Semantics of the logic}
+
+
+%%
+%% Reachability
+%%
+
+\subsection{Reachability}
+
 
 \begin{definition}[Reachability]
   Let $L\subseteq\Loc$ finite and $\sigma\in\Store_L$. By induction we define sets $\reachn{i}{L}{\sigma} \in \Loc$
@@ -274,6 +322,82 @@ $\reach{L}{\sigma} \subseteq \dom{\sigma}$ holds.
 \begin{proof}
   Trivial.
 \end{proof}
+
+
+%%
+%% Semantic domains
+%%
+
+\subsection{Semantic domains}
+
+\begin{definition}[Semantic domains]
+  For all types $\pi \in \LType$ we define {\em semantic domains}
+  $\semantic{\pi} = \bigcup_{L\subseteq\Loc,L\text{ finite}} \semantic{\pi}_L$, where
+  the {\em $L$-definable semantic domains} $\semantic{\pi}_L$ are defined inductively as follows:
+  \[\begin{array}{rcl}
+    \semantic{\tau}_L &:=& \{v\in\Val^\tau\,|\,\locns{v}=L\} \\
+    \semantic{\tassn}_L &:=& \{\phi:\Store_L \to \Bool\,|\,\text{$\phi$ $L$-definable}\} \\
+    \semantic{\ttarrow{\delta}{\pi}}_L &:=& \{\eta:\semantic{\delta}\to\semantic{\pi}\,|\,
+             \eta(\semantic{\delta}_{L'}) \subseteq \semantic{\pi}_{L \cup L'} \text{ f.a. finite } L' \subseteq \Loc\}
+  \end{array}\]
+\end{definition}
+
+\begin{definition}[Support]
+  Let $\pi\in\LType$. For every $d \in \semantic{\pi}$ the set $\supp{d}\subseteq\Loc$,
+  called the {\em support} of $d$, is defined by induction on $\pi$:
+  \[\begin{array}{rcl}
+    \supp{v} &:=& \locns{v} \\
+    \supp{\phi} &:=& L, \text{ where } \phi:\Store_L\to\Bool \\
+    \supp{\eta} &:=& \bigcap_{d\in\semantic{\delta}} \supp{\app{\eta}{d}}, \text{ where } \eta:\semantic{\delta}\to\semantic{\pi}
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}
+  Let $\pi\in\LType$.
+  \begin{enumerate}
+    \item For every $d\in\semantic{\pi}$ and $L\subseteq\Loc$ finite,
+          $d\in\semantic{\pi}_L$ implies $L = \supp{d}$.
+    \item For all $L,L'\subseteq\Loc$ finite, $\semantic{\pi}_L \cap \semantic{\pi}_{L'} \ne \emptyset$
+          implies $L = L'$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof} \
+  \begin{enumerate}
+    \item Straight forward induction.
+    \item Trivial conclusion.
+  \end{enumerate}
+\end{proof}
+
+
+%%
+%% Total correctness
+%%
+
+\subsection{Total correctness}
+
+\begin{definition}[Total correctness]
+  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+  and $L \subseteq \Loc$ finite. $e$ is {\em $L$-correct} with regard to $\phi$ and $\psi$ if for all
+  $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\Val^\tau$ and a $\sigma'\in\Store_L$,
+  for which $(e,\sigma) \Downarrow (v,\sigma')$ and $\app{\app{\psi}{v}}{\sigma'} = \true$ holds. We write
+  $L \models \triple{\phi}{e}{\psi}$.
+\end{definition}
+
+%\begin{proposition}[Total correctness]
+%  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+%  and $L \subseteq \Loc$ finite with $L \models \triple{\phi}{e}{\psi}$.
+%  \begin{enumerate}
+%    \item $L' \models \triple{\phi}{e}{\psi}$ for every finite $L'\subseteq\Loc$ with $L \subseteq L'$.
+%    \item $L' \models \triple{\phi}{e}{\psi}$ for $L' = \supp{\phi} \cup \locns{e} \cup \supp{\psi}$.
+%  \end{enumerate}
+%\end{proposition}
+
+\begin{proposition}[Total correctness]
+  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+  and $L,L' \subseteq \Loc$ finite with $\locns{e} \cup \supp{\phi} \cup \supp{\psi} \subseteq L,L'$. Then
+  $L \models \triple{\phi}{e}{\psi}$ iff $L' \models \triple{\phi}{e}{\psi}$.
+\end{proposition}
 
 
 \end{document}
