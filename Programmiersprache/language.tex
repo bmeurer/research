@@ -80,18 +80,18 @@ includes all finite subsets of $\Loc^\tau$.
   are defined by the grammars
   \[\GRbeg
     \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
-    c \GRis z \GRmid b \GRmid \unit \GRmid l \GRmid \cref \GRmid !
+    c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid !
              \GRmid \assign \GRmid \fix,
   \GRend\]
   the set $\Exp$ of {\em expressions} $e$ is defined by
   \[\GRbeg
-    e \GRis c \GRmid x \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+    e \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
            \GRmid \ifte{e_0}{e_1}{e_2}
-           \GRal \proj{e}{l} \GRmid \record{m_1=e_1,\ldots,m_n=e_n}
+           \GRal \proj{e}{m} \GRmid \record{m_1=e_1,\ldots,m_n=e_n}
   \GRend\]
   and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
   \[\GRbeg
-    v \GRis c \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \record{m_1=v_1,\ldots,m_n=v_n}
+    v \GRis c \GRmid l \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \record{m_1=v_1,\ldots,m_n=v_n}
   \GRend\]
   with distinct member names $m_1,\ldots,m_n$ for records.
 \end{definition}
@@ -423,6 +423,139 @@ relates stores to their permuted variants, $R_L^\Store = \bigcap_{\eta\in\Perm_L
               \sigma \equiv_L \sigma' \Rightarrow \phi\,\sigma = \phi\,\sigma'\right]$
     \item $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L \Rightarrow
               \left[\forall L'\in\Locfin. \psi\,(\semantic{\theta}_{L'})\subseteq\semantic{\pi}_{L \cup L'} \right]$
+    \item $d \in \semantic{\pi} \Rightarrow d \in \semantic{\pi}_{\supp{d}}$
+  \end{enumerate}
+\end{lemma}
+
+
+%%
+%% Third attempt
+%%
+
+\pagebreak
+\subsection{Third attempt}
+
+% TODO
+\newcommand{\CExp}{\nstyle{CExp}}
+\newcommand{\CVal}{\nstyle{CVal}}
+\newcommand{\loc}{\nstyle{loc}}
+\newcommand{\sto}{\nstyle{sto}}
+\newcommand{\val}{\nstyle{val}}
+\newcommand{\DEF}{\nstyle{DEF}}
+\newcommand{\OUT}{\nstyle{OUT}}
+\newcommand{\I}{\mathcal{I}}
+
+\begin{definition}
+  Let $(W,\le)$ be a preordered set (of `worlds' $w$).
+  A {\em $W$-universe} is a set $D$ together with a family of subsets $(D_w)_{w\in W}$ such that
+  $D = \bigcup_{w\in W} D_w$ and $v \le w \Rightarrow D_v \subseteq D_w$ for all $v,w \in W$.
+\end{definition}
+
+\begin{definition}
+  A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w_n)_{w\in W,n\in \N}$
+  of sets $\Sigma^w_n$ such that for all $m,n\in \N$ and $v,w\in W$
+  \begin{itemize}
+    \item $m \ne n \Rightarrow \Sigma^v_n \cap \Sigma^w_n = \emptyset$
+    \item $v \le w \Rightarrow \Sigma^v_n \supseteq \Sigma^w_n$
+  \end{itemize}
+\end{definition}
+
+An element $r \in \Sigma_n$ is called a {\em relation symbol of arity $n$}. We use the abbreviations
+\[\begin{array}{rcl}
+  \Sigma_n =_{def} \bigcup_{w\in W} \Sigma^w_n, &
+  \Sigma^w =_{def} \bigcup_{n\in \N} \Sigma^w_n, &
+  \Sigma =_{def} \bigcup_{w\in W} \Sigma^w.
+\end{array}\]
+
+\begin{definition}
+  Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-universe} is a pair
+  $(D,\I)$, where $D$ is a $W$-universe and $\I$ is a function which maps every
+  $r \in \Sigma_n$ to a relation $\I(r) \subseteq D^n$ such that
+  $r \in \Sigma^w \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
+\end{definition}
+
+\begin{definition}[Ground relation]
+  A {\em ground relation of arity $n$} is simply a triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\val\}}$ with
+  \begin{itemize}
+    \item $R^\loc \subseteq \bigcup_{\tau\in\Type} \left(\Loc^\tau\right)^n$,
+    \item $R^\sto \subseteq \Store^n$ and
+    \item $R^\val = \bigcup_{\tau\in\Type} R^{[\,],\tau} \cap \Val^n$
+  \end{itemize}
+  where the relations $R^{\Gamma,\tau} \subseteq \left(\Exp^{\Gamma,\tau}\right)^n$ are defined by induction as follows:
+  \begin{enumerate}
+    \item $\vec{l}\in R^{\Gamma,\tau}$ iff $\vec{l}\in R^{\Loc}$.
+    \item $(c,\ldots,c)\in R^{\Gamma,\tau}$ for every $c\in\Const$ with $\Tj{\Gamma}{c}{\tau}$.
+    \item $(x,\ldots,x)\in R^{\Gamma,\tau}$ for every $x\in\Var$ with $\Tj{\Gamma}{x}{\tau}$.
+    \item $(\abstr{x}{e_1},\ldots,\abstr{x}{e_n})\in R^{\Gamma,\tarrow{\tau}{\tau'}}$ iff
+          $\vec{e}\in R^{\Gamma[\tau/x],\tau'}$.
+    \item $(\app{e_1}{e_1'},\ldots,\app{e_n}{e_n'})\in R^{\Gamma,\tau}$ iff
+          $\vec{e}\in R^{\Gamma,\tarrow{\tau'}{\tau}}$ and
+          $\vec{e'}\in R^{\Gamma,\tau'}$.
+    \item $(\ifte{e_1}{e_1'}{e_1''},\ldots,\ifte{e_n}{e_n'}{e_n''})\in R^{\Gamma,\tau}$ iff
+          $\vec{e}\in R^{\Gamma,\tbool}$ and $\vec{e'},\vec{e''}\in R^{\Gamma,\tau}$.
+    \item $(\proj{e_1}{m_j},\ldots,\proj{e_n}{m_j})\in R^{\Gamma,\tau_j}$ iff
+          $\vec{e}\in R^{\Gamma,\{{m_i=\tau_i}^{i=1 \ldots k}\}}$.
+    \item $(\record{{m_i=e_{1,i}}^{i=1 \ldots k}},\ldots,\record{{m_i=e_{n,i}}^{i=1 \ldots k}})\in
+            R^{\Gamma,\{{m_i=\tau_i}^{i=1 \ldots k}\}}$ iff \\
+            $(e_{1,i},\ldots,e_{n,i})\in R^{\Gamma,\tau_i}$ for every $i=1 \ldots k$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[$L$-definability]
+  Let $L \in \Locfin$. A ground relation $R$ of arity $n$ is called {\em $L$-definable}, if there
+  exists a relation $R_L$ such that
+  \begin{enumerate}
+    \item $\vec{\sigma}\in R^\sto$ iff $(\vec{\sigma}|L) \in R_L$ and
+          $\vec{\sigma}\,(\delta^n\,(\Loc \setminus L)) \subseteq \delta^n \CVal_\bot$
+    \item $\vec{l}\in R^\loc$ and $\vec{\sigma}\in R^\sto$ implies $\vec{\sigma}\,(\vec{l})\in R^\val$
+    \item $\vec{\sigma}\in R^\sto$, $\vec{l}\in R^\loc$ and $\vec{v}\in R^\val$ implies
+          $\vec{\sigma}[\vec{v}/\vec{l}]\in R^\sto$
+  \end{enumerate}
+\end{definition}
+
+According to the previous definition, every $L$-definable relation $R$ is uniquely determined by
+$R^\sto$ or even by $R_L$. We let $\DEF^L_n$ denote the set of all $L$-definable ground relations
+of arity $n$ and $\OUT^L_n = \bigcup_{L'\in\Locfin\wedge L \cap L' = \emptyset} \DEF^{L'}_n$ denote
+the set of those which are definable outside of $L$.
+
+Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$.
+
+\begin{definition}[Semantic domains]
+  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-universe $\semantic{\pi}=(D^\pi,\I^\pi)$ by
+  \begin{itemize}
+    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v}\subseteq L\}$ \\
+          $D^\tau = \bigcup_{L\in W} D^\tau_L$ \\
+          $\I^\tau(R) = \{\vec{v}\in(D^\tau)^n\,|\,\vec{v}\in R^\val\}$
+
+    \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
+                              \forall R\in\Sigma^L_n.\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
+                              \hspace*{5cm} \wedge \phi\,(\Store_L) \subseteq \Bool
+                         \}$ \\
+          $D^\tassn = \bigcup_{L\in W} D^\tassn_L$ \\
+          $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^n\,|\,
+                                  \vec{\phi}\,(R^\sto) \subseteq \delta^n \Bool_\bot \}$
+
+    \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi:D^\theta \to D^\pi\,|\,
+                              \forall L'\in W. \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
+                              \hspace*{4.2cm} \wedge \forall R\in\Sigma^L. \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
+          $D^{\tarrow{\theta}{\pi}} = \bigcup_{L\in W} D^{\tarrow{\theta}{\pi}}_L$ \\
+          $\I^{\tarrow{\theta}{\pi}} = \{ \vec{\psi} \in (D^{\tarrow{\theta}{\pi}})^n\,|\,
+                                          \vec{\psi}\,(\I^\theta(R)) \subseteq \I^\pi(R) \}$
+  \end{itemize}
+\end{definition}
+
+We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
+for the $W$-$\Sigma$-universe $(D^\pi,\I^\pi)$ but also for the underlying $W$-universe $D^\pi$,
+hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $R^\pi$ as an abbreviation
+for $\I^\pi(R)$.
+
+\begin{lemma}[Sanity Lemma]
+  Let $L\in W$. Then
+  \begin{enumerate}
+    \item $\phi\in\semantic{\tassn}_L \Rightarrow \left[ \forall \sigma,\sigma'\in\Store_L.
+              \sigma \equiv_L \sigma' \Rightarrow \phi\,\sigma = \phi\,\sigma'\right]$
+    \item $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L \Rightarrow
+              \left[\forall L'\in W. \psi\,(\semantic{\theta}_{L'})\subseteq\semantic{\pi}_{L \cup L'} \right]$
     \item $d \in \semantic{\pi} \Rightarrow d \in \semantic{\pi}_{\supp{d}}$
   \end{enumerate}
 \end{lemma}
