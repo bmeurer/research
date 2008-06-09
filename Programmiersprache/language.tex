@@ -446,17 +446,29 @@ relates stores to their permuted variants, $R_L^\Store = \bigcap_{\eta\in\Perm_L
 \newcommand{\I}{\mathcal{I}}
 
 \begin{definition}
-  Let $(W,\le)$ be a preordered set (of `worlds' $w$).
-  A {\em $W$-universe} is a set $D$ together with a family of subsets $(D_w)_{w\in W}$ such that
-  $D = \bigcup_{w\in W} D_w$ and $v \le w \Rightarrow D_v \subseteq D_w$ for all $v,w \in W$.
+  Let $(W,\sqsubseteq)$ be a lattice (of `worlds' $w$).
+  A {\em $W$-set} is a set $D$ together with a family of subsets $(D_w)_{w\in W}$ such that
+  $D = \bigcup_{w\in W} D_w$ and
+  \begin{itemize}
+    \item $v \sqsubseteq w \Rightarrow D_v \subseteq D_w$
+    \item $D_v \cap D_w \subseteq D_{v \sqcap w}$
+  \end{itemize}
+  for all $v,w \in W$.
 \end{definition}
+
+We define the {\em support} of an element $d\in D$ to be the world
+\[\begin{array}{rcl}
+  \supp{d} &=& \bigsqcap \{w\in W\,|\,d \in D_w\}.
+\end{array}\]
+The support is guarantied to exist by definition of the $W$-sets, i.e. we have
+$d \in D_{\supp{d}}$ for every $d \in D$. $\supp{d}$ is thereby the least world of the element $d$.
 
 \begin{definition}
   A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w_n)_{w\in W,n\in \N}$
   of sets $\Sigma^w_n$ such that for all $m,n\in \N$ and $v,w\in W$
   \begin{itemize}
     \item $m \ne n \Rightarrow \Sigma^v_m \cap \Sigma^w_n = \emptyset$
-    \item $v \le w \Rightarrow \Sigma^v_n \supseteq \Sigma^w_n$
+    \item $v \sqsubseteq w \Rightarrow \Sigma^v_n \supseteq \Sigma^w_n$
   \end{itemize}
 \end{definition}
 
@@ -468,11 +480,13 @@ An element $r \in \Sigma_n$ is called a {\em relation symbol of arity $n$}. We u
 \end{array}\]
 
 \begin{definition}
-  Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-universe} is a pair
-  $(D,\I)$, where $D$ is a $W$-universe and $\I$ is a function which maps every
+  Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-set} is a pair
+  $(D,\I)$, where $D$ is a $W$-set and $\I$ is a function which maps every
   $r \in \Sigma_n$ to a relation $\I(r) \subseteq D^n$ such that
   $r \in \Sigma^w \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
 \end{definition}
+
+We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the lattice set of `worlds'.
 
 \begin{definition}[Ground relation]
   A {\em ground relation of arity $n$} is simply a triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\val\}}$ with
@@ -512,11 +526,11 @@ We let $\DEF^L_n$ denote the set of all $L$-definable ground relations
 of arity $n$ and $\OUT^L_n = \bigcup_{L'\in W\wedge L \cap L' = \emptyset} \DEF^{L'}_n$ denote
 the set of those which are definable outside of $L$.
 
-Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$.
-{\bf TODO:} Prove that $\OUT$ is indeed a $W$-sorted signature.
+Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$. It is trivial to see
+that $\Sigma$ is indeed a $W$-sorted signature.
 
 \begin{definition}[Semantic domains]
-  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-universe $\semantic{\pi}=(D^\pi,\I^\pi)$ by
+  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$ by
   \begin{itemize}
     \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v}\subseteq L\}$ \\
           $D^\tau = \bigcup_{L\in W} D^\tau_L$ \\
@@ -524,7 +538,11 @@ Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$.
 
     \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
                               \forall R\in\Sigma^L_n.\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
-                              \hspace*{5cm} \wedge \phi\,(\Store_L) \subseteq \Bool
+                              \hspace*{5cm} \wedge \phi\,(\Store_L) \subseteq \Bool \\
+                              \hspace*{5cm} \wedge \forall L_1,L_2\in W.
+                                \phi\,(\Store_{L_1} \cup \Store_{L_2}) \subseteq \Bool
+                                \Rightarrow
+                                \phi\,(\Store_{L_1 \cap L_2}) \subseteq \Bool
                          \}$ \\
           $D^\tassn = \bigcup_{L\in W} D^\tassn_L$ \\
           $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^n\,|\,
@@ -539,13 +557,23 @@ Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$.
   \end{itemize}
 \end{definition}
 
-{\bf TODO:} Prove that $D^\pi$ is a $W$-universe and $(D^\pi,\I^\pi)$ is a $W$-$\Sigma$-universe
+{\bf TODO:} Prove that $D^\pi$ is a $W$-set and $(D^\pi,\I^\pi)$ is a $W$-$\Sigma$-set
 for all $\pi\in\LType$.
 
 We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
-for the $W$-$\Sigma$-universe $(D^\pi,\I^\pi)$ but also for the underlying $W$-universe $D^\pi$,
+for the $W$-$\Sigma$-set $(D^\pi,\I^\pi)$ but also for the underlying $W$-set $D^\pi$,
 hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $R^\pi$ as an abbreviation
 for $\I^\pi(R)$.
+
+\begin{definition}[Support]
+  For every $\pi\in\LType$ we define the {\em support} of an element $d \in \semantic{\pi}$ to be the set
+  \[\begin{array}{rcl}
+    \supp{d} &=& \bigcap \{L\in W\,|\,\semantic{\pi}_L\}
+  \end{array}\]
+\end{definition}
+
+The support is guarantied to exists, because $\semantic{\pi}$ is a $W$-set, i.e. we
+have $d \in \semantic{\pi}_{\supp{d}}$ for all $d\in\semantic{\pi}$, $\pi\in\LType$.
 
 \begin{lemma}[Sanity Lemma]
   Let $L\in W$. Then
