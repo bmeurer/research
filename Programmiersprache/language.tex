@@ -81,9 +81,7 @@ between integer values and their program representation.
 
 We assume an infinite set $\Loc^\tau$ of {\em $\tau$-locations} for each type $\tau \in \Type$,
 where the sets $\Loc^\tau$ are required to be disjoint. Given those sets,
-$\Loc = \bigcup_{\tau\in\Type} \Loc^\tau$ is the set of all {\em locations} $l$. The set
-$\Locfin = \powersetfin{\Loc}$ includes all finite subsets of $\Loc$, and likewise $\Locfin^\tau = \powersetfin{\Loc^\tau}$
-includes all finite subsets of $\Loc^\tau$.
+$\Loc = \bigcup_{\tau\in\Type} \Loc^\tau$ is the set of all {\em locations} $l$.
 
 \begin{definition}[Expressions]
   The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
@@ -153,12 +151,12 @@ closed values.
             \item $\sigma(\locns{\sigma(\Loc)}) \subseteq \CVal$.
           \end{itemize}
 
-    \item For each $L\in\Locfin$ the set of {\em $L$-stores} is defined as
+    \item For each $L\in\powersetfin{\Loc}$ the set of {\em $L$-stores} is defined as
           \[\begin{array}{l}
             \Store_L = \{\sigma\,|\,\text{$\sigma$ is a store with $L\subseteq\dom{\sigma}$}\}.
           \end{array}\]
 
-    \item $\Store = \bigcup_{L\in\Locfin} \Store_L$ denotes the set of all {\em stores}.
+    \item $\Store = \bigcup_{L\in\powersetfin{\Loc}} \Store_L$ denotes the set of all {\em stores}.
   \end{enumerate}
 \end{definition}
 
@@ -166,7 +164,7 @@ We thereby require stores to be well-typed and closed by definition, i.e. we don
 references} within stores.
 
 \begin{definition}[Configuration]
-  Let $e\in\Exp$ and $\sigma\in\Store$. The pair $(e,\sigma)$ is a {\em configuration}
+  Let $e\in\CExp$ and $\sigma\in\Store$. The pair $(e,\sigma)$ is a {\em configuration}
   if $\locns{e} \subseteq \dom{\sigma}$.
 \end{definition}
 
@@ -443,7 +441,7 @@ are indeed $W$-$\Sigma$-sets.
 
 \begin{proof} \
   \begin{enumerate}
-    \item Straight forward induction on $\pi$.
+    \item Straight forward induction.
 
     \item {\bf TODO}
   \end{enumerate}
@@ -457,12 +455,32 @@ are indeed $W$-$\Sigma$-sets.
 \subsection{Total correctness}
 
 \begin{definition}[Total correctness]
-  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L\in\Loc$. $e$ is {\em $L$-total correct}, or {\em $L$-correct} for short, with regard to $\phi$ and $\psi$
-  if for all $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\Val^\tau$ and a $\sigma'\in\Store_L$,
+  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+  and $L\in W$. $e$ is {\em $L$-total correct}, or {\em $L$-correct} for short, with regard to $\phi$ and $\psi$ if for
+  all $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\CVal^\tau$ and a $\sigma'\in\Store_L$,
   for which $(e,\sigma) \Downarrow (v,\sigma')$ and $\app{\app{\psi}{v}}{\sigma'} = \true$ holds. We write
   $L \models \triple{\phi}{e}{\psi}$ in this case.
 \end{definition}
+
+\begin{lemma}[Total correctness]
+  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+  and $L,L'\in W$. $\locns{e}\cup\supp{\phi}\cup\supp{\psi} \subseteq L \cap L'$ implies
+  \[\begin{array}{rcl}
+    L\models\triple{\phi}{e}{\psi} &\text{ iff }& L'\models\triple{\phi}{e}{\psi}.
+  \end{array}\]
+\end{lemma}
+
+\begin{proof}
+  Without loss of generality let $L= \locns{e}\cup\supp{\phi}\cup\supp{\psi}$ and hence $L \subseteq L'$.
+  \begin{itemize}
+    \item[`$\Rightarrow$']
+          Let $\sigma\in\Store_{L'}$ with $\phi\,\sigma=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
+          a $v\in\CVal^\tau$ and a $\sigma'\in\Store_L$ such that $(e,\sigma)\Downarrow(v,\sigma')$ and
+          $\psi\,v\,\sigma'=\true$. $\sigma'\in\Store_{L'}$ since $L'\subseteq\dom{\sigma}\subseteq\dom{\sigma'}$.
+
+    \item[`$\Leftarrow$']
+  \end{itemize}
+\end{proof}
 
 
 \end{document}
