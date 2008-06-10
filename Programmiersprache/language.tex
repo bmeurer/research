@@ -30,6 +30,16 @@
 %% LaTeX macros
 \include{macros}
 
+% TODO
+\newcommand{\CExp}{\nstyle{CExp}}
+\newcommand{\CVal}{\nstyle{CVal}}
+\newcommand{\loc}{\nstyle{loc}}
+\newcommand{\sto}{\nstyle{sto}}
+\newcommand{\val}{\nstyle{val}}
+\newcommand{\DEF}{\nstyle{DEF}}
+\newcommand{\OUT}{\nstyle{OUT}}
+\newcommand{\I}{\mathcal{I}}
+
 
 \begin{document}
 
@@ -122,9 +132,11 @@ $\Tj{\Gamma}{e}{\tau}$.
   \end{itemize}
 \end{definition}
 
-We write $\tj{e}{\tau}$ for $\Tj{[\,]}{e}{\tau}$. The set $\Exp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$
-includes the closed expressions of type $\tau$. Likewise $\Val^\tau = \Exp^\tau \cap \Val$ includes
-the closed values of type $\tau$.
+We write $\tj{e}{\tau}$ for $\Tj{[\,]}{e}{\tau}$. The set $\CExp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$
+includes the closed expressions of type $\tau$ and $\CExp = \bigcup_{\tau\in\Type} \CExp^\tau$ includes
+all well-typed, closed expressions. Likewise $\CVal^\tau = \CExp^\tau \cap \Val$ includes
+the closed values of type $\tau$ and $\CVal = \bigcup_{\tau\in\Type} \CVal^\tau$ includes all well-typed,
+closed values.
 
 
 %%
@@ -135,10 +147,10 @@ the closed values of type $\tau$.
 
 \begin{definition}[Store] \label{definition:Store} \
   \begin{enumerate}
-    \item A {\em store} is a partial function $\sigma:\Loc \pto \bigcup_{\tau\in\Type} \Val^\tau$ with
+    \item A {\em store} is a (total) function $\sigma:\Loc \to \CVal_\bot$ with
           \begin{itemize}
-            \item $\sigma(\Loc^\tau) \subseteq \Val^\tau$ for all $\tau \in \Type$, and
-            \item $\locns{\sigma(\Loc)} \subseteq \dom{\sigma}$.
+            \item $\sigma(\Loc^\tau) \subseteq (\CVal^\tau)_\bot$ for all $\tau \in \Type$, and
+            \item $\sigma(\locns{\sigma(\Loc)}) \subseteq \CVal$.
           \end{itemize}
 
     \item For each $L\in\Locfin$ the set of {\em $L$-stores} is defined as
@@ -239,68 +251,71 @@ define the set $\Assn$ of {\em assertions} $p,q$ using the following grammar:
 %% Reachability
 %%
 
-\subsection{Reachability}
+%\subsection{Reachability}
+%
+%
+%\begin{definition}[Reachability]
+%  Let $L\in\Locfin$ and $\sigma\in\Store_L$. By induction we define sets $\reachn{i}{L}{\sigma} \in \Loc$
+%  \begin{itemize}
+%    \item $\reachn{0}{L}{\sigma} = L$
+%    \item $\reachn{i+1}{L}{\sigma} = \reachn{i}{L}{\sigma} \cup \bigcup_{l\in\reachn{i}{L}{\sigma}} \locns{\sigma(l)}$.
+%  \end{itemize}
+%  The set $\reach{L}{\sigma} = \bigcup_{i\in\N} \reachn{i}{L}{\sigma}$ includes all locations in $\sigma$ reachable
+%  by $L$.
+%\end{definition}
+%
+%Since a store $\sigma\in\Store_L$ is always closed by definition, it is obvious that
+%$\reach{L}{\sigma} \subseteq \dom{\sigma}$ holds.
+%
+%\begin{lemma}
+%  For all $L,L'\in\Locfin$ with $L \subseteq L'$ and $\sigma,\sigma'\in\Store_{L'}$ we have:
+%  \begin{enumerate}
+%    \item $\Store_{L'} \subseteq \Store_L$
+%    \item $\reach{L}{\sigma} \subseteq \reach{L'}{\sigma}$
+%    \item If $\reach{L'}{\sigma} = \reach{L'}{\sigma'}$ and $\sigma(l) = \sigma'(l)$ for every $l\in\reach{L'}{\sigma}$,
+%          then $\reach{L}{\sigma} = \reach{L}{\sigma'}$.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Trivial.
+%\end{proof}
+%
+%\begin{definition}[$L$-similarity, $L$-equivalence, $L$-definability]
+%  Given a set $L\in\Locfin$ we define:
+%  \begin{enumerate}
+%    \item Two stores $\sigma,\sigma'\in\Store$ with $L \subseteq \dom{\sigma} \cup \dom{\sigma'}$ are
+%          {\em $L$-similar}, denoted $\sigma \simeq_L \sigma'$, if $\sigma(l)=\sigma'(l)$ for every
+%          $l \in L$.
+%
+%    \item Two stores $\sigma,\sigma'\in\Store_L$ are {\em $L$-equivalent}, denoted $\sigma \equiv_L \sigma'$,
+%          if
+%          \begin{itemize}
+%            \item $\reach{L}{\sigma} = \reach{L}{\sigma'}$ and
+%            \item $\sigma \simeq_{\reach{L}{\sigma}} \sigma'$.
+%          \end{itemize}
+%
+%    \item A predicate $\phi:\Store_{L'} \to \Bool$ with $L' \subseteq L$ is said to be {\em $L$-definable} if
+%          $\app{\phi}{\sigma} = \app{\phi}{\sigma'}$ holds for all
+%          stores $\sigma,\sigma'\in\Store_L$ with $\sigma \equiv_L \sigma'$.
+%  \end{enumerate}
+%\end{definition}
+%
+%\begin{lemma}
+%  For all sets $L,L'\in\Locfin$ with $L \subseteq L'$ we have:
+%  \begin{enumerate}
+%    \item $\sigma \simeq_{L'} \sigma'$ implies $\sigma \simeq_L \sigma'$ for all $\sigma,\sigma'\in\Store$.
+%    \item $\sigma \equiv_{L'} \sigma'$ implies $\sigma \equiv_L \sigma'$ for all $\sigma,\sigma'\in\Store_{L'}$.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Trivial.
+%\end{proof}
 
 
-\begin{definition}[Reachability]
-  Let $L\in\Locfin$ and $\sigma\in\Store_L$. By induction we define sets $\reachn{i}{L}{\sigma} \in \Loc$
-  \begin{itemize}
-    \item $\reachn{0}{L}{\sigma} = L$
-    \item $\reachn{i+1}{L}{\sigma} = \reachn{i}{L}{\sigma} \cup \bigcup_{l\in\reachn{i}{L}{\sigma}} \locns{\sigma(l)}$.
-  \end{itemize}
-  The set $\reach{L}{\sigma} = \bigcup_{i\in\N} \reachn{i}{L}{\sigma}$ includes all locations in $\sigma$ reachable
-  by $L$.
-\end{definition}
-
-Since a store $\sigma\in\Store_L$ is always closed by definition, it is obvious that
-$\reach{L}{\sigma} \subseteq \dom{\sigma}$ holds.
-
-\begin{lemma}
-  For all $L,L'\in\Locfin$ with $L \subseteq L'$ and $\sigma,\sigma'\in\Store_{L'}$ we have:
-  \begin{enumerate}
-    \item $\Store_{L'} \subseteq \Store_L$
-    \item $\reach{L}{\sigma} \subseteq \reach{L'}{\sigma}$
-    \item If $\reach{L'}{\sigma} = \reach{L'}{\sigma'}$ and $\sigma(l) = \sigma'(l)$ for every $l\in\reach{L'}{\sigma}$,
-          then $\reach{L}{\sigma} = \reach{L}{\sigma'}$.
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Trivial.
-\end{proof}
-
-\begin{definition}[$L$-similarity, $L$-equivalence, $L$-definability]
-  Given a set $L\in\Locfin$ we define:
-  \begin{enumerate}
-    \item Two stores $\sigma,\sigma'\in\Store$ with $L \subseteq \dom{\sigma} \cup \dom{\sigma'}$ are
-          {\em $L$-similar}, denoted $\sigma \simeq_L \sigma'$, if $\sigma(l)=\sigma'(l)$ for every
-          $l \in L$.
-
-    \item Two stores $\sigma,\sigma'\in\Store_L$ are {\em $L$-equivalent}, denoted $\sigma \equiv_L \sigma'$,
-          if
-          \begin{itemize}
-            \item $\reach{L}{\sigma} = \reach{L}{\sigma'}$ and
-            \item $\sigma \simeq_{\reach{L}{\sigma}} \sigma'$.
-          \end{itemize}
-
-    \item A predicate $\phi:\Store_{L'} \to \Bool$ with $L' \subseteq L$ is said to be {\em $L$-definable} if
-          $\app{\phi}{\sigma} = \app{\phi}{\sigma'}$ holds for all
-          stores $\sigma,\sigma'\in\Store_L$ with $\sigma \equiv_L \sigma'$.
-  \end{enumerate}
-\end{definition}
-
-\begin{lemma}
-  For all sets $L,L'\in\Locfin$ with $L \subseteq L'$ we have:
-  \begin{enumerate}
-    \item $\sigma \simeq_{L'} \sigma'$ implies $\sigma \simeq_L \sigma'$ for all $\sigma,\sigma'\in\Store$.
-    \item $\sigma \equiv_{L'} \sigma'$ implies $\sigma \equiv_L \sigma'$ for all $\sigma,\sigma'\in\Store_{L'}$.
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Trivial.
-\end{proof}
-
+%% TODO - statt \pi besser \theta fuer die logischen Typen verwenden
+%%        und \pi fuer die Permutationen
 
 %%
 %% Semantic domains
@@ -308,160 +323,19 @@ $\reach{L}{\sigma} \subseteq \dom{\sigma}$ holds.
 
 \subsection{Semantic domains}
 
-\begin{definition}[Semantic domains]
-  For all types $\pi \in \LType$ we define {\em semantic domains}
-  $\semantic{\pi} = \bigcup_{L\in\Locfin} \semantic{\pi}_L$, where
-  the {\em $L$-definable semantic domains} $\semantic{\pi}_L$ are defined inductively as follows:
-  \[\begin{array}{rcl}
-    \semantic{\tau}_L &:=& \{v\in\Val^\tau\,|\,\locns{v}=L\} \\
-    \semantic{\tassn}_L &:=& \{\phi:\Store_L \to \Bool\,|\,\text{$\phi$ $L$-definable}\} \\
-    \semantic{\ttarrow{\theta}{\pi}}_L &:=& \{\psi:\semantic{\theta}\to\semantic{\pi}\,|\,
-             \psi\,(\semantic{\theta}_{L'}) \subseteq \semantic{\pi}_{L \cup L'} \text{ f.a. } L'\in\Locfin\}
-  \end{array}\]
-\end{definition}
-
-\begin{definition}[Support]
-  Let $\pi\in\LType$. For every $d \in \semantic{\pi}$ the set $\supp{d}\subseteq\Loc$,
-  called the {\em support} of $d$, is defined by induction on $\pi$:
-  \[\begin{array}{rcl}
-    \supp{v} &:=& \locns{v} \\
-    \supp{\phi} &:=& L, \text{ where } \phi:\Store_L\to\Bool \\
-    \supp{\eta} &:=& \bigcap_{d\in\semantic{\theta}} \supp{\app{\eta}{d}}, \text{ where } \eta:\semantic{\theta}\to\semantic{\pi}
-  \end{array}\]
-\end{definition}
-
-\begin{lemma}
-  Let $\pi\in\LType$.
-  \begin{enumerate}
-    \item For every $d\in\semantic{\pi}$ and $L\in\Locfin$,
-          $d\in\semantic{\pi}_L$ implies $L = \supp{d}$.
-    \item For all $L,L'\in\Locfin$, $\semantic{\pi}_L \cap \semantic{\pi}_{L'} \ne \emptyset$
-          implies $L = L'$.
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof} \
-  \begin{enumerate}
-    \item Straight forward induction.
-    \item Trivial conclusion.
-  \end{enumerate}
-\end{proof}
-
-
-%%
-%% Total correctness
-%%
-
-\subsection{Total correctness}
-
-\begin{definition}[Total correctness]
-  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L\in\Loc$. $e$ is {\em $L$-correct} with regard to $\phi$ and $\psi$ if for all
-  $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\Val^\tau$ and a $\sigma'\in\Store_L$,
-  for which $(e,\sigma) \Downarrow (v,\sigma')$ and $\app{\app{\psi}{v}}{\sigma'} = \true$ holds. We write
-  $L \models \triple{\phi}{e}{\psi}$.
-\end{definition}
-
-
-%% TODO - statt \pi besser \theta fuer die logischen Typen verwenden
-%%        und \pi fuer die Permutationen
-
-%%
-%% Second attempt
-%%
-
-\pagebreak
-\subsection{Second attempt}
-
 \begin{definition}
-  Let $L\in\Locfin$.
-  \begin{itemize}
-    \item A {\em $L$-permutation} is a total, bijective function $\eta:\Loc \to \Loc$ with
-          \begin{itemize}
-            \item $\eta\,(L) = L$ and
-            \item $\eta\,(\Loc^\tau) = \Loc^\tau$ for every $\tau\in\Type$.
-          \end{itemize}
-    \item $\Perm_L = \{\eta:\Loc \to \Loc\,|\,\text{$\eta$ is $L$-permutation}\}$ denotes the
-          set of all $L$-permutations.
-  \end{itemize}
-\end{definition}
-
-For every such $\eta$, a function $\langle\eta\rangle:\Exp\to\Exp,e\mapsto \app{e}{\eta}$ is
-defined, where $\app{e}{\eta}$ is the expression $e$ with the locations permuted according to $\eta$.
-The set
-$R_\eta^\Store = \{(\sigma,\langle\eta^{-1}\rangle \circ \sigma \circ \eta)\,|\,\sigma\in\Store_L\}$
-relates stores to their permuted variants, $R_L^\Store = \bigcap_{\eta\in\Perm_L} R_\eta^\Store$.
-
-\begin{lemma}
-  Let $L\in\Locfin$ and $\eta\in\Perm_L$. Then
-  \begin{enumerate}
-    \item $R_\eta^\Store \subseteq \Store_L \times \Store_L$
-  \end{enumerate}
-\end{lemma}
-
-\begin{definition}[Semantic domains]
-  For every type $\pi \in \LType$ we define {\em semantic domains}
-  $\semantic{\pi} = \bigcup_{L\in\Locfin} \semantic{\pi}_L$ with
-  $\semantic{\pi}_L = \{d\,|\,(d,d)\in R_L^\pi\}$. Here
-  $R_L^\pi = \bigcap_{\eta\in\Perm_L} R_\eta^\pi$, where the $R_\eta^\pi$
-  are defined by induction on $\pi$:
-  \[\begin{array}{rcl}
-    R_\eta^\tau &=& \{(v,\app{v}{\eta})\,|\,v \in \Val^\tau\} \\
-
-    R_\eta^\tassn &=& \{\vec{\phi}\in(\Store_L\to\Bool)^2\,|\,\vec{\phi}\,(R_\eta^\Store) \subseteq \delta^2 \Bool\} \\
-
-    R_\eta^{\ttarrow{\theta}{\pi}} &=& \{\vec{\psi}\in(\semantic{\theta}\to\semantic{\pi})^2\,|\,
-                                        \vec{\psi}\,(R_\eta^\theta) \subseteq R_\eta^\pi\}
-  \end{array}\]
-  $d \in \semantic{\pi}$ is called {\em $L$-definable} if $d \in \semantic{\pi}_L$.
-\end{definition}
-
-\begin{lemma}[Sanity Lemma]
-  Let $L\in\Locfin$. Then
-  \begin{enumerate}
-    \item $\phi\in\semantic{\tassn}_L \Rightarrow \left[ \forall \sigma,\sigma'\in\Store_L.
-              \sigma \equiv_L \sigma' \Rightarrow \phi\,\sigma = \phi\,\sigma'\right]$
-    \item $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L \Rightarrow
-              \left[\forall L'\in\Locfin. \psi\,(\semantic{\theta}_{L'})\subseteq\semantic{\pi}_{L \cup L'} \right]$
-    \item $d \in \semantic{\pi} \Rightarrow d \in \semantic{\pi}_{\supp{d}}$
-  \end{enumerate}
-\end{lemma}
-
-
-%%
-%% Third attempt
-%%
-
-\pagebreak
-\subsection{Third attempt}
-
-% TODO
-\newcommand{\CExp}{\nstyle{CExp}}
-\newcommand{\CVal}{\nstyle{CVal}}
-\newcommand{\loc}{\nstyle{loc}}
-\newcommand{\sto}{\nstyle{sto}}
-\newcommand{\val}{\nstyle{val}}
-\newcommand{\DEF}{\nstyle{DEF}}
-\newcommand{\OUT}{\nstyle{OUT}}
-\newcommand{\I}{\mathcal{I}}
-
-\begin{definition}
-  Let $(W,\sqsubseteq)$ be a lattice (of `worlds' $w$).
+  Let $(W,\sqsubseteq)$ be a partial order (of `worlds' $w$).
   A {\em $W$-set} is a set $D$ together with a family of subsets $(D_w)_{w\in W}$ such that
-  $D = \bigcup_{w\in W} D_w$ and
-  \begin{itemize}
-    \item $v \sqsubseteq w \Rightarrow D_v \subseteq D_w$
-    \item $D_v \cap D_w \subseteq D_{v \sqcap w}$
-  \end{itemize}
+  $D = \bigcup_{w\in W} D_w$ and $w \ne v \Rightarrow D_w \cap D_v = \emptyset$
   for all $v,w \in W$.
 \end{definition}
 
-We define the {\em support} of an element $d\in D$ to be the world
+We define the {\em support} of an element $d\in D_w$ to be the world
 \[\begin{array}{rcl}
-  \supp{d} &=& \bigsqcap \{w\in W\,|\,d \in D_w\}.
+  \supp{d} &=& w
 \end{array}\]
-The support is guarantied to exist by definition of the $W$-sets, i.e. we have
-$d \in D_{\supp{d}}$ for every $d \in D$. $\supp{d}$ is thereby the least world of the element $d$.
+The support is guarantied to be unique for every $d \in D$, since the subsets
+$(D_w)_{w\in W}$ of $D$ are disjoint.
 
 \begin{definition}
   A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w_n)_{w\in W,n\in \N}$
@@ -483,10 +357,10 @@ An element $r \in \Sigma_n$ is called a {\em relation symbol of arity $n$}. We u
   Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-set} is a pair
   $(D,\I)$, where $D$ is a $W$-set and $\I$ is a function which maps every
   $r \in \Sigma_n$ to a relation $\I(r) \subseteq D^n$ such that
-  $r \in \Sigma^w \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
+  $r \in \Sigma^w_n \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
 \end{definition}
 
-We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the lattice set of `worlds'.
+We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial order of `worlds'.
 
 \begin{definition}[Ground relation]
   A {\em ground relation of arity $n$} is simply a triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\val\}}$ with
@@ -532,59 +406,63 @@ that $\Sigma$ is indeed a $W$-sorted signature.
 \begin{definition}[Semantic domains]
   For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$ by
   \begin{itemize}
-    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v}\subseteq L\}$ \\
+    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
           $D^\tau = \bigcup_{L\in W} D^\tau_L$ \\
           $\I^\tau(R) = \{\vec{v}\in(D^\tau)^n\,|\,\vec{v}\in R^\val\}$
 
     \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
-                              \forall R\in\Sigma^L_n.\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
-                              \hspace*{5cm} \wedge \phi\,(\Store_L) \subseteq \Bool \\
-                              \hspace*{5cm} \wedge \forall L_1,L_2\in W.
-                                \phi\,(\Store_{L_1} \cup \Store_{L_2}) \subseteq \Bool
-                                \Rightarrow
-                                \phi\,(\Store_{L_1 \cap L_2}) \subseteq \Bool
+                              \forall R\in\Sigma^L_n.\,\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
+                              \hspace*{5cm} \wedge \dom{\phi} = \Store_L
                          \}$ \\
           $D^\tassn = \bigcup_{L\in W} D^\tassn_L$ \\
           $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^n\,|\,
                                   \vec{\phi}\,(R^\sto) \subseteq \delta^n \Bool_\bot \}$
 
     \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi:D^\theta \to D^\pi\,|\,
-                              \forall L'\in W. \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
-                              \hspace*{4.2cm} \wedge \forall R\in\Sigma^L. \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
+                              \forall L'\in W.\, \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
+                              \hspace*{4.2cm} \wedge \forall R\in\Sigma^L.\, \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
           $D^{\ttarrow{\theta}{\pi}} = \bigcup_{L\in W} D^{\ttarrow{\theta}{\pi}}_L$ \\
           $\I^{\ttarrow{\theta}{\pi}}(R) = \{ \vec{\psi} \in (D^{\ttarrow{\theta}{\pi}})^n\,|\,
                                           \vec{\psi}\,(\I^\theta(R)) \subseteq \I^\pi(R) \}$
   \end{itemize}
 \end{definition}
 
-{\bf TODO:} Prove that $D^\pi$ is a $W$-set and $(D^\pi,\I^\pi)$ is a $W$-$\Sigma$-set
-for all $\pi\in\LType$.
-
 We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
 for the $W$-$\Sigma$-set $(D^\pi,\I^\pi)$ but also for the underlying $W$-set $D^\pi$,
 hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $R^\pi$ as an abbreviation
-for $\I^\pi(R)$.
+for $\I^\pi(R)$. However we still need to prove that the semantic domains $\semantic{\pi}$
+are indeed $W$-$\Sigma$-sets.
 
-\begin{definition}[Support]
-  For every $\pi\in\LType$ we define the {\em support} of an element $d \in \semantic{\pi}$ to be the set
-  \[\begin{array}{rcl}
-    \supp{d} &=& \bigcap \{L\in W\,|\,\semantic{\pi}_L\}
-  \end{array}\]
-\end{definition}
-
-The support is guarantied to exists, because $\semantic{\pi}$ is a $W$-set, i.e. we
-have $d \in \semantic{\pi}_{\supp{d}}$ for all $d\in\semantic{\pi}$, $\pi\in\LType$.
-
-\begin{lemma}[Sanity Lemma]
-  Let $L\in W$. Then
+\begin{lemma}
+  Let $\pi\in\LType$ and $d \in \semantic{\pi}$.
   \begin{enumerate}
-    \item $\phi\in\semantic{\tassn}_L \Rightarrow \left[ \forall \sigma,\sigma'\in\Store_L.
-              \sigma \equiv_L \sigma' \Rightarrow \phi\,\sigma = \phi\,\sigma'\right]$
-    \item $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L \Rightarrow
-              \left[\forall L'\in W. \psi\,(\semantic{\theta}_{L'})\subseteq\semantic{\pi}_{L \cup L'} \right]$
-    \item $d \in \semantic{\pi} \Rightarrow d \in \semantic{\pi}_{\supp{d}}$
+    \item $\forall L_1,L_2\in W.\, d \in \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \Rightarrow L_1 = L_2$
+    \item $\forall L \in W, n \in \N, R\in \OUT^L_n.\, d \in \semantic{\pi}_L \Rightarrow (d,\ldots,d) \in R^\pi$
   \end{enumerate}
 \end{lemma}
+
+\begin{proof} \
+  \begin{enumerate}
+    \item Straight forward induction on $\pi$.
+
+    \item {\bf TODO}
+  \end{enumerate}
+\end{proof}
+
+
+%%
+%% Total correctness
+%%
+
+\subsection{Total correctness}
+
+\begin{definition}[Total correctness]
+  Let $\tau\in\Type$, $e\in\Exp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+  and $L\in\Loc$. $e$ is {\em $L$-total correct}, or {\em $L$-correct} for short, with regard to $\phi$ and $\psi$
+  if for all $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\Val^\tau$ and a $\sigma'\in\Store_L$,
+  for which $(e,\sigma) \Downarrow (v,\sigma')$ and $\app{\app{\psi}{v}}{\sigma'} = \true$ holds. We write
+  $L \models \triple{\phi}{e}{\psi}$ in this case.
+\end{definition}
 
 
 \end{document}
