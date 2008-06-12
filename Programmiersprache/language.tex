@@ -36,9 +36,10 @@
 \newcommand{\loc}{\nstyle{loc}}
 \newcommand{\sto}{\nstyle{sto}}
 \newcommand{\val}{\nstyle{val}}
-\newcommand{\DEF}{\nstyle{DEF}}
 \newcommand{\OUT}{\nstyle{OUT}}
+\newcommand{\DEF}{\nstyle{DEF}}
 \newcommand{\I}{\mathcal{I}}
+\newcommand{\id}{\nstyle{id}}
 
 
 \begin{document}
@@ -336,91 +337,81 @@ The support is guarantied to be unique for every $d \in D$, since the subsets
 $(D_w)_{w\in W}$ of $D$ are disjoint.
 
 \begin{definition}
-  A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w_n)_{w\in W,n\in \N}$
-  of sets $\Sigma^w_n$ such that for all $m,n\in \N$ and $v,w\in W$
-  \begin{itemize}
-    \item $m \ne n \Rightarrow \Sigma^v_m \cap \Sigma^w_n = \emptyset$
-    \item $v \sqsubseteq w \Rightarrow \Sigma^v_n \supseteq \Sigma^w_n$
-  \end{itemize}
+  A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w)_{w\in W}$
+  of sets $\Sigma^w$ such that
+  $v \sqsubseteq w \Rightarrow \Sigma^v \supseteq \Sigma^w$
+  for all $v,w\in W$.
 \end{definition}
 
-An element $r \in \Sigma_n$ is called a {\em relation symbol of arity $n$}. We use the abbreviations
+An element $r \in \Sigma_n$ is called a {\em relation symbol}. We use the abbreviation
 \[\begin{array}{rcl}
-  \Sigma_n =_{def} \bigcup_{w\in W} \Sigma^w_n, &
-  \Sigma^w =_{def} \bigcup_{n\in \N} \Sigma^w_n, &
   \Sigma =_{def} \bigcup_{w\in W} \Sigma^w.
 \end{array}\]
 
 \begin{definition}
   Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-set} is a pair
   $(D,\I)$, where $D$ is a $W$-set and $\I$ is a function which maps every
-  $r \in \Sigma_n$ to a relation $\I(r) \subseteq D^n$ such that
-  $r \in \Sigma^w_n \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
+  $r \in \Sigma$ to a relation $\I(r) \subseteq D^2$ such that
+  $r \in \Sigma^w \Rightarrow \delta^2 D_w \subseteq \I(r)$ for all $w \in W$.
 \end{definition}
 
 We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial order of `worlds'.
 
+\begin{definition}
+  A {\em permutation} is a bijective function $\mu:\Loc\to\Loc$ with
+  $\mu\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$.
+\end{definition}
+
+We let $\OUT_L = \{\mu\,|\,(\mu|L) = \id_L\}$
+denote the set of all permutations $\mu$ which permute only locations outside $L$.
+
 \begin{definition}[Ground relation]
-  A {\em ground relation of arity $n$} is simply a triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\val\}}$ with
+  Let $L\in W$ and $\mu \in \OUT_L$. A {\em $\mu$-defined ground relation} is simply a
+  triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\val\}}$ with
   \begin{itemize}
-    \item $R^\loc \subseteq \bigcup_{\tau\in\Type} \left(\Loc^\tau\right)^n$,
-    \item $R^\sto \subseteq \Store^n$ and
-    \item $R^\val = \bigcup_{\tau\in\Type} \left(\CVal^\tau\right)^n \cap R^\Exp$
+    \item $R^\loc = \{ (l,\mu(l))\,|\,l\in \Loc\}$,
+    \item $R^\sto = \{ \vec{s}\in\Store^2\,|\,\vec{s}\,(R^\loc)\subseteq R^\val\}$ and
+    \item $R^\val = \bigcup_{\tau\in\Type} \left(\CVal^\tau\right)^2 \cap R^\Exp$
   \end{itemize}
-  where the relation $R^\Exp \subseteq \Exp^n$ is defined by induction as follows:
+  where the relation $R^\Exp \subseteq \Exp^2$ is inductively defined as follows:
   \begin{enumerate}
     \item $\vec{l}\in R^\Exp$ iff $\vec{l}\in R^{\Loc}$.
-    \item $(c,\ldots,c)\in R^\Exp$ iff $c\in\Const$.
-    \item $(x,\ldots,x)\in R^\Exp$ iff $x\in\Var$.
-    \item $(\abstr{x}{e_1},\ldots,\abstr{x}{e_n})\in R^\Exp$ iff $\vec{e}\in R^\Exp$.
-    \item $(\app{e_1}{e_1'},\ldots,\app{e_n}{e_n'})\in R^\Exp$ iff $\vec{e},\vec{e'}\in R^\Exp$.
-    \item $(\ifte{e_1}{e_1'}{e_1''},\ldots,\ifte{e_n}{e_n'}{e_n''})\in R^\Exp$ iff
+    \item $(c,c)\in R^\Exp$ iff $c\in\Const$.
+    \item $(x,x)\in R^\Exp$ iff $x\in\Var$.
+    \item $(\abstr{x}{e_1},\abstr{x}{e_2})\in R^\Exp$ iff $\vec{e}\in R^\Exp$.
+    \item $(\app{e_1}{e_1'},\app{e_2}{e_2'})\in R^\Exp$ iff $\vec{e},\vec{e'}\in R^\Exp$.
+    \item $(\ifte{e_1}{e_1'}{e_1''},\ifte{e_2}{e_2'}{e_2''})\in R^\Exp$ iff
           $\vec{e},\vec{e'},\vec{e''}\in R^\Exp$.
-    \item $(\proj{e_1}{m_j},\ldots,\proj{e_n}{m_j})\in R^\Exp$ iff $\vec{e}\in R^\Exp$.
-    \item $(\record{{m_i=e_{1,i}}^{i=1 \ldots k}},\ldots,\record{{m_i=e_{n,i}}^{i=1 \ldots k}})\in R^\Exp$ iff \\
-            $(e_{1,i},\ldots,e_{n,i})\in R^\Exp$ for every $i=1 \ldots k$.
+    \item $(\proj{e_1}{m_j},\proj{e_2}{m_j})\in R^\Exp$ iff $\vec{e}\in R^\Exp$.
+    \item $(\record{{m_i=e_i}^{i=1 \ldots k}},\record{{m_i=e_i'}^{i=1 \ldots k}})\in R^\Exp$ iff
+            $(e_i,e_i')\in R^\Exp$ for every $i=1 \ldots k$.
   \end{enumerate}
 \end{definition}
 
-\begin{definition}[$L$-definability]
-  Let $L \in W$. A ground relation $R$ of arity $n$ is called {\em $L$-definable}, if there
-  exists a relation $R_L$ such that
-  \begin{enumerate}
-    \item $\vec{\sigma}\in R^\sto$ iff $(\vec{\sigma}|L) \in R_L$ and
-          $\vec{\sigma}\,(\delta^n\,(\Loc \setminus L)) \subseteq \delta^n \CVal_\bot$
-    \item $\vec{l}\in R^\loc$ and $\vec{\sigma}\in R^\sto$ implies $\vec{\sigma}\,(\vec{l})\in R^\val$
-    \item $\vec{\sigma}\in R^\sto$, $\vec{l}\in R^\loc$ and $\vec{v}\in R^\val$ implies
-          $\vec{\sigma}[\vec{v}/\vec{l}]\in R^\sto$
-  \end{enumerate}
-\end{definition}
+Let $\Sigma = (\Sigma_L)_{L\in W}$ where $\Sigma_L = \{R_\mu\,|\,\mu\in\OUT_L\}$. It is more or less trivial to see
+that $\Sigma$ is indeed a $W$-sorted signature, since $L \subseteq L'$ implies $\OUT_{L'}\subseteq\OUT_L$.
 
-We let $\DEF^L_n$ denote the set of all $L$-definable ground relations
-of arity $n$ and $\OUT^L_n = \bigcup_{L'\in W\wedge L \cap L' = \emptyset} \DEF^{L'}_n$ denote
-the set of those which are definable outside of $L$.
-
-Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$. It is trivial to see
-that $\Sigma$ is indeed a $W$-sorted signature.
+{\bf TODO:} $\Sigma$ nicht nur auf $\mu$ sondern auch noch mehrere Relationen aufnehmen.
 
 \begin{definition}[Semantic domains]
-  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$ by
+  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$
+  with $D^\pi = \bigcup_{L\in W} D^\pi_L$ by
   \begin{itemize}
     \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
-          $D^\tau = \bigcup_{L\in W} D^\tau_L$ \\
-          $\I^\tau(R) = \{\vec{v}\in(D^\tau)^n\,|\,\vec{v}\in R^\val\}$
+          $\I^\tau(R) = \{\vec{v}\in(D^\tau)^2\,|\,\vec{v}\in R^\val\}$
 
     \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
-                              \forall R\in\Sigma^L_n.\,\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
-                              \hspace*{5cm} \wedge \dom{\phi} = \Store_L
+                              \forall R\in\Sigma_L:\phi\,(R^\sto) \subseteq \delta^2\Bool_\bot \\
+                              \hspace*{5cm} \wedge \dom{\phi} = \Store_L \\
+                              \hspace*{5cm} \wedge \phi\,(\equiv_L) \subseteq \delta^2\Bool_\bot
                          \}$ \\
-          $D^\tassn = \bigcup_{L\in W} D^\tassn_L$ \\
-          $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^n\,|\,
-                                  \vec{\phi}\,(R^\sto) \subseteq \delta^n \Bool_\bot \}$
+          $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^2\,|\,
+                                  \vec{\phi}\,(R^\sto) \subseteq \delta^2 \Bool_\bot \}$
 
     \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi:D^\theta \to D^\pi\,|\,
-                              \forall L'\in W.\, \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
-                              \hspace*{4.2cm} \wedge \forall R\in\Sigma^L.\, \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
-          $D^{\ttarrow{\theta}{\pi}} = \bigcup_{L\in W} D^{\ttarrow{\theta}{\pi}}_L$ \\
-          $\I^{\ttarrow{\theta}{\pi}}(R) = \{ \vec{\psi} \in (D^{\ttarrow{\theta}{\pi}})^n\,|\,
+                              \forall L'\in W: \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
+                              \hspace*{4.2cm} \wedge \forall R\in\Sigma_L: \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
+          $\I^{\ttarrow{\theta}{\pi}}(R) = \{ \vec{\psi} \in (D^{\ttarrow{\theta}{\pi}})^2\,|\,
                                           \vec{\psi}\,(\I^\theta(R)) \subseteq \I^\pi(R) \}$
   \end{itemize}
 \end{definition}
@@ -434,8 +425,8 @@ are indeed $W$-$\Sigma$-sets.
 \begin{lemma}
   Let $\pi\in\LType$ and $d \in \semantic{\pi}$.
   \begin{enumerate}
-    \item $\forall L_1,L_2\in W.\, d \in \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \Rightarrow L_1 = L_2$
-    \item $\forall L \in W, n \in \N, R\in \OUT^L_n.\, d \in \semantic{\pi}_L \Rightarrow (d,\ldots,d) \in R^\pi$
+    \item $\forall L_1,L_2\in W: d \in \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \Rightarrow L_1 = L_2$
+    \item $\forall L \in W, R\in \OUT_L: d \in \semantic{\pi}_L \Rightarrow (d,d) \in R^\pi$
   \end{enumerate}
 \end{lemma}
 
@@ -456,31 +447,89 @@ are indeed $W$-$\Sigma$-sets.
 
 \begin{definition}[Total correctness]
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L\in W$. $e$ is {\em $L$-total correct}, or {\em $L$-correct} for short, with regard to $\phi$ and $\psi$ if for
-  all $\sigma\in\Store_L$ with $\app{\phi}{\sigma}=\true$ there exists a $v\in\CVal^\tau$ and a $\sigma'\in\Store_L$,
-  for which $(e,\sigma) \Downarrow (v,\sigma')$ and $\app{\app{\psi}{v}}{\sigma'} = \true$ holds. We write
-  $L \models \triple{\phi}{e}{\psi}$ in this case.
+  and $L\in W$. $e$ is {\em $L$-totally correct}, or {\em $L$-correct} for short, with respect to $\phi$ and $\psi$ if for
+  all $s\in\Store_L$ with $\phi\,s=\true$: each computation for $(e,s)$ terminates with some
+  $(v',s')$ such that $\psi\,v'\,s'=\true$. We write $L \models \triple{\phi}{e}{\psi}$ in this case.
 \end{definition}
+
+While the above definition reflects the usual understanding of {\em total correctness}, it is not really handy
+in proving the soundness of the calculus later. This is because having to argue about all computations each
+time is a tedious task. To get around this, we will show that it suffices to prove that if there exists a
+terminating computation for $(e,s)$, then all possible computations terminate, and $\psi$ either holds for all
+or none of the computations.
+
+\begin{lemma}
+  Let $\tau\in\Type$, $e \in \CExp^\tau$, $s\in\Store$ with $\locns{e} \subseteq \dom{s}$.
+  If $(e,s)$ terminates with $(v',s')$ then all computations for $(e,s)$ terminate with some
+  $(v'',s'')$ such that there is a $R \in \Sigma_{\dom{s}}$ with $(v',v'')\in R^\tau$ and $(s',s'') \in R^\sto$.
+\end{lemma}
+
+\begin{lemma}
+  Let $\tau\in\Type$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$,
+  $e\in\CExp^\tau$, $v',v''\in\CVal^\tau$ and $s,s',s''\in\Store$.
+  If $\supp{\psi} \subseteq \dom{s}$, $(e,s)\xrightarrow*(v',s')$
+  and $(e,s)\xrightarrow*(v'',s'')$ then $\psi\,v'\,s'=\psi\,v''\,s''$.
+\end{lemma}
+
+\begin{lemma}
+  Let $\tau\in\Type$, $e\in\CExp^\tau$, $v'\in\CVal^\tau$, $s,s'\in\Store$
+  and $R \in \Sigma_{\dom{s}}$. If $(e,s)\xrightarrow*(v',s')$ then there
+  exists a configuration $(v'',s'')$ such that
+  \begin{enumerate}
+    \item $(v',v'')\in R^\tau$
+    \item $(s',s'')\in R^\sto$
+    \item $(e,s) \xrightarrow* (v'',s'')$
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}
+  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
+  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
+  \begin{enumerate}
+    \item $(e,s) \xrightarrow* (v,s')$
+    \item $(e,s_1) \xrightarrow* (v,s_1')$
+    \item $\grph{s'} \subseteq \grph{s_1'}$
+  \end{enumerate}
+\end{lemma}
 
 \begin{lemma}[Total correctness]
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L,L'\in W$. $\locns{e}\cup\supp{\phi}\cup\supp{\psi} \subseteq L \cap L'$ implies
-  \[\begin{array}{rcl}
-    L\models\triple{\phi}{e}{\psi} &\text{ iff }& L'\models\triple{\phi}{e}{\psi}.
-  \end{array}\]
+  and $L,L'\in W$.
+  \begin{enumerate}
+    \item If for every $s \in \Store_L$ with $\phi\,s=\true$ a $v'\in\CVal^\tau$ and a
+          $s'\in\Store_L$ exist so that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$ then
+          \[\begin{array}{rcl}
+            L\models\triple{\phi}{e}{\psi}.
+          \end{array}\]
+
+    \item $\locns{e}\cup\supp{\phi}\cup\supp{\psi} \subseteq L \cap L'$ implies
+          \[\begin{array}{rcl}
+            L\models\triple{\phi}{e}{\psi} &\text{ iff }& L'\models\triple{\phi}{e}{\psi}.
+          \end{array}\]
+  \end{enumerate}
 \end{lemma}
 
-\begin{proof}
-  Without loss of generality let $L= \locns{e}\cup\supp{\phi}\cup\supp{\psi}$ and hence $L \subseteq L'$.
-  \begin{itemize}
-    \item[`$\Rightarrow$']
-          Let $\sigma\in\Store_{L'}$ with $\phi\,\sigma=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
-          a $v\in\CVal^\tau$ and a $\sigma'\in\Store_L$ such that $(e,\sigma)\Downarrow(v,\sigma')$ and
-          $\psi\,v\,\sigma'=\true$. $\sigma'\in\Store_{L'}$ since $L'\subseteq\dom{\sigma}\subseteq\dom{\sigma'}$.
+\begin{proof} \
+  \begin{enumerate}
+    \item
 
-    \item[`$\Leftarrow$']
-  \end{itemize}
+    \item Without loss of generality let $L= \locns{e}\cup\supp{\phi}\cup\supp{\psi}$ and hence $L \subseteq L'$.
+          \begin{itemize}
+            \item[`$\Rightarrow$']
+                  Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
+                  a $v\in\CVal^\tau$ and a $s'\in\Store_L$ such that $(e,s)\Downarrow(v,s')$ and
+                  $\psi\,v\,s'=\true$. $s'\in\Store_{L'}$ since $L'\subseteq\dom{s}\subseteq\dom{s'}$.
+
+            \item[`$\Leftarrow$']
+          \end{itemize}
+  \end{enumerate}
 \end{proof}
+
+From these results it is easy to see that the exact $L$ doesn't matter for the total correctness, since
+if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi}\cup\locns{e}\cup\supp{\psi}$
+then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi}\cup\locns{e}\cup\supp{\psi}$.
+Hence we write $\triple{\phi}{e}{\psi}$ to denote that $e$ is {\em totally correct} with respect to
+$\phi$ and $\psi$.
 
 
 \end{document}
