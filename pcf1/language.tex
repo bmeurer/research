@@ -1,0 +1,326 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+%\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+%\usepackage{scrpage2}
+\usepackage{stmaryrd}
+\usepackage{url}
+
+%% LaTeX macros
+\include{macros}
+
+% TODO
+\newcommand{\CExp}{\nstyle{CExp}}
+\newcommand{\CVal}{\nstyle{CVal}}
+\newcommand{\loc}{\nstyle{loc}}
+\newcommand{\sto}{\nstyle{sto}}
+\newcommand{\val}{\nstyle{val}}
+\newcommand{\z}{\nstyle{int}}
+\newcommand{\DEF}{\nstyle{DEF}}
+\newcommand{\OUT}{\nstyle{OUT}}
+\newcommand{\I}{\mathcal{I}}
+
+
+\begin{document}
+
+
+%%
+%% The programming language
+%%
+
+\chapter{The programming language}
+
+As target language, we use eager PCF with the usual primitive types and imperative concepts.
+
+
+%%
+%% Abstract syntax
+%%
+
+\section{Abstract syntax}
+
+We assume that an infinite set of variables $x \in \Var$ is given; variables are used to
+abstract expressions. Expressions are considered equal modulo renaming of bound variables.
+$\Bool=\{\true,\false\}$ is the set of boolean constants $b$, $\Int$ is the set of integer
+constants $z$; we do not distinguish between integer values and their program representation.
+
+\begin{definition}[Types]
+  The set $\Type$ of all {\em types} $\tau$ is defined by the context-free grammar below:
+  \[\GRbeg
+    \tau  \GRis \tbool \GRmid \tint \GRmid \tunit
+          \GRal \tref{\tint}
+          \GRal \tarrow{\tau_1}{\tau_2}
+  \GRend\]
+\end{definition}
+
+We assume an infinite set $\Loc$ of locations $l$.
+
+\begin{definition}[Expressions]
+  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
+  are defined by the grammars
+  \[\GRbeg
+    \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+    c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid !
+             \GRmid \assign \GRmid \fix,
+  \GRend\]
+  the set $\Exp$ of {\em expressions} $e$ is defined by
+  \[\GRbeg
+    e \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+           \GRmid \ifte{e_0}{e_1}{e_2}
+  \GRend\]
+  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+  \[\GRbeg
+    v \GRis c \GRmid l \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v}
+  \GRend\]
+\end{definition}
+
+$\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if both $\free{e}=\emptyset$
+and $\locns{e}=\emptyset$ holds, that is if $e$ contains neither unbound variables nor
+locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
+considered for the logic later are valid programs (i.e. programmers aren't permitted to access
+abritrary memory locations).
+
+
+%%
+%% Static semantics
+%%
+
+\section{Static semantics}
+
+The static semantics of the programming language are defined by the typing relation
+$\Tj{\Gamma}{e}{\tau}$.
+
+\begin{definition}[Typing relation]
+  A {\em typing judgement} is a formula $\Tj{\Gamma}{e}{\tau}$ where
+  \begin{itemize}
+    \item $\Gamma:\Var \pto \Type$, $\dom{\Gamma}$ is finite
+    \item $e\in\Exp$ and
+    \item $\tau\in\Type$.
+  \end{itemize}
+\end{definition}
+
+We write $\tj{e}{\tau}$ for $\Tj{[\,]}{e}{\tau}$. The set $\CExp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$
+includes the closed expressions of type $\tau$ and $\CExp = \bigcup_{\tau\in\Type} \CExp^\tau$ includes
+all well-typed, closed expressions. Likewise $\CVal^\tau = \CExp^\tau \cap \Val$ includes
+the closed values of type $\tau$ and $\CVal = \bigcup_{\tau\in\Type} \CVal^\tau$ includes all well-typed,
+closed values.
+
+
+%%
+%% Operational semantics
+%%
+
+\section{Operational semantics}
+
+\begin{definition}[Store] \label{definition:Store} \
+  \begin{enumerate}
+    \item A {\em store} is a (total) function $s:\Loc \to \Int_\bot$.
+
+    \item For each $L\in\powersetfin{\Loc}$ the set of {\em $L$-stores} is defined as
+          \[\begin{array}{l}
+            \Store_L = \{s\,|\,\text{$s$ is a store with $L\subseteq\dom{s}$}\}.
+          \end{array}\]
+
+    \item $\Store = \bigcup_{L\in\powersetfin{\Loc}} \Store_L$ denotes the set of all {\em stores}.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Configuration]
+  Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
+  if $\locns{e} \subseteq \dom{s}$.
+\end{definition}
+
+Expressions that appear as part of an evaluation are required to be closed, i.e. do not
+include {\em dangling references} to unallocated store cells.
+
+\begin{definition}[Small step semantics]
+  Let $e,e'\in\Exp$ and $s,s'\in\Store$. A {\em small step} is a formula
+  $(e,s) \to (e',s')$. A small step is said to be valid if it was derived with
+  the small rules given {\bf somewhere else}.
+\end{definition}
+
+\begin{definition}[Big step semantics]
+  Let $e\in\Exp$, $v\in\Val$ and $s,s'\in\Store$. A {\em big step} is a formula
+  $(e,s) \Downarrow (v,s')$. A big step is said to be valid if it was derived with the
+  big step rules given {\bf somewhere else}.
+\end{definition}
+
+\begin{corollary}
+  Let $e\in\Exp$, $v\in\Val$ and $s,s'\in\Store$. If $(e,s)$ is a configuration
+  and $(e,s) \Downarrow (v,s')$, then
+  \begin{enumerate}
+    \item $(v,s')$ is also a configuration, and
+    \item $\dom{s} \subseteq \dom{s'}$.
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  Straight forward induction.
+\end{proof}
+
+The big step semantic is thereby well-defined with regard to configurations, i.e. it preserves
+the configuration property. In the remainder
+we thereby consider only pairs $(e,s)$ that are valid configurations. In addition we
+assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
+
+
+%%
+%% The assertion language
+%%
+
+\chapter{The assertion language}
+
+
+%%
+%% Syntax of the assertion language
+%%
+
+\section{Syntax of the assertion language}
+
+
+%%
+%% Semantics of the logic
+%%
+
+\section{Semantics of the logic}
+
+
+%%
+%% Semantic domains
+%%
+
+\subsection{Semantic domains}
+
+\begin{definition}
+  Let $(W,\sqsubseteq)$ be a partial order (of `worlds' $w$).
+  A {\em $W$-set} is a set $D$ together with a family of subsets $(D_w)_{w\in W}$ such that
+  $D = \bigcup_{w\in W} D_w$ and $w \ne v \Rightarrow D_w \cap D_v = \emptyset$
+  for all $v,w \in W$.
+\end{definition}
+
+We define the {\em support} of an element $d\in D_w$ to be the world
+\[\begin{array}{rcl}
+  \supp{d} &=& w
+\end{array}\]
+The support is guarantied to be unique for every $d \in D$, since the subsets
+$(D_w)_{w\in W}$ of $D$ are disjoint.
+
+\begin{definition}
+  A {\em $W$-sorted (relation) signature} is a family $\Sigma=(\Sigma^w_n)_{w\in W,n\in \N}$
+  of sets $\Sigma^w_n$ such that for all $m,n\in \N$ and $v,w\in W$
+  \begin{itemize}
+    \item $m \ne n \Rightarrow \Sigma^v_m \cap \Sigma^w_n = \emptyset$
+    \item $v \sqsubseteq w \Rightarrow \Sigma^v_n \supseteq \Sigma^w_n$
+  \end{itemize}
+\end{definition}
+
+An element $r \in \Sigma_n$ is called a {\em relation symbol of arity $n$}. We use the abbreviations
+\[\begin{array}{rcl}
+  \Sigma_n =_{def} \bigcup_{w\in W} \Sigma^w_n, &
+  \Sigma^w =_{def} \bigcup_{n\in \N} \Sigma^w_n, &
+  \Sigma =_{def} \bigcup_{w\in W} \Sigma^w.
+\end{array}\]
+
+\begin{definition}
+  Let $\Sigma$ be a $W$-sorted signature. A {\em $W$-$\Sigma$-set} is a pair
+  $(D,\I)$, where $D$ is a $W$-set and $\I$ is a function which maps every
+  $r \in \Sigma_n$ to a relation $\I(r) \subseteq D^n$ such that
+  $r \in \Sigma^w_n \Rightarrow \delta^n D_w \subseteq \I(r)$ for all $w \in W$.
+\end{definition}
+
+We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial order of `worlds'.
+
+\begin{definition}[Ground relation]
+  A {\em ground relation of arity $n$} is simply a triple $R = (R^\gamma)_{\gamma\in\{\loc,\sto,\z\}}$ with
+  \begin{itemize}
+    \item $R^\loc \subseteq \Loc^n$,
+    \item $R^\sto \subseteq \Store^n$ and
+    \item $R^\z \subseteq \Int^n$.
+  \end{itemize}
+\end{definition}
+
+\begin{definition}[$L$-definability]
+  Let $L \in W$. A ground relation $R$ of arity $n$ is called {\em $L$-definable}, if there
+  exists a relation $R_L \subseteq (L \to \Int)^n$ such that
+  \begin{enumerate}
+    \item $R^\sto = \{\vec{s}\in\Store^n\,|\,(\vec{s}|L)\in R_L
+                      \wedge 
+                      \vec{s}(\delta^n(\Loc \setminus L)) \subseteq \delta^n \Int\}$
+    \item $R^\z = \delta^n \Int$
+    \item $R^\loc = \{\vec{l}\in\Loc^n\,|\, \}$
+
+    \item $\vec{l}\in R^\loc$ and $\vec{s}\in R^\sto$ implies
+          $\vec{s}\,(\vec{l})\in R^\val \cup \{\bot\}^n$
+    \item for every $\tau\in\Type$, $\vec{s}\in\Store^n$, $\vec{l}\in(\Loc^\tau)^n$
+          and $\vec{v}\in(\CVal^\tau)^n$: \\
+          $\vec{s}\in R^\sto$, $\vec{l}\in R^\loc$ and $\vec{v}\in R^\val$ implies
+          $\vec{s}[\vec{v}/\vec{l}]\in R^\sto$
+  \end{enumerate}
+\end{definition}
+
+We let $\DEF^L_n$ denote the set of all $L$-definable ground relations
+of arity $n$ and $\OUT^L_n = \bigcup_{L'\in W\wedge L \cap L' = \emptyset} \DEF^{L'}_n$ denote
+the set of those which are definable outside of $L$.
+
+Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$. It is trivial to see
+that $\Sigma$ is indeed a $W$-sorted signature.
+
+\begin{definition}[Semantic domains]
+  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$
+  with $D^\pi = \bigcup_{L\in W} W^\pi_L$ by
+  \begin{itemize}
+    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
+          $\I^\tau(R) = \{\vec{v}\in(D^\tau)^n\,|\,\vec{v}\in R^\val\}$
+
+    \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
+                              \forall R\in\Sigma^L_n.\,\phi\,(R^\sto) \subseteq \delta^n\Bool_\bot \\
+                              \hspace*{5cm} \wedge \dom{\phi} = \Store_L
+                         \}$ \\
+          $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^n\,|\,
+                                  \vec{\phi}\,(R^\sto) \subseteq \delta^n \Bool_\bot \}$
+
+    \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi:D^\theta \to D^\pi\,|\,
+                              \forall L'\in W.\, \psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
+                              \hspace*{4.2cm} \wedge \forall R\in\Sigma^L.\, \psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
+          $\I^{\ttarrow{\theta}{\pi}}(R) = \{ \vec{\psi} \in (D^{\ttarrow{\theta}{\pi}})^n\,|\,
+                                          \vec{\psi}\,(\I^\theta(R)) \subseteq \I^\pi(R) \}$
+  \end{itemize}
+\end{definition}
+
+We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
+for the $W$-$\Sigma$-set $(D^\pi,\I^\pi)$ but also for the underlying $W$-set $D^\pi$,
+hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $R^\pi$ as an abbreviation
+for $\I^\pi(R)$. However we still need to prove that the semantic domains $\semantic{\pi}$
+are indeed $W$-$\Sigma$-sets.
+
+\begin{lemma}
+  Let $\pi\in\LType$ and $d \in \semantic{\pi}$.
+  \begin{enumerate}
+    \item $\forall L_1,L_2\in W.\, d \in \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \Rightarrow L_1 = L_2$
+    \item $\forall L \in W, n \in \N, R\in \OUT^L_n.\, d \in \semantic{\pi}_L \Rightarrow (d,\ldots,d) \in R^\pi$
+  \end{enumerate}
+\end{lemma}
+
+\end{document}
