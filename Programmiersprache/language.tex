@@ -384,7 +384,14 @@ We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial orde
 
 \begin{definition}[$L$-definability]
   Let $L \in W$. A ground relation $R$ of arity $n$ is called {\em $L$-definable}, if there
-  exists a relation $R_L$ such that
+  exists a relation $R_L \in (\Store_L)^n$ such that
+  \begin{enumerate}
+    \item $R^\sto = \{\vec{s}\in\Store^n\,|\, (\vec{s}|L)\in R_L 
+                     \wedge \vec{s}\,(\delta^n(\Loc\setminus L)) \subseteq \delta^n \CVal_\bot\}$
+    \item $R^\loc = \{\vec{l}\in\bigcup_{\tau\in\Type}(\Loc^\tau)^n\,|\,
+                      \}$
+  \end{enumerate}
+  {\bf TODO}
   \begin{enumerate}
     \item $\vec{s}\in R^\sto$ iff $(\vec{s}|L) \in R_L$ and
           $\vec{s}\,(\delta^n\,(\Loc \setminus L)) \subseteq \delta^n \CVal_\bot$
