@@ -352,19 +352,19 @@ where $e\mu$ is inductively defined as follows:
 \end{itemize}
 
 Obviously $\mu^\Exp$ is well-defined. For $\mu^\Sto$ assume that $L \in W$ and $s\in\Store_L$,
-then $\mu^\Sto\,s = \mu^\Exp \circ s \circ \mu^{-1}$ is closed under locations in
+then $\mu^\Sto\,s = \mu^\Exp \circ s \circ \mu^{-1}$ is closed with respect to locations in
 $\dom{\mu^\Sto\,s}$ and
 \[\begin{array}{rccccl}
   \dom{\mu^\Sto\,s} &=& \mu(\dom{s}) &\supseteq& \mu(L),
 \end{array}\]
-thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$. Furtheron $\locns{\mu^\Exp(e)} = \mu(\locns{e})$
-holds for every $e \in \Exp$.
+thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$.
 
-\begin{lemma}
-  Let $L \subseteq \Loc$ and $\mu \in \Perm_L$, then
+\begin{lemma}[Permutations] \label{lemma:Permutations}
+  For every $\mu\in\Perm$ we have
   \begin{enumerate}
-    \item $\forall e\in\Exp.\,\locns{e} \subseteq L \Rightarrow \mu^\Exp\,e = e$
-    \item $\forall s\in\Store.\,\dom{s} \subseteq L \Rightarrow \mu^\Sto\,s = s$
+    \item $\forall e\in\Exp.\,\locns{\mu^\Exp\,e} = \mu\,(\locns{e})$
+    \item $\forall L \subseteq \Loc, e\in\Exp.\,(\mu|L)=\id_L\wedge\locns{e} \subseteq L \,\Rightarrow\, \mu^\Exp\,e = e$
+    \item $\forall L \subseteq \Loc, s\in\Store.\,(\mu|L)=\id_L\wedge\dom{s} \subseteq L \,\Rightarrow\, \mu^\Sto\,s = s$
   \end{enumerate}
 \end{lemma}
 
@@ -372,29 +372,47 @@ holds for every $e \in \Exp$.
   Trivial.
 \end{proof}
 
-\begin{lemma}
-  For every $L \in W$ and $\mu \in \Perm$ we have
+\begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
+  Let $\mu \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
+  Then
   \begin{enumerate}
-    \item $\forall s,s'\in\Store.\,s \equiv_{\mu(L)} s'
-            \Rightarrow (\mu^\Sto)^{-1}\,s \equiv_L (\mu^\Sto)^{-1}\,s'$
-    \item $\forall \phi\in\DEF_L.\, (\phi\circ (\mu^\Sto)^{-1}) \in \DEF_{\mu(L)}$
+    \item $\reach{\mu(L)}{\mu^\Sto\,s} = \mu\,(\reach{L}{s})$
+    \item $s \equiv_L s' \,\Leftrightarrow\, (\mu^\Sto\,s) \equiv_{\mu(L)} (\mu^\Sto\,s')$
+    \item $\phi \in \DEF_{\mu(L)} \,\Leftrightarrow\, (\phi \circ \mu^\Sto) \in \DEF_L$
   \end{enumerate}
 \end{lemma}
 
-\begin{proof}
-  Let $L' = \mu(L)$.
+\begin{proof} \
   \begin{enumerate}
-    \item 
+    \item It is sufficient to prove $\mu\,(\reachn{i}{L}{s}) = \reachn{i}{\mu(L)}{\mu^\Sto\,s}$ for every $i\in\N$:
+          \begin{itemize}
+            \item $\reachn{0}{\mu(L)}{\mu^\Sto\,s} = \mu(L) = \mu\,(\reachn{0}{L}{s})$
 
-    \item Let $\phi\in\DEF_L$, then $\dom{\phi \circ (\mu^\Sto)^{-1}} = \Store_{L'}$. Now
-          let $s,s'\in\Store_{L'}$ with $s \equiv_{L'} s'$, then
-          \[\begin{array}{rl}
-            \Rightarrow & s \equiv_{\mu(L)} s' \\
-            \Rightarrow & (\mu^\Sto)^{-1} \, s \equiv_L (\mu^\Sto)^{-1} \, s' \\
-            \Rightarrow & \phi\,((\mu^\Sto)^{-1}\, s) = \phi\,((\mu^\Sto)^{-1}\, s')
-                          \quad \quad \text{since } \phi \in \DEF_L \\
-            \Rightarrow & (\phi\circ (\mu^\Sto)^{-1}) \in \DEF_{L'}
-          \end{array}\]
+            \item $\reachn{i+1}{\mu(L)}{\mu^\Sto\,s} \\
+                  = \reachn{i}{\mu(L)}{\mu^\Sto\,s}
+                    \cup \bigcup_{l\in\reachn{i}{\mu(L)}{\mu^\Sto\,s}} \locns{s(l)} \\
+                  = \mu\,(\reachn{i}{L}{s})
+                    \cup \bigcup_{l\in\reachn{i}{L}{s}} \locns{\mu^\Exp(s(l)} \\
+                  = \mu\,(\reachn{i+1}{L}{s})$
+          \end{itemize}
+
+    \item We prove only one direction, the reverse follows easily.
+
+          $\reach{\mu(L)}{\mu^\Sto\,s} = \mu\,(\reach{L}{s}) = \mu\,(\reach{L}{s'}) = \reach{\mu(L)}{\mu^\Sto\,s'}$
+
+          $l \in \reach{\mu(L)}{\mu^\Sto\,s} \\
+            \,\Rightarrow\,
+            \mu^{-1}(l) \in \reach{L}{s} \\
+            \,\Rightarrow\,
+            s(\mu^{-1}(l)) = s'(\mu^{-1}(l)) \\
+            \,\Rightarrow\,
+            (\mu^\Sto s)(l) = (\mu^\Sto s')(l)$
+
+    \item Again only one direction.
+
+          Let $s,s'\in\Store_L$ with $s \equiv_L s'$. Then $(\mu^\Sto\,s) \equiv_{\mu(L)} (\mu^\Sto\,s')$
+          where $(\mu^\Sto\,s),(\mu^\Sto\,s')\in\Store_{\mu(L)}$, hence $\phi\,(\mu^\Sto\,s)=\phi\,(\mu^\Sto\,s')$
+          and thereby $(\phi \circ \mu^\Sto) \in \DEF_L$.
   \end{enumerate}
 \end{proof}
 
@@ -471,7 +489,7 @@ for $\I^\pi(\mu)$.
 \begin{lemma}[Semantic domains] \
   For every $\pi \in \LType$ we have
   \begin{enumerate}
-    \item $\forall \mu \in \Perm.\,\mu^\pi\,\semantic{\pi} \subseteq \semantic{\pi}$
+    \item $\forall L\in W, \mu \in \Perm.\,\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$
     \item $\forall L_1,L_2 \in W.\, \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset \Rightarrow L_1=L_2$
     \item $\forall L \in W, \mu \in \Perm_L, d\in \semantic{\pi}_L.\, \mu^\pi\,d = d$
   \end{enumerate}
@@ -484,10 +502,12 @@ outside $L$.
 
 \begin{proof} \
   \begin{enumerate}
+    \item {\bf TODO}
+
     \item Straight forward induction.
 
     \item The proof for $\semantic{\tau}_L$ follows immediately with
-          lemma~\ref{lemma:properties_of_Sigma_L}, the proofs for
+          lemma~\ref{lemma:Permutations}, the proofs for
           $\semantic{\tassn}_L$ and $\semantic{\ttarrow{\theta}{\pi}}_L$
           are trivial.
   \end{enumerate}
