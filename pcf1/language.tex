@@ -198,9 +198,56 @@ include {\em dangling references} to unallocated store cells.
 \end{proof}
 
 The small step semantic is thereby well-defined with regard to configurations, i.e. it preserves
-the configuration property. In the remainder
-we thereby consider only pairs $(e,s)$ that are valid configurations. In addition we
-assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
+the configuration property. We assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
+
+\begin{lemma} \label{lemma:Small_steps_and_graph_of_stores}
+  Let $\tau\in\Type$, $e\in\CExp^\tau\setminus\Val$, $s,\hat{s}\in\Store_{\locns{e}}$.
+  If $\grph{s} \subseteq \grph{\hat{s}}$ then there exist $e',\hat{e}'\in\CExp^\tau$
+  and $s',\hat{s}'\in\Store$ such that
+  \begin{enumerate}
+    \item $(e,s) \to (e',s')$,
+    \item $(e,\hat{s}) \to (\hat{e}',\hat{s}')$ and
+    \item $\grph{s'} \subseteq \grph{\hat{s}'}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  By structural induction on $e$. We consider only the case for the application,
+  hence let $e = \app{e_1}{e_2}$.
+  \begin{itemize}
+    \item $e_1 \not\in \Val$, then by induction hypothesis, we have
+          $e_1',\hat{e_1}'\in\CExp^\tau$ and $s',\hat{s}'\in\Store$ such that
+          $(e_1,s) \to (e_1',s')$, $(e_1,\hat{s}) \to (\hat{e_1}',\hat{s}')$
+          and $\grph{s'} \subseteq \grph{\hat{s}'}$. With \RN{App-Left} we
+          conclude $(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')$ and
+          $(\app{e_1}{e_2},\hat{s}) \to (\app{\hat{e_1}'}{e_2},\hat{s}')$.
+
+    \item $e_1 \in \Val, e_2 \not\in \Val$ analogue to the above with \RN{App-Right}.
+
+    \item $e_1 = \cref, e_2=v\in \Val$, choose $e' = \hat{e}' = l \not\in \dom{\hat{s}} \subseteq \dom{s}$
+          and thereby $(e,s) \to (l,s[v/l])$ and $(e,\hat{s}) \to (l,\hat{s}[v/l])$ with \RN{Ref} and
+          $\grph{s'} = \grph{s} \cup \{(l,v)\} \subseteq \grph{\hat{s}} \cup \{(l,v)\} = \grph{\hat{s}'}$.
+
+    \item $e_1 = (\app{\assign}{l}), e_2 = v \in \Val$ where $l \in \dom{s}\cap\dom{\hat{s}}$, then
+          $(e,s) \to (\unit,s[v/l])$ and $(e,\hat{s}) \to (\unit,\hat{s}[v/l])$ with \RN{Assign} and
+          $\grph{s[v/l]}=\grph{s}\cup\{(l,v)\} \subseteq \grph{\hat{s}}\cup\{(l,v)\}=\grph{\hat{s}[v/l]}$.
+  \end{itemize}
+  The remaining cases are quite similar.
+\end{proof}
+
+\begin{corollary}
+  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
+  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
+  \begin{enumerate}
+    \item $(e,s) \xrightarrow* (v,s')$
+    \item $(e,s_1) \xrightarrow* (v,s_1')$
+    \item $\grph{s'} \subseteq \grph{s_1'}$
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  Follows immediately with lemma~\ref{lemma:Small_steps_and_graph_of_stores}.
+\end{proof}
 
 
 %%
@@ -304,19 +351,54 @@ where $e\mu$ is inductively defined as follows:
   \item $(\ifte{e_0}{e_1}{e_2})\mu = \ifte{(e_0\mu)}{(e_1\mu)}{(e_2\mu)}$
 \end{itemize}
 
-\begin{corollary}
+Obviously $\mu^\Exp$ is well-defined. For $\mu^\Sto$ assume that $L \in W$ and $s\in\Store_L$,
+then $\mu^\Sto\,s = \mu^\Exp \circ s \circ \mu^{-1}$ is closed under locations in
+$\dom{\mu^\Sto\,s}$ and
+\[\begin{array}{rccccl}
+  \dom{\mu^\Sto\,s} &=& \mu(\dom{s}) &\supseteq& \mu(L),
+\end{array}\]
+thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$. Furtheron $\locns{\mu^\Exp(e)} = \mu(\locns{e})$
+holds for every $e \in \Exp$.
+
+\begin{lemma}
   Let $L \subseteq \Loc$ and $\mu \in \Perm_L$, then
   \begin{enumerate}
     \item $\forall e\in\Exp.\,\locns{e} \subseteq L \Rightarrow \mu^\Exp\,e = e$
     \item $\forall s\in\Store.\,\dom{s} \subseteq L \Rightarrow \mu^\Sto\,s = s$
   \end{enumerate}
-\end{corollary}
+\end{lemma}
 
 \begin{proof}
   Trivial.
 \end{proof}
 
 \begin{lemma}
+  For every $L \in W$ and $\mu \in \Perm$ we have
+  \begin{enumerate}
+    \item $\forall s,s'\in\Store.\,s \equiv_{\mu(L)} s'
+            \Rightarrow (\mu^\Sto)^{-1}\,s \equiv_L (\mu^\Sto)^{-1}\,s'$
+    \item $\forall \phi\in\DEF_L.\, (\phi\circ (\mu^\Sto)^{-1}) \in \DEF_{\mu(L)}$
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Let $L' = \mu(L)$.
+  \begin{enumerate}
+    \item 
+
+    \item Let $\phi\in\DEF_L$, then $\dom{\phi \circ (\mu^\Sto)^{-1}} = \Store_{L'}$. Now
+          let $s,s'\in\Store_{L'}$ with $s \equiv_{L'} s'$, then
+          \[\begin{array}{rl}
+            \Rightarrow & s \equiv_{\mu(L)} s' \\
+            \Rightarrow & (\mu^\Sto)^{-1} \, s \equiv_L (\mu^\Sto)^{-1} \, s' \\
+            \Rightarrow & \phi\,((\mu^\Sto)^{-1}\, s) = \phi\,((\mu^\Sto)^{-1}\, s')
+                          \quad \quad \text{since } \phi \in \DEF_L \\
+            \Rightarrow & (\phi\circ (\mu^\Sto)^{-1}) \in \DEF_{L'}
+          \end{array}\]
+  \end{enumerate}
+\end{proof}
+
+\begin{lemma} \label{lemma:Existance_of_permutations_for_small_steps}
   Let $\tau\in\Type$, $e,e',e''\in\CExp^\tau$, $s,s',s''\in\Store_{\locns{e}}$ with
   $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$. Then there exists some $\mu \in \PERM_{\dom{s}}$
   such that $\mu^\Exp\,e' = e''$ and $\mu^\Sto\,s' = s''$.
@@ -352,21 +434,9 @@ where $e\mu$ is inductively defined as follows:
   $\mu^\Exp\,v' = v''$ and $\mu^\Sto\,s' = s''$.
 \end{corollary}
 
-\begin{lemma}
-  Let $e,e' \in \CExp$, $s,s_1\in\Store_{\locns{e}}$. If $\grph{s} \subseteq \grph{s_1}$
-
-  {\bf TODO}
-\end{lemma}
-
-\begin{corollary}
-  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
-  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
-  \begin{enumerate}
-    \item $(e,s) \xrightarrow* (v,s')$
-    \item $(e,s_1) \xrightarrow* (v,s_1')$
-    \item $\grph{s'} \subseteq \grph{s_1'}$
-  \end{enumerate}
-\end{corollary}
+\begin{proof}
+  Immediate consequence of lemma~\ref{lemma:Existance_of_permutations_for_small_steps}.
+\end{proof}
 
 
 %%
@@ -375,58 +445,42 @@ where $e\mu$ is inductively defined as follows:
 
 \subsection{Semantic domains}
 
-Now let $\Sigma = (\Sigma_L)_{L\in W}$ where $\Sigma_L = \PERM_L \cup \INV_L$.
-
-\begin{lemma} \label{lemma:properties_of_Sigma_L}
-  For every $L \in W$ and $R \in \Sigma_L$ we have
-  \begin{enumerate}
-    \item $\delta^2 L \subseteq R^\Loc$
-    \item $\delta^2 \{e\in\Exp\,|\,\locns{e}=L\} \subseteq R^\Exp$
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  From the definition of $R^\Exp$ it is obvious to see that the second statement
-  is an immediate consequence of the first one. Therefore it is sufficient to
-  prove the first statement. This is trivial for $R \in \INV_L$, and for $R \in \PERM_L$
-  we know that there is a $\mu\in\Perm_L$ such that $\mu\,(l)=l$ for every $l \in L$ and
-  hence $(l,l) \in R^\Loc$ for every $l \in L$.
-\end{proof}
-
 \begin{definition}[Semantic domains]
-  For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$
-  with $D^\pi = \bigcup_{L \in W} D^\pi$ by
+  For every type $\pi\in\LType$ we define {\em semantic domains} $\semantic{\pi} = (D^\pi,\I^\pi)$ where
+  $D^\pi = \bigcup_{L \in W} D^\pi_L$ and $\I^\pi(\mu) : D^\pi \to D^\pi$ for every $\mu \in \Perm$ by
   \begin{itemize}
     \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
-          $\I^\tau(R) = \{\vec{v} \in (D^\tau)^2\,|\,\vec{v} \in R^\Exp\}$
+          $\I^\tau(\mu): D^\tau \to D^\tau, v \mapsto \mu^\Exp\,v$
 
-    \item $D^\tassn_L = \{ \phi:\Store\to\Bool_\bot\,|\,
-                           \forall R \in \Sigma_L.\,\phi\,(R^\Sto) \subseteq \delta^2\Bool_\bot \\
-                           \hspace*{5cm} \wedge \dom{\phi}=\Store_L \}$ \\
-          $\I^\tassn(R) = \{ \vec{\phi} \in (D^\tassn)^2\,|\,
-                             \vec{\phi}\,(R^\Sto) \subseteq \delta^2 \Bool_\bot \}$
+    \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Perm_L.\,\phi = \phi \circ (\mu^\Sto)^{-1}\}$ \\
+          $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\Sto)^{-1}$
 
     \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi: D^\theta \to D^\pi\,|\,
-                              \forall L'\in W.\,\psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
-                              \hspace*{4.2cm} \wedge \forall R\in \Sigma_L.\,\psi\,(\I^\theta(R))\subseteq\I^\pi(R)\}$ \\
-          $\I^{\ttarrow{\theta}{\pi}}(R) = \{ \vec{\psi} \in (D^{\ttarrow{\theta}{\pi}})^2\,|\,
-                                              \vec{\psi}\,(\I^\theta(R)) \subseteq \I^\pi(R) \}$
+                          \forall L'\in W.\,\psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
+                          \hspace*{4.2cm} \wedge \forall \mu\in\Perm_L.\,\psi=\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}\}$\\
+          $\I^{\ttarrow{\theta}{\pi}}(\mu): D^{\ttarrow{\theta}{\pi}} \to D^{\ttarrow{\theta}{\pi}},
+                                            \psi \mapsto \I^\pi(\mu) \circ \psi \circ (\I^\theta(\mu))^{-1}$
   \end{itemize}
 \end{definition}
 
 We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
-for the $W$-$\Sigma$-set $(D^\pi,\I^\pi)$ but also for the underlying $W$-set $D^\pi$,
-hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $R^\pi$ as an abbreviation
-for $\I^\pi(R)$. However we still need to prove that the semantic domains $\semantic{\pi}$
-are indeed $W$-$\Sigma$-sets (and thereby that the $D^\pi$ are proper $W$-sets).
+for the semantic domain $(D^\pi,\I^\pi)$ but also for the underlying set $D^\pi$,
+hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $\mu^\pi$ as an abbreviation
+for $\I^\pi(\mu)$.
 
-\begin{lemma}
+\begin{lemma}[Semantic domains] \
   For every $\pi \in \LType$ we have
   \begin{enumerate}
+    \item $\forall \mu \in \Perm.\,\mu^\pi\,\semantic{\pi} \subseteq \semantic{\pi}$
     \item $\forall L_1,L_2 \in W.\, \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset \Rightarrow L_1=L_2$
-    \item $\forall L \in W, R \in \Sigma_L.\, \delta^2 \semantic{\pi}_L \subseteq R^\pi$
+    \item $\forall L \in W, \mu \in \Perm_L, d\in \semantic{\pi}_L.\, \mu^\pi\,d = d$
   \end{enumerate}
 \end{lemma}
+
+The first proposition ensures that $\I^\pi$ is well defined for every $\pi\in\LType$, the
+second states that there exists a unique world $L \in W$ for every $d \in \semantic{\pi}$ and
+the last one ensures that elements of $\semantic{\pi}_L$ are invariant under permutations
+outside $L$.
 
 \begin{proof} \
   \begin{enumerate}
