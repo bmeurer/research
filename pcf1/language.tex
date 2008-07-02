@@ -360,16 +360,17 @@ $\dom{\mu^\Sto\,s}$ and
 thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$.
 
 \begin{lemma}[Permutations] \label{lemma:Permutations}
-  For every $\mu\in\Perm$ we have
+  For every $\mu\in\Perm$ and $L\subseteq \Loc$ we have
   \begin{enumerate}
+    \item $\forall \mu'\in\Perm.\,\mu'\in\Perm_L \,\Leftrightarrow\, (\mu \circ \mu' \circ \mu^{-1})\in\Perm_{\mu(L)}$
     \item $\forall e\in\Exp.\,\locns{\mu^\Exp\,e} = \mu\,(\locns{e})$
-    \item $\forall L \subseteq \Loc, e\in\Exp.\,(\mu|L)=\id_L\wedge\locns{e} \subseteq L \,\Rightarrow\, \mu^\Exp\,e = e$
-    \item $\forall L \subseteq \Loc, s\in\Store.\,(\mu|L)=\id_L\wedge\dom{s} \subseteq L \,\Rightarrow\, \mu^\Sto\,s = s$
+    \item $\forall e\in\Exp.\,\mu\in\Perm_L\wedge\locns{e} \subseteq L \,\Rightarrow\, \mu^\Exp\,e = e$
+    \item $\forall s\in\Store.\,\mu\in\Perm_L\wedge\dom{s} \subseteq L \,\Rightarrow\, \mu^\Sto\,s = s$
   \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-  Trivial.
+  Mostly trivial.
 \end{proof}
 
 \begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
