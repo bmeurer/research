@@ -487,31 +487,91 @@ for the semantic domain $(D^\pi,\I^\pi)$ but also for the underlying set $D^\pi$
 hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $\mu^\pi$ as an abbreviation
 for $\I^\pi(\mu)$.
 
+Considering lemma~\ref{lemma:Permutations}
+it is pretty much obvious that $\mu^\pi\,d = d$ for every $d \in \semantic{\pi}_L$ and
+$\mu\in\Perm_L$.
+It is also easy to see that
+\[\begin{array}{rcl}
+  \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
+\end{array}\]
+holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\pi}$ a
+unique world $L \in W$ exists, such that $d \in \semantic{\pi}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\pi}_{L'}$.
+This unique world $L$
+is called the {\em support of $d$}, written $\supp{d}$.
+
 \begin{lemma}[Semantic domains] \
-  For every $\pi \in \LType$ we have
-  \begin{enumerate}
-    \item $\forall L\in W, \mu \in \Perm.\,\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$
-    \item $\forall L_1,L_2 \in W.\, \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset \Rightarrow L_1=L_2$
-    \item $\forall L \in W, \mu \in \Perm_L, d\in \semantic{\pi}_L.\, \mu^\pi\,d = d$
-  \end{enumerate}
+  Let $\pi \in \LType$, $\mu\in\Perm$ and $L\in W$.
+  Then $\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$ and
+  for every $d'\in\semantic{\pi}_{\mu(L)}$ there is
+  a unique $d\in\semantic{\pi}_{L}$ such that $\mu^\pi\,d = d'$.
 \end{lemma}
 
-The first proposition ensures that $\I^\pi$ is well defined for every $\pi\in\LType$, the
-second states that there exists a unique world $L \in W$ for every $d \in \semantic{\pi}$ and
-the last one ensures that elements of $\semantic{\pi}_L$ are invariant under permutations
-outside $L$.
+Given that $\semantic{\pi}$ is the union of disjoint sets $\semantic{\pi}_L$, the lemma
+states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
 
-\begin{proof} \
-  \begin{enumerate}
-    \item {\bf TODO}
+\begin{proof}
+  By induction on $\pi$:
+  \begin{itemize}
+    \item $v \in \semantic{\tau}_L \\
+           \,\Leftrightarrow\,
+           L = \locns{v} \\
+           \,\Leftrightarrow\,
+           \mu(L) = \mu\,(\locns{v}) = \locns{\mu^\Exp\,v} = \locns{\mu^\tau\,v} \\
+           \,\Leftrightarrow\,
+           (\mu^\tau\,v) \in \semantic{\tau}_{\mu(L)}$
 
-    \item Straight forward induction.
+          Since $\mu^\Exp$ is bijective, $(\mu^\tau)^{-1}\,v'$ is in
+          $\semantic{\tau}_L$ and unique for every $v'\in\semantic{\tau}_{\mu(L)}$.
 
-    \item The proof for $\semantic{\tau}_L$ follows immediately with
-          lemma~\ref{lemma:Permutations}, the proofs for
-          $\semantic{\tassn}_L$ and $\semantic{\ttarrow{\theta}{\pi}}_L$
-          are trivial.
-  \end{enumerate}
+    \item Let $\phi \in \semantic{\tassn}_L$, then
+          \begin{itemize}
+            \item $\phi\in\DEF_L
+                   \,\Rightarrow\,
+                   \phi\in\DEF_{\mu^{-1}(\mu(L))}
+                   \,\Rightarrow\,
+                   (\phi \circ (\mu^\Sto)^{-1}) \in \DEF_{\mu(L)}$
+
+            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
+                   \,\Rightarrow\,
+                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Perm_L \\
+                   \,\Rightarrow\,
+                   \phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\Sto)^{-1} \\
+                   \,\Rightarrow\,
+                   \phi\circ (\mu^\Sto)^{-1} = \phi \circ (\mu^\Sto)^{-1} \circ (\bar{\mu}^\Sto)^{-1}$
+          \end{itemize}
+          and therefore $(\phi\circ(\mu^\Sto)^{-1}) = (\mu^\tassn\,\phi) \in \semantic{\tassn}_{\mu(L)}$.
+          $\mu^\tassn$ is bijective, because $\mu^\Sto$ is bijective.
+
+    \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
+          \begin{itemize}
+            \item $d \in \semantic{\theta}_{L'}, L'\in W \\
+                   \,\Rightarrow\,
+                   ((\mu^\theta)^{-1}\,d) \in \semantic{\theta}_{\mu^{-1}(L')} \\
+                   \,\Rightarrow\,
+                   \psi\,((\mu^\theta)^{-1}\,d) \in \semantic{\pi}_{L\cup\mu^{-1}(L')} \\
+                   \,\Rightarrow\,
+                   \mu^\pi\,(\psi\,((\mu^\theta)^{-1}\,d))\in\semantic{\pi}_{\mu(L)\cup L'} \\
+                   \,\Rightarrow\,
+                   ((\mu^\pi\circ\psi\circ(\mu^\theta)^{-1})\,d)\in\semantic{\pi}_{\mu(L)\cup L'}$
+
+            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
+                   \,\Rightarrow\,
+                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Perm_L \\
+                   \,\Rightarrow\,
+                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\pi\circ\psi\circ
+                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta)^{-1} \\
+                   \,\Rightarrow\,
+                   \psi = (\mu^\pi)^{-1}\circ\bar{\mu}^\pi\circ\mu^\pi\circ\psi
+                      \circ(\mu^\theta)^{-1}\circ(\bar{\mu}^\theta)^{-1}\circ\mu^\theta \\
+                   \,\Rightarrow\,
+                   \mu^\pi \circ \psi \circ (\mu^\theta)^{-1}
+                      = \bar{\mu}^\pi\circ[\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}]\circ(\bar{\mu}^\theta)^{-1}$
+          \end{itemize}
+          so we conclude $(\mu^{\ttarrow{\theta}{\pi}}\,\psi)\in\semantic{\ttarrow{\theta}{\pi}}_{\mu(L)}$.
+
+          By induction hypothesis both $\mu^\pi$ and $\mu^\theta$ are bijective, hence
+          $\mu^{\ttarrow{\theta}{\pi}}$ is also a bijective mapping.
+  \end{itemize}
 \end{proof}
 
 
