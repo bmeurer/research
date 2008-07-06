@@ -170,7 +170,7 @@ references} within stores.
   if $\locns{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
 \end{definition}
 
-The stores $s$ are already guarantied to be closed due to definition~\ref{definition:Store} and
+The stores $s$ are already guaranteed to be closed due to definition~\ref{definition:Store} and
 now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
 include {\em dangling references} to unallocated store cells.
 
@@ -316,7 +316,7 @@ $\supp{d} \subseteq \Fix{\mu}$ implies $\mu^\gamma\,d = d$ for all $\mu\in\Perm$
   Trivial.
 \end{proof}
 
-\begin{theorem}
+\begin{theorem} \label{theorem:small_steps_and_permutations}
   Let $k_1,k_1',k_2,k_2'\in D^\scon$ and $\mu_1\in\Perm$ with
   $k_1 \to k_2$ and $k_1' = \mu_1^\scon\,k_1$. Then $k_1' \to k_2'$ iff there is a $\mu_2\in\Perm$
   with $\mu_1 =_{\supp{k_1}} \mu_2$ such that $k_2' = \mu_2^\scon\,k_2$.
@@ -609,6 +609,10 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
   \[\begin{array}{rcl}
     ((\mu^{-1})^\pi \circ \mu^\pi)\,\semantic{\pi}_L &\subseteq& \semantic{\pi}_L.
   \end{array}\]
+%  \[\xymatrix{
+%    \semantic{\pi}_L \ar@/^1pc/[r]^{\mu^\pi} &
+%    \semantic{\pi}_{\mu(L)} \ar@/^1pc/[l]^{(\mu^{-1})^\pi}
+%  }\]
   Given these results it is then sufficient to prove that $(\mu^\pi|\semantic{\pi}_L)$ is
   well-defined and $\mu^\pi \circ (\mu^{-1})^\pi$ is the identity on $\semantic{\pi}$.
   \begin{itemize}
@@ -626,41 +630,52 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
           Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi = (\mu^{-1})^\ssto(\mu^\ssto\,\phi) = \phi$.
 
-    \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
-          \begin{itemize}
-            \item $d \in \semantic{\theta}_{L'}, L'\in W \\
-                   \,\Rightarrow\,
-                   ((\mu^\theta)^{-1}\,d) \in \semantic{\theta}_{\mu^{-1}(L')} \\
-                   \,\Rightarrow\,
-                   \psi\,((\mu^\theta)^{-1}\,d) \in \semantic{\pi}_{L\cup\mu^{-1}(L')} \\
-                   \,\Rightarrow\,
-                   \mu^\pi\,(\psi\,((\mu^\theta)^{-1}\,d))\in\semantic{\pi}_{\mu(L)\cup L'} \\
-                   \,\Rightarrow\,
-                   ((\mu^\pi\circ\psi\circ(\mu^\theta)^{-1})\,d)\in\semantic{\pi}_{\mu(L)\cup L'}$
-
-            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
-                   \,\Rightarrow\,
-                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
-                   \,\Rightarrow\,
-                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\pi\circ\psi\circ
-                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta)^{-1} \\
-                   \,\Rightarrow\,
-                   \psi = (\mu^\pi)^{-1}\circ\bar{\mu}^\pi\circ\mu^\pi\circ\psi
-                      \circ(\mu^\theta)^{-1}\circ(\bar{\mu}^\theta)^{-1}\circ\mu^\theta \\
-                   \,\Rightarrow\,
-                   \mu^\pi \circ \psi \circ (\mu^\theta)^{-1}
-                      = \bar{\mu}^\pi\circ[\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}]\circ(\bar{\mu}^\theta)^{-1}$
-          \end{itemize}
-          so we conclude $(\mu^{\ttarrow{\theta}{\pi}}\,\psi)\in\semantic{\ttarrow{\theta}{\pi}}_{\mu(L)}$.
-
-          Given $\mu^\theta\circ(\mu^{-1})^\theta = \id_{\semantic{\theta}}$ and
-          $\mu^\pi\circ(\mu^{-1})^\pi = \id_{\semantic{\pi}}$ by induction hypothesis it follows easily that
-          \[\begin{array}{rcccl}
-            (\mu^{\ttarrow{\theta}{\pi}}\circ (\mu^{-1})^{\ttarrow{\theta}{\pi}})\,\psi
-            &=& \mu^\pi \circ (\mu^{-1})^\pi \circ \psi \circ (\mu^{-1})^\theta \circ \mu^\theta 
-            &=& \psi.
-          \end{array}\]
+    \item For $\mu^{\ttarrow{\theta}{\pi}}$ the statement follows immediately using the induction hypothesis.
+%    \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
+%          \begin{itemize}
+%            \item $d \in \semantic{\theta}_{L'}, L'\in W \\
+%                   \,\Rightarrow\,
+%                   ((\mu^\theta)^{-1}\,d) \in \semantic{\theta}_{\mu^{-1}(L')} \\
+%                   \,\Rightarrow\,
+%                   \psi\,((\mu^\theta)^{-1}\,d) \in \semantic{\pi}_{L\cup\mu^{-1}(L')} \\
+%                   \,\Rightarrow\,
+%                   \mu^\pi\,(\psi\,((\mu^\theta)^{-1}\,d))\in\semantic{\pi}_{\mu(L)\cup L'} \\
+%                   \,\Rightarrow\,
+%                   ((\mu^\pi\circ\psi\circ(\mu^\theta)^{-1})\,d)\in\semantic{\pi}_{\mu(L)\cup L'}$
+%
+%            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
+%                   \,\Rightarrow\,
+%                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
+%                   \,\Rightarrow\,
+%                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\pi\circ\psi\circ
+%                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta)^{-1} \\
+%                   \,\Rightarrow\,
+%                   \psi = (\mu^\pi)^{-1}\circ\bar{\mu}^\pi\circ\mu^\pi\circ\psi
+%                      \circ(\mu^\theta)^{-1}\circ(\bar{\mu}^\theta)^{-1}\circ\mu^\theta \\
+%                   \,\Rightarrow\,
+%                   \mu^\pi \circ \psi \circ (\mu^\theta)^{-1}
+%                      = \bar{\mu}^\pi\circ[\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}]\circ(\bar{\mu}^\theta)^{-1}$
+%          \end{itemize}
+%          so we conclude $(\mu^{\ttarrow{\theta}{\pi}}\,\psi)\in\semantic{\ttarrow{\theta}{\pi}}_{\mu(L)}$.
+%
+%          Given $\mu^\theta\circ(\mu^{-1})^\theta = \id_{\semantic{\theta}}$ and
+%          $\mu^\pi\circ(\mu^{-1})^\pi = \id_{\semantic{\pi}}$ by induction hypothesis it follows easily that
+%          \[\begin{array}{rcccl}
+%            (\mu^{\ttarrow{\theta}{\pi}}\circ (\mu^{-1})^{\ttarrow{\theta}{\pi}})\,\psi
+%            &=& \mu^\pi \circ (\mu^{-1})^\pi \circ \psi \circ (\mu^{-1})^\theta \circ \mu^\theta 
+%            &=& \psi.
+%          \end{array}\]
   \end{itemize}
+\end{proof}
+
+\begin{lemma} \label{lemma:Permutations_and_semantic_domains}
+  Let $\mu,\hat{\mu}\in\Perm$, $\pi\in\LType$ and $d \in \semantic{\pi}$, then
+  $\mu^\pi\,d = \hat{\mu}^\pi\,d$ if
+  $(\mu|\supp{d}) = (\hat{\mu}|\supp{d})$.
+\end{lemma}
+
+\begin{proof}
+  Follows easily with lemma~\ref{lemma:Permutations}.
 \end{proof}
 
 
@@ -672,8 +687,9 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
 \begin{definition}[Total correctness]
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L\in W$. $e$ is {\em $L$-totally correct}, or {\em $L$-correct} for short, with respect to $\phi$ and
-  $\psi$ if for all $s\in\Store_L$ with $\phi\,s=\true$: each computation for $(e,s)$ terminates with some
+  and $L\in W$ with $\supp{\phi,e,\psi} \subseteq L$.
+  $e$ is {\em $L$-totally correct}, or {\em $L$-correct} for short, with respect to $\phi$ and
+  $\psi$ if for every $s\in\Store_L$ with $\phi\,s=\true$ each computation for $(e,s)$ terminates with some
   $(v',s')$ such that $\psi\,v'\,s'=\true$. We write $L \models \triple{\phi}{e}{\psi}$ in this case.
 \end{definition}
 
@@ -683,34 +699,46 @@ time is a tedious task. To get around this, we will show that it suffices to pro
 terminating computation for $(e,s)$, then all possible computations terminate, and $\psi$ either holds for all
 or none of the computations.
 
-\begin{lemma}
-  Let $\tau\in\Type$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$,
-  $e\in\CExp^\tau$, $v',v''\in\CVal^\tau$ and $s,s',s''\in\Store$
-  with $\locns{e}\subseteq \dom{s}$, $\locns{v'}\subseteq\dom{s'}$
-  and $\locns{v''}\subseteq \dom{s''}$.
-  If $\supp{\psi} \subseteq \dom{s}$, $(e,s)\xrightarrow*(v',s')$
-  and $(e,s)\xrightarrow*(v'',s'')$ then $\psi\,v'\,s'=\psi\,v''\,s''$.
-\end{lemma}
+Furtheron it is unusual to talk about a specific world $L$ in which $e$ is totally correct. Instead, one would
+like to say that $e$ is totally correct with respect to $\phi$ and $\psi$, without talking about the world
+explicitly. Hence we will show that if $e$ is totally correct in a sufficiently large world, then $e$ is
+totally correct in all such worlds and we don't need to talk about the exact $L$ anymore.
+
+%\begin{lemma}
+%  Let $\tau\in\Type$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$,
+%  $e\in\CExp^\tau$, $v',v''\in\CVal^\tau$ and $s,s',s''\in\Store$
+%  with $\locns{e}\subseteq \dom{s}$, $\locns{v'}\subseteq\dom{s'}$
+%  and $\locns{v''}\subseteq \dom{s''}$.
+%  If $\supp{\psi} \subseteq \dom{s}$, $(e,s)\xrightarrow*(v',s')$
+%  and $(e,s)\xrightarrow*(v'',s'')$ then $\psi\,v'\,s'=\psi\,v''\,s''$.
+%\end{lemma}
 
 \begin{lemma}[Total correctness]
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-  and $L,L'\in W$.
+  and $L,L'\in W$ with $\supp{\phi,e,\psi} \subseteq L \cap L'$.
   \begin{enumerate}
-    \item If for every $s \in \Store_L$ with $\phi\,s=\true$ a $v'\in\CVal^\tau$ and a
-          $s'\in\Store_L$ exist so that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$ then
-          $L\models\triple{\phi}{e}{\psi}$.
+    \item $L\models\triple{\phi}{e}{\psi}$ if for every $s \in \Store_L$ with $\phi\,s=\true$ there exist $v'\in\CVal^\tau$ and 
+          $s'\in\Store_L$ such that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$.
 
-    \item If $\supp{\phi,e,\psi} \subseteq L \cap L'$ then the following are equivalent
-          \begin{enumerate}
-            \item $L\models\triple{\phi}{e}{\psi}$
-            \item $L'\models\triple{\phi}{e}{\psi}$
-          \end{enumerate}
+    \item $L\models\triple{\phi}{e}{\psi}$ iff $L'\models\triple{\phi}{e}{\psi}$.
   \end{enumerate}
 \end{lemma}
 
 \begin{proof} \
   \begin{enumerate}
-    \item
+    \item Let $s \in \Store_L$ with $\phi\,s = \true$. If there exists a terminating computation $(e,s) \xrightarrow* (v',s')$
+          then theorem~\ref{theorem:small_steps_and_permutations} guarantees that all computations for $(e,s)$
+          terminate with some $(v'',s'')$ such that a permutation $\mu\in\Fix{\dom{s}}$ exists with
+          $\mu^\tau\,v' = \mu^\sexp\,v' = v''$ and $\mu^\ssto\,s' = s''$.
+          Hence it suffices to prove that $\psi\,v'\,s' = \psi\,(\mu^\tau\,v')\,(\mu^\ssto\,s')$.
+
+          Since $\supp{\psi} \subseteq \dom{s} \subseteq \Fix{\mu}$ we have $\psi = (\mu^{\ttarrow{\tau}{\tassn}})^{-1}\,\psi$ by
+          lemma~\ref{lemma:Permutations_and_semantic_domains} and so
+          \[\begin{array}{rcl}
+            \psi\,v'\,s' &=& ((\mu^\tassn)^{-1} \circ \psi \circ \mu^\tau)\,v'\,s' \\
+                         &=& ((\mu^\tassn)^{-1} (\psi\,(\mu^\tau\,v')))\,s' \\
+                         &=& \psi\,(\mu^\tau\,v')\,(\mu^\ssto\,s').
+          \end{array}\]
 
     \item Without loss of generality let $L= \supp{\phi,e,\psi}$ and hence $L \subseteq L'$.
           \begin{itemize}
