@@ -589,46 +589,42 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
 \begin{lemma}[Semantic domains] \
   Let $\pi \in \LType$, $\mu\in\Perm$ and $L\in W$.
-  Then $\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$ and
-  for every $d'\in\semantic{\pi}_{\mu(L)}$ there is
-  a unique $d\in\semantic{\pi}_{L}$ such that $\mu^\pi\,d = d'$.
+  \begin{enumerate}
+    \item $(\mu^\pi|\semantic{\pi}_L): \semantic{\pi}_L \to \semantic{\pi}_{\mu(L)}$ is
+          well-defined and bijective.
+    \item $\mu^\pi: \semantic{\pi} \to \semantic{\pi}$ is well-defined and bijective.
+  \end{enumerate}
 \end{lemma}
 
-Given that $\semantic{\pi}$ is the union of disjoint sets $\semantic{\pi}_L$, the lemma
-states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
-
 \begin{proof}
-  By induction on $\pi$:
+  Given that $\semantic{\pi}$ is the union of disjoint sets $\semantic{\pi}_L$, the second
+  property is simply an implication of the first one. Now assume that $(\mu^\pi|\semantic{\pi}_L)$
+  is well-defined, i.e. $\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$, then
+  we also have $(\mu^{-1})^\pi\,\semantic{\pi}_{\mu(L)} \subseteq \semantic{\pi}_L$, which
+  implies
+  \[\begin{array}{rcl}
+    (\mu^\pi \circ (\mu^{-1})^\pi)\,\semantic{\pi}_{\mu(L)} &\subseteq& \semantic{\pi}_{\mu(L)}
+  \end{array}\]
+  and
+  \[\begin{array}{rcl}
+    ((\mu^{-1})^\pi \circ \mu^\pi)\,\semantic{\pi}_L &\subseteq& \semantic{\pi}_L.
+  \end{array}\]
+  Given these results it is then sufficient to prove that $(\mu^\pi|\semantic{\pi}_L)$ is
+  well-defined and $\mu^\pi \circ (\mu^{-1})^\pi$ is the identity on $\semantic{\pi}$.
   \begin{itemize}
-    \item $v \in \semantic{\tau}_L \\
-           \,\Leftrightarrow\,
-           L = \locns{v} \\
-           \,\Leftrightarrow\,
-           \mu(L) = \mu\,(\locns{v}) = \locns{\mu^\sexp\,v} = \locns{\mu^\tau\,v} \\
-           \,\Leftrightarrow\,
-           (\mu^\tau\,v) \in \semantic{\tau}_{\mu(L)}$
+    \item Let $v \in \semantic{\tau}_L$, then we have $\supp{v} = L$ and by lemma~\ref{lemma:Permutations}
+          we also have $\mu(L) = \supp{\mu^\sexp\,v} = \supp{\mu^\tau\,v}$, thereby
+          $(\mu^\tau\,v) \in \semantic{\tau}_{\mu(L)}$. Likewise
+          $(\mu^\tau \circ(\mu^{-1})^\tau)\,v = \mu^\sexp((\mu^{-1})^\sexp\,v) = v$.
 
-          Since $\mu^\sexp$ is bijective, $(\mu^\tau)^{-1}\,v'$ is in
-          $\semantic{\tau}_L$ and unique for every $v'\in\semantic{\tau}_{\mu(L)}$.
+    \item Let $\phi \in \semantic{\tassn}_L$ then $\phi \in \DEF_{\mu^{-1}(\mu(L))}$ and using
+          lemma~\ref{lemma:Permutations_and_Reachability} we conclude $(\phi\circ(\mu^\ssto)^{-1})\in\DEF_{\mu(L)}$.
 
-    \item Let $\phi \in \semantic{\tassn}_L$, then
-          \begin{itemize}
-            \item $\phi\in\DEF_L
-                   \,\Rightarrow\,
-                   \phi\in\DEF_{\mu^{-1}(\mu(L))}
-                   \,\Rightarrow\,
-                   (\phi \circ (\mu^\ssto)^{-1}) \in \DEF_{\mu(L)}$
+          Now let $\bar{\mu}\in\Fix{\mu(L)}$ then $(\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L}$ and since
+          $\phi\in\DEF_L$ we also have $\phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\ssto)^{-1}$,
+          which easily transforms to $\phi\circ (\mu^\ssto)^{-1} = \phi \circ (\mu^\ssto)^{-1} \circ (\bar{\mu}^\ssto)^{-1}$.
 
-            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
-                   \,\Rightarrow\,
-                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
-                   \,\Rightarrow\,
-                   \phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\Sto)^{-1} \\
-                   \,\Rightarrow\,
-                   \phi\circ (\mu^\ssto)^{-1} = \phi \circ (\mu^\ssto)^{-1} \circ (\bar{\mu}^\Sto)^{-1}$
-          \end{itemize}
-          and therefore $(\phi\circ(\mu^\ssto)^{-1}) = (\mu^\tassn\,\phi) \in \semantic{\tassn}_{\mu(L)}$.
-          $\mu^\tassn$ is bijective, because $\mu^\ssto$ is bijective.
+          Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi = (\mu^{-1})^\ssto(\mu^\ssto\,\phi) = \phi$.
 
     \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
           \begin{itemize}
@@ -657,8 +653,13 @@ states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
           \end{itemize}
           so we conclude $(\mu^{\ttarrow{\theta}{\pi}}\,\psi)\in\semantic{\ttarrow{\theta}{\pi}}_{\mu(L)}$.
 
-          By induction hypothesis both $\mu^\pi$ and $\mu^\theta$ are bijective, hence
-          $\mu^{\ttarrow{\theta}{\pi}}$ is also a bijective mapping.
+          Given $\mu^\theta\circ(\mu^{-1})^\theta = \id_{\semantic{\theta}}$ and
+          $\mu^\pi\circ(\mu^{-1})^\pi = \id_{\semantic{\pi}}$ by induction hypothesis it follows easily that
+          \[\begin{array}{rcccl}
+            (\mu^{\ttarrow{\theta}{\pi}}\circ (\mu^{-1})^{\ttarrow{\theta}{\pi}})\,\psi
+            &=& \mu^\pi \circ (\mu^{-1})^\pi \circ \psi \circ (\mu^{-1})^\theta \circ \mu^\theta 
+            &=& \psi.
+          \end{array}\]
   \end{itemize}
 \end{proof}
 
