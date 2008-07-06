@@ -22,6 +22,7 @@
 \usepackage[standard,thmmarks]{ntheorem}
 \usepackage{stmaryrd}
 \usepackage{url}
+\usepackage[arrow, matrix, curve]{xy}
 
 %% LaTeX macros
 \include{macros}
@@ -30,17 +31,16 @@
 \newcommand{\CExp}{\nstyle{CExp}}
 \newcommand{\CVal}{\nstyle{CVal}}
 \newcommand{\Conf}{\nstyle{Conf}}
+\newcommand{\Con}{\nstyle{Con}}
 \newcommand{\Sto}{\nstyle{Sto}}
-\newcommand{\loc}{\nstyle{loc}}
-\newcommand{\sto}{\nstyle{sto}}
-\newcommand{\val}{\nstyle{val}}
+\newcommand{\scon}{\nstyle{con}}
+\newcommand{\sexp}{\nstyle{exp}}
+\newcommand{\ssto}{\nstyle{sto}}
 \newcommand{\z}{\nstyle{int}}
 \newcommand{\DEF}{\nstyle{DEF}}
-\newcommand{\OUT}{\nstyle{OUT}}
-\newcommand{\PERM}{\nstyle{PERM}}
-\newcommand{\INV}{\nstyle{INV}}
 \newcommand{\id}{\nstyle{id}}
 \newcommand{\I}{\mathcal{I}}
+\newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
 \newcommand{\returns}[2]{\ensuremath{\mathbf{returns}\,{#1}.\,{#2}}}
 
 
@@ -143,20 +143,22 @@ and $\CVal = \CExp \cap \Val$.
 
 \section{Operational semantics}
 
+Let $(W,\subseteq) = (\powersetfin{Loc},\subseteq)$ be the partial order of possible `worlds'.
+
 \begin{definition}[Store] \label{definition:Store} \
   \begin{enumerate}
-    \item A {\em store} is a partial function $s:\Loc \pto \CVal$ with
+    \item A {\em store} is a partial function $s:\Loc \pto \CVal$ with a finite domain and
           \begin{enumerate}
             \item $s(\Loc^\tau) \subseteq \CVal^\tau$ for every $\tau\in\Type$ and
             \item $\locns{s(\Loc)} \subseteq \dom{s}$.
           \end{enumerate}
 
-    \item For each $L\subseteq \Loc$ the set of {\em $L$-stores} is defined as
+    \item For every $L \in W$ the set of {\em $L$-stores} is defined as
           \[\begin{array}{l}
             \Store_L = \{s\,|\,\text{$s$ is a store with $L\subseteq\dom{s}$}\}.
           \end{array}\]
 
-    \item $\Store = \bigcup_{L\subseteq\Loc} \Store_L$ denotes the set of all {\em stores}.
+    \item $\Store = \bigcup_{L \in W} \Store_L$ denotes the set of all {\em stores}.
   \end{enumerate}
 \end{definition}
 
@@ -165,89 +167,228 @@ references} within stores.
 
 \begin{definition}[Configuration]
   Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
-  if $\locns{e} \subseteq \dom{s}$.
+  if $\locns{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
 \end{definition}
 
 The stores $s$ are already guarantied to be closed due to definition~\ref{definition:Store} and
 now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
 include {\em dangling references} to unallocated store cells.
 
+For any given set $L \subseteq \Loc$ we let $\Conf_L = \{(e,s)\in\Conf\,|\,\dom{s}\subseteq L\}$
+denote the subset of configurations which do not have locations allocated outside $L$.
+
 \begin{definition}[Small step semantics]
-  Let $e,e'\in\Exp$ and $s,s'\in\Store$. A {\em small step} is a formula
-  $(e,s) \to (e',s')$. A small step is said to be valid if it was derived with
+  Let $k,k'\in\Conf$. A {\em small step} is a formula
+  $k \to k'$. A small step is said to be valid if it was derived with
   the small rules given {\bf somewhere else}.
 \end{definition}
 
 \begin{definition}[Big step semantics]
-  Let $e\in\Exp$, $v\in\Val$ and $s,s'\in\Store$. A {\em big step} is a formula
-  $(e,s) \Downarrow (v,s')$. A big step is said to be valid if it was derived with the
+  Let $k,k'\in\Conf$ with $k' \in \Val \times \Store$. A {\em big step} is a formula
+  $k \Downarrow k'$. A big step is said to be valid if it was derived with the
   big step rules given {\bf somewhere else}.
 \end{definition}
 
-\begin{corollary}
-  Let $e\in\Exp$, $v\in\Val$ and $s,s'\in\Store$. If $(e,s)$ is a configuration
-  and $(e,s) \xrightarrow* (v,s')$, then
-  \begin{enumerate}
-    \item $(v,s')$ is also a configuration, and
-    \item $\dom{s} \subseteq \dom{s'}$.
-  \end{enumerate}
-\end{corollary}
+It is easy to see that both the small and the big step semantics are well defined
+with respect to configurations. We assume that type safety holds for the semantics
+(see Pierce, {\bf TODO}).
 
-\begin{proof}
-  Straight forward induction.
-\end{proof}
+%\begin{lemma} \label{lemma:Small_steps_and_graph_of_stores}
+%  Let $\tau\in\Type$, $e\in\CExp^\tau\setminus\Val$, $s,\hat{s}\in\Store_{\locns{e}}$.
+%  If $\grph{s} \subseteq \grph{\hat{s}}$ then there exist $e',\hat{e}'\in\CExp^\tau$
+%  and $s',\hat{s}'\in\Store$ such that
+%  \begin{enumerate}
+%    \item $(e,s) \to (e',s')$,
+%    \item $(e,\hat{s}) \to (\hat{e}',\hat{s}')$ and
+%    \item $\grph{s'} \subseteq \grph{\hat{s}'}$.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  By structural induction on $e$. We consider only the case for the application,
+%  hence let $e = \app{e_1}{e_2}$.
+%  \begin{itemize}
+%    \item $e_1 \not\in \Val$, then by induction hypothesis, we have
+%          $e_1',\hat{e_1}'\in\CExp^\tau$ and $s',\hat{s}'\in\Store$ such that
+%          $(e_1,s) \to (e_1',s')$, $(e_1,\hat{s}) \to (\hat{e_1}',\hat{s}')$
+%          and $\grph{s'} \subseteq \grph{\hat{s}'}$. With \RN{App-Left} we
+%          conclude $(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')$ and
+%          $(\app{e_1}{e_2},\hat{s}) \to (\app{\hat{e_1}'}{e_2},\hat{s}')$.
+%
+%    \item $e_1 \in \Val, e_2 \not\in \Val$ analogue to the above with \RN{App-Right}.
+%
+%    \item $e_1 = \cref, e_2=v\in \Val$, choose $e' = \hat{e}' = l \not\in \dom{\hat{s}} \subseteq \dom{s}$
+%          and thereby $(e,s) \to (l,s[v/l])$ and $(e,\hat{s}) \to (l,\hat{s}[v/l])$ with \RN{Ref} and
+%          $\grph{s'} = \grph{s} \cup \{(l,v)\} \subseteq \grph{\hat{s}} \cup \{(l,v)\} = \grph{\hat{s}'}$.
+%
+%    \item $e_1 = (\app{\assign}{l}), e_2 = v \in \Val$ where $l \in \dom{s}\cap\dom{\hat{s}}$, then
+%          $(e,s) \to (\unit,s[v/l])$ and $(e,\hat{s}) \to (\unit,\hat{s}[v/l])$ with \RN{Assign} and
+%          $\grph{s[v/l]}=\grph{s}\cup\{(l,v)\} \subseteq \grph{\hat{s}}\cup\{(l,v)\}=\grph{\hat{s}[v/l]}$.
+%  \end{itemize}
+%  The remaining cases are quite similar.
+%\end{proof}
+%
+%\begin{corollary}
+%  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
+%  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
+%  \begin{enumerate}
+%    \item $(e,s) \xrightarrow* (v,s')$
+%    \item $(e,s_1) \xrightarrow* (v,s_1')$
+%    \item $\grph{s'} \subseteq \grph{s_1'}$
+%  \end{enumerate}
+%\end{corollary}
+%
+%\begin{proof}
+%  Follows immediately with lemma~\ref{lemma:Small_steps_and_graph_of_stores}.
+%\end{proof}
 
-The small step semantic is thereby well-defined with regard to configurations, i.e. it preserves
-the configuration property. We assume that type safety holds for the semantics (see Pierce, {\bf TODO}).
+%%
+%% Permutability
+%%
 
-\begin{lemma} \label{lemma:Small_steps_and_graph_of_stores}
-  Let $\tau\in\Type$, $e\in\CExp^\tau\setminus\Val$, $s,\hat{s}\in\Store_{\locns{e}}$.
-  If $\grph{s} \subseteq \grph{\hat{s}}$ then there exist $e',\hat{e}'\in\CExp^\tau$
-  and $s',\hat{s}'\in\Store$ such that
-  \begin{enumerate}
-    \item $(e,s) \to (e',s')$,
-    \item $(e,\hat{s}) \to (\hat{e}',\hat{s}')$ and
-    \item $\grph{s'} \subseteq \grph{\hat{s}'}$.
-  \end{enumerate}
+\subsection{Permutability}
+
+\begin{definition}[Permutation]
+  A {\em permutation} is a total, bijective function $\mu:\Loc\to\Loc$ with
+  $\mu\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$. Let $\Perm$ be the
+  set of all such permutations.
+\end{definition}
+
+Let $\Fix{\mu} = \{l\in\Loc\,|\,\mu(l)=l\}$ be set the of all fixpoints of $\mu$. Then
+the set $\Fix{L} = \{\mu\in\Perm\,|\,L \subseteq \Fix{\mu}\}$ includes all
+permutations $\mu$ with $(\mu|L) = \id_L$.
+
+\begin{lemma}
+  For all $L \subseteq \Loc$ and $\mu_1,\mu_2\in\Perm$ we have
+  $\mu_1\in\Fix{L}$ iff $(\mu_2 \circ \mu_1 \circ \mu_2^{-1})\in\Fix{{\mu_2(L)}}$.
 \end{lemma}
 
 \begin{proof}
-  By structural induction on $e$. We consider only the case for the application,
-  hence let $e = \app{e_1}{e_2}$.
-  \begin{itemize}
-    \item $e_1 \not\in \Val$, then by induction hypothesis, we have
-          $e_1',\hat{e_1}'\in\CExp^\tau$ and $s',\hat{s}'\in\Store$ such that
-          $(e_1,s) \to (e_1',s')$, $(e_1,\hat{s}) \to (\hat{e_1}',\hat{s}')$
-          and $\grph{s'} \subseteq \grph{\hat{s}'}$. With \RN{App-Left} we
-          conclude $(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')$ and
-          $(\app{e_1}{e_2},\hat{s}) \to (\app{\hat{e_1}'}{e_2},\hat{s}')$.
-
-    \item $e_1 \in \Val, e_2 \not\in \Val$ analogue to the above with \RN{App-Right}.
-
-    \item $e_1 = \cref, e_2=v\in \Val$, choose $e' = \hat{e}' = l \not\in \dom{\hat{s}} \subseteq \dom{s}$
-          and thereby $(e,s) \to (l,s[v/l])$ and $(e,\hat{s}) \to (l,\hat{s}[v/l])$ with \RN{Ref} and
-          $\grph{s'} = \grph{s} \cup \{(l,v)\} \subseteq \grph{\hat{s}} \cup \{(l,v)\} = \grph{\hat{s}'}$.
-
-    \item $e_1 = (\app{\assign}{l}), e_2 = v \in \Val$ where $l \in \dom{s}\cap\dom{\hat{s}}$, then
-          $(e,s) \to (\unit,s[v/l])$ and $(e,\hat{s}) \to (\unit,\hat{s}[v/l])$ with \RN{Assign} and
-          $\grph{s[v/l]}=\grph{s}\cup\{(l,v)\} \subseteq \grph{\hat{s}}\cup\{(l,v)\}=\grph{\hat{s}[v/l]}$.
-  \end{itemize}
-  The remaining cases are quite similar.
+  Trivial.
 \end{proof}
 
-\begin{corollary}
-  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
-  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
+Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
+$\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
+every $\gamma \in \Gamma$ we define a set $D^\gamma$ and for every $d \in D^\gamma$
+we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
+\begin{itemize}
+  \item $D^\sexp = \CExp$, $\supp{e} = \locns{e}$
+  \item $D^\ssto = \Store$, $\supp{s} = \dom{s}$
+  \item $D^\scon = \Conf$, $\supp{(e,s)} = \supp{e} \cup \supp{s}$
+\end{itemize}
+For every permutation $\mu \in \Perm$ and every $\gamma\in\Gamma$ we define
+a function $\mu^\gamma:D^\gamma \to D^\gamma$ by
+\begin{itemize}
+  \item $\mu^\sexp\,e = e\mu$,
+  \item $\mu^\ssto\,s = \mu^\sexp \circ s \circ \mu^{-1}$ and
+  \item $\mu^\scon\,(e,s) = (\mu^\sexp\,e,\mu^\ssto\,s)$,
+\end{itemize}
+where $e\mu$ is the expression that results from applying $\mu$ to every location in $e$.
+
+Obviously $\mu^\sexp$ is well-defined and bijective. For $\mu^\ssto$ assume that $L \in W$ and $s\in\Store_L$,
+then $\mu^\ssto\,s = \mu^\sexp \circ s \circ \mu^{-1}$ is closed with respect to locations in
+$\dom{\mu^\ssto\,s}$ and
+\[\begin{array}{rccccl}
+  \dom{\mu^\ssto\,s} &=& \mu(\dom{s}) &\supseteq& \mu(L),
+\end{array}\]
+thereby $(\mu^\ssto\,s) \in \Store_{\mu(L)}$. It is also easy to see that $\mu^\ssto$ is bijective, since
+we have
+\[\begin{array}{rcl}
+  (\mu^{-1})^\ssto(\mu^\ssto\,s)
+  &=& (\mu^{-1})^\ssto\,(\mu^\sexp \circ s \circ \mu^{-1}) \\
+  &=& (\mu^{-1})^\sexp \circ \mu^\sexp \circ s \circ \mu^{-1} \circ \mu \\
+  &=& s
+\end{array}\]
+for all $\mu\in\Perm$ and $s\in\Store$. Obviously $\mu^\scon$ is also well-defined and bijective then.
+
+\begin{lemma}[Permutations] \label{lemma:Permutations}
+  Let $\mu,\hat{\mu}\in\Perm$, $\gamma\in\Gamma$ and $d \in D^\gamma$, then
   \begin{enumerate}
-    \item $(e,s) \xrightarrow* (v,s')$
-    \item $(e,s_1) \xrightarrow* (v,s_1')$
-    \item $\grph{s'} \subseteq \grph{s_1'}$
+    \item $\supp{\mu^\gamma\,d} = \mu\,(\supp{d})$
+    \item $(\mu|\supp{d}) = (\hat{\mu}|\supp{d})$ implies $\mu^\gamma\,d = \hat{\mu}^\gamma\,d$
   \end{enumerate}
-\end{corollary}
+\end{lemma}
+%
+In the special case $\hat{\mu} = \id$ for the second property we conclude immediately that
+$\supp{d} \subseteq \Fix{\mu}$ implies $\mu^\gamma\,d = d$ for all $\mu\in\Perm$, $d\in D^\gamma$.
 
 \begin{proof}
-  Follows immediately with lemma~\ref{lemma:Small_steps_and_graph_of_stores}.
+  Trivial.
 \end{proof}
+
+\begin{theorem}
+  Let $k_1,k_1',k_2,k_2'\in D^\scon$ and $\mu_1\in\Perm$ with
+  $k_1 \to k_2$ and $k_1' = \mu_1^\scon\,k_1$. Then $k_1' \to k_2'$ iff there is a $\mu_2\in\Perm$
+  with $\mu_1 =_{\supp{k_1}} \mu_2$ such that $k_2' = \mu_2^\scon\,k_2$.
+\end{theorem}
+
+The theorem is probably easier to understand if we visualize the implications using commutative
+diagrams.
+\[
+  \xymatrix{
+    k_1 \ar[r]^{\to} \ar[d]_{\mu_1} & k_2 \ar@{.>}[d]^{\mu_2} \\
+    k_1' \ar[r]^{\to} & k_2'
+  }
+  \hspace*{3cm}
+  \xymatrix{
+    k_1 \ar[r]^{\to} \ar[d]_{\mu_1} & k_2 \ar[d]^{\mu_2} \\
+    k_1' \ar@{.>}[r]^{\to} & k_2'
+  }
+\]
+
+\begin{proof}
+  $\mu^\sexp$ preserves the structure of expressions, hence the small steps $k_1 \to k_2$ and
+  $k_1' \to k_2'$ (if they exist) must have been derived using the same small step rules. Therefore
+  we can prove the theorem by induction on the length of the derivation of $k_1 \to k_2$.
+  \begin{itemize}
+    \item If $k_1 \to k_2$ was derived using rule \RN{Ref} then we have
+          $k_1 = (\cref\,v,s)$,
+          $k_2 = (l,s[v/l])$ with $l \not\in \dom{s}$
+          and $k_1' = (\mu_1^\sexp(\cref\,v),\mu_1^\ssto\,s)$.
+          \begin{itemize}
+            \item[`$\Rightarrow$']
+                  $k_2' = (l',(\mu_1^\ssto\,s)[\mu_1^\sexp\,v/l'])$ with $l' \not\in \dom{\mu_1^\ssto\,s}$
+
+                  We can choose any $\mu_2 \in \Perm$ with $\mu_1 =_{\supp{k_1}} \mu_2$ and $\mu_2\,l = l'$ since
+                  $l \not\in \dom{s} = \supp{k_1}$ and $(\mu_1^\ssto\,s)[\mu_1^\sexp\,v/l'] = \mu_2^\ssto(s[v/l])$.
+
+            \item[`$\Leftarrow$']
+                  $k_2' = (\mu_2\,l,\mu_2^\ssto(s[v/l]))$
+
+                  $l \not\in \dom{s}$ implies $(\mu_2\,l)\not\in\mu_2(\dom{s})=\dom{\mu_2^\ssto\,s}=\dom{\mu_1^\ssto\,s}$,
+                  and $\mu_2^\ssto(s[v/l]) = (\mu_2^\ssto\,s)[\mu_2^\sexp\,v/\mu_2\,l] = (\mu_1^\ssto\,s)[\mu_1^\sexp\,v/\mu_2\,l]$
+                  and thereby we conclude
+                  $(\mu_1^\sexp(\cref\,v),\mu_1^\ssto\,s)\to(\mu_2\,l,\mu_2^\ssto(s[v/l]))$ by small step rule \RN{Ref}.
+          \end{itemize}
+
+    \item If $k_1 \to k_2$ was derived using rule \RN{App-Left} then $k_1 = (e_1\,e_2,s)$,
+          $k_2 = (e_1'\,e_2,s')$ and $k_1' = (\mu_1^\sexp(e_1\,e_2),\mu_1^\ssto\,s)$ with $(e_1,s) \to (e_1',s')$.
+          \begin{itemize}
+            \item[`$\Rightarrow$']
+                  $k_2' = (\hat{e}_1'\,(\mu_1^\sexp\,e_2),\hat{s}')$ with
+                  $(\mu_1^\sexp\,e_1,\mu_1^\ssto\,s) \to (\hat{e}_1',\hat{s}')$
+
+                  By induction hypothesis there is a $\mu_2\in\Perm$ with $\mu_1 =_{\dom{s}} \mu_2$ such that
+                  $\hat{e}_1' = \mu_2^\sexp\,e_1'$ and $\hat{s}' = \mu_2^\ssto\,s'$. Since
+                  $\mu_1 =_{\dom{s}} \mu_2$ and $\dom{s} = \supp{k_1}$ we have $\mu_1^\sexp\,e_2=\mu_e^\sexp\,e_2$
+                  and so we conclude $k_2' = (\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$.
+
+            \item[`$\Leftarrow$']
+                  $k_2' = (\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$
+
+                  $\mu_2 =_{\supp{k_1}} \mu_1$ implies $\mu_2^\sexp\,e_2 = \mu_1^\sexp\,e_1$ and by induction hypothesis
+                  a small step $(\mu_1^\sexp\,e_1,\mu_1^\ssto\,s) \to (\mu_2^\sexp\,e_1',\mu_2^\ssto\,s')$ exists. Then
+                  $(\mu_1^\sexp(e_1\,e_2),\mu_1^\ssto\,s)\to(\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$ follows immediately
+                  with \RN{App-Left}.
+          \end{itemize}
+  \end{itemize}
+  The remaining cases are omitted, they are similar to the above. 
+\end{proof}
+
+Now this theorem provides quite a lot of interesting results. For example, if we choose $\mu_1 = \id$ then we can
+conclude that if $k_1 = k_1'$ has atleast one terminating computation, then all computations for $k_1$ terminate
+with exactly the same number of steps, and for every two results $(v',s')$ and $(v'',s'')$ a permutation
+$\mu_2 \in \Fix{\supp{k_1}}$ exists, such that $v' = \mu_2^\sexp\,v''$ and $v'' = \mu_2^\ssto\,s''$.
 
 
 %%
@@ -269,8 +410,6 @@ the configuration property. We assume that type safety holds for the semantics (
 %%
 
 \section{Semantics of the logic}
-
-Let $(W,\subseteq) = (\powersetfin{Loc},\subseteq)$ be the partial order of possible `worlds'.
 
 
 %%
@@ -322,140 +461,89 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
   \end{enumerate}
 \end{definition}
 
-
-%%
-%% Permutability
-%%
-
-\subsection{Permutability}
-
-\begin{definition}[Permutation]
-  A {\em permutation} is a total, bijective function $\mu:\Loc\to\Loc$ with
-  $\mu\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$.
-  For a given $L \subseteq \Loc$ we define $\PERM_L = \{\mu\,|\,(\mu|L) = \id_L\}$
-  and $\PERM = \bigcup_{L\subseteq\Loc} \PERM_L$.
-\end{definition}
-
-For every permutation $\mu \in \PERM_L$ we define functions 
-\begin{itemize}
-  \item $\mu^\Exp:\Exp \to \Exp, e \mapsto e\mu$ and
-  \item $\mu^\Sto:\Store \to \Store, s \mapsto \mu^\Exp \circ s \circ \mu^{-1}$,
-\end{itemize}
-where $e\mu$ is inductively defined as follows:
-\begin{itemize}
-  \item $c\mu = c$ for every $c \in \Const$
-  \item $x\mu = x$ for every $x \in \Var$
-  \item $l\mu = \mu\,(l)$ for every $l \in \Loc$
-  \item $(\app{e_1}{e_2})\mu = \app{(e_1\mu)}{(e_2\mu)}$
-  \item $(\abstr{x}{e})\mu = \abstr{x}{(e\mu)}$
-  \item $(\ifte{e_0}{e_1}{e_2})\mu = \ifte{(e_0\mu)}{(e_1\mu)}{(e_2\mu)}$
-\end{itemize}
-
-Obviously $\mu^\Exp$ is well-defined. For $\mu^\Sto$ assume that $L \in W$ and $s\in\Store_L$,
-then $\mu^\Sto\,s = \mu^\Exp \circ s \circ \mu^{-1}$ is closed with respect to locations in
-$\dom{\mu^\Sto\,s}$ and
-\[\begin{array}{rccccl}
-  \dom{\mu^\Sto\,s} &=& \mu(\dom{s}) &\supseteq& \mu(L),
-\end{array}\]
-thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$.
-
-\begin{lemma}[Permutations] \label{lemma:Permutations}
-  For every $\mu\in\Perm$ and $L\subseteq \Loc$ we have
-  \begin{enumerate}
-    \item $\forall \mu'\in\Perm.\,\mu'\in\Perm_L \,\Leftrightarrow\, (\mu \circ \mu' \circ \mu^{-1})\in\Perm_{\mu(L)}$
-    \item $\forall e\in\Exp.\,\locns{\mu^\Exp\,e} = \mu\,(\locns{e})$
-    \item $\forall e\in\Exp.\,\mu\in\Perm_L\wedge\locns{e} \subseteq L \,\Rightarrow\, \mu^\Exp\,e = e$
-    \item $\forall s\in\Store.\,\mu\in\Perm_L\wedge\dom{s} \subseteq L \,\Rightarrow\, \mu^\Sto\,s = s$
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Mostly trivial.
-\end{proof}
-
 \begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
   Let $\mu \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
   Then
   \begin{enumerate}
-    \item $\reach{\mu(L)}{\mu^\Sto\,s} = \mu\,(\reach{L}{s})$
-    \item $s \equiv_L s' \,\Leftrightarrow\, (\mu^\Sto\,s) \equiv_{\mu(L)} (\mu^\Sto\,s')$
-    \item $\phi \in \DEF_{\mu(L)} \,\Leftrightarrow\, (\phi \circ \mu^\Sto) \in \DEF_L$
+    \item $\reach{\mu(L)}{\mu^\ssto\,s} = \mu\,(\reach{L}{s})$
+    \item $s \equiv_L s' \,\Leftrightarrow\, (\mu^\ssto\,s) \equiv_{\mu(L)} (\mu^\ssto\,s')$
+    \item $\phi \in \DEF_{\mu(L)} \,\Leftrightarrow\, (\phi \circ \mu^\ssto) \in \DEF_L$
   \end{enumerate}
 \end{lemma}
 
 \begin{proof} \
   \begin{enumerate}
-    \item It is sufficient to prove $\mu\,(\reachn{i}{L}{s}) = \reachn{i}{\mu(L)}{\mu^\Sto\,s}$ for every $i\in\N$:
+    \item It is sufficient to prove $\mu\,(\reachn{i}{L}{s}) = \reachn{i}{\mu(L)}{\mu^\ssto\,s}$ for every $i\in\N$:
           \begin{itemize}
-            \item $\reachn{0}{\mu(L)}{\mu^\Sto\,s} = \mu(L) = \mu\,(\reachn{0}{L}{s})$
+            \item $\reachn{0}{\mu(L)}{\mu^\ssto\,s} = \mu(L) = \mu\,(\reachn{0}{L}{s})$
 
-            \item $\reachn{i+1}{\mu(L)}{\mu^\Sto\,s} \\
-                  = \reachn{i}{\mu(L)}{\mu^\Sto\,s}
-                    \cup \bigcup_{l\in\reachn{i}{\mu(L)}{\mu^\Sto\,s}} \locns{s(l)} \\
+            \item $\reachn{i+1}{\mu(L)}{\mu^\ssto\,s} \\
+                  = \reachn{i}{\mu(L)}{\mu^\ssto\,s}
+                    \cup \bigcup_{l\in\reachn{i}{\mu(L)}{\mu^\ssto\,s}} \locns{s(l)} \\
                   = \mu\,(\reachn{i}{L}{s})
-                    \cup \bigcup_{l\in\reachn{i}{L}{s}} \locns{\mu^\Exp(s(l)} \\
+                    \cup \bigcup_{l\in\reachn{i}{L}{s}} \locns{\mu^\sexp(s(l)} \\
                   = \mu\,(\reachn{i+1}{L}{s})$
           \end{itemize}
 
     \item We prove only one direction, the reverse follows easily.
 
-          $\reach{\mu(L)}{\mu^\Sto\,s} = \mu\,(\reach{L}{s}) = \mu\,(\reach{L}{s'}) = \reach{\mu(L)}{\mu^\Sto\,s'}$
+          $\reach{\mu(L)}{\mu^\ssto\,s} = \mu\,(\reach{L}{s}) = \mu\,(\reach{L}{s'}) = \reach{\mu(L)}{\mu^\ssto\,s'}$
 
-          $l \in \reach{\mu(L)}{\mu^\Sto\,s} \\
+          $l \in \reach{\mu(L)}{\mu^\ssto\,s} \\
             \,\Rightarrow\,
             \mu^{-1}(l) \in \reach{L}{s} \\
             \,\Rightarrow\,
             s(\mu^{-1}(l)) = s'(\mu^{-1}(l)) \\
             \,\Rightarrow\,
-            (\mu^\Sto s)(l) = (\mu^\Sto s')(l)$
+            (\mu^\ssto s)(l) = (\mu^\ssto s')(l)$
 
     \item Again only one direction.
 
-          Let $s,s'\in\Store_L$ with $s \equiv_L s'$. Then $(\mu^\Sto\,s) \equiv_{\mu(L)} (\mu^\Sto\,s')$
-          where $(\mu^\Sto\,s),(\mu^\Sto\,s')\in\Store_{\mu(L)}$, hence $\phi\,(\mu^\Sto\,s)=\phi\,(\mu^\Sto\,s')$
-          and thereby $(\phi \circ \mu^\Sto) \in \DEF_L$.
+          Let $s,s'\in\Store_L$ with $s \equiv_L s'$. Then $(\mu^\ssto\,s) \equiv_{\mu(L)} (\mu^\ssto\,s')$
+          where $(\mu^\ssto\,s),(\mu^\ssto\,s')\in\Store_{\mu(L)}$, hence $\phi\,(\mu^\ssto\,s)=\phi\,(\mu^\ssto\,s')$
+          and thereby $(\phi \circ \mu^\ssto) \in \DEF_L$.
   \end{enumerate}
 \end{proof}
 
-\begin{lemma} \label{lemma:Existance_of_permutations_for_small_steps}
-  Let $\tau\in\Type$, $e,e',e''\in\CExp^\tau$, $s,s',s''\in\Store_{\locns{e}}$ with
-  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$. Then there exists some $\mu \in \PERM_{\dom{s}}$
-  such that $\mu^\Exp\,e' = e''$ and $\mu^\Sto\,s' = s''$.
-\end{lemma}
-
-\begin{proof}
-  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$ requires that both small steps were derived
-  using the same rules. Therefore, we can easily prove the lemma by induction on the length
-  of the derivation of $(e,s) \to (e',s')$.
-  \begin{itemize}
-    \item For \RN{Op} we have $e' = e'' \in \Const$ and therefore $\mu^\Exp\,e' = e''$ for every
-          $\mu \in \Perm$. Since $\mu^\Sto\,s=s$ for every $\mu \in \Perm_{\dom{s}}$ and $s' = s = s''$,
-          we also have $\mu^\Sto\,s' = s''$.
-
-    \item In case of \RN{Ref} we have $e = \cref\,v$, $e' = l'$, $e'' = l''$,
-          $s' = s[v/l']$, $s'' = s[v/l'']$ with $l',l''\not\in\dom{s}$. Let
-          $\mu \in \Perm_{\dom{s}}$ with $\mu\,l'=l''$, so we have $\mu^\Exp\,e' = e''$ and
-          $s''(l'') = v = s'(l') = s'(\mu^{-1}\,l'') = \mu^\Exp\,(s(\mu^{-1}\,l''))$.
-
-    \item \RN{App-Left} implies $e = \app{e_1}{e_2}$, $e' = \app{e_1'}{e_2}$ and $e'' = \app{e_1''}{e_2}$.
-          By induction hypothesis there exists a $\mu \in \Perm_{\dom{s}}$ with
-          $\mu^\Exp\,e_1' = e_1''$ and $\mu^\Sto\,s' = s''$. Since
-          $\locns{e_2} \subseteq \locns{e} \subseteq \dom{s}$ we also have $\mu^\Exp\,e_2 = e_2$
-          and thereby $\mu^\Exp\,(\app{e_1'}{e_2}) = \app{e_1''}{e_2}$.
-  \end{itemize}
-  We omit the other cases, they're similar to the above.
-\end{proof}
-
-\begin{corollary}
-  Let $\tau\in\Type$, $e\in\CExp^\tau$, $s\in\Store_{\locns{e}}$.
-  If $(e,s)$ terminates with $(v',s')$ then all computations for $(e,s)$ terminate with some
-  $(v'',s'')$ such that there exists a $\mu \in \PERM_{\dom{s}}$ with
-  $\mu^\Exp\,v' = v''$ and $\mu^\Sto\,s' = s''$.
-\end{corollary}
-
-\begin{proof}
-  Immediate consequence of lemma~\ref{lemma:Existance_of_permutations_for_small_steps}.
-\end{proof}
+%\begin{lemma} \label{lemma:Existance_of_permutations_for_small_steps}
+%  Let $\tau\in\Type$, $e,e',e''\in\CExp^\tau$, $s,s',s''\in\Store_{\locns{e}}$ with
+%  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$. Then there exists some $\mu \in \Perm_{\dom{s}}$
+%  such that $\mu^\sexp\,e' = e''$ and $\mu^\ssto\,s' = s''$.
+%\end{lemma}
+%
+%\begin{proof}
+%  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$ requires that both small steps were derived
+%  using the same rules. Therefore, we can easily prove the lemma by induction on the length
+%  of the derivation of $(e,s) \to (e',s')$.
+%  \begin{itemize}
+%    \item For \RN{Op} we have $e' = e'' \in \Const$ and therefore $\mu^\sexp\,e' = e''$ for every
+%          $\mu \in \Perm$. Since $\mu^\ssto\,s=s$ for every $\mu \in \Perm_{\dom{s}}$ and $s' = s = s''$,
+%          we also have $\mu^\ssto\,s' = s''$.
+%
+%    \item In case of \RN{Ref} we have $e = \cref\,v$, $e' = l'$, $e'' = l''$,
+%          $s' = s[v/l']$, $s'' = s[v/l'']$ with $l',l''\not\in\dom{s}$. Let
+%          $\mu \in \Perm_{\dom{s}}$ with $\mu\,l'=l''$, so we have $\mu^\sexp\,e' = e''$ and
+%          $s''(l'') = v = s'(l') = s'(\mu^{-1}\,l'') = \mu^\sexp\,(s(\mu^{-1}\,l''))$.
+%
+%    \item \RN{App-Left} implies $e = \app{e_1}{e_2}$, $e' = \app{e_1'}{e_2}$ and $e'' = \app{e_1''}{e_2}$.
+%          By induction hypothesis there exists a $\mu \in \Perm_{\dom{s}}$ with
+%          $\mu^\sexp\,e_1' = e_1''$ and $\mu^\ssto\,s' = s''$. Since
+%          $\locns{e_2} \subseteq \locns{e} \subseteq \dom{s}$ we also have $\mu^\sexp\,e_2 = e_2$
+%          and thereby $\mu^\sexp\,(\app{e_1'}{e_2}) = \app{e_1''}{e_2}$.
+%  \end{itemize}
+%  We omit the other cases, they're similar to the above.
+%\end{proof}
+%
+%\begin{corollary}
+%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $s\in\Store_{\locns{e}}$.
+%  If $(e,s)$ terminates with $(v',s')$ then all computations for $(e,s)$ terminate with some
+%  $(v'',s'')$ such that there exists a $\mu \in \Perm_{\dom{s}}$ with
+%  $\mu^\sexp\,v' = v''$ and $\mu^\ssto\,s' = s''$.
+%\end{corollary}
+%
+%\begin{proof}
+%  Immediate consequence of lemma~\ref{lemma:Existance_of_permutations_for_small_steps}.
+%\end{proof}
 
 
 %%
@@ -468,15 +556,15 @@ thereby $(\mu^\Sto\,s) \in \Store_{\mu(L)}$.
   For every type $\pi\in\LType$ we define {\em semantic domains} $\semantic{\pi} = (D^\pi,\I^\pi)$ where
   $D^\pi = \bigcup_{L \in W} D^\pi_L$ and $\I^\pi(\mu) : D^\pi \to D^\pi$ for every $\mu \in \Perm$ by
   \begin{itemize}
-    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
-          $\I^\tau(\mu): D^\tau \to D^\tau, v \mapsto \mu^\Exp\,v$
+    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\supp{v} = L\}$ \\
+          $\I^\tau(\mu): D^\tau \to D^\tau, v \mapsto \mu^\sexp\,v$
 
-    \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Perm_L.\,\phi = \phi \circ (\mu^\Sto)^{-1}\}$ \\
-          $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\Sto)^{-1}$
+    \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Fix{L}.\,\phi = \phi \circ (\mu^\ssto)^{-1}\}$ \\
+          $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\ssto)^{-1}$
 
     \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi: D^\theta \to D^\pi\,|\,
                           \forall L'\in W.\,\psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
-                          \hspace*{4.2cm} \wedge \forall \mu\in\Perm_L.\,\psi=\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}\}$\\
+                          \hspace*{4.2cm} \wedge \forall \mu\in\Fix{L}.\,\psi=\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}\}$\\
           $\I^{\ttarrow{\theta}{\pi}}(\mu): D^{\ttarrow{\theta}{\pi}} \to D^{\ttarrow{\theta}{\pi}},
                                             \psi \mapsto \I^\pi(\mu) \circ \psi \circ (\I^\theta(\mu))^{-1}$
   \end{itemize}
@@ -487,17 +575,17 @@ for the semantic domain $(D^\pi,\I^\pi)$ but also for the underlying set $D^\pi$
 hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $\mu^\pi$ as an abbreviation
 for $\I^\pi(\mu)$.
 
-Considering lemma~\ref{lemma:Permutations}
+Given lemma~\ref{lemma:Permutations}
 it is pretty much obvious that $\mu^\pi\,d = d$ for every $d \in \semantic{\pi}_L$ and
-$\mu\in\Perm_L$.
+$\mu\in\Fix{L}$.
 It is also easy to see that
 \[\begin{array}{rcl}
   \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
 \end{array}\]
 holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\pi}$ a
 unique world $L \in W$ exists, such that $d \in \semantic{\pi}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\pi}_{L'}$.
-This unique world $L$
-is called the {\em support of $d$}, written $\supp{d}$.
+This unique world $L$ is called the {\em support of $d$}, written $\supp{d}$. In general we abbreviate
+$\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
 \begin{lemma}[Semantic domains] \
   Let $\pi \in \LType$, $\mu\in\Perm$ and $L\in W$.
@@ -516,11 +604,11 @@ states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
            \,\Leftrightarrow\,
            L = \locns{v} \\
            \,\Leftrightarrow\,
-           \mu(L) = \mu\,(\locns{v}) = \locns{\mu^\Exp\,v} = \locns{\mu^\tau\,v} \\
+           \mu(L) = \mu\,(\locns{v}) = \locns{\mu^\sexp\,v} = \locns{\mu^\tau\,v} \\
            \,\Leftrightarrow\,
            (\mu^\tau\,v) \in \semantic{\tau}_{\mu(L)}$
 
-          Since $\mu^\Exp$ is bijective, $(\mu^\tau)^{-1}\,v'$ is in
+          Since $\mu^\sexp$ is bijective, $(\mu^\tau)^{-1}\,v'$ is in
           $\semantic{\tau}_L$ and unique for every $v'\in\semantic{\tau}_{\mu(L)}$.
 
     \item Let $\phi \in \semantic{\tassn}_L$, then
@@ -529,18 +617,18 @@ states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
                    \,\Rightarrow\,
                    \phi\in\DEF_{\mu^{-1}(\mu(L))}
                    \,\Rightarrow\,
-                   (\phi \circ (\mu^\Sto)^{-1}) \in \DEF_{\mu(L)}$
+                   (\phi \circ (\mu^\ssto)^{-1}) \in \DEF_{\mu(L)}$
 
             \item $\bar{\mu}\in\Perm_{\mu(L)} \\
                    \,\Rightarrow\,
-                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Perm_L \\
+                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
                    \,\Rightarrow\,
                    \phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\Sto)^{-1} \\
                    \,\Rightarrow\,
-                   \phi\circ (\mu^\Sto)^{-1} = \phi \circ (\mu^\Sto)^{-1} \circ (\bar{\mu}^\Sto)^{-1}$
+                   \phi\circ (\mu^\ssto)^{-1} = \phi \circ (\mu^\ssto)^{-1} \circ (\bar{\mu}^\Sto)^{-1}$
           \end{itemize}
-          and therefore $(\phi\circ(\mu^\Sto)^{-1}) = (\mu^\tassn\,\phi) \in \semantic{\tassn}_{\mu(L)}$.
-          $\mu^\tassn$ is bijective, because $\mu^\Sto$ is bijective.
+          and therefore $(\phi\circ(\mu^\ssto)^{-1}) = (\mu^\tassn\,\phi) \in \semantic{\tassn}_{\mu(L)}$.
+          $\mu^\tassn$ is bijective, because $\mu^\ssto$ is bijective.
 
     \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
           \begin{itemize}
@@ -556,7 +644,7 @@ states that $\mu^\pi$ is well-defined and bijective for every $\mu\in\Perm$.
 
             \item $\bar{\mu}\in\Perm_{\mu(L)} \\
                    \,\Rightarrow\,
-                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Perm_L \\
+                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
                    \,\Rightarrow\,
                    \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\pi\circ\psi\circ
                       ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta)^{-1} \\
@@ -595,19 +683,6 @@ terminating computation for $(e,s)$, then all possible computations terminate, a
 or none of the computations.
 
 \begin{lemma}
-  Let $\tau\in\Type$, $e\in\CExp^\tau$, $v'\in\CVal^\tau$, $s,s'\in\Store$
-  and $R \in \PERM_{\dom{s}}$. If $(e,s)\xrightarrow*(v',s')$ then there
-  exists a configuration $(v'',s'')$ such that
-  \begin{enumerate}
-    \item $(v',v'')\in R^\Exp$
-    \item $(s',s'')\in R^\Sto$
-    \item $(e,s) \xrightarrow* (v'',s'')$
-  \end{enumerate}
-\end{lemma}
-
-{\bf TODO:} This is trivial with $v'' = v'$ and $s'' = s'$.
-
-\begin{lemma}
   Let $\tau\in\Type$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$,
   $e\in\CExp^\tau$, $v',v''\in\CVal^\tau$ and $s,s',s''\in\Store$
   with $\locns{e}\subseteq \dom{s}$, $\locns{v'}\subseteq\dom{s'}$
@@ -622,14 +697,13 @@ or none of the computations.
   \begin{enumerate}
     \item If for every $s \in \Store_L$ with $\phi\,s=\true$ a $v'\in\CVal^\tau$ and a
           $s'\in\Store_L$ exist so that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$ then
-          \[\begin{array}{rcl}
-            L\models\triple{\phi}{e}{\psi}.
-          \end{array}\]
+          $L\models\triple{\phi}{e}{\psi}$.
 
-    \item $\locns{e}\cup\supp{\phi}\cup\supp{\psi} \subseteq L \cap L'$ implies
-          \[\begin{array}{rcl}
-            L\models\triple{\phi}{e}{\psi} &\text{ iff }& L'\models\triple{\phi}{e}{\psi}.
-          \end{array}\]
+    \item If $\supp{\phi,e,\psi} \subseteq L \cap L'$ then the following are equivalent
+          \begin{enumerate}
+            \item $L\models\triple{\phi}{e}{\psi}$
+            \item $L'\models\triple{\phi}{e}{\psi}$
+          \end{enumerate}
   \end{enumerate}
 \end{lemma}
 
@@ -637,7 +711,7 @@ or none of the computations.
   \begin{enumerate}
     \item
 
-    \item Without loss of generality let $L= \locns{e}\cup\supp{\phi}\cup\supp{\psi}$ and hence $L \subseteq L'$.
+    \item Without loss of generality let $L= \supp{\phi,e,\psi}$ and hence $L \subseteq L'$.
           \begin{itemize}
             \item[`$\Rightarrow$']
                   Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
@@ -650,39 +724,10 @@ or none of the computations.
 \end{proof}
 
 From these results it is easy to see that the exact $L$ doesn't matter for the total correctness, since
-if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi}\cup\locns{e}\cup\supp{\psi}$
-then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi}\cup\locns{e}\cup\supp{\psi}$.
+if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi,e,\psi}$
+then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\psi}$.
 Hence we write $\triple{\phi}{e}{\psi}$ to denote that $e$ is {\em totally correct} with respect to
 $\phi$ and $\psi$.
-
-%\begin{definition}[Total correctness]
-%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-%  and $L\in W$. $e$ is {\em $L$-total correct}, or {\em $L$-correct} for short, with regard to $\phi$ and $\psi$ if for
-%  all $s\in\Store_L$ with $\app{\phi}{s}=\true$ there exists a $v\in\CVal^\tau$ and a $s'\in\Store_L$,
-%  for which $(e,s) \Downarrow (v,s')$ and $\app{\app{\psi}{v}}{s'} = \true$ holds. We write
-%  $L \models \triple{\phi}{e}{\psi}$ in this case.
-%\end{definition}
-%
-%\begin{lemma}[Total correctness]
-%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
-%  and $L,L'\in W$. $\locns{e}\cup\supp{\phi}\cup\supp{\psi} \subseteq L \cap L'$ implies
-%  \[\begin{array}{rcl}
-%    L\models\triple{\phi}{e}{\psi} &\text{ iff }& L'\models\triple{\phi}{e}{\psi}.
-%  \end{array}\]
-%\end{lemma}
-%
-%\begin{proof}
-%  Without loss of generality let $L= \locns{e}\cup\supp{\phi}\cup\supp{\psi}$ and hence $L \subseteq L'$.
-%  \begin{itemize}
-%    \item[`$\Rightarrow$']
-%          Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
-%          a $v\in\CVal^\tau$ and a $s'\in\Store_L$ such that $(e,s)\Downarrow(v,s')$ and
-%          $\psi\,v\,s'=\true$. $s'\in\Store_{L'}$ since $L'\subseteq\dom{s}\subseteq\dom{s'}$.
-%
-%    \item[`$\Leftarrow$']
-%  \end{itemize}
-%\end{proof}
-
 
 
 \end{document}
