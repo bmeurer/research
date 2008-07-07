@@ -272,7 +272,7 @@ $\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
 every $\gamma \in \Gamma$ we define a set $D^\gamma$ and for every $d \in D^\gamma$
 we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
 \begin{itemize}
-  \item $D^\sexp = \CExp$, $\supp{e} = \locns{e}$
+  \item $D^\sexp = \Exp$, $\supp{e} = \locns{e}$
   \item $D^\ssto = \Store$, $\supp{s} = \dom{s}$
   \item $D^\scon = \Conf$, $\supp{(e,s)} = \supp{e} \cup \supp{s}$
 \end{itemize}
@@ -689,7 +689,7 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
   and $L\in W$ with $\supp{\phi,e,\psi} \subseteq L$.
   $e$ is {\em $L$-totally correct}, or {\em $L$-correct} for short, with respect to $\phi$ and
-  $\psi$ if for every $s\in\Store_L$ with $\phi\,s=\true$ each computation for $(e,s)$ terminates with some
+  $\psi$, if for every $s\in\Store_L$ with $\phi\,s=\true$ each computation for $(e,s)$ terminates with some
   $(v',s')$ such that $\psi\,v'\,s'=\true$. We write $L \models \triple{\phi}{e}{\psi}$ in this case.
 \end{definition}
 
@@ -718,7 +718,7 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
   and $L,L'\in W$ with $\supp{\phi,e,\psi} \subseteq L \cap L'$.
   \begin{enumerate}
     \item $L\models\triple{\phi}{e}{\psi}$ if for every $s \in \Store_L$ with $\phi\,s=\true$ there exist $v'\in\CVal^\tau$ and 
-          $s'\in\Store_L$ such that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$.
+          $s'\in\Store$ such that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$.
 
     \item $L\models\triple{\phi}{e}{\psi}$ iff $L'\models\triple{\phi}{e}{\psi}$.
   \end{enumerate}
@@ -743,9 +743,11 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
     \item Without loss of generality let $L= \supp{\phi,e,\psi}$ and hence $L \subseteq L'$.
           \begin{itemize}
             \item[`$\Rightarrow$']
-                  Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
-                  a $v\in\CVal^\tau$ and a $s'\in\Store_L$ such that $(e,s)\Downarrow(v,s')$ and
-                  $\psi\,v\,s'=\true$. $s'\in\Store_{L'}$ since $L'\subseteq\dom{s}\subseteq\dom{s'}$.
+                  Trivial since $\Store_{L'} \subseteq \Store_L$.
+%                  Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
+%                  a $v\in\CVal^\tau$ and a $s'\in\Store_L$ such that $(e,s)\xrightarrow*(v,s')$ and
+%                  $\psi\,v\,s'=\true$. Since $L'\subseteq\dom{s}\subseteq\dom{s'}$ we conclude that
+%                  $s'\in\Store_{L'}$.
 
             \item[`$\Leftarrow$']
           \end{itemize}
@@ -755,8 +757,8 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
 From these results it is easy to see that the exact $L$ doesn't matter for the total correctness, since
 if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi,e,\psi}$
 then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\psi}$.
-Hence we write $\triple{\phi}{e}{\psi}$ to denote that $e$ is {\em totally correct} with respect to
-$\phi$ and $\psi$.
+Hence we write $\triple{\phi}{e}{\psi}$ if $\supp{\phi,e,\psi}\models\triple{\phi}{e}{\psi}$,
+to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 
 \end{document}
