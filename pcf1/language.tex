@@ -248,6 +248,12 @@ with respect to configurations. We assume that type safety holds for the semanti
 
 \subsection{Permutability}
 
+These permutations were inspired by the {\em partial bijections} used by Pitts ({\bf TODO}: citation);
+but we prefer to use total bijections here, since we have to consider stores instead of just their domains.
+The result will be similar since we will introduce a partial order on stores, which combined with the
+total bijection on stores, results in something that is comparable to a partial bijection in the sense
+of Pitts.
+
 \begin{definition}[Permutation]
   A {\em permutation} is a total, bijective function $\mu:\Loc\to\Loc$ with
   $\mu\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$. Let $\Perm$ be the
@@ -269,12 +275,18 @@ permutations $\mu$ with $(\mu|L) = \id_L$.
 
 Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
 $\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
-every $\gamma \in \Gamma$ we define a set $D^\gamma$ and for every $d \in D^\gamma$
+every $\gamma \in \Gamma$ we define a poset $D^\gamma$ and for every $d \in D^\gamma$
 we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
 \begin{itemize}
-  \item $D^\sexp = \Exp$, $\supp{e} = \locns{e}$
-  \item $D^\ssto = \Store$, $\supp{s} = \dom{s}$
-  \item $D^\scon = \Conf$, $\supp{(e,s)} = \supp{e} \cup \supp{s}$
+  \item $D^\sexp = (\Exp,\sqsubseteq_\Exp)$ \\
+        $e \sqsubseteq_\Exp e' \,\Leftrightarrow\, e = e'$ \\
+        $\supp{e} = \locns{e}$
+  \item $D^\ssto = (\Store,\sqsubseteq_\Store)$ \\
+        $s \sqsubseteq_\Store s' \,\Leftrightarrow\, \grph{s} \subseteq \grph{s'}$ \\
+        $\supp{s} = \dom{s}$
+  \item $D^\scon = (\Conf,\sqsubseteq_\Conf)$ \\
+        $(e,s) \sqsubseteq_\Conf (e',s') \,\Leftrightarrow\, e \sqsubseteq_\Exp e' \wedge s \sqsubseteq_\Store s'$ \\
+        $\supp{(e,s)} = \supp{e} \cup \supp{s}$
 \end{itemize}
 For every permutation $\mu \in \Perm$ and every $\gamma\in\Gamma$ we define
 a function $\mu^\gamma:D^\gamma \to D^\gamma$ by
@@ -390,6 +402,47 @@ conclude that if $k_1 = k_1'$ has atleast one terminating computation, then all 
 with exactly the same number of steps, and for every two results $(v',s')$ and $(v'',s'')$ a permutation
 $\mu_2 \in \Fix{\supp{k_1}}$ exists, such that $v' = \mu_2^\sexp\,v''$ and $v'' = \mu_2^\ssto\,s''$.
 
+\begin{theorem} \label{theorem:small_steps_and_graph}
+  Let $k_1,k_1',k_2\in D^\scon$. If $k_1 \sqsubseteq k_1'$ and $k_1' \to k_2'$ then
+  there exists a $k_2 \in D^\scon$ such that $k_1 \to k_2$ and $k_2 \sqsubseteq k_2'$.
+\end{theorem}
+
+We can again visualize the theorem using a commutative diagram:
+\[
+  \xymatrix{
+    k_1 \ar@{.>}[r]^{\to} \ar[d]_{\sqsubseteq} & k_2 \ar@{.>}[d]^{\sqsubseteq} \\
+    k_1' \ar[r]^{\to} & k_2'
+  }
+\]
+
+\begin{proof}
+  By induction on $k_1' \to k_2'$:
+  \begin{itemize}
+    \item If $k_1' \to k_2'$ was derived using \RN{Ref} then $k_1 = (\cref\,v,s)$, $k_1' = (\cref\,v,s')$
+          with $s \sqsubseteq k'$ and $k_2' = (l,s'[v/l])$ with $l \not\in \dom{s'}$.
+
+          Now let $k_2 = (l,s[v/l])$. Since $l \not\in \dom{s'} \supseteq \dom{s}$ we can derive
+          $k_1 \to k_2$ using \RN{Ref}.
+
+    \item If $k_1' \to k_2'$ was derived by \RN{Assign} then $k_1 = (l \assign v,s)$, $k_1' = (l \assign v,s')$
+          and $k_2' = (\unit,s'[v/l])$ with $s \sqsubseteq s'$.
+
+          Then choose $k_2 = (\unit,s[v/l])$ since then $k_1 \to k_2$ with \RN{Assign} and obviously
+          $(s[v/l]) \sqsubseteq (s'[v/l])$ since $s \sqsubseteq s'$ and $l \in \dom{s}\cap\dom{s'}$.
+
+    \item If $k_1' \to k_2'$ was derived using \RN{App-Left} then $k_1=(e_1\,e_2,s_1)$, $k_1'=(e_1\,e_2,s_1')$
+          and $k_2' = (e_1'\,e_2,s_2')$ with $s_1 \sqsubseteq s_1'$ and $(e_1,s_1') \to (e_1',s_2')$.
+
+          By induction hypothesis there exists $s_2 \in D^\scon$ with $s_2 \sqsubseteq s_2'$ and
+          $(e_1,s_1) \to (e_1',s_2)$. With \RN{App-Left} we conclude $(e_1\,e_2,s_1) \to (e_1'\,e_2,s_2)$.
+  \end{itemize}
+  The remaining cases are pretty similar in shape.
+\end{proof}
+
+Obviously this theorem implies that for every two stores $s,\hat{s}$ with $s \sqsubseteq \hat{s}$ and
+$(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ there exists another store $s'$ such that $(e,s) \xrightarrow* (v,s')$
+and $s' \sqsubseteq \hat{s}'$.
+
 
 %%
 %% The assertion language
@@ -451,7 +504,7 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
     \item Two stores $s,s'\in\Store_L$ are {\em $L$-equivalent}, denoted $s \equiv_L s'$, if
           \begin{itemize}
             \item $\reach{L}{s} = \reach{L}{s'}$ and
-            \item $\forall l\in\reach{s}{L}.\,s(l)=s'(l)$.
+            \item $\forall l\in\reach{s}{L}.\,s\,l=s'\,l$.
           \end{itemize}
 
     \item A predicate $\phi:\Store \pto \Bool$ with $\Store_L = \dom{\phi}$ is said to be
@@ -460,6 +513,24 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
           predicates.
   \end{enumerate}
 \end{definition}
+
+\begin{lemma}[$L$-definability] \label{lemma:L_definability}
+  Let $L \in W$, $\phi \in \DEF_L$ and $s,s' \in \Store_L$. $s \sqsubseteq s'$ implies
+  $\phi\,s = \phi\,s'$.
+\end{lemma}
+
+\begin{proof}
+  Since $\phi \in \DEF_L$ we have $\phi\,s = \phi\,s'$ for all $s,s'$ with $s \equiv_L s'$. Hence
+  it suffices to show that $s \sqsubseteq s'$ implies $s \equiv_L s'$.
+  \[\begin{array}{rcl}
+    s \sqsubseteq s'
+    &\Rightarrow& \grph{s} \subseteq \grph{s'} \\
+    &\Rightarrow& \dom{s} \subseteq \dom{s'} \wedge \forall l\in\dom{s}.\,s\,l = s'\,l \\
+    &\Rightarrow& \reach{s}{L} = \reach{s'}{L} \wedge \forall l\in\reach{s}{L}.\,s\,l = s'\,l \\
+    &           & \text{by a trivial induction since $\reach{s}{L} \subseteq \dom{s}$} \\
+    &\Rightarrow& s \equiv_L s'
+  \end{array}\]
+\end{proof}
 
 \begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
   Let $\mu \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
@@ -504,46 +575,6 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
           and thereby $(\phi \circ \mu^\ssto) \in \DEF_L$.
   \end{enumerate}
 \end{proof}
-
-%\begin{lemma} \label{lemma:Existance_of_permutations_for_small_steps}
-%  Let $\tau\in\Type$, $e,e',e''\in\CExp^\tau$, $s,s',s''\in\Store_{\locns{e}}$ with
-%  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$. Then there exists some $\mu \in \Perm_{\dom{s}}$
-%  such that $\mu^\sexp\,e' = e''$ and $\mu^\ssto\,s' = s''$.
-%\end{lemma}
-%
-%\begin{proof}
-%  $(e,s) \to (e',s')$ and $(e,s) \to (e'',s'')$ requires that both small steps were derived
-%  using the same rules. Therefore, we can easily prove the lemma by induction on the length
-%  of the derivation of $(e,s) \to (e',s')$.
-%  \begin{itemize}
-%    \item For \RN{Op} we have $e' = e'' \in \Const$ and therefore $\mu^\sexp\,e' = e''$ for every
-%          $\mu \in \Perm$. Since $\mu^\ssto\,s=s$ for every $\mu \in \Perm_{\dom{s}}$ and $s' = s = s''$,
-%          we also have $\mu^\ssto\,s' = s''$.
-%
-%    \item In case of \RN{Ref} we have $e = \cref\,v$, $e' = l'$, $e'' = l''$,
-%          $s' = s[v/l']$, $s'' = s[v/l'']$ with $l',l''\not\in\dom{s}$. Let
-%          $\mu \in \Perm_{\dom{s}}$ with $\mu\,l'=l''$, so we have $\mu^\sexp\,e' = e''$ and
-%          $s''(l'') = v = s'(l') = s'(\mu^{-1}\,l'') = \mu^\sexp\,(s(\mu^{-1}\,l''))$.
-%
-%    \item \RN{App-Left} implies $e = \app{e_1}{e_2}$, $e' = \app{e_1'}{e_2}$ and $e'' = \app{e_1''}{e_2}$.
-%          By induction hypothesis there exists a $\mu \in \Perm_{\dom{s}}$ with
-%          $\mu^\sexp\,e_1' = e_1''$ and $\mu^\ssto\,s' = s''$. Since
-%          $\locns{e_2} \subseteq \locns{e} \subseteq \dom{s}$ we also have $\mu^\sexp\,e_2 = e_2$
-%          and thereby $\mu^\sexp\,(\app{e_1'}{e_2}) = \app{e_1''}{e_2}$.
-%  \end{itemize}
-%  We omit the other cases, they're similar to the above.
-%\end{proof}
-%
-%\begin{corollary}
-%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $s\in\Store_{\locns{e}}$.
-%  If $(e,s)$ terminates with $(v',s')$ then all computations for $(e,s)$ terminate with some
-%  $(v'',s'')$ such that there exists a $\mu \in \Perm_{\dom{s}}$ with
-%  $\mu^\sexp\,v' = v''$ and $\mu^\ssto\,s' = s''$.
-%\end{corollary}
-%
-%\begin{proof}
-%  Immediate consequence of lemma~\ref{lemma:Existance_of_permutations_for_small_steps}.
-%\end{proof}
 
 
 %%
@@ -704,15 +735,6 @@ like to say that $e$ is totally correct with respect to $\phi$ and $\psi$, witho
 explicitly. Hence we will show that if $e$ is totally correct in a sufficiently large world, then $e$ is
 totally correct in all such worlds and we don't need to talk about the exact $L$ anymore.
 
-%\begin{lemma}
-%  Let $\tau\in\Type$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$,
-%  $e\in\CExp^\tau$, $v',v''\in\CVal^\tau$ and $s,s',s''\in\Store$
-%  with $\locns{e}\subseteq \dom{s}$, $\locns{v'}\subseteq\dom{s'}$
-%  and $\locns{v''}\subseteq \dom{s''}$.
-%  If $\supp{\psi} \subseteq \dom{s}$, $(e,s)\xrightarrow*(v',s')$
-%  and $(e,s)\xrightarrow*(v'',s'')$ then $\psi\,v'\,s'=\psi\,v''\,s''$.
-%\end{lemma}
-
 \begin{lemma}[Total correctness]
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
   and $L,L'\in W$ with $\supp{\phi,e,\psi} \subseteq L \cap L'$.
@@ -744,12 +766,20 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
           \begin{itemize}
             \item[`$\Rightarrow$']
                   Trivial since $\Store_{L'} \subseteq \Store_L$.
-%                  Let $s\in\Store_{L'}$ with $\phi\,s=\true$. Since $\Store_{L'} \subseteq \Store_L$ we have
-%                  a $v\in\CVal^\tau$ and a $s'\in\Store_L$ such that $(e,s)\xrightarrow*(v,s')$ and
-%                  $\psi\,v\,s'=\true$. Since $L'\subseteq\dom{s}\subseteq\dom{s'}$ we conclude that
-%                  $s'\in\Store_{L'}$.
 
             \item[`$\Leftarrow$']
+                  Let $s \in \Store_L$ with $\phi\,s = \true$. Then we are able to construct a store $\hat{s}\in\Store_{L'}$
+                  with $s \sqsubseteq \hat{s}$, and by lemma~\ref{lemma:L_definability} we also have $\phi\,\hat{s}=\true$
+                  then.
+
+                  Since $(e,\hat{s})$ is a well-typed configuration, there must be atleast one computation such that
+                  $(e,\hat{s}) \xrightarrow* (v,\hat{s}')$, and $\psi\,v\,\hat{s}'=\true$ holds by assumption.
+                  Now theorem~\ref{theorem:small_steps_and_graph} guarantees that a store $s'$ exists such that
+                  $(e,s) \xrightarrow* (v,s')$ and $s' \sqsubseteq \hat{s}'$.
+
+                  Since $(\psi\,v) \in \semantic{\tassn}_{\supp{\psi,v}}$ and 
+                  $\supp{\psi,v}\subseteq\dom{s'}\subseteq\dom{\hat{s}'}$ we have $\psi\,v\,s' = \true$ by
+                  lemma~\ref{lemma:L_definability}, and therefore we conclude $L\models\triple{\phi}{e}{\psi}$.
           \end{itemize}
   \end{enumerate}
 \end{proof}
