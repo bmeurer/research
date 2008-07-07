@@ -174,8 +174,8 @@ The stores $s$ are already guaranteed to be closed due to definition~\ref{defini
 now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
 include {\em dangling references} to unallocated store cells.
 
-For any given set $L \subseteq \Loc$ we let $\Conf_L = \{(e,s)\in\Conf\,|\,\dom{s}\subseteq L\}$
-denote the subset of configurations which do not have locations allocated outside $L$.
+%For any given set $L \subseteq \Loc$ we let $\Conf_L = \{(e,s)\in\Conf\,|\,\dom{s}\subseteq L\}$
+%denote the subset of configurations which do not have locations allocated outside $L$.
 
 \begin{definition}[Small step semantics]
   Let $k,k'\in\Conf$. A {\em small step} is a formula
@@ -260,7 +260,7 @@ of Pitts.
   set of all such permutations.
 \end{definition}
 
-Let $\Fix{\mu} = \{l\in\Loc\,|\,\mu(l)=l\}$ be set the of all fixpoints of $\mu$. Then
+Let $\Fix{\mu} = \{l\in\Loc\,|\,\mu(l)=l\}$ be set the of all fixed points of $\mu$. Then
 the set $\Fix{L} = \{\mu\in\Perm\,|\,L \subseteq \Fix{\mu}\}$ includes all
 permutations $\mu$ with $(\mu|L) = \id_L$.
 
@@ -749,8 +749,8 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
 \begin{proof} \
   \begin{enumerate}
     \item Let $s \in \Store_L$ with $\phi\,s = \true$. If there exists a terminating computation $(e,s) \xrightarrow* (v',s')$
-          then theorem~\ref{theorem:small_steps_and_permutations} guarantees that all computations for $(e,s)$
-          terminate with some $(v'',s'')$ such that a permutation $\mu\in\Fix{\dom{s}}$ exists with
+          then theorem~\ref{theorem:small_steps_and_permutations} guarantees that each computation for $(e,s)$
+          terminates with some $(v'',s'')$ such that a permutation $\mu\in\Fix{\dom{s}}$ exists with
           $\mu^\tau\,v' = \mu^\sexp\,v' = v''$ and $\mu^\ssto\,s' = s''$.
           Hence it suffices to prove that $\psi\,v'\,s' = \psi\,(\mu^\tau\,v')\,(\mu^\ssto\,s')$.
 
@@ -773,7 +773,7 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
                   then.
 
                   Since $(e,\hat{s})$ is a well-typed configuration, there must be atleast one computation such that
-                  $(e,\hat{s}) \xrightarrow* (v,\hat{s}')$, and $\psi\,v\,\hat{s}'=\true$ holds by assumption.
+                  $(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ for which, by assumption, $\psi\,v\,\hat{s}'=\true$ holds.
                   Now theorem~\ref{theorem:small_steps_and_graph} guarantees that a store $s'$ exists such that
                   $(e,s) \xrightarrow* (v,s')$ and $s' \sqsubseteq \hat{s}'$.
 
