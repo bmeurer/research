@@ -118,6 +118,18 @@
 
 
 %%
+%% Formulas
+%%
+
+\newcommand{\qex}[2]{\exists #1.\,#2}
+\newcommand{\qall}[2]{\forall #1.\,#2}
+\newcommand{\qbex}[3]{\exists\langle #2 \rangle\, #1  .\,#3}
+\newcommand{\qball}[3]{\forall\langle #2 \rangle\, #1  .\,#3}
+
+\newcommand{\tabstr}[2]{\Lambda #1.\,#2}
+
+
+%%
 %% Grammars
 %%
 
@@ -139,4 +151,12 @@
 
 \newcommand{\tj}[2]{#1\,\coloncolon\,#2}
 \newcommand{\Tj}[3]{#1\,\triangleright\,#2\coloncolon#3}
+
+
+%%
+%% Other environments
+%%
+
+\newcommand{\bcase}{\left\{\!\!\!\begin{array}{ll}}
+\newcommand{\ecase}{\end{array}\right.}
 

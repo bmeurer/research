@@ -457,6 +457,31 @@ and $s' \sqsubseteq \hat{s}'$.
 
 \section{Syntax of the assertion language}
 
+\[\GRbeg
+  t \GRis v
+    \GRal f
+    \GRal \app{t_1}{t_2}
+    \GRal \tabstr{x}{t}
+    \GRnl
+
+  h \GRis t_1 = t_2
+    \GRal \triple{p}{e}{q}
+    \GRal \qex{x}{h}
+    \GRal h_1 \wedge h_2
+    \GRal \neg h
+    \GRnl
+
+  p,q \GRis x
+      \GRal h
+      \GRal \app{p}{t}
+      \GRal \tabstr{x}{p}
+      \GRal t_1 \mapsto t_2
+      \GRal t \not\rightleftharpoons p
+      \GRal \qbex{x}{t}{p}
+      \GRal p \wedge q
+      \GRal \neg p
+\GRend\]
+
 
 %%
 %% Semantics of the logic
@@ -790,5 +815,105 @@ then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\
 Hence we write $\triple{\phi}{e}{\psi}$ if $\supp{\phi,e,\psi}\models\triple{\phi}{e}{\psi}$,
 to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
+
+%%
+%% Semantics of the assertion language
+%%
+
+\subsection{Semantics of the assertion language}
+
+\noindent Auxiliary functions
+\begin{itemize}
+  \item $\I_\neg: \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
+        $\I_\neg\,\phi\,s =
+          \bcase
+            \uparrow  & \text{if } s \not\in \dom{\phi} \\
+            \true     & \text{if } \phi\,s=\false \\
+            \false    & \text{otherwise}
+          \ecase$
+
+  \item $\I_\wedge: \semantic{\tassn} \to \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
+        $\I_\wedge\,\phi_1\,\phi_2\,s =
+          \bcase
+            \uparrow  & \text{if } s \not\in \dom{\phi_1} \text{ or } s \not\in \dom{\phi_2} \\
+            \true     & \text{if } \phi_1\,s=\true \text{ and } \phi_2\,s=\true \\
+            \false    & \text{otherwise}
+          \ecase$
+
+  \item $\I_{\mapsto}: \semantic{\tref{\tau}} \to \semantic{\tau} \to \semantic{\tassn}$ \\[1ex]
+        $\I_{\mapsto}\,l\,v\,s =
+          \bcase
+            \uparrow  & \text{if } l \not\in \dom{s} \\
+            \true     & \text{if } s\,l = v \\
+            \false    & \text{otherwise}
+          \ecase$
+
+  \item $\I_{\not\rightleftharpoons}: \semantic{\pi_1} \to \semantic{\pi_2} \to \semantic{\tassn}$ \\[1ex]
+        $\I_{\not\rightleftharpoons}\,d_1\,d_2\,s =
+          \bcase
+            \uparrow  & \text{if } \supp{d_1,d_2} \not\subseteq \dom{s} \\
+            \true     & \text{if } \reach{\supp{d_1}}{s} \cap \reach{\supp{d_2}}{s} = \emptyset \\
+            \false    & \text{otherwise}
+          \ecase$
+  
+  \item $\I_\exists: \semantic{\pi_1} \to (\semantic{\pi_2} \to \semantic{\tassn}) \to \semantic{\tassn}$ \\[1ex]
+        $\I_\exists\,d_1\,f\,s =
+          \bcase
+            \uparrow  & \text{if } s \not\in \dom{f\,d_2}
+                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\supp{d_1}}\semantic{\pi}_{L'} \\
+            \true     & \text{if } f\,d_2\,s = \true
+                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\supp{d_1}}\semantic{\pi}_{L'} \\
+            \false    & \text{otherwise}
+          \ecase$
+\end{itemize}
+
+\noindent The {\em meaning function} $\semantic{\tj{p}{\pi}}: \nstyle{Env}_p \to \semantic{\pi}$.
+\begin{itemize}
+  \item $\semantic{\tj{x^\pi}{\pi}}\,\eta := \eta\,x$
+
+  \item $\semantic{\tj{h}{\tassn}}\,\eta := \phi$ \\[1ex]
+        $\phi:\Store \pto \Bool,
+          s \mapsto \bcase
+                      \true   & \text{if } \eta \models h \\
+                      \false  & \text{otherwise}
+                    \ecase$
+
+  \item $\semantic{\tj{\app{p}{t}}{\pi}}\,\eta :=
+          (\semantic{\tj{p}{\ttarrow{\theta}{\pi}}}\,\eta)\,
+          (\semantic{\tj{t}{\theta}}\,\eta)$
+
+  \item $\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\pi}}}\,\eta := f$ \\[1ex]
+        $f: \semantic{\theta} \to \semantic{\pi},
+          d \mapsto \semantic{\tj{p}{\pi}}\,(\eta[d/x])$
+
+  \item $\semantic{\tj{t_1 \mapsto t_2}{\tassn}}\,\eta :=
+          \I_{\mapsto}\,(\semantic{\tj{t_1}{\tref{\tau}}}\,\eta)\,(\semantic{\tj{t_2}{\tau}}\,\eta)$
+
+  \item $\semantic{\tj{t \not\rightleftharpoons p}{\tassn}}\,\eta :=
+          \I_{\not\rightleftharpoons}\,(\semantic{\tj{t}{\theta}}\,\eta)\,(\semantic{\tj{p}{\pi}}\,\eta)$
+
+  \item $\semantic{\tj{\qbex{x^\pi}{t}{p}}{\tassn}}\,\eta :=
+          \I_\exists\,(\semantic{\tj{t}{\theta}}\,\eta)\,f$ \\[1ex]
+        $f: \semantic{\pi} \to \semantic{\tassn}, d \mapsto \semantic{\tj{p}{\tassn}}\,(\eta[d/x])$
+
+  \item $\semantic{\tj{p \wedge q}{\tassn}}\,\eta :=
+          \I_\wedge\,(\semantic{\tj{p}{\tassn}}\,\eta)\,(\semantic{\tj{q}{\tassn}}\,\eta)$
+
+  \item $\semantic{\tj{\neg p}{\tassn}}\,\eta :=
+          \I_\neg\,(\semantic{\tj{p}{\tassn}}\,\eta)$
+\end{itemize}
+
+\noindent The satisfaction relation $\eta \models h$ where $h \in \nstyle{Formula}$ and $\eta \in \nstyle{Env}_h$
+\begin{itemize}
+  \item $\eta \models t_1 = t_2$ iff $(t_1,t_2) \in R_=$
+
+  \item $\eta \models \triple{p}{e}{q}$ iff
+
+  \item $\eta \models h_1 \wedge h_2$ iff $\eta \models h_1$ and $\eta \models h_2$
+
+  \item $\eta \models \neg h$ iff $\eta \not\models h$
+  
+  \item $\eta \models \qex{x^\pi}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\pi}$
+\end{itemize}
 
 \end{document}
