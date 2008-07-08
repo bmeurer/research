@@ -813,7 +813,7 @@ From these results it is easy to see that the exact $L$ doesn't matter for the t
 if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi,e,\psi}$
 then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\psi}$.
 Hence we write $\triple{\phi}{e}{\psi}$ if $\supp{\phi,e,\psi}\models\triple{\phi}{e}{\psi}$,
-to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
+to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$. 
 
 
 %%
@@ -835,7 +835,7 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
   \item $\I_\wedge: \semantic{\tassn} \to \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
         $\I_\wedge\,\phi_1\,\phi_2\,s =
           \bcase
-            \uparrow  & \text{if } s \not\in \dom{\phi_1} \text{ or } s \not\in \dom{\phi_2} \\
+            \uparrow  & \text{if } s \not\in \dom{\phi_1} \cap \dom{\phi_2} \\
             \true     & \text{if } \phi_1\,s=\true \text{ and } \phi_2\,s=\true \\
             \false    & \text{otherwise}
           \ecase$
