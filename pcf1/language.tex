@@ -917,4 +917,14 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
   \item $\eta \models \qex{x^\pi}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\pi}$
 \end{itemize}
 
+
+\begin{lemma} \
+  \begin{enumerate}
+    \item Let $t \in\nstyle{Term}$, $\theta\in\nstyle{DType}$ and $\eta\in\nstyle{Env}_t$, then
+          $(\semantic{\tj{t}{\theta}}\,\eta) \in \semantic{\theta}$.
+    \item Let $p \in\nstyle{Assn}$, $\pi\in\nstyle{PType}$ and $\eta\in\nstyle{Env}_p$, then
+          $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$.
+  \end{enumerate}
+\end{lemma}
+
 \end{document}
