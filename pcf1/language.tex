@@ -905,9 +905,10 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 \noindent The satisfaction relation $\eta \models h$ where $h \in \nstyle{Formula}$ and $\eta \in \nstyle{Env}_h$
 \begin{itemize}
-  \item $\eta \models t_1 = t_2$ iff $(t_1,t_2) \in R_=$
+  \item $\eta \models t_1 = t_2$ iff $(t_1,t_2) \in R_=^\theta$
 
   \item $\eta \models \triple{p}{e}{q}$ iff
+        $\triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta}$
 
   \item $\eta \models h_1 \wedge h_2$ iff $\eta \models h_1$ and $\eta \models h_2$
 
