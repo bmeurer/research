@@ -831,6 +831,17 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 We abbreviate $\Env_d = \Env_{\free{d}}$ for all $d\in\Exp\cup\Term\cup\Assn\cup\Formula$.
 
+The {\em meaning function} for terms
+\begin{itemize}
+  \item $\semantic{\tj{v}{\tau}}\,\eta := v\,\eta$
+  \item $\semantic{\tj{f}{\theta}}\,\eta := f^\I$
+  \item $\semantic{\tj{\app{t_1}{t_2}}{\theta}}\,\eta :=
+          (\semantic{\tj{t_1}{\ttarrow{\theta'}{\theta}}}\,\eta)\,
+          (\semantic{\tj{t_2}{\theta'}}\,\eta)$
+  \item $\semantic{\tj{\tabstr{x^\theta}{t}}{\ttarrow{\theta}{\theta'}}}\,\eta := f$ \\
+        $f: \semantic{\theta} \to \semantic{\theta'}, d \mapsto \semantic{\tj{t}{\theta'}}\,(\eta[d/x])$
+\end{itemize}
+
 \noindent Auxiliary functions
 \begin{itemize}
   \item $\I_\neg: \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
@@ -869,9 +880,9 @@ We abbreviate $\Env_d = \Env_{\free{d}}$ for all $d\in\Exp\cup\Term\cup\Assn\cup
         $\I_\exists\,d_1\,f\,s =
           \bcase
             \uparrow  & \text{if } s \not\in \dom{f\,d_2}
-                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\supp{d_1}}\semantic{\pi}_{L'} \\
+                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\pi}_{L'} \\
             \true     & \text{if } f\,d_2\,s = \true
-                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\supp{d_1}}\semantic{\pi}_{L'} \\
+                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\pi}_{L'} \\
             \false    & \text{otherwise}
           \ecase$
 \end{itemize}
