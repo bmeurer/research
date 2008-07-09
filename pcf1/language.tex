@@ -822,6 +822,15 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 \subsection{Semantics of the assertion language}
 
+\begin{definition}[Environment] \label{definition:Environment}
+  An {\em environment} is a partial function $\eta: \Var \pto \bigcup_{\pi\in\LType} \semantic{\pi}$ with
+  a finite domain and $\eta(\Var^\pi) \subseteq \semantic{\pi}$ for every $\pi \in \LType$. $\Env$ denotes
+  the set of all environments, $\Env_X = \{\eta\in\Env\,|\,X \subseteq \dom{\eta}\}$ denotes the set of
+  all environments whose domain contains at least $X \subseteq \Var$.
+\end{definition}
+
+We abbreviate $\Env_d = \Env_{\free{d}}$ for all $d\in\Exp\cup\Term\cup\Assn\cup\Formula$.
+
 \noindent Auxiliary functions
 \begin{itemize}
   \item $\I_\neg: \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
@@ -867,7 +876,7 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
           \ecase$
 \end{itemize}
 
-\noindent The {\em meaning function} $\semantic{\tj{p}{\pi}}: \nstyle{Env}_p \to \semantic{\pi}$.
+\noindent The {\em meaning function} $\semantic{\tj{p}{\pi}}: \Env_p \to \semantic{\pi}$.
 \begin{itemize}
   \item $\semantic{\tj{x^\pi}{\pi}}\,\eta := \eta\,x$
 
@@ -903,7 +912,7 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
           \I_\neg\,(\semantic{\tj{p}{\tassn}}\,\eta)$
 \end{itemize}
 
-\noindent The satisfaction relation $\eta \models h$ where $h \in \nstyle{Formula}$ and $\eta \in \nstyle{Env}_h$
+\noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
 \begin{itemize}
   \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\theta}}\,\eta) = (\semantic{\tj{t_2}{\theta}}\,\eta)$
 
@@ -920,9 +929,9 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 \begin{lemma} \
   \begin{enumerate}
-    \item Let $t \in\nstyle{Term}$, $\theta\in\nstyle{DType}$ and $\eta\in\nstyle{Env}_t$, then
+    \item Let $t \in\Term$, $\theta\in\DType$ and $\eta\in\Env_t$, then
           $(\semantic{\tj{t}{\theta}}\,\eta) \in \semantic{\theta}$.
-    \item Let $p \in\nstyle{Assn}$, $\pi\in\nstyle{PType}$ and $\eta\in\nstyle{Env}_p$, then
+    \item Let $p \in\Assn$, $\pi\in\PType$ and $\eta\in\Env_p$, then
           $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$.
   \end{enumerate}
 \end{lemma}
