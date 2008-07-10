@@ -376,9 +376,6 @@ We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial orde
     \item $(\app{e_1}{e_1'},\ldots,\app{e_n}{e_n'})\in R^\Exp$ iff $\vec{e},\vec{e'}\in R^\Exp$.
     \item $(\ifte{e_1}{e_1'}{e_1''},\ldots,\ifte{e_n}{e_n'}{e_n''})\in R^\Exp$ iff
           $\vec{e},\vec{e'},\vec{e''}\in R^\Exp$.
-    \item $(\proj{e_1}{m_j},\ldots,\proj{e_n}{m_j})\in R^\Exp$ iff $\vec{e}\in R^\Exp$.
-    \item $(\record{{m_i=e_{1,i}}^{i=1 \ldots k}},\ldots,\record{{m_i=e_{n,i}}^{i=1 \ldots k}})\in R^\Exp$ iff \\
-            $(e_{1,i},\ldots,e_{n,i})\in R^\Exp$ for every $i=1 \ldots k$.
   \end{enumerate}
 \end{definition}
 
@@ -386,21 +383,14 @@ We choose $(W,\sqsubseteq) = (\powersetfin{\Loc},\subseteq)$ as the partial orde
   Let $L \in W$. A ground relation $R$ of arity $n$ is called {\em $L$-definable}, if there
   exists a relation $R_L \in (\Store_L)^n$ such that
   \begin{enumerate}
-    \item $R^\sto = \{\vec{s}\in\Store^n\,|\, (\vec{s}|L)\in R_L 
-                     \wedge \vec{s}\,(\delta^n(\Loc\setminus L)) \subseteq \delta^n \CVal_\bot\}$
-    \item $R^\loc = \{\vec{l}\in\bigcup_{\tau\in\Type}(\Loc^\tau)^n\,|\,
-                      \}$
-  \end{enumerate}
-  {\bf TODO}
-  \begin{enumerate}
     \item $\vec{s}\in R^\sto$ iff $(\vec{s}|L) \in R_L$ and
           $\vec{s}\,(\delta^n\,(\Loc \setminus L)) \subseteq \delta^n \CVal_\bot$
-    \item $\vec{l}\in R^\loc$ and $\vec{s}\in R^\sto$ implies
+    \item $\vec{l}\in R^\loc$ and $\vec{s}\in R^\sto$ iff
           $\vec{s}\,(\vec{l})\in R^\val \cup \{\bot\}^n$
     \item for every $\tau\in\Type$, $\vec{s}\in\Store^n$, $\vec{l}\in(\Loc^\tau)^n$
           and $\vec{v}\in(\CVal^\tau)^n$: \\
-          $\vec{s}\in R^\sto$, $\vec{l}\in R^\loc$ and $\vec{v}\in R^\val$ implies
-          $\vec{s}[\vec{v}/\vec{l}]\in R^\sto$
+          $\vec{s}\in R^\sto$, $\vec{l}\in R^\loc$ and $\vec{v}\in R^\val$ iff
+          $\vec{s}\,[\vec{v}/\vec{l}]\in R^\sto$
   \end{enumerate}
 \end{definition}
 
@@ -408,12 +398,37 @@ We let $\DEF^L_n$ denote the set of all $L$-definable ground relations
 of arity $n$ and $\OUT^L_n = \bigcup_{L'\in W\wedge L \cap L' = \emptyset} \DEF^{L'}_n$ denote
 the set of those which are definable outside of $L$.
 
-Let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$. It is trivial to see
+\begin{lemma}[$L$-definability] \label{lemma:L_definability}
+  Let $n \in \N$, $L \in W$ and $R \in \OUT^L_n$, then
+  \begin{enumerate}
+    \item $\delta^n L \subseteq R^\loc$
+    \item $\delta^n\{v\in\CVal\,|\,\locns{v} = L\} \subseteq R^\val$
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  $R \in \OUT^L_n$ implies that a $L' \in W$ exists such that $L' \cap L = \emptyset$
+  and $R \in \DEF^{L'}_n$. Without loss of generality let $L \ne \emptyset$.
+  \begin{enumerate}
+    \item Let $l \in L$ and $\vec{s} \in R^\sto$. Then $\vec{s}\,(l,\ldots,l) \in \delta^n \CVal_\bot$ and
+          hence there exists a $d \in \CVal_\bot$ such that $\vec{s}\,(l,\ldots,l) = (d,\ldots,d)$.
+          \begin{itemize}
+            \item $d = \bot \Rightarrow \vec{s}\,(l,\ldots,l) \in \{\bot\}^n
+                     \Rightarrow (l,\ldots,l) \in R^\loc$
+            \item $d \ne \bot \Rightarrow \vec{s}\,[(d,\ldots,d)/(l,\ldots,l)] = \vec{s} \in R^\sto
+                     \Rightarrow (l,\ldots,l) \in R^\loc$
+          \end{itemize}
+
+    \item Immediate consequence of the above.
+  \end{enumerate}
+\end{proof}
+
+Now let $\Sigma = (\Sigma^L_n)_{L\in W,n\in \N}$ where $\Sigma^L_n = \OUT^L_n$. It is trivial to see
 that $\Sigma$ is indeed a $W$-sorted signature.
 
 \begin{definition}[Semantic domains]
   For every type $\pi\in\LType$ we define a $W$-$\Sigma$-set $\semantic{\pi}=(D^\pi,\I^\pi)$
-  with $D^\pi = \bigcup_{L\in W} W^\pi_L$ by
+  with $D^\pi = \bigcup_{L\in W} D^\pi_L$ by
   \begin{itemize}
     \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$ \\
           $\I^\tau(R) = \{\vec{v}\in(D^\tau)^n\,|\,\vec{v}\in R^\val\}$
@@ -451,7 +466,9 @@ are indeed $W$-$\Sigma$-sets.
   \begin{enumerate}
     \item Straight forward induction.
 
-    \item {\bf TODO}
+    \item The proof for $v\in\semantic{\tau}_L$ follows immediately with lemma~\ref{lemma:L_definability},
+          the proofs for $\phi\in\semantic{\tassn}_L$ and $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$ are
+          trivial.
   \end{enumerate}
 \end{proof}
 
