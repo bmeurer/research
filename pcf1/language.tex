@@ -482,6 +482,23 @@ and $s' \sqsubseteq \hat{s}'$.
       \GRal \neg p
 \GRend\]
 
+We define 
+\begin{itemize}
+  \item the set $\SType$ of all {\em static types} $\sigma$,
+  \item the set $\PType$ of all {\em predicate types} $\pi$ and
+  \item the set $\LType$ of all {\em logical types} $\kappa$
+\end{itemize}
+by the following grammars:
+\[\GRbeg
+  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2}
+         \GRnl
+
+  \pi \GRis \tassn \GRmid \ttarrow{\sigma}{\pi}
+      \GRnl
+
+  \kappa \GRis \sigma \GRmid \pi
+\GRend\]
+
 
 %%
 %% Semantics of the logic
@@ -609,8 +626,8 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
 \subsection{Semantic domains}
 
 \begin{definition}[Semantic domains]
-  For every type $\pi\in\LType$ we define {\em semantic domains} $\semantic{\pi} = (D^\pi,\I^\pi)$ where
-  $D^\pi = \bigcup_{L \in W} D^\pi_L$ and $\I^\pi(\mu) : D^\pi \to D^\pi$ for every $\mu \in \Perm$ by
+  For every type $\kappa\in\LType$ we define {\em semantic domains} $\semantic{\kappa} = (D^\kappa,\I^\kappa)$ where
+  $D^\kappa = \bigcup_{L \in W} D^\kappa_L$ and $\I^\kappa(\mu) : D^\kappa \to D^\kappa$ for every $\mu \in \Perm$ by
   \begin{itemize}
     \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\supp{v} = L\}$ \\
           $\I^\tau(\mu): D^\tau \to D^\tau, v \mapsto \mu^\sexp\,v$
@@ -618,59 +635,59 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
     \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Fix{L}.\,\phi = \phi \circ (\mu^\ssto)^{-1}\}$ \\
           $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\ssto)^{-1}$
 
-    \item $D^{\ttarrow{\theta}{\pi}}_L = \{ \psi: D^\theta \to D^\pi\,|\,
-                          \forall L'\in W.\,\psi\,(D^\theta_{L'}) \subseteq D^\pi_{L \cup L'} \\
-                          \hspace*{4.2cm} \wedge \forall \mu\in\Fix{L}.\,\psi=\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}\}$\\
-          $\I^{\ttarrow{\theta}{\pi}}(\mu): D^{\ttarrow{\theta}{\pi}} \to D^{\ttarrow{\theta}{\pi}},
-                                            \psi \mapsto \I^\pi(\mu) \circ \psi \circ (\I^\theta(\mu))^{-1}$
+    \item $D^{\ttarrow{\sigma}{\kappa}}_L = \{ \psi: D^\sigma \to D^\kappa\,|\,
+                          \forall L'\in W.\,\psi\,(D^\sigma_{L'}) \subseteq D^\kappa_{L \cup L'} \\
+                          \hspace*{4.2cm} \wedge \forall \mu\in\Fix{L}.\,\psi=\mu^\kappa\circ\psi\circ(\mu^\sigma)^{-1}\}$\\
+          $\I^{\ttarrow{\sigma}{\kappa}}(\mu): D^{\ttarrow{\sigma}{\kappa}} \to D^{\ttarrow{\sigma}{\kappa}},
+                                            \psi \mapsto \I^\kappa(\mu) \circ \psi \circ (\I^\sigma(\mu))^{-1}$
   \end{itemize}
 \end{definition}
 
-We follow the usual mathematical convention and use $\semantic{\pi}$ not only as a notation
-for the semantic domain $(D^\pi,\I^\pi)$ but also for the underlying set $D^\pi$,
-hence $\semantic{\pi}_L$ denotes the set $D^\pi_L$. Moreover, we use $\mu^\pi$ as an abbreviation
-for $\I^\pi(\mu)$.
+We follow the usual mathematical convention and use $\semantic{\kappa}$ not only as a notation
+for the semantic domain $(D^\kappa,\I^\kappa)$ but also for the underlying set $D^\kappa$,
+hence $\semantic{\kappa}_L$ denotes the set $D^\kappa_L$. Moreover, we use $\mu^\kappa$ as an abbreviation
+for $\I^\kappa(\mu)$.
 
 Given lemma~\ref{lemma:Permutations}
-it is pretty much obvious that $\mu^\pi\,d = d$ for every $d \in \semantic{\pi}_L$ and
+it is pretty much obvious that $\mu^\kappa\,d = d$ for every $d \in \semantic{\kappa}_L$ and
 $\mu\in\Fix{L}$.
 It is also easy to see that
 \[\begin{array}{rcl}
-  \semantic{\pi}_{L_1} \cap \semantic{\pi}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
+  \semantic{\kappa}_{L_1} \cap \semantic{\kappa}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
 \end{array}\]
-holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\pi}$ a
-unique world $L \in W$ exists, such that $d \in \semantic{\pi}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\pi}_{L'}$.
+holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\kappa}$ a
+unique world $L \in W$ exists, such that $d \in \semantic{\kappa}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\kappa}_{L'}$.
 This unique world $L$ is called the {\em support of $d$}, written $\supp{d}$. In general we abbreviate
 $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
 \begin{lemma}[Semantic domains] \
-  Let $\pi \in \LType$, $\mu\in\Perm$ and $L\in W$.
+  Let $\kappa \in \LType$, $\mu\in\Perm$ and $L\in W$.
   \begin{enumerate}
-    \item $(\mu^\pi|\semantic{\pi}_L): \semantic{\pi}_L \to \semantic{\pi}_{\mu(L)}$ is
+    \item $(\mu^\kappa|\semantic{\kappa}_L): \semantic{\kappa}_L \to \semantic{\kappa}_{\mu(L)}$ is
           well-defined and bijective.
-    \item $\mu^\pi: \semantic{\pi} \to \semantic{\pi}$ is well-defined and bijective.
+    \item $\mu^\kappa: \semantic{\kappa} \to \semantic{\kappa}$ is well-defined and bijective.
   \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-  Given that $\semantic{\pi}$ is the union of disjoint sets $\semantic{\pi}_L$, the second
-  property is simply an implication of the first one. Now assume that $(\mu^\pi|\semantic{\pi}_L)$
-  is well-defined, i.e. $\mu^\pi\,\semantic{\pi}_L \subseteq \semantic{\pi}_{\mu(L)}$, then
-  we also have $(\mu^{-1})^\pi\,\semantic{\pi}_{\mu(L)} \subseteq \semantic{\pi}_L$, which
+  Given that $\semantic{\kappa}$ is the union of disjoint sets $\semantic{\kappa}_L$, the second
+  property is simply an implication of the first one. Now assume that $(\mu^\kappa|\semantic{\kappa}_L)$
+  is well-defined, i.e. $\mu^\kappa\,\semantic{\kappa}_L \subseteq \semantic{\kappa}_{\mu(L)}$, then
+  we also have $(\mu^{-1})^\kappa\,\semantic{\kappa}_{\mu(L)} \subseteq \semantic{\kappa}_L$, which
   implies
   \[\begin{array}{rcl}
-    (\mu^\pi \circ (\mu^{-1})^\pi)\,\semantic{\pi}_{\mu(L)} &\subseteq& \semantic{\pi}_{\mu(L)}
+    (\mu^\kappa \circ (\mu^{-1})^\kappa)\,\semantic{\kappa}_{\mu(L)} &\subseteq& \semantic{\kappa}_{\mu(L)}
   \end{array}\]
   and
   \[\begin{array}{rcl}
-    ((\mu^{-1})^\pi \circ \mu^\pi)\,\semantic{\pi}_L &\subseteq& \semantic{\pi}_L.
+    ((\mu^{-1})^\kappa \circ \mu^\kappa)\,\semantic{\kappa}_L &\subseteq& \semantic{\kappa}_L.
   \end{array}\]
 %  \[\xymatrix{
-%    \semantic{\pi}_L \ar@/^1pc/[r]^{\mu^\pi} &
-%    \semantic{\pi}_{\mu(L)} \ar@/^1pc/[l]^{(\mu^{-1})^\pi}
+%    \semantic{\kappa}_L \ar@/^1pc/[r]^{\mu^\kappa} &
+%    \semantic{\kappa}_{\mu(L)} \ar@/^1pc/[l]^{(\mu^{-1})^\kappa}
 %  }\]
-  Given these results it is then sufficient to prove that $(\mu^\pi|\semantic{\pi}_L)$ is
-  well-defined and $\mu^\pi \circ (\mu^{-1})^\pi$ is the identity on $\semantic{\pi}$.
+  Given these results it is then sufficient to prove that $(\mu^\kappa|\semantic{\kappa}_L)$ is
+  well-defined and $\mu^\kappa \circ (\mu^{-1})^\kappa$ is the identity on $\semantic{\kappa}$.
   \begin{itemize}
     \item Let $v \in \semantic{\tau}_L$, then we have $\supp{v} = L$ and by lemma~\ref{lemma:Permutations}
           we also have $\mu(L) = \supp{\mu^\sexp\,v} = \supp{\mu^\tau\,v}$, thereby
@@ -686,47 +703,47 @@ $\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$.
 
           Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi = (\mu^{-1})^\ssto(\mu^\ssto\,\phi) = \phi$.
 
-    \item For $\mu^{\ttarrow{\theta}{\pi}}$ the statement follows immediately using the induction hypothesis.
-%    \item Let $\psi\in\semantic{\ttarrow{\theta}{\pi}}_L$, then
+    \item For $\mu^{\ttarrow{\sigma}{\kappa}}$ the statement follows immediately using the induction hypothesis.
+%    \item Let $\psi\in\semantic{\ttarrow{\sigma}{\kappa}}_L$, then
 %          \begin{itemize}
-%            \item $d \in \semantic{\theta}_{L'}, L'\in W \\
+%            \item $d \in \semantic{\sigma}_{L'}, L'\in W \\
 %                   \,\Rightarrow\,
-%                   ((\mu^\theta)^{-1}\,d) \in \semantic{\theta}_{\mu^{-1}(L')} \\
+%                   ((\mu^\sigma)^{-1}\,d) \in \semantic{\sigma}_{\mu^{-1}(L')} \\
 %                   \,\Rightarrow\,
-%                   \psi\,((\mu^\theta)^{-1}\,d) \in \semantic{\pi}_{L\cup\mu^{-1}(L')} \\
+%                   \psi\,((\mu^\sigma)^{-1}\,d) \in \semantic{\kappa}_{L\cup\mu^{-1}(L')} \\
 %                   \,\Rightarrow\,
-%                   \mu^\pi\,(\psi\,((\mu^\theta)^{-1}\,d))\in\semantic{\pi}_{\mu(L)\cup L'} \\
+%                   \mu^\kappa\,(\psi\,((\mu^\sigma)^{-1}\,d))\in\semantic{\kappa}_{\mu(L)\cup L'} \\
 %                   \,\Rightarrow\,
-%                   ((\mu^\pi\circ\psi\circ(\mu^\theta)^{-1})\,d)\in\semantic{\pi}_{\mu(L)\cup L'}$
+%                   ((\mu^\kappa\circ\psi\circ(\mu^\sigma)^{-1})\,d)\in\semantic{\kappa}_{\mu(L)\cup L'}$
 %
 %            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
 %                   \,\Rightarrow\,
 %                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
 %                   \,\Rightarrow\,
-%                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\pi\circ\psi\circ
-%                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta)^{-1} \\
+%                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\kappa\circ\psi\circ
+%                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\sigma)^{-1} \\
 %                   \,\Rightarrow\,
-%                   \psi = (\mu^\pi)^{-1}\circ\bar{\mu}^\pi\circ\mu^\pi\circ\psi
-%                      \circ(\mu^\theta)^{-1}\circ(\bar{\mu}^\theta)^{-1}\circ\mu^\theta \\
+%                   \psi = (\mu^\kappa)^{-1}\circ\bar{\mu}^\kappa\circ\mu^\kappa\circ\psi
+%                      \circ(\mu^\sigma)^{-1}\circ(\bar{\mu}^\sigma)^{-1}\circ\mu^\sigma \\
 %                   \,\Rightarrow\,
-%                   \mu^\pi \circ \psi \circ (\mu^\theta)^{-1}
-%                      = \bar{\mu}^\pi\circ[\mu^\pi\circ\psi\circ(\mu^\theta)^{-1}]\circ(\bar{\mu}^\theta)^{-1}$
+%                   \mu^\kappa \circ \psi \circ (\mu^\sigma)^{-1}
+%                      = \bar{\mu}^\kappa\circ[\mu^\kappa\circ\psi\circ(\mu^\sigma)^{-1}]\circ(\bar{\mu}^\sigma)^{-1}$
 %          \end{itemize}
-%          so we conclude $(\mu^{\ttarrow{\theta}{\pi}}\,\psi)\in\semantic{\ttarrow{\theta}{\pi}}_{\mu(L)}$.
+%          so we conclude $(\mu^{\ttarrow{\sigma}{\kappa}}\,\psi)\in\semantic{\ttarrow{\sigma}{\kappa}}_{\mu(L)}$.
 %
-%          Given $\mu^\theta\circ(\mu^{-1})^\theta = \id_{\semantic{\theta}}$ and
-%          $\mu^\pi\circ(\mu^{-1})^\pi = \id_{\semantic{\pi}}$ by induction hypothesis it follows easily that
+%          Given $\mu^\sigma\circ(\mu^{-1})^\sigma = \id_{\semantic{\sigma}}$ and
+%          $\mu^\kappa\circ(\mu^{-1})^\kappa = \id_{\semantic{\kappa}}$ by induction hypothesis it follows easily that
 %          \[\begin{array}{rcccl}
-%            (\mu^{\ttarrow{\theta}{\pi}}\circ (\mu^{-1})^{\ttarrow{\theta}{\pi}})\,\psi
-%            &=& \mu^\pi \circ (\mu^{-1})^\pi \circ \psi \circ (\mu^{-1})^\theta \circ \mu^\theta 
+%            (\mu^{\ttarrow{\sigma}{\kappa}}\circ (\mu^{-1})^{\ttarrow{\sigma}{\kappa}})\,\psi
+%            &=& \mu^\kappa \circ (\mu^{-1})^\kappa \circ \psi \circ (\mu^{-1})^\sigma \circ \mu^\sigma 
 %            &=& \psi.
 %          \end{array}\]
   \end{itemize}
 \end{proof}
 
 \begin{lemma} \label{lemma:Permutations_and_semantic_domains}
-  Let $\mu,\hat{\mu}\in\Perm$, $\pi\in\LType$ and $d \in \semantic{\pi}$, then
-  $\mu^\pi\,d = \hat{\mu}^\pi\,d$ if
+  Let $\mu,\hat{\mu}\in\Perm$, $\kappa\in\LType$ and $d \in \semantic{\kappa}$, then
+  $\mu^\kappa\,d = \hat{\mu}^\kappa\,d$ if
   $(\mu|\supp{d}) = (\hat{\mu}|\supp{d})$.
 \end{lemma}
 
@@ -823,23 +840,26 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 \subsection{Semantics of the assertion language}
 
 \begin{definition}[Environment] \label{definition:Environment}
-  An {\em environment} is a partial function $\eta: \Var \pto \bigcup_{\pi\in\LType} \semantic{\pi}$ with
-  a finite domain and $\eta(\Var^\pi) \subseteq \semantic{\pi}$ for every $\pi \in \LType$. $\Env$ denotes
+  An {\em environment} is a partial function $\eta: \Var \pto \bigcup_{\kappa\in\LType} \semantic{\kappa}$ with
+  a finite domain and $\eta(\Var^\kappa) \subseteq \semantic{\kappa}$ for every $\kappa \in \LType$. $\Env$ denotes
   the set of all environments, $\Env_X = \{\eta\in\Env\,|\,X \subseteq \dom{\eta}\}$ denotes the set of
-  all environments whose domain contains at least $X \subseteq \Var$.
+  all environments whose domains include at least $X \subseteq \Var$.
 \end{definition}
 
 We abbreviate $\Env_d = \Env_{\free{d}}$ for all $d\in\Exp\cup\Term\cup\Assn\cup\Formula$.
-
-The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\theta}$ for terms $t \in \Term$.
+For every term $t \in \Term$, $\sigma \in \SType$ with $\tj{t}{\sigma}$ the {\em meaning function}
+$\semantic{\tj{t}{\sigma}}: \Env_t \to \semantic{\sigma}$ is defined by
 \begin{itemize}
   \item $\semantic{\tj{v}{\tau}}\,\eta := v\,\eta$
-  \item $\semantic{\tj{f}{\theta}}\,\eta := f^\I$
-  \item $\semantic{\tj{\app{t_1}{t_2}}{\theta}}\,\eta :=
-          (\semantic{\tj{t_1}{\ttarrow{\theta'}{\theta}}}\,\eta)\,
-          (\semantic{\tj{t_2}{\theta'}}\,\eta)$
-  \item $\semantic{\tj{\tabstr{x^\theta}{t}}{\ttarrow{\theta}{\theta'}}}\,\eta := f$ \\
-        $f: \semantic{\theta} \to \semantic{\theta'}, d \mapsto \semantic{\tj{t}{\theta'}}\,(\eta[d/x])$
+
+  \item $\semantic{\tj{f}{\sigma}}\,\eta := f^\I$
+
+  \item $\semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta :=
+          (\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,
+          (\semantic{\tj{t_2}{\sigma'}}\,\eta)$
+
+  \item $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta := \psi$ \\
+        $\psi: \semantic{\sigma} \to \semantic{\sigma'}, d \mapsto \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])$
 \end{itemize}
 
 \noindent Auxiliary functions
@@ -868,7 +888,7 @@ The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\the
             \false    & \text{otherwise}
           \ecase$
 
-  \item $\I_{\not\rightleftharpoons}: \semantic{\pi_1} \to \semantic{\pi_2} \to \semantic{\tassn}$ \\[1ex]
+  \item $\I_{\not\rightleftharpoons}: \semantic{\kappa_1} \to \semantic{\kappa_2} \to \semantic{\tassn}$ \\[1ex]
         $\I_{\not\rightleftharpoons}\,d_1\,d_2\,s =
           \bcase
             \uparrow  & \text{if } \supp{d_1,d_2} \not\subseteq \dom{s} \\
@@ -876,13 +896,13 @@ The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\the
             \false    & \text{otherwise}
           \ecase$
   
-  \item $\I_\exists: \semantic{\pi_1} \to (\semantic{\pi_2} \to \semantic{\tassn}) \to \semantic{\tassn}$ \\[1ex]
-        $\I_\exists\,d_1\,f\,s =
+  \item $\I_\exists: \semantic{\kappa_1} \to (\semantic{\kappa_2} \to \semantic{\tassn}) \to \semantic{\tassn}$ \\[1ex]
+        $\I_\exists\,d_1\,\psi\,s =
           \bcase
-            \uparrow  & \text{if } s \not\in \dom{f\,d_2}
-                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\pi}_{L'} \\
-            \true     & \text{if } f\,d_2\,s = \true
-                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\pi}_{L'} \\
+            \uparrow  & \text{if } s \not\in \dom{\psi\,d_2}
+                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\kappa}_{L'} \\
+            \true     & \text{if } \psi\,d_2\,s = \true
+                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\reach{\supp{d_1}}{s}}\semantic{\kappa}_{L'} \\
             \false    & \text{otherwise}
           \ecase$
 \end{itemize}
@@ -899,22 +919,22 @@ The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\the
                     \ecase$
 
   \item $\semantic{\tj{\app{p}{t}}{\pi}}\,\eta :=
-          (\semantic{\tj{p}{\ttarrow{\theta}{\pi}}}\,\eta)\,
-          (\semantic{\tj{t}{\theta}}\,\eta)$
+          (\semantic{\tj{p}{\ttarrow{\sigma}{\pi}}}\,\eta)\,
+          (\semantic{\tj{t}{\sigma}}\,\eta)$
 
-  \item $\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\pi}}}\,\eta := f$ \\[1ex]
-        $f: \semantic{\theta} \to \semantic{\pi},
+  \item $\semantic{\tj{\tabstr{x^\sigma}{p}}{\ttarrow{\sigma}{\pi}}}\,\eta := \psi$ \\[1ex]
+        $\psi: \semantic{\sigma} \to \semantic{\pi},
           d \mapsto \semantic{\tj{p}{\pi}}\,(\eta[d/x])$
 
   \item $\semantic{\tj{t_1 \mapsto t_2}{\tassn}}\,\eta :=
           \I_{\mapsto}\,(\semantic{\tj{t_1}{\tref{\tau}}}\,\eta)\,(\semantic{\tj{t_2}{\tau}}\,\eta)$
 
   \item $\semantic{\tj{t \not\rightleftharpoons p}{\tassn}}\,\eta :=
-          \I_{\not\rightleftharpoons}\,(\semantic{\tj{t}{\theta}}\,\eta)\,(\semantic{\tj{p}{\pi}}\,\eta)$
+          \I_{\not\rightleftharpoons}\,(\semantic{\tj{t}{\sigma}}\,\eta)\,(\semantic{\tj{p}{\pi}}\,\eta)$
 
-  \item $\semantic{\tj{\qbex{x^\pi}{t}{p}}{\tassn}}\,\eta :=
-          \I_\exists\,(\semantic{\tj{t}{\theta}}\,\eta)\,f$ \\[1ex]
-        $f: \semantic{\pi} \to \semantic{\tassn}, d \mapsto \semantic{\tj{p}{\tassn}}\,(\eta[d/x])$
+  \item $\semantic{\tj{\qbex{x^\kappa}{t}{p}}{\tassn}}\,\eta :=
+          \I_\exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi$ \\[1ex]
+        $\psi: \semantic{\kappa} \to \semantic{\tassn}, d \mapsto \semantic{\tj{p}{\tassn}}\,(\eta[d/x])$
 
   \item $\semantic{\tj{p \wedge q}{\tassn}}\,\eta :=
           \I_\wedge\,(\semantic{\tj{p}{\tassn}}\,\eta)\,(\semantic{\tj{q}{\tassn}}\,\eta)$
@@ -925,7 +945,7 @@ The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\the
 
 \noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
 \begin{itemize}
-  \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\theta}}\,\eta) = (\semantic{\tj{t_2}{\theta}}\,\eta)$
+  \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\sigma}}\,\eta) = (\semantic{\tj{t_2}{\sigma}}\,\eta)$
 
   \item $\eta \models \triple{p}{e}{q}$ iff
         $\triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta}$
@@ -934,14 +954,14 @@ The {\em meaning function} $\semantic{\tj{t}{\theta}}: \Env_t \to \semantic{\the
 
   \item $\eta \models \neg h$ iff $\eta \not\models h$
   
-  \item $\eta \models \qex{x^\pi}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\pi}$
+  \item $\eta \models \qex{x^\kappa}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\kappa}$
 \end{itemize}
 
 
 \begin{lemma} \
   \begin{enumerate}
-    \item Let $t \in\Term$, $\theta\in\DType$ and $\eta\in\Env_t$, then
-          $(\semantic{\tj{t}{\theta}}\,\eta) \in \semantic{\theta}$.
+    \item Let $t \in\Term$, $\sigma\in\SType$ and $\eta\in\Env_t$, then
+          $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}$.
     \item Let $p \in\Assn$, $\pi\in\PType$ and $\eta\in\Env_p$, then
           $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$.
   \end{enumerate}
