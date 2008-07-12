@@ -855,7 +855,7 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 \end{definition}
 
 We abbreviate $\Env_d = \Env_{\free{d}}$. If $\eta \in \Env$ and $e \in \Exp$, then $e\,\eta$ denotes
-the expression that results from replacing every variable in $e$ with its respective value in $\eta$. It is
+the expression that results from replacing every variable $x$ in $e$ with $\eta\,x$. It is
 easy to see that $e\,\eta$ is closed if $\eta \in \Env_e$.
 
 For every well-typed term $t \in \Term$ of type $\sigma \in \SType$, the {\em meaning function}
@@ -944,13 +944,12 @@ follows:
   \semantic{\tj{p \vee q}{\tassn}}\,\eta
     &=& \Or\,(\semantic{\tj{p}{\tassn}}\,\eta)\,(\semantic{\tj{q}{\tassn}}\,\eta) \\
   \semantic{\tj{\neg p}{\tassn}}\,\eta 
-    &=& \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta)
+    &=& \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta) \\
+  \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
+    &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi \text{ with} \\
+    & & \psi: \semantic{\theta} \to \semantic{\tassn} \\
+    & & \psi\,d = \semantic{\tj{p}{\tassn}}\,(\eta[d/x])
 \end{array}\]
-\begin{itemize}
-  \item $\semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta :=
-          \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi$ \\[1ex]
-        $\psi: \semantic{\theta} \to \semantic{\tassn}, d \mapsto \semantic{\tj{p}{\tassn}}\,(\eta[d/x])$
-\end{itemize}
 
 \noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
 \begin{itemize}
