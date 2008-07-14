@@ -36,6 +36,7 @@
 \newcommand{\scon}{\nstyle{con}}
 \newcommand{\sexp}{\nstyle{exp}}
 \newcommand{\ssto}{\nstyle{sto}}
+\newcommand{\senv}{\nstyle{env}}
 \newcommand{\z}{\nstyle{int}}
 \newcommand{\DEF}{\nstyle{DEF}}
 \newcommand{\id}{\nstyle{id}}
@@ -847,6 +848,10 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 \subsection{Semantics of the assertion language}
 
+{\bf TODO:} Type system for the assertion language. Define $\Term^\sigma$, $\Assn^\pi$ (and make sure
+to assert that expressions and values do not contain locations, i.e. $\locns{e} = \locns{v} = \emptyset$
+for the appropriate rules). Define $\supp{t} = \locns{t}$ for the current soundness lemma below.
+
 \begin{definition}[Environment] \label{definition:Environment}
   An {\em environment} is a partial function $\eta: \Var \pto \bigcup_{\theta\in\LType} \semantic{\theta}$ with
   a finite domain and $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for every $\theta \in \LType$. $\Env$ denotes
@@ -856,25 +861,86 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 We abbreviate $\Env_d = \Env_{\free{d}}$. If $\eta \in \Env$ and $e \in \Exp$, then $e\,\eta$ denotes
 the expression that results from replacing every variable $x$ in $e$ with $\eta\,x$. It is
-easy to see that $e\,\eta$ is closed if $\eta \in \Env_e$.
-
-For every well-typed term $t \in \Term$ of type $\sigma \in \SType$, the {\em meaning function}
-$\semantic{\tj{t}{\sigma}}: \Env_t \to \semantic{\sigma}$ is defined by induction on the structure of $t$ as
-follows:
-\[\begin{array}{rcl}
-  \semantic{\tj{x^\sigma}{\sigma}}\,\eta
-    &=& \eta\,x \\
-  \semantic{\tj{f}{\sigma}}\,\eta 
-    &=& \semantic{f} \\
-  \semantic{\tj{v}{\tau}}\,\eta
-    &=& v\,\eta \\
-  \semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta
-    &=& (\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,
-        (\semantic{\tj{t_2}{\sigma'}}\,\eta) \\
-  \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
-    &=& \psi: \semantic{\sigma} \to \semantic{\sigma'} \\
-    & & \psi\, d = \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])
+easy to see that $e\,\eta$ is closed if $\eta \in \Env_e$. We define the support of an environment $\eta$
+to be the set $\supp{\eta} = \bigcup_{x\in\dom{\eta}} \supp{\eta\,x}$ and for every permutation
+$\mu\in\Perm$ we define a function
+\[\begin{array}{c}
+  \mu^\senv: \Env \to \Env, \eta \mapsto [x^\theta_i: \mu^\theta\,(\eta\,x^\theta_i)]_{x^\theta_i\in\dom{\eta}}
 \end{array}\]
+that applies $\mu$ to all elements in the image of $\eta$. It is trivial to prove that
+\begin{enumerate}
+  \item $\supp{\mu^\senv\,\eta} = \mu\,(\supp{\eta})$ and
+  \item $(\mu|\supp{\eta}) = (\hat{\mu}|\supp{\eta}) \,\Rightarrow\, \mu^\senv\,\eta = \hat{\mu}^\senv\,\eta$
+\end{enumerate}
+holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
+
+\begin{definition}[Meaning of terms]
+  For every well-typed term $t \in \Term$ of type $\sigma \in \SType$, the {\em meaning function}
+  $\semantic{\tj{t}{\sigma}}: \Env_t \to \semantic{\sigma}$ is defined by induction on the structure of $t$ as
+  follows:
+  \[\begin{array}{rcl}
+    \semantic{\tj{x^\sigma}{\sigma}}\,\eta
+      &=& \eta\,x \\
+    \semantic{\tj{f}{\sigma}}\,\eta 
+      &=& \semantic{f} \\
+    \semantic{\tj{v}{\tau}}\,\eta
+      &=& v\,\eta \\
+    \semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta
+      &=& (\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,
+          (\semantic{\tj{t_2}{\sigma'}}\,\eta) \\
+    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+      &=& \psi: \semantic{\sigma} \to \semantic{\sigma'} \\
+      & & \psi\, d = \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}
+  Let $\sigma \in \SType$, $t \in \Term^\sigma$, $\eta,\hat{\eta} \in \Env_t$. Then
+  \begin{enumerate}
+    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}_{\supp{t, \eta|_{\free{t}}}}$
+    \item $(\eta|_{\free{t}}) = (\hat{\eta}|_{\free{t}})$ implies
+          $(\semantic{\tj{t}{\sigma}}\,\eta) = (\semantic{\tj{t}{\sigma}}\,\hat{\eta})$
+    \item $\mu^\sigma\,(\semantic{\tj{t}{\sigma}}\,\eta) = \semantic{\tj{t}{\sigma}}\,(\mu^\senv\,\eta)$
+          for all $\mu\in\Fix{\supp{t}}$
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Mostly obvious induction on the structure of $t$. We show only the proof for the
+  abstraction case.
+
+  Here we have $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+    = \psi:\semantic{\sigma}\to\semantic{\sigma'},
+      d \mapsto \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])$.
+  Let $L = \supp{\tabstr{x}{t},\eta|_{\free{\tabstr{x}{t}}}}
+         = \supp{t,\eta|_{\free{t} \setminus \{x\}}}$. In order to prove
+  that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$, we have to show
+  \begin{enumerate}
+    \item[(a)] $\psi\,(\semantic{\sigma}_{L'}) \subseteq \semantic{\sigma'}_{L \cup L'}$ for every $L' \in W$, and
+    \item[(b)] $\psi = \mu^{\sigma'} \circ \psi \circ (\mu^\sigma)^{-1}$ for every $\mu\in\Fix{L}$.
+  \end{enumerate}
+  {\em Proof of (a):} Let $d \in \semantic{\sigma}$. By induction hypothesis we have
+  \[\begin{array}{rcl}
+    \psi\,d = (\semantic{\tj{t}{\sigma'}}\,(\eta[d/x]))
+    &\in& \semantic{\sigma'}_{\supp{t,(\eta[d/x])|_{\free{t}}}}
+  \end{array}\]
+  and we conclude
+  \[\begin{array}{rcl}
+    \supp{t,(\eta[d/x])|_{\free{t}}}
+    &=& \supp{t,\eta|_{\free{t}\setminus\{x\}},d} \\
+    &=& L \cup \supp{d}.
+  \end{array}\]
+   {\em Proof of (b):} Let $\mu\in\Fix{L}$ and $d\in\semantic{\sigma}$, then
+   \[\begin{array}{rcl}
+    \psi\,(\mu^\sigma\,d)
+    &=& \semantic{\tj{t}{\sigma'}}\,(\eta[\mu^\sigma\,d/x]) \\
+    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[\mu^\sigma\,d/x]) \\
+    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[d/x])) \\
+    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[d/x])).
+  \end{array}\]
+  Hence we know that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$. We still need to show
+  that {\bf TODO}
+\end{proof}
 
 \noindent Auxiliary functions
 \begin{itemize}
