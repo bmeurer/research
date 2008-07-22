@@ -895,13 +895,12 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
 \end{definition}
 
 \begin{lemma}
-  Let $\sigma \in \SType$, $t \in \Term^\sigma$, $\eta,\hat{\eta} \in \Env_t$. Then
+  Let $\sigma \in \SType$, $t \in \Term^\sigma$, $\eta,\hat{\eta} \in \Env_t$ and $\mu,\hat{\mu}\in\Perm$. Then
+  we have
   \begin{enumerate}
-    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}_{\supp{t, \eta|_{\free{t}}}}$
-    \item $(\eta|_{\free{t}}) = (\hat{\eta}|_{\free{t}})$ implies
-          $(\semantic{\tj{t}{\sigma}}\,\eta) = (\semantic{\tj{t}{\sigma}}\,\hat{\eta})$
-    \item $\mu^\sigma\,(\semantic{\tj{t}{\sigma}}\,\eta) = \semantic{\tj{t}{\sigma}}\,(\mu^\senv\,\eta)$
-          for all $\mu\in\Fix{\supp{t}}$
+    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}_{\supp{\eta|_{\free{t}}}}$
+    \item $\semantic{\tj{t}{\sigma}}\,(\mu^\senv\,\eta) = \hat{\mu}^\sigma\,(\semantic{\tj{t}{\sigma}}\,\hat{\eta})$
+          whenever $(\mu^\senv\,\eta) =_{\free{t}} (\hat{\mu}^\senv\,\hat{\eta})$
   \end{enumerate}
 \end{lemma}
 
@@ -912,34 +911,70 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   Here we have $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
     = \psi:\semantic{\sigma}\to\semantic{\sigma'},
       d \mapsto \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])$.
-  Let $L = \supp{\tabstr{x}{t},\eta|_{\free{\tabstr{x}{t}}}}
-         = \supp{t,\eta|_{\free{t} \setminus \{x\}}}$. In order to prove
+  Let $L = \supp{\eta|_{\free{\tabstr{x}{t}}}}
+         = \supp{\eta|_{\free{t} \setminus \{x\}}}$. In order to prove
   that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$, we have to show
   \begin{enumerate}
     \item[(a)] $\psi\,(\semantic{\sigma}_{L'}) \subseteq \semantic{\sigma'}_{L \cup L'}$ for every $L' \in W$, and
-    \item[(b)] $\psi = \mu^{\sigma'} \circ \psi \circ (\mu^\sigma)^{-1}$ for every $\mu\in\Fix{L}$.
+    \item[(b)] $\psi \circ \mu^\sigma = \mu^{\sigma'} \circ \psi$ for every $\mu\in\Fix{L}$.
   \end{enumerate}
   {\em Proof of (a):} Let $d \in \semantic{\sigma}$. By induction hypothesis we have
   \[\begin{array}{rcl}
     \psi\,d = (\semantic{\tj{t}{\sigma'}}\,(\eta[d/x]))
-    &\in& \semantic{\sigma'}_{\supp{t,(\eta[d/x])|_{\free{t}}}}
+    &\in& \semantic{\sigma'}_{\supp{\eta[d/x]|_{\free{t}}}}
   \end{array}\]
   and we conclude
   \[\begin{array}{rcl}
-    \supp{t,(\eta[d/x])|_{\free{t}}}
-    &=& \supp{t,\eta|_{\free{t}\setminus\{x\}},d} \\
+    \supp{(\eta[d/x])|_{\free{t}}}
+    &=& \supp{\eta|_{\free{t}\setminus\{x\}},d} \\
     &=& L \cup \supp{d}.
   \end{array}\]
    {\em Proof of (b):} Let $\mu\in\Fix{L}$ and $d\in\semantic{\sigma}$, then
    \[\begin{array}{rcl}
     \psi\,(\mu^\sigma\,d)
     &=& \semantic{\tj{t}{\sigma'}}\,(\eta[\mu^\sigma\,d/x]) \\
-    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[\mu^\sigma\,d/x]) \\
     &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[d/x])) \\
-    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[d/x])).
+    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[d/x])) \\
+    &=& \mu^{\sigma'}\,(\psi\,d).
   \end{array}\]
-  Hence we know that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$. We still need to show
-  that {\bf TODO}
+  Hence we know that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$. Now in order to prove that
+  \[\begin{array}{rcl}
+    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)
+    &=& \hat{\mu}^{\ttarrow{\sigma}{\sigma'}}\,
+      (\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta})
+  \end{array}\]
+  whenever $(\mu^\senv\,\eta) =_{\free{t}\setminus\{x\}} (\hat{\mu}^\senv\,\hat{\eta})$
+  it is sufficient to show that
+  \begin{enumerate}
+    \item[(c)] $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+                = \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta}$ whenever
+               $\eta =_{\free{t}\setminus\{x\}} \hat{\eta}$, and
+    \item[(d)] $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)
+                = \mu^{\ttarrow{\sigma}{\sigma'}}\,
+                  (\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta)$.
+  \end{enumerate}
+  The proof of (c) is well-known and standard. For (d), let $d \in \semantic{\sigma}$, then
+  \[\begin{array}{rcl}
+    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)\,d
+    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[d/x]) \\
+    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
+    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
+    &=& \mu^{\sigma'}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta\,
+          ((\mu^\sigma)^{-1}\,d)) \\
+    &=& \mu^{\ttarrow{\sigma}{\sigma'}}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta)\,d.
+  \end{array}\]
+%  The proof of the
+%  second property is also pretty much straightforward. Again, let $d \in \semantic{\sigma}$, then
+%  \[\begin{array}{rcl}
+%    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)\,d
+%    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[d/x]) \\
+%    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
+%    &=& \hat{\mu}^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\hat{\eta}[(\hat{\mu}^\sigma)^{-1}\,d/x])) \\
+%    &=& \hat{\mu}^{\sigma'}\,((\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta})\,
+%                        ((\hat{\mu}^\sigma)^{-1}\,d) \\
+%    &=& (\hat{\mu}^{\ttarrow{\sigma}{\sigma'}}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,
+%                        \hat{\eta}))\,d.
+%  \end{array}\]
 \end{proof}
 
 \noindent Auxiliary functions
