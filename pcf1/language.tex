@@ -28,11 +28,11 @@
 \include{macros}
 
 % TODO
-\newcommand{\CExp}{\nstyle{CExp}}
-\newcommand{\CVal}{\nstyle{CVal}}
-\newcommand{\Conf}{\nstyle{Conf}}
-\newcommand{\Con}{\nstyle{Con}}
-\newcommand{\Sto}{\nstyle{Sto}}
+\newcommand{\CExp}{\sstyle{CExp}}
+\newcommand{\CVal}{\sstyle{CVal}}
+\newcommand{\Conf}{\sstyle{Conf}}
+\newcommand{\Con}{\sstyle{Con}}
+\newcommand{\Sto}{\sstyle{Sto}}
 \newcommand{\scon}{\nstyle{con}}
 \newcommand{\sexp}{\nstyle{exp}}
 \newcommand{\ssto}{\nstyle{sto}}
@@ -199,55 +199,6 @@ include {\em dangling references} to unallocated store cells.
 It is easy to see that both the small and the big step semantics are well defined
 with respect to configurations. We assume that type safety holds for the semantics
 (see Pierce, {\bf TODO}).
-
-%\begin{lemma} \label{lemma:Small_steps_and_graph_of_stores}
-%  Let $\tau\in\Type$, $e\in\CExp^\tau\setminus\Val$, $s,\hat{s}\in\Store_{\locns{e}}$.
-%  If $\grph{s} \subseteq \grph{\hat{s}}$ then there exist $e',\hat{e}'\in\CExp^\tau$
-%  and $s',\hat{s}'\in\Store$ such that
-%  \begin{enumerate}
-%    \item $(e,s) \to (e',s')$,
-%    \item $(e,\hat{s}) \to (\hat{e}',\hat{s}')$ and
-%    \item $\grph{s'} \subseteq \grph{\hat{s}'}$.
-%  \end{enumerate}
-%\end{lemma}
-%
-%\begin{proof}
-%  By structural induction on $e$. We consider only the case for the application,
-%  hence let $e = \app{e_1}{e_2}$.
-%  \begin{itemize}
-%    \item $e_1 \not\in \Val$, then by induction hypothesis, we have
-%          $e_1',\hat{e_1}'\in\CExp^\tau$ and $s',\hat{s}'\in\Store$ such that
-%          $(e_1,s) \to (e_1',s')$, $(e_1,\hat{s}) \to (\hat{e_1}',\hat{s}')$
-%          and $\grph{s'} \subseteq \grph{\hat{s}'}$. With \RN{App-Left} we
-%          conclude $(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')$ and
-%          $(\app{e_1}{e_2},\hat{s}) \to (\app{\hat{e_1}'}{e_2},\hat{s}')$.
-%
-%    \item $e_1 \in \Val, e_2 \not\in \Val$ analogue to the above with \RN{App-Right}.
-%
-%    \item $e_1 = \cref, e_2=v\in \Val$, choose $e' = \hat{e}' = l \not\in \dom{\hat{s}} \subseteq \dom{s}$
-%          and thereby $(e,s) \to (l,s[v/l])$ and $(e,\hat{s}) \to (l,\hat{s}[v/l])$ with \RN{Ref} and
-%          $\grph{s'} = \grph{s} \cup \{(l,v)\} \subseteq \grph{\hat{s}} \cup \{(l,v)\} = \grph{\hat{s}'}$.
-%
-%    \item $e_1 = (\app{\assign}{l}), e_2 = v \in \Val$ where $l \in \dom{s}\cap\dom{\hat{s}}$, then
-%          $(e,s) \to (\unit,s[v/l])$ and $(e,\hat{s}) \to (\unit,\hat{s}[v/l])$ with \RN{Assign} and
-%          $\grph{s[v/l]}=\grph{s}\cup\{(l,v)\} \subseteq \grph{\hat{s}}\cup\{(l,v)\}=\grph{\hat{s}[v/l]}$.
-%  \end{itemize}
-%  The remaining cases are quite similar.
-%\end{proof}
-%
-%\begin{corollary}
-%  If $(e,s)$ has a terminating computation and $\grph{s} \subseteq \grph{s_1}$ then
-%  there exist $v\in\CVal^\tau$, $s',s_1'\in\Store$ with
-%  \begin{enumerate}
-%    \item $(e,s) \xrightarrow* (v,s')$
-%    \item $(e,s_1) \xrightarrow* (v,s_1')$
-%    \item $\grph{s'} \subseteq \grph{s_1'}$
-%  \end{enumerate}
-%\end{corollary}
-%
-%\begin{proof}
-%  Follows immediately with lemma~\ref{lemma:Small_steps_and_graph_of_stores}.
-%\end{proof}
 
 %%
 %% Permutability
@@ -490,22 +441,23 @@ and $s' \sqsubseteq \hat{s}'$.
       \GRal \neg p
 \GRend\]
 
-We define 
-\begin{itemize}
-  \item the set $\SType$ of all {\em static types} $\sigma$,
-  \item the set $\PType$ of all {\em predicate types} $\pi$ and
-  \item the set $\LType$ of all {\em logical types} $\theta$
-\end{itemize}
-by the following grammars:
+The set $\LType$ of all {\em logical types} $\theta$ is defined
+by the following grammar
 \[\GRbeg
-  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2}
-         \GRnl
-
-  \pi \GRis \tassn \GRmid \ttarrow{\sigma}{\pi}
-      \GRnl
-
-  \theta \GRis \sigma \GRmid \pi
+  \theta \GRis \tau \GRmid \tassn \GRmid \ttarrow{\theta_1}{\theta_2}.
 \GRend\]
+Notable subsets of $\LType$ are
+\begin{itemize}
+  \item the set $\SType$ of all {\em static types} $\sigma$, given by
+        \[\GRbeg
+          \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2},
+        \GRend\]
+
+  \item and the set $\PType$ of all {\em predicate types} $\pi$, given by
+        \[\GRbeg
+          \pi \GRis \tassn \GRmid \ttarrow{\theta}{\pi}.
+        \GRend\]
+\end{itemize}
 
 
 %%
@@ -643,11 +595,11 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
     \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Fix{L}.\,\phi = \phi \circ (\mu^\ssto)^{-1}\}$ \\
           $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\ssto)^{-1}$
 
-    \item $D^{\ttarrow{\sigma}{\theta}}_L = \{ \psi: D^\sigma \to D^\theta\,|\,
-                          \forall L'\in W.\,\psi\,(D^\sigma_{L'}) \subseteq D^\theta_{L \cup L'} \\
-                          \hspace*{4.2cm} \wedge \forall \mu\in\Fix{L}.\,\psi=\mu^\theta\circ\psi\circ(\mu^\sigma)^{-1}\}$\\
-          $\I^{\ttarrow{\sigma}{\theta}}(\mu): D^{\ttarrow{\sigma}{\theta}} \to D^{\ttarrow{\sigma}{\theta}},
-                                            \psi \mapsto \I^\theta(\mu) \circ \psi \circ (\I^\sigma(\mu))^{-1}$
+    \item $D^{\ttarrow{\theta_1}{\theta_2}}_L = \{ \psi: D^{\theta_1} \to D^{\theta_2}\,|\,
+              \forall L'\in W.\,\psi\,(D^{\theta_1}_{L'}) \subseteq D^{\theta_2}_{L \cup L'} \\
+              \hspace*{4.5cm} \wedge \forall \mu\in\Fix{L}.\,\psi\circ\mu^{\theta_1}=\mu^{\theta_2}\circ\psi\}$\\
+          $\I^{\ttarrow{\theta_1}{\theta_2}}(\mu):D^{\ttarrow{\theta_1}{\theta_2}}\to D^{\ttarrow{\theta_1}{\theta_2}},
+                              \psi \mapsto \I^{\theta_2}(\mu) \circ \psi \circ (\I^{\theta_1}(\mu))^{-1}$
   \end{itemize}
 \end{definition}
 
@@ -691,10 +643,6 @@ $\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
   \[\begin{array}{rcl}
     ((\mu^{-1})^\theta \circ \mu^\theta)\,\semantic{\theta}_L &\subseteq& \semantic{\theta}_L.
   \end{array}\]
-%  \[\xymatrix{
-%    \semantic{\theta}_L \ar@/^1pc/[r]^{\mu^\theta} &
-%    \semantic{\theta}_{\mu(L)} \ar@/^1pc/[l]^{(\mu^{-1})^\theta}
-%  }\]
   Given these results it is then sufficient to prove that $(\mu^\theta|\semantic{\theta}_L)$ is
   well-defined and $\mu^\theta \circ (\mu^{-1})^\theta$ is the identity on $\semantic{\theta}$.
   \begin{itemize}
@@ -712,7 +660,7 @@ $\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
 
           Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi = (\mu^{-1})^\ssto(\mu^\ssto\,\phi) = \phi$.
 
-    \item For $\mu^{\ttarrow{\sigma}{\theta}}$ the statement follows immediately using the induction hypothesis.
+    \item For $\mu^{\ttarrow{\theta_1}{\theta_2}}$ the statement follows immediately using the induction hypothesis.
 %    \item Let $\psi\in\semantic{\ttarrow{\sigma}{\theta}}_L$, then
 %          \begin{itemize}
 %            \item $d \in \semantic{\sigma}_{L'}, L'\in W \\
@@ -850,11 +798,11 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
 
 {\bf TODO:} Type system for the assertion language. Define $\Term^\sigma$, $\Assn^\pi$ (and make sure
 to assert that expressions and values do not contain locations, i.e. $\locns{e} = \locns{v} = \emptyset$
-for the appropriate rules). Define $\supp{t} = \locns{t}$ for the current soundness lemma below.
+for the appropriate rules).
 
 \begin{definition}[Environment] \label{definition:Environment}
-  An {\em environment} is a partial function $\eta: \Var \pto \bigcup_{\theta\in\LType} \semantic{\theta}$ with
-  a finite domain and $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for every $\theta \in \LType$. $\Env$ denotes
+  An {\em environment} is a partial, finite function $\eta: \Var \pto \bigcup_{\theta\in\LType} \semantic{\theta}$
+  where $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for every $\theta \in \LType$. $\Env$ denotes
   the set of all environments, $\Env_X = \{\eta\in\Env\,|\,X \subseteq \dom{\eta}\}$ denotes the set of
   all environments whose domains include at least $X \subseteq \Var$.
 \end{definition}
@@ -963,18 +911,6 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
           ((\mu^\sigma)^{-1}\,d)) \\
     &=& \mu^{\ttarrow{\sigma}{\sigma'}}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta)\,d.
   \end{array}\]
-%  The proof of the
-%  second property is also pretty much straightforward. Again, let $d \in \semantic{\sigma}$, then
-%  \[\begin{array}{rcl}
-%    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)\,d
-%    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[d/x]) \\
-%    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
-%    &=& \hat{\mu}^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\hat{\eta}[(\hat{\mu}^\sigma)^{-1}\,d/x])) \\
-%    &=& \hat{\mu}^{\sigma'}\,((\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta})\,
-%                        ((\hat{\mu}^\sigma)^{-1}\,d) \\
-%    &=& (\hat{\mu}^{\ttarrow{\sigma}{\sigma'}}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,
-%                        \hat{\eta}))\,d.
-%  \end{array}\]
 \end{proof}
 
 \noindent Auxiliary functions
@@ -1011,7 +947,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
             \false    & \text{otherwise}
           \ecase$
   
-  \item $\Exists: \semantic{\theta_1} \to (\semantic{\theta_2} \to \semantic{\tassn}) \to \semantic{\tassn}$ \\[1ex]
+  \item $\Exists: \semantic{\theta_1} \to \semantic{\ttarrow{\theta_2}{\tassn}} \to \semantic{\tassn}$ \\[1ex]
         $\Exists\,d_1\,\psi\,s =
           \bcase
             \uparrow  & \text{if } s \not\in \dom{\psi\,d_2}
@@ -1035,8 +971,8 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \semantic{\tj{\app{p}{t}}{\pi}}\,\eta
     &=& (\semantic{\tj{p}{\ttarrow{\sigma}{\pi}}}\,\eta)\,
         (\semantic{\tj{t}{\sigma}}\,\eta) \\
-  \semantic{\tj{\tabstr{x^\sigma}{p}}{\ttarrow{\sigma}{\pi}}}\,\eta
-    &=& \psi: \semantic{\sigma} \to \semantic{\pi} \\
+  \semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\pi}}}\,\eta
+    &=& \psi: \semantic{\theta} \to \semantic{\pi} \\
     & & \psi\,d = \semantic{\tj{p}{\pi}}\,(\eta[d/x]) \\
   \semantic{\tj{t_1 \mapsto t_2}{\tassn}}\,\eta 
     &=& \Cont\,(\semantic{\tj{t_1}{\tref{\tau}}}\,\eta)\,(\semantic{\tj{t_2}{\tau}}\,\eta) \\
@@ -1047,9 +983,12 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \semantic{\tj{\neg p}{\tassn}}\,\eta 
     &=& \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta) \\
   \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
-    &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi \text{ with} \\
-    & & \psi: \semantic{\theta} \to \semantic{\tassn} \\
-    & & \psi\,d = \semantic{\tj{p}{\tassn}}\,(\eta[d/x])
+  &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,
+               (\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\tassn}}}\,\eta) \\
+%  \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
+%    &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi \text{ with} \\
+%    & & \psi: \semantic{\theta} \to \semantic{\tassn} \\
+%    & & \psi\,d = \semantic{\tj{p}{\tassn}}\,(\eta[d/x])
 \end{array}\]
 
 \noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
