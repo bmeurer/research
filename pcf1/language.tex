@@ -38,7 +38,7 @@
 \newcommand{\ssto}{\nstyle{sto}}
 \newcommand{\senv}{\nstyle{env}}
 \newcommand{\z}{\nstyle{int}}
-\newcommand{\DEF}{\nstyle{DEF}}
+\newcommand{\DEF}{\sstyle{DEF}}
 \newcommand{\id}{\nstyle{id}}
 \newcommand{\I}{\mathcal{I}}
 \newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
@@ -170,7 +170,7 @@ Let $(W,\subseteq) = (\powersetfin{Loc},\subseteq)$ be the partial order of poss
 \end{definition}
 
 We thereby require stores to be well-typed and closed by definition, i.e. we don't permit {\em dangling
-references} within stores.
+references} within stores. Obviously $\Store_{L'} \subseteq \Store_L$ if $L \subseteq L'$.
 
 \begin{definition}[Configuration]
   Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
@@ -199,6 +199,7 @@ include {\em dangling references} to unallocated store cells.
 It is easy to see that both the small and the big step semantics are well defined
 with respect to configurations. We assume that type safety holds for the semantics
 (see Pierce, {\bf TODO}).
+
 
 %%
 %% Permutability
@@ -486,13 +487,14 @@ Notable subsets of $\LType$ are
 Since a store $s\in\Store_L$ is always closed by definition, it is obvious that
 $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
 
-\begin{lemma}
-  For all $L,L'\in W$ with $L \subseteq L'$ and $s,s'\in\Store_{L'}$ we have:
+\begin{lemma}[Reachability] \label{lemma:Reachability}
+  Let $L,L'\in W$ with $L \subseteq L'$ and $s,s'\in\Store_{L'}$.
   \begin{enumerate}
-    \item $\Store_{L'} \subseteq \Store_L$
     \item $\reach{L}{s} \subseteq \reach{L'}{s}$
-    \item If $\reach{L'}{s} = \reach{L'}{s'}$ and $s(l) = s'(l)$ for every $l\in\reach{L'}{s}$,
-          then $\reach{L}{s} = \reach{L}{s'}$.
+    \item $\reach{L}{s} = \reach{\reach{L}{s}}{s}$
+    \item $\reach{L \cup L'}{s} = \reach{L}{s} \cup \reach{L'}{s}$
+    \item $\reach{L}{s} = \reach{L}{s'}$ whenever $\reach{L'}{s} = \reach{L'}{s'}$
+          and $s =_{\reach{L'}{s}} s'$
   \end{enumerate}
 \end{lemma}
 
@@ -503,11 +505,8 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
 \begin{definition}[$L$-equivalence, $L$-definability]
   Given a world $L \in W$ we define:
   \begin{enumerate}
-    \item Two stores $s,s'\in\Store_L$ are {\em $L$-equivalent}, denoted $s \equiv_L s'$, if
-          \begin{itemize}
-            \item $\reach{L}{s} = \reach{L}{s'}$ and
-            \item $\forall l\in\reach{s}{L}.\,s\,l=s'\,l$.
-          \end{itemize}
+    \item Two stores $s,s'\in\Store_L$ are called {\em $L$-equivalent}, denoted $s \equiv_L s'$, if
+          $\reach{L}{s} = \reach{L}{s'}$ and $s =_{\reach{L}{s}} s'$.
 
     \item A predicate $\phi:\Store \pto \Bool$ with $\Store_L = \dom{\phi}$ is said to be
           {\em $L$-definable} if $\app{\phi}{s} = \app{\phi}{s'}$ for all stores
@@ -516,22 +515,35 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
   \end{enumerate}
 \end{definition}
 
-\begin{lemma}[$L$-definability] \label{lemma:L_definability}
-  Let $L \in W$, $\phi \in \DEF_L$ and $s,s' \in \Store_L$. $s \sqsubseteq s'$ implies
-  $\phi\,s = \phi\,s'$.
+\begin{lemma}[$L$-equivalence, $L$-definability] \label{lemma:L_equivalence_and_L_definability}
+  Let $L \in W$ and $s,s' \in \Store_L$.
+  \begin{enumerate}
+    \item $s \equiv_{L} s'$ implies $s \equiv_{L'} s'$ for all $L' \subseteq \reach{L}{s}$
+    \item $s \sqsubseteq s'$ implies $\phi\,s = \phi\,s'$ for every $\phi \in \DEF_L$
+  \end{enumerate}
 \end{lemma}
 
-\begin{proof}
-  Since $\phi \in \DEF_L$ we have $\phi\,s = \phi\,s'$ for all $s,s'$ with $s \equiv_L s'$. Hence
-  it suffices to show that $s \sqsubseteq s'$ implies $s \equiv_L s'$.
-  \[\begin{array}{rcl}
-    s \sqsubseteq s'
-    &\Rightarrow& \grph{s} \subseteq \grph{s'} \\
-    &\Rightarrow& \dom{s} \subseteq \dom{s'} \wedge \forall l\in\dom{s}.\,s\,l = s'\,l \\
-    &\Rightarrow& \reach{s}{L} = \reach{s'}{L} \wedge \forall l\in\reach{s}{L}.\,s\,l = s'\,l \\
-    &           & \text{by a trivial induction since $\reach{s}{L} \subseteq \dom{s}$} \\
-    &\Rightarrow& s \equiv_L s'
-  \end{array}\]
+\begin{proof} \
+  \begin{enumerate}
+    \item Let $L' \subseteq \reach{L}{s}$. Then lemma~\ref{lemma:Reachability} implies
+          \[\begin{array}{rcl}
+            \reach{L'}{s} &\subseteq& \reach{\reach{L}{s}}{s} \\
+                          &=&         \reach{L}{s}
+          \end{array}\]
+          and therefore $s\,l = s'\,l$ for every $l \in \reach{L'}{s} \subseteq \reach{L}{s}$. The
+          proof of $\reach{L'}{s} = \reach{L'}{s'}$ is a trivial induction then.
+
+    \item Since $\phi \in \DEF_L$ we have $\phi\,s = \phi\,s'$ for all $s,s'$ with $s \equiv_L s'$. Hence
+          it suffices to show that $s \sqsubseteq s'$ implies $s \equiv_L s'$.
+          \[\begin{array}{rcl}
+            s \sqsubseteq s'
+            &\Rightarrow& \grph{s} \subseteq \grph{s'} \\
+            &\Rightarrow& \dom{s} \subseteq \dom{s'} \wedge \forall l\in\dom{s}.\,s\,l = s'\,l \\
+            &\Rightarrow& \reach{L}{s} = \reach{L}{s'} \wedge \forall l\in\reach{L}{s}.\,s\,l = s'\,l \\
+            &           & \text{by a trivial induction since $\reach{L}{s} \subseteq \dom{s}$} \\
+            &\Rightarrow& s \equiv_L s'
+          \end{array}\]
+  \end{enumerate}
 \end{proof}
 
 \begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
@@ -942,7 +954,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \item $\Disj: \semantic{\theta_1} \to \semantic{\theta_2} \to \semantic{\tassn}$ \\[1ex]
         $\Disj\,d_1\,d_2\,s =
           \bcase
-            \uparrow  & \text{if } \supp{d_1,d_2} \not\subseteq \dom{s} \\
+            \uparrow  & \text{if } \supp{d_1,d_2} \nsubseteq \dom{s} \\
             \true     & \text{if } \reach{d_1}{s} \cap \reach{d_2}{s} = \emptyset \\
             \false    & \text{otherwise}
           \ecase$
@@ -950,13 +962,73 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \item $\Exists: \semantic{\theta_1} \to \semantic{\ttarrow{\theta_2}{\tassn}} \to \semantic{\tassn}$ \\[1ex]
         $\Exists\,d_1\,\psi\,s =
           \bcase
-            \uparrow  & \text{if } s \not\in \dom{\psi\,d_2}
-                        \text{ for some }d_2 \in \bigcup_{L'\subseteq\reach{d_1}{s}}\semantic{\theta_2}_{L'} \\
+            \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{s} \\
             \true     & \text{if } \psi\,d_2\,s = \true
-                        \text{ for some } d_2 \in \bigcup_{L'\subseteq\reach{d_1}{s}}\semantic{\theta_2}_{L'} \\
+                        \text{ for some } d_2 \in \bigcup_{L\subseteq\reach{d_1}{s}}\semantic{\theta_2}_{L} \\
             \false    & \text{otherwise}
           \ecase$
 \end{itemize}
+
+\begin{lemma}
+  Let $L_1,L_2 \in W$.
+  \begin{itemize}
+    \item $\Neg\,\semantic{\tassn}_{L_1} \subseteq \semantic{\tassn}_{L_1}$
+    \item $\Or\,\semantic{\tassn}_{L_1}\,\semantic{\tassn}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
+    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau} \subseteq \semantic{\tassn}_{L_1}$
+    \item $\Disj\,\semantic{\theta_1}_{L_1}\,\semantic{\theta_2}_{L_2} \subseteq \semantic{\tassn}_{L_1\cup L_2}$
+    \item $\Exists\,\semantic{\theta_1}_{L_1}\,\semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}
+            \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
+  \end{itemize}
+\end{lemma}
+
+\begin{proof}
+  We prove only the first and the last property of the lemma. The proofs for the remaining cases are
+  similar to the ones considered below.
+  \begin{itemize}
+    \item Let $\phi_1 \in \semantic{\tassn}_{L_1}$, $\phi = \Neg\,\phi_1$. Then
+          $\dom{\phi} = \dom{\phi_1} = \Store_{L_1}$ and for every two $s,s'\in\Store_{L_1}$
+          with $s \equiv_{L_1} s'$ we have
+          \[\begin{array}{rcl}
+            \phi\,s = \true
+            &\text{iff}&
+            \phi_1\,s = \false \\
+            &\text{iff}&
+            \phi_1\,s' = \false \\
+            &\text{iff}&
+            \phi\,s' = \true
+          \end{array}\]
+          and thereby $\phi\in\DEF_{L_1}$. Now let $\mu \in \Fix{L_1}$, then we also have
+          \[\begin{array}{rcl}
+            \phi\,s = \true
+            &\text{iff}&
+            \phi_1\,s = \false \\
+            &\text{iff}&
+            \phi_1\,((\mu^\ssto)^{-1}\,s) = \false \\
+            &\text{iff}&
+            \phi\,((\mu^\ssto)^{-1}\,s) = \true,
+          \end{array}\]
+          hence we conclude $\phi \in \semantic{\tassn}_{L_1}$.
+
+    \item Let $d_1 \in \semantic{\theta_1}_{L_1}$,
+          $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}$ and
+          $\phi = (\Exists\,d_1\,\psi)$. It follows immediately that
+          $\dom{\phi} = \Store_{L_1 \cup L_2}$. So let $s,s' \in \Store_{L_1 \cup L_2}$ with
+          $s \equiv_{L_1 \cup L_2} s'$ and further assume that $\phi\,s = \true$. Then we know that
+          $\psi\,d_2\,s = \true$ for some $d_2 \in \semantic{\theta_2}_L$,
+          $L \subseteq \reach{L_1}{s}$, and thereby
+          $(\psi\,d_2) \in \semantic{\tassn}_{L \cup L_2} \subseteq \DEF_{L \cup L_2}$.
+          Since $s \equiv_{L_1\cup L_2} s'$ we also have $s \equiv_{L \cup L_2} s'$ by
+          lemma~\ref{lemma:L_equivalence_and_L_definability}, and so we conclude
+          $\psi\,d_2\,s' = \true$.
+
+          Furtheron let $\mu \in \Fix{L_1 \cup L_2}$ and $s \in \Store_{L_1 \cup L_2}$ with $\phi\,s = \true$.
+          Then again, there exist $d_2 \in \semantic{\theta_2}_L$, $L \subseteq \reach{L_1}{s}$ such
+          that $\psi\,d_2\,s=\true$. But then there also exist $d_2'\in\semantic{\theta_2}_{L'}$,
+          $L' \subseteq \reach{L_1}{(\mu^\ssto)^{-1}\,s}$ such that $\psi\,(\mu^{\theta_2}\,d_2')\,s=\true$.
+          Since $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}$ we conclude
+          $\psi\,d_2'\,((\mu^\ssto)^{-1}\,s) = \true$ and so $\phi\,((\mu^\ssto)^{-1}\,s) = \true$.
+  \end{itemize}
+\end{proof}
 
 \noindent The {\em meaning function} $\semantic{\tj{p}{\pi}}: \Env_p \to \semantic{\pi}$.
 \[\begin{array}{rcl}
@@ -965,8 +1037,9 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \semantic{\tj{h}{\tassn}}\,\eta
     &=& \phi:\Store \pto \Bool \\
     & & \phi\,s = \bcase
-                    \true   & \text{if } \eta \models h \\
-                    \false  & \text{otherwise}
+                    \uparrow  & \text{if } s \not\in \Store_L \\
+                    \true     & \text{if } \eta \models h \\
+                    \false    & \text{otherwise}
                   \ecase \\
   \semantic{\tj{\app{p}{t}}{\pi}}\,\eta
     &=& (\semantic{\tj{p}{\ttarrow{\sigma}{\pi}}}\,\eta)\,
@@ -985,10 +1058,6 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
   &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,
                (\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\tassn}}}\,\eta) \\
-%  \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
-%    &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,\psi \text{ with} \\
-%    & & \psi: \semantic{\theta} \to \semantic{\tassn} \\
-%    & & \psi\,d = \semantic{\tj{p}{\tassn}}\,(\eta[d/x])
 \end{array}\]
 
 \noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
@@ -1005,6 +1074,16 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \item $\eta \models \qex{x^\theta}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\theta}$
 \end{itemize}
 
+
+\begin{lemma}
+  Let $\pi \in \PType$, $p \in \Assn^\pi$, $\eta,\hat{\eta} \in \Env_p$ and $\mu,\hat{\mu}\in\Perm$. Then
+  we have
+  \begin{enumerate}
+    \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}_{\supp{\eta|_{\free{p}}}}$
+    \item $\semantic{\tj{p}{\pi}}\,(\mu^\senv\,\eta) = \hat{\mu}^\pi\,(\semantic{\tj{p}{\pi}}\,\hat{\eta})$
+          whenever $(\mu^\senv\,\eta) =_{\free{t}} (\hat{\mu}^\senv\,\hat{\eta})$
+  \end{enumerate}
+\end{lemma}
 
 \begin{lemma} \
   \begin{enumerate}
