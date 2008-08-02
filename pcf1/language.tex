@@ -670,7 +670,8 @@ $\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
           $\phi\in\DEF_L$ we also have $\phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\ssto)^{-1}$,
           which easily transforms to $\phi\circ (\mu^\ssto)^{-1} = \phi \circ (\mu^\ssto)^{-1} \circ (\bar{\mu}^\ssto)^{-1}$.
 
-          Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi = (\mu^{-1})^\ssto(\mu^\ssto\,\phi) = \phi$.
+          Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi\,s
+            = \phi\,((\mu^{-1})^\ssto\,(\mu^\ssto\,s)) = \phi$.
 
     \item For $\mu^{\ttarrow{\theta_1}{\theta_2}}$ the statement follows immediately using the induction hypothesis.
 %    \item Let $\psi\in\semantic{\ttarrow{\sigma}{\theta}}_L$, then
@@ -854,7 +855,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \end{array}\]
 \end{definition}
 
-\begin{lemma}
+\begin{lemma} \label{lemma:meaning_function_of_t_is_well_defined}
   Let $\sigma \in \SType$, $t \in \Term^\sigma$, $\eta,\hat{\eta} \in \Env_t$ and $\mu,\hat{\mu}\in\Perm$. Then
   we have
   \begin{enumerate}
@@ -946,7 +947,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \item $\Cont: \semantic{\tref{\tau}} \to \semantic{\tau} \to \semantic{\tassn}$ \\[1ex]
         $\Cont\,l\,v\,s =
           \bcase
-            \uparrow  & \text{if } l \not\in \dom{s} \\
+            \uparrow  & \text{if } \supp{l,v} \nsubseteq \dom{s} \\
             \true     & \text{if } s\,l = v \\
             \false    & \text{otherwise}
           \ecase$
@@ -974,7 +975,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \begin{itemize}
     \item $\Neg\,\semantic{\tassn}_{L_1} \subseteq \semantic{\tassn}_{L_1}$
     \item $\Or\,\semantic{\tassn}_{L_1}\,\semantic{\tassn}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau} \subseteq \semantic{\tassn}_{L_1}$
+    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
     \item $\Disj\,\semantic{\theta_1}_{L_1}\,\semantic{\theta_2}_{L_2} \subseteq \semantic{\tassn}_{L_1\cup L_2}$
     \item $\Exists\,\semantic{\theta_1}_{L_1}\,\semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}
             \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
@@ -1022,9 +1023,11 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
           $\psi\,d_2\,s' = \true$.
 
           Furtheron let $\mu \in \Fix{L_1 \cup L_2}$ and $s \in \Store_{L_1 \cup L_2}$ with $\phi\,s = \true$.
-          Then again, there exist $d_2 \in \semantic{\theta_2}_L$, $L \subseteq \reach{L_1}{s}$ such
-          that $\psi\,d_2\,s=\true$. But then there also exist $d_2'\in\semantic{\theta_2}_{L'}$,
-          $L' \subseteq \reach{L_1}{(\mu^\ssto)^{-1}\,s}$ such that $\psi\,(\mu^{\theta_2}\,d_2')\,s=\true$.
+          Again there exist $d_2 \in \semantic{\theta_2}_L$, $L \subseteq \reach{L_1}{s}$ such
+          that $\psi\,d_2\,s=\true$. Then
+          $d_2' = ((\mu^{\theta_2})^{-1}\,d_2)\in\semantic{\theta_2}_{L'}$ and
+          $L' = (\mu^{-1}\,L) \subseteq \reach{L_1}{(\mu^\ssto)^{-1}\,s}$ exist such that
+          $\psi\,(\mu^{\theta_2}\,d_2')\,s=\true$.
           Since $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}$ we conclude
           $\psi\,d_2'\,((\mu^\ssto)^{-1}\,s) = \true$ and so $\phi\,((\mu^\ssto)^{-1}\,s) = \true$.
   \end{itemize}
@@ -1037,7 +1040,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \semantic{\tj{h}{\tassn}}\,\eta
     &=& \phi:\Store \pto \Bool \\
     & & \phi\,s = \bcase
-                    \uparrow  & \text{if } s \not\in \Store_L \\
+                    \uparrow  & \text{if } \supp{\eta|_{\free{h}}} \nsubseteq \dom{s} \\
                     \true     & \text{if } \eta \models h \\
                     \false    & \text{otherwise}
                   \ecase \\
@@ -1075,23 +1078,34 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
 \end{itemize}
 
 
-\begin{lemma}
-  Let $\pi \in \PType$, $p \in \Assn^\pi$, $\eta,\hat{\eta} \in \Env_p$ and $\mu,\hat{\mu}\in\Perm$. Then
-  we have
+\begin{lemma} \label{lemma:meaning_function_of_p_is_well_defined}
+  Let $\mu,\hat{\mu}\in\Perm$.
   \begin{enumerate}
-    \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}_{\supp{\eta|_{\free{p}}}}$
-    \item $\semantic{\tj{p}{\pi}}\,(\mu^\senv\,\eta) = \hat{\mu}^\pi\,(\semantic{\tj{p}{\pi}}\,\hat{\eta})$
-          whenever $(\mu^\senv\,\eta) =_{\free{t}} (\hat{\mu}^\senv\,\hat{\eta})$
+    \item Let $\pi \in \PType$, $p \in \Assn^\pi$ and $\eta,\hat{\eta} \in \Env_p$ with
+          $(\mu^\senv\,\eta) =_{\free{t}} (\hat{\mu}^\senv\,\hat{\eta})$, then
+          \begin{enumerate}
+            \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}_{\supp{\eta|_{\free{p}}}}$
+            \item $\semantic{\tj{p}{\pi}}\,(\mu^\senv\,\eta) = \hat{\mu}^\pi\,(\semantic{\tj{p}{\pi}}\,\hat{\eta})$
+          \end{enumerate}
+
+    \item For every $h \in \Formula$ and all $\eta,\hat{\eta}\in\Env_h$ with 
+          $(\mu^\senv\,\eta) =_{\free{h}} (\hat{\mu}^\senv\,\hat{\eta})$ we have
+          $(\mu^\senv\,\eta)\models h$ iff $\hat{\eta}\models h$.
   \end{enumerate}
 \end{lemma}
 
-\begin{lemma} \
+\begin{theorem} \
   \begin{enumerate}
     \item Let $t \in\Term$, $\sigma\in\SType$ and $\eta\in\Env_t$, then
           $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}$.
     \item Let $p \in\Assn$, $\pi\in\PType$ and $\eta\in\Env_p$, then
           $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$.
   \end{enumerate}
-\end{lemma}
+\end{theorem}
+
+\begin{proof}
+  Immediate consequence of lemma~\ref{lemma:meaning_function_of_t_is_well_defined}
+  and lemma~\ref{lemma:meaning_function_of_p_is_well_defined}.
+\end{proof}
 
 \end{document}
