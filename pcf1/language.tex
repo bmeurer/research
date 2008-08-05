@@ -276,7 +276,7 @@ for all $\mu\in\Perm$ and $s\in\Store$. Obviously $\mu^\scon$ is also well-defin
   Let $\mu,\hat{\mu}\in\Perm$, $\gamma\in\Gamma$ and $d \in D^\gamma$, then
   \begin{enumerate}
     \item $\supp{\mu^\gamma\,d} = \mu\,(\supp{d})$
-    \item $(\mu|\supp{d}) = (\hat{\mu}|\supp{d})$ implies $\mu^\gamma\,d = \hat{\mu}^\gamma\,d$
+    \item $\mu =_{\supp{d}} \hat{\mu}$ implies $\mu^\gamma\,d = \hat{\mu}^\gamma\,d$
   \end{enumerate}
 \end{lemma}
 %
@@ -713,8 +713,10 @@ $\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
 
 \begin{lemma} \label{lemma:Permutations_and_semantic_domains}
   Let $\mu,\hat{\mu}\in\Perm$, $\theta\in\LType$ and $d \in \semantic{\theta}$, then
-  $\mu^\theta\,d = \hat{\mu}^\theta\,d$ if
-  $(\mu|\supp{d}) = (\hat{\mu}|\supp{d})$.
+  \begin{enumerate}
+    \item $\supp{\mu^\theta\,d} = \mu\,(\supp{d})$
+    \item $\mu =_{\supp{d}} \hat{\mu}$ implies $\mu^\theta\,d = \hat{\mu}^\theta\,d$
+  \end{enumerate}
 \end{lemma}
 
 \begin{proof}
