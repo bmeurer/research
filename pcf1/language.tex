@@ -783,8 +783,8 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
 
             \item[`$\Leftarrow$']
                   Let $s \in \Store_L$ with $\phi\,s = \true$. Then we are able to construct a store $\hat{s}\in\Store_{L'}$
-                  with $s \sqsubseteq \hat{s}$, and by lemma~\ref{lemma:L_definability} we also have $\phi\,\hat{s}=\true$
-                  then.
+                  with $s \sqsubseteq \hat{s}$, and by lemma~\ref{lemma:L_equivalence_and_L_definability}
+                  we also have $\phi\,\hat{s}=\true$ then.
 
                   Since $(e,\hat{s})$ is a well-typed configuration, there must be atleast one computation such that
                   $(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ for which, by assumption, $\psi\,v\,\hat{s}'=\true$ holds.
@@ -793,7 +793,8 @@ totally correct in all such worlds and we don't need to talk about the exact $L$
 
                   Since $(\psi\,v) \in \semantic{\tassn}_{\supp{\psi,v}}$ and 
                   $\supp{\psi,v}\subseteq\dom{s'}\subseteq\dom{\hat{s}'}$ we have $\psi\,v\,s' = \true$ by
-                  lemma~\ref{lemma:L_definability}, and therefore we conclude $L\models\triple{\phi}{e}{\psi}$.
+                  lemma~\ref{lemma:L_equivalence_and_L_definability},
+                  and therefore we conclude $L\models\triple{\phi}{e}{\psi}$.
           \end{itemize}
   \end{enumerate}
 \end{proof}
