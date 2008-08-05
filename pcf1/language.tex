@@ -836,6 +836,10 @@ to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$.
   \end{array}\]
 \end{proof}
 
+Given lemma~\ref{lemma:Total_correctness} we can generalize the statement of the previous lemma
+to $\triple{\phi}{e}{\psi}$ iff $\triple{\mu^\tassn\,\phi}{(\mu^\sexp\,e)}{\mu^{\ttarrow{\tau}{\tassn}}\,\psi}$,
+since the exact world doesn't matter for total correctness.
+
 
 %%
 %% Semantics of the assertion language
@@ -1127,6 +1131,67 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
           $(\mu^\senv\,\eta)\models h$ iff $\hat{\eta}\models h$.
   \end{enumerate}
 \end{lemma}
+
+\begin{proof}
+  By simultaneous induction on the size of $p$ and $h$, where it is important to note that
+  $\nstyle{size}\,(\qbex{x}{t}{p}) > \nstyle{size}\,(\tabstr{x}{p})$ holds.
+  \begin{itemize}
+    \item {\em Proof of (a):}
+          Let $\phi:\Store \pto \Bool$ with $\phi = \semantic{\tj{h}{\tassn}}\,\eta$
+          and let $L = \supp{\eta|_{\free{h}}}$,
+          then $\dom{\phi} = \Store_L$. For all $s,s'\in\dom{\phi}$
+          \[\begin{array}{rcccl}
+            \phi\,s=\true &\text{iff}& \eta \models h &\text{iff}& \phi\,s'=\true,
+          \end{array}\]
+          and especially
+          \[\begin{array}{rcl}
+            \phi\,((\bar{\mu}^\ssto)^{-1}\,s) = \true &\text{iff}& \phi\,s=\true
+          \end{array}\]
+          for all $\bar{\mu}\in\Fix{L}$.
+
+          {\em Proof of (b):}
+          Now let $\phi = \semantic{\tj{h}{\tassn}}\,(\mu^\senv\,\eta)$ and $s \in \dom{\phi}$, then
+          \[\begin{array}{rcl}
+            \phi\,s = \true
+            &\text{iff}& (\mu^\senv\,\eta) \models h \\
+            &\text{iff}& \hat{\eta} \models h \\
+            &\text{iff}& (\semantic{\tj{h}{\tassn}}\,\hat{\eta})\,s=\true \\
+            &\text{iff}& (\semantic{\tj{h}{\tassn}}\,\hat{\eta})\,((\mu^\ssto)^{-1}\,s) = \true \\
+            &\text{iff}& (\mu^\tassn\,(\semantic{\tj{h}{\tassn}}\,\hat{\eta}))\,s=\true.
+          \end{array}\]
+
+    \item $(\mu^\senv\,\eta) \models t_1 = t_2$ holds iff
+          $\semantic{\tj{t_1}{\sigma}}\,(\mu^\senv\,\eta) =\semantic{\tj{t_2}{\sigma}}\,(\mu^\senv\,\eta)$.
+          By lemma~\ref{lemma:meaning_function_of_t_is_well_defined} this is the case iff
+          $\hat{\mu}^\sigma\,(\semantic{\tj{t_1}{\sigma}}\,\hat{\eta})
+           =\hat{\mu}^\sigma\,(\semantic{\tj{t_2}{\sigma}}\,\hat{\eta})$, which holds iff
+          $\semantic{\tj{t_1}{\sigma}}\,\hat{\eta} = \semantic{\tj{t_2}{\sigma}}\,\hat{\eta}$, and
+          therefore iff $\hat{\eta}\models t_1 = t_2$.
+
+    \item $(\mu^\senv\,\eta) \models \qex{x^\theta}{h}$ iff there exists some
+          $d \in \semantic{\theta}$ with $(\mu^\senv\,\eta)[d/x] \models h$.
+          Obviously $(\mu^\senv\,\eta)[d/x] = \mu^\senv\,(\eta[(\mu^\theta)^{-1}\,d/x])$.
+          By induction hypothesis $\mu^\senv\,(\eta[(\mu^\theta)^{-1}\,d/x]) \models h$
+          holds iff $\hat{\eta}[(\mu^\theta)^{-1}\,d/x] \models h$, hence iff
+          $\hat{\eta}\models \qex{x^\theta}{h}$.
+
+    \item The total correctness formula $(\mu^\senv\,\eta)\models\triple{p}{e}{q}$ holds if and only if
+          $\triple{\semantic{\tj{p}{\tassn}}\,(\mu^\senv\,\eta)}
+                  {(e\,(\mu^\senv\,\eta))}
+                  {\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,(\mu^\senv\,\eta)}$,
+          which holds iff
+          $\triple{\hat{\mu}^\tassn\,(\semantic{\tj{p}{\tassn}}\,\hat{\eta})}
+                  {(\hat{\mu}^\sexp\,(e\,\hat{\eta}))}
+                  {\hat{\mu}^{\ttarrow{\tau}{\tassn}}\,(\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\hat{\eta})}$
+          by induction hypothesis. According to lemma~\ref{lemma:Permutations_and_total_correctness} this
+          statement equals
+          $\triple{\semantic{\tj{p}{\tassn}}\,\hat{\eta}}
+                  {(e\,\hat{\eta})}
+                  {\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\hat{\eta}}$
+          which is just $\hat{\eta} \models \triple{p}{e}{q}$.
+  \end{itemize}
+  The remaining cases are similar to the above.
+\end{proof}
 
 \begin{theorem} \
   \begin{enumerate}
