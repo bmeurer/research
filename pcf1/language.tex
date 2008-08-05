@@ -749,7 +749,7 @@ like to say that $e$ is totally correct with respect to $\phi$ and $\psi$, witho
 explicitly. Hence we will show that if $e$ is totally correct in a sufficiently large world, then $e$ is
 totally correct in all such worlds and we don't need to talk about the exact $L$ anymore.
 
-\begin{lemma}[Total correctness]
+\begin{lemma}[Total correctness] \label{lemma:Total_correctness}
   Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
   and $L,L'\in W$ with $\supp{\phi,e,\psi} \subseteq L \cap L'$.
   \begin{enumerate}
@@ -803,6 +803,37 @@ if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi,e,\ps
 then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\psi}$.
 Hence we write $\triple{\phi}{e}{\psi}$ if $\supp{\phi,e,\psi}\models\triple{\phi}{e}{\psi}$,
 to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$. 
+
+\begin{lemma} \label{lemma:Permutations_and_total_correctness}
+  Let $L \in W$, $\tau \in \Type$, $\phi \in \semantic{\tassn}$,
+  $\psi \in \semantic{\ttarrow{\tau}{\tassn}}$ and $e \in \CExp^\tau$ with $\supp{\phi,e,\psi} \subseteq L$.
+  For every $\mu \in \Perm$ we have $L\models\triple{\phi}{e}{\psi}$ iff
+  $\mu(L) \models \triple{\mu^\tassn\,\phi}{(\mu^\sexp\,e)}{\mu^{\ttarrow{\tau}{\tassn}}\,\psi}$.
+\end{lemma}
+
+\begin{proof}
+  We prove only one direction, the other direction follows immediately with a similar reasoning.
+
+  So let $s \in \Store_{\mu(L)}$ with $(\mu^\tassn\,\phi)\,s = \true$, then
+  $((\mu^\ssto)^{-1}\,s) \in \Store_L$ and $\phi\,((\mu^\ssto)^{-1}\,s)=\true$.
+  According to lemma~\ref{lemma:Total_correctness} there are $v' \in \CVal^\tau$
+  and $s' \in \Store$ such that
+  $(e,(\mu^\ssto)^{-1}\,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s' = \true$.
+
+  By theorem~\ref{theorem:small_steps_and_permutations} there exists some
+  $\hat{\mu}\in\Perm$ with $\hat{\mu} =_{\supp{e,(\mu^\ssto)^{-1}\,s}} \mu$ such that
+  $(\mu^\sexp\,e,s) \xrightarrow* (\hat{\mu}^\tau\,v',\hat{\mu}^\ssto\,s')$.
+  Since $\supp{\psi} \subseteq L \subseteq \supp{(\mu^\ssto)^{-1}\,s}$ we also have
+  $\hat{\mu} =_{\supp{\psi}} \mu$ and thereby
+  \[\begin{array}{rcl}
+    (\mu^{\ttarrow{\tau}{\tassn}}\,\psi)\,(\hat{\mu}^\tau\,v')\,(\hat{\mu}^\ssto\,s')
+    &=& (\hat{\mu}^{\ttarrow{\tau}{\tassn}}\,\psi)\,(\hat{\mu}^\tau\,v')\,(\hat{\mu}^\ssto\,s') \\
+    &=& \psi\,((\hat{\mu}^\tau)^{-1}\,(\hat{\mu}^\tau\,v'))\,
+              ((\hat{\mu}^\ssto)^{-1}\,(\hat{\mu}^\ssto\,s')) \\
+    &=& \psi\,v'\,s' \\
+    &=& \true.
+  \end{array}\]
+\end{proof}
 
 
 %%
