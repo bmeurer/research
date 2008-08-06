@@ -44,6 +44,7 @@
 \newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
 \newcommand{\returns}[2]{\ensuremath{\mathbf{returns}\,{#1}.\,{#2}}}
 
+\newcommand{\AUX}{\nstyle{AUX}}
 \newcommand{\Neg}{\nstyle{Neg}}
 \newcommand{\Or}{\nstyle{Or}}
 \newcommand{\Cont}{\nstyle{Cont}}
@@ -964,7 +965,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \end{array}\]
 \end{proof}
 
-\noindent Auxiliary functions
+\noindent Auxiliary functions $\AUX = \{\Neg,\Or,\Cont,\Disj,\Exists\}$.
 \begin{itemize}
   \item $\Neg: \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
         $\Neg\,\phi\,s =
@@ -1008,20 +1009,27 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
           \ecase$
 \end{itemize}
 
+%\begin{lemma}
+%  Let $L_1,L_2 \in W$.
+%  \begin{itemize}
+%    \item $\Neg\,\semantic{\tassn}_{L_1} \subseteq \semantic{\tassn}_{L_1}$
+%    \item $\Or\,\semantic{\tassn}_{L_1}\,\semantic{\tassn}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
+%    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
+%    \item $\Disj\,\semantic{\theta_1}_{L_1}\,\semantic{\theta_2}_{L_2} \subseteq \semantic{\tassn}_{L_1\cup L_2}$
+%    \item $\Exists\,\semantic{\theta_1}_{L_1}\,\semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}
+%            \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
+%  \end{itemize}
+%\end{lemma}
+
 \begin{lemma}
-  Let $L_1,L_2 \in W$.
-  \begin{itemize}
-    \item $\Neg\,\semantic{\tassn}_{L_1} \subseteq \semantic{\tassn}_{L_1}$
-    \item $\Or\,\semantic{\tassn}_{L_1}\,\semantic{\tassn}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-    \item $\Disj\,\semantic{\theta_1}_{L_1}\,\semantic{\theta_2}_{L_2} \subseteq \semantic{\tassn}_{L_1\cup L_2}$
-    \item $\Exists\,\semantic{\theta_1}_{L_1}\,\semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}
-            \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-  \end{itemize}
+  Let $f \in \AUX$ with $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$
+  and $\vec{L} \in W^n$ with $L = \bigcup_{i=1,\ldots,n} L_i$, then
+  $f\,\semantic{\theta_1}_{L_1}\ldots\semantic{\theta_n}_{L_n}
+    \subseteq \semantic{\tassn}_L$.
 \end{lemma}
 
 \begin{proof}
-  We prove only the first and the last property of the lemma. The proofs for the remaining cases are
+  We will show that $\Neg$ and $\Exists$ are well-defined. The proofs for the remaining cases are
   similar to the ones considered below.
   \begin{itemize}
     \item Let $\phi_1 \in \semantic{\tassn}_{L_1}$, $\phi = \Neg\,\phi_1$. Then
@@ -1071,50 +1079,128 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \end{itemize}
 \end{proof}
 
-\noindent The {\em meaning function} $\semantic{\tj{p}{\pi}}: \Env_p \to \semantic{\pi}$.
-\[\begin{array}{rcl}
-  \semantic{\tj{x^\pi}{\pi}}\,\eta 
-    &=& \eta\,x \\
-  \semantic{\tj{h}{\tassn}}\,\eta
-    &=& \phi:\Store \pto \Bool \\
-    & & \phi\,s = \bcase
-                    \uparrow  & \text{if } \supp{\eta|_{\free{h}}} \nsubseteq \dom{s} \\
-                    \true     & \text{if } \eta \models h \\
-                    \false    & \text{otherwise}
-                  \ecase \\
-  \semantic{\tj{\app{p}{t}}{\pi}}\,\eta
-    &=& (\semantic{\tj{p}{\ttarrow{\sigma}{\pi}}}\,\eta)\,
-        (\semantic{\tj{t}{\sigma}}\,\eta) \\
-  \semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\pi}}}\,\eta
-    &=& \psi: \semantic{\theta} \to \semantic{\pi} \\
-    & & \psi\,d = \semantic{\tj{p}{\pi}}\,(\eta[d/x]) \\
-  \semantic{\tj{t_1 \mapsto t_2}{\tassn}}\,\eta 
-    &=& \Cont\,(\semantic{\tj{t_1}{\tref{\tau}}}\,\eta)\,(\semantic{\tj{t_2}{\tau}}\,\eta) \\
-  \semantic{\tj{t \# p}{\tassn}}\,\eta
-    &=& \Disj\,(\semantic{\tj{t}{\sigma}}\,\eta)\,(\semantic{\tj{p}{\pi}}\,\eta) \\
-  \semantic{\tj{p \vee q}{\tassn}}\,\eta
-    &=& \Or\,(\semantic{\tj{p}{\tassn}}\,\eta)\,(\semantic{\tj{q}{\tassn}}\,\eta) \\
-  \semantic{\tj{\neg p}{\tassn}}\,\eta 
-    &=& \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta) \\
-  \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
-  &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,
-               (\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\tassn}}}\,\eta) \\
-\end{array}\]
+%\begin{lemma}
+%  Let $\tau\in\Type$, $\theta_1,\theta_2 \in \LType$, $\phi_1,\phi_2 \in \semantic{\tassn}$,
+%  $l\in\semantic{\tref{\tau}}$, $v\in\semantic{\tau}$, $d_1\in\semantic{\theta_1}$,
+%  $d_2 \in \semantic{\theta_2}$ and $\mu\in\Perm$.
+%  \begin{itemize}
+%    \item $\Neg\,(\mu^\tassn\,\phi_1)
+%          = \mu^\tassn\,(\Neg\,\phi_1)$
+%    \item $\Or\,(\mu^\tassn\,\phi_1)\,(\mu^\tassn\,\phi_2)
+%          = \mu^\tassn\,(\Or\,\phi_1\,\phi_2)$
+%    \item $\Cont\,(\mu^{\tref{\tau}}\,l)\,(\mu^\tau\,v)
+%          = \mu^\tassn\,(\Cont\,l\,v)$
+%    \item $\Disj\,(\mu^{\theta_1}\,d_1)\,(\mu^{\theta_2}\,d_2)
+%          = \mu^\tassn\,(\Disj$
+%  \end{itemize}
+%\end{lemma}
 
-\noindent The satisfaction relation $\eta \models h$ where $h \in \Formula$ and $\eta \in \Env_h$
-\begin{itemize}
-  \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\sigma}}\,\eta) = (\semantic{\tj{t_2}{\sigma}}\,\eta)$
+\begin{lemma}
+  Let $\mu \in \Perm$, $f \in \AUX$ with
+  $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$ and
+  $\vec{d} \in \semantic{\theta_1} \times \ldots \times \semantic{\theta_n}$, then
+  $f\,(\mu^{\theta_1}\,d_1)\,\ldots\,(\mu^{\theta_n}\,d_n)=\mu^\tassn\,(f\,d_1\,\ldots\,d_n)$.
+\end{lemma}
 
-  \item $\eta \models \triple{p}{e}{q}$ iff
-        $\triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta}$
+\begin{proof}
+  Again, we prove only $\Neg$ and $\Exists$, the remaining cases are similar.
+  \begin{itemize}
+    \item Let $\phi_1 \in \semantic{\tassn}$ and $s \in \Store$, then
+          \[\begin{array}{rcl}
+            \Neg\,(\mu^\tassn\,\phi_1)\,s 
+            &=& \Neg\,(\phi_1\circ(\mu^\ssto)^{-1})\,s \\
+            &=& \bcase
+                  \uparrow  & \text{if } s \not\in \dom{\phi_1 \circ (\mu^\ssto)^{-1}} \\
+                  \true     & \text{if } (\phi_1 \circ (\mu^\ssto)^{-1})\,s=\false \\
+                  \false    & \text{otherwise}
+                \ecase \\
+            &=& \bcase
+                  \uparrow  & \text{if } ((\mu^\ssto)^{-1}\,s) \not\in \dom{\phi_1} \\
+                  \true     & \text{if } \phi_1\,((\mu^\ssto)^{-1}\,s) = \false \\
+                  \false    & \text{otherwise}
+                \ecase \\
+            &=& \Neg\,\phi_1\,((\mu^\ssto)^{-1}\,s) \\
+            &=& \mu^\tassn\,(\Neg\,\phi_1)\,s.
+          \end{array}\]
 
-  \item $\eta \models h_1 \vee h_2$ iff $\eta \models h_1$ or $\eta \models h_2$
+    \item Let $d_1 \in \semantic{\theta_1}$, $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}$
+          and $s \in \Store$, then
+          \[\begin{array}{rcl}
+            & & \Exists\,(\mu^{\theta_1}\,d_1)\,(\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi)\,s \\
+            &=& \bcase
+                  \uparrow  & \text{if } \supp{\mu^{\theta_1}\,d_1,\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi}
+                              \nsubseteq \dom{s} \\
+                  \true     & \text{if } (\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi)\,d_2\,s = \true \text{ for some }
+                              d_2 \in \bigcup_{L\subseteq\reach{\mu^{\theta_1}\,d_1}{s}} \semantic{\theta_2}_L \\
+                  \false    & \text{otherwise}
+                \ecase \\
+            &=& \bcase
+                  \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{(\mu^\ssto)^{-1}\,s} \\
+                  \true     & \text{if } \psi\,((\mu^{\theta_2})^{-1}\,d_2)\,((\mu^\ssto)^{-1}\,s)=\true \text{ for} \\
+                            & \text{some } d_2 \in \bigcup_{L'\subseteq\reach{d_1}{(\mu^\ssto)^{-1}\,s}} 
+                                  \semantic{\theta_2}_{\mu(L')} \\
+                  \false    & \text{otherwise}
+                \ecase \\
+            &=& \bcase
+                  \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{(\mu^\ssto)^{-1}\,s} \\
+                  \true     & \text{if } \psi\,d_2'\,((\mu^\ssto)^{-1}\,s)=\true \text{ for some }
+                              d_2'\in\bigcup_{L'\subseteq \reach{d_1}{(\mu^\ssto)^{-1}\,s}} \semantic{\theta_2}_{L'} \\
+                  \false    & \text{otherwise}
+                \ecase \\
+            &=& \Exists\,d_1\,\psi\,((\mu^\ssto)^{-1}\,s) \\
+            &=& \mu^\tassn\,(\Exists\,d_1\,\psi)\,s.
+          \end{array}\]
+  \end{itemize}
+\end{proof}
 
-  \item $\eta \models \neg h$ iff $\eta \not\models h$
-  
-  \item $\eta \models \qex{x^\theta}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\theta}$
-\end{itemize}
+\begin{definition}[Meaning of assertions and formulas]
+  For every well-typed assertion $p \in \Assn$ of type $\pi \in \PType$, the
+  {\em meaning function} $\semantic{\tj{p}{\pi}}: \Env_p \to \semantic{\pi}$ is defined
+  by induction on the structure of $p$ as follows:
+  \[\begin{array}{rcl}
+    \semantic{\tj{x^\pi}{\pi}}\,\eta 
+      &=& \eta\,x \\
+    \semantic{\tj{h}{\tassn}}\,\eta
+      &=& \phi:\Store \pto \Bool \\
+      & & \phi\,s = \bcase
+                      \uparrow  & \text{if } \supp{\eta|_{\free{h}}} \nsubseteq \dom{s} \\
+                      \true     & \text{if } \eta \models h \\
+                      \false    & \text{otherwise}
+                    \ecase \\
+    \semantic{\tj{\app{p}{t}}{\pi}}\,\eta
+      &=& (\semantic{\tj{p}{\ttarrow{\sigma}{\pi}}}\,\eta)\,
+          (\semantic{\tj{t}{\sigma}}\,\eta) \\
+    \semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\pi}}}\,\eta
+      &=& \psi: \semantic{\theta} \to \semantic{\pi} \\
+      & & \psi\,d = \semantic{\tj{p}{\pi}}\,(\eta[d/x]) \\
+    \semantic{\tj{t_1 \mapsto t_2}{\tassn}}\,\eta 
+      &=& \Cont\,(\semantic{\tj{t_1}{\tref{\tau}}}\,\eta)\,(\semantic{\tj{t_2}{\tau}}\,\eta) \\
+    \semantic{\tj{t \# p}{\tassn}}\,\eta
+      &=& \Disj\,(\semantic{\tj{t}{\sigma}}\,\eta)\,(\semantic{\tj{p}{\pi}}\,\eta) \\
+    \semantic{\tj{p \vee q}{\tassn}}\,\eta
+      &=& \Or\,(\semantic{\tj{p}{\tassn}}\,\eta)\,(\semantic{\tj{q}{\tassn}}\,\eta) \\
+    \semantic{\tj{\neg p}{\tassn}}\,\eta 
+      &=& \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta) \\
+    \semantic{\tj{\qbex{x^\theta}{t}{p}}{\tassn}}\,\eta
+    &=& \Exists\,(\semantic{\tj{t}{\sigma}}\,\eta)\,
+                 (\semantic{\tj{\tabstr{x^\theta}{p}}{\ttarrow{\theta}{\tassn}}}\,\eta) \\
+  \end{array}\]
+  For every well-typed formula $h \in \Formula$ and each suitable environment $\eta \in \Env_h$,
+  the {\em satisfaction relation} $\eta \models h$ is defined by induction on the structure of
+  $h$ as follows:
+  \begin{itemize}
+    \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\sigma}}\,\eta) = (\semantic{\tj{t_2}{\sigma}}\,\eta)$
 
+    \item $\eta \models \triple{p}{e}{q}$ iff
+          $\triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta}$
+
+    \item $\eta \models h_1 \vee h_2$ iff $\eta \models h_1$ or $\eta \models h_2$
+
+    \item $\eta \models \neg h$ iff $\eta \not\models h$
+    
+    \item $\eta \models \qex{x^\theta}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\theta}$
+  \end{itemize}
+\end{definition}
 
 \begin{lemma} \label{lemma:meaning_function_of_p_is_well_defined}
   Let $\mu,\hat{\mu}\in\Perm$.
