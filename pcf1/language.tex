@@ -461,6 +461,49 @@ Notable subsets of $\LType$ are
         \GRend\]
 \end{itemize}
 
+\subsubsection{Abbreviations}
+
+We write
+\[\begin{array}{rcl}
+  \tabstr{\unit}{t}
+  &\triangleq& \tabstr{x^\tunit}{t} \quad \text{where } x^{\tunit}\not\in\free{t} \\
+  \\
+  p \wedge q
+  &\triangleq& \neg(\neg p \vee \neg q) \\
+  p \Rightarrow q
+  &\triangleq& \neg p \vee q \\
+  p \Leftrightarrow q
+  &\triangleq& (p \Rightarrow q) \wedge (q \Rightarrow p) \\
+  \qball{x}{t}{p}
+  &\triangleq& \neg\qbex{x}{t}{\neg p} \\
+  \tabstr{\unit}{p}
+  &\triangleq& \tabstr{x^\tunit}{p} \quad \text{where } x^{\tunit}\not\in\free{p} \\
+  \\
+  \true
+  &\triangleq& t = t \quad \text{where } t \in \Term \\
+  \false
+  &\triangleq& \neg \true \\
+  h_1 \wedge h_2
+  &\triangleq& \neg(\neg h_1 \vee \neg h_2) \\
+  h_1 \Rightarrow h_2
+  &\triangleq& \neg h_1 \vee h_2 \\
+  h_1 \Leftrightarrow h_2
+  &\triangleq& (h_1 \Rightarrow h_2) \wedge (h_2 \Rightarrow h_1) \\
+  \qall{x}{h}
+  &\triangleq& \neg\qex{x}{\neg h} \\
+  \triple{p}{e}{\returns{x}{p}}
+  &\triangleq& \triple{p}{e}{\tabstr{x}{p}} \\
+  \{p\}
+  &\triangleq& \triple{\true}{e}{p}
+\end{array}\]
+In addition to these rather obvious abbreviations we add a new type of formula
+$\inv{e}{p}$, read {\em `the assertion $p$ is invariant with respect to $e$'}.
+\[\begin{array}{rcll}
+  \inv{e}{p} &\triangleq& \triple{p}{e}{\tabstr{\unit}{p}} \quad \text{for every } p\in\Assn^\tassn \\
+  \inv{e}{p} &\triangleq& \qall{x^\theta}{\inv{e}{(p\,x)}} \quad \text{for every } p\in\Assn^{\ttarrow{\theta}{\theta'}}
+\end{array}\]
+{\bf TODO:} Won't work. Doesn't treat $\tj{e}{\tarrow{\tau_1}{\tau_2}}$ properly.
+
 
 %%
 %% Semantics of the logic
