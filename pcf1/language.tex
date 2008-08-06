@@ -1009,19 +1009,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
           \ecase$
 \end{itemize}
 
-%\begin{lemma}
-%  Let $L_1,L_2 \in W$.
-%  \begin{itemize}
-%    \item $\Neg\,\semantic{\tassn}_{L_1} \subseteq \semantic{\tassn}_{L_1}$
-%    \item $\Or\,\semantic{\tassn}_{L_1}\,\semantic{\tassn}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-%    \item $\Cont\,\semantic{\tref{\tau}}_{L_1}\,\semantic{\tau}_{L_2} \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-%    \item $\Disj\,\semantic{\theta_1}_{L_1}\,\semantic{\theta_2}_{L_2} \subseteq \semantic{\tassn}_{L_1\cup L_2}$
-%    \item $\Exists\,\semantic{\theta_1}_{L_1}\,\semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}
-%            \subseteq \semantic{\tassn}_{L_1 \cup L_2}$
-%  \end{itemize}
-%\end{lemma}
-
-\begin{lemma}
+\begin{lemma} \label{lemma:AUX_functions_are_well_defined}
   Let $f \in \AUX$ with $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$
   and $\vec{L} \in W^n$ with $L = \bigcup_{i=1,\ldots,n} L_i$, then
   $f\,\semantic{\theta_1}_{L_1}\ldots\semantic{\theta_n}_{L_n}
@@ -1079,23 +1067,7 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   \end{itemize}
 \end{proof}
 
-%\begin{lemma}
-%  Let $\tau\in\Type$, $\theta_1,\theta_2 \in \LType$, $\phi_1,\phi_2 \in \semantic{\tassn}$,
-%  $l\in\semantic{\tref{\tau}}$, $v\in\semantic{\tau}$, $d_1\in\semantic{\theta_1}$,
-%  $d_2 \in \semantic{\theta_2}$ and $\mu\in\Perm$.
-%  \begin{itemize}
-%    \item $\Neg\,(\mu^\tassn\,\phi_1)
-%          = \mu^\tassn\,(\Neg\,\phi_1)$
-%    \item $\Or\,(\mu^\tassn\,\phi_1)\,(\mu^\tassn\,\phi_2)
-%          = \mu^\tassn\,(\Or\,\phi_1\,\phi_2)$
-%    \item $\Cont\,(\mu^{\tref{\tau}}\,l)\,(\mu^\tau\,v)
-%          = \mu^\tassn\,(\Cont\,l\,v)$
-%    \item $\Disj\,(\mu^{\theta_1}\,d_1)\,(\mu^{\theta_2}\,d_2)
-%          = \mu^\tassn\,(\Disj$
-%  \end{itemize}
-%\end{lemma}
-
-\begin{lemma}
+\begin{lemma} \label{lemma:AUX_functions_and_permutations}
   Let $\mu \in \Perm$, $f \in \AUX$ with
   $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$ and
   $\vec{d} \in \semantic{\theta_1} \times \ldots \times \semantic{\theta_n}$, then
@@ -1188,18 +1160,23 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   For every well-typed formula $h \in \Formula$ and each suitable environment $\eta \in \Env_h$,
   the {\em satisfaction relation} $\eta \models h$ is defined by induction on the structure of
   $h$ as follows:
-  \begin{itemize}
-    \item $\eta \models t_1 = t_2$ iff $(\semantic{\tj{t_1}{\sigma}}\,\eta) = (\semantic{\tj{t_2}{\sigma}}\,\eta)$
-
-    \item $\eta \models \triple{p}{e}{q}$ iff
-          $\triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta}$
-
-    \item $\eta \models h_1 \vee h_2$ iff $\eta \models h_1$ or $\eta \models h_2$
-
-    \item $\eta \models \neg h$ iff $\eta \not\models h$
-    
-    \item $\eta \models \qex{x^\theta}{h}$ iff $\eta[d/x] \models h$ for some $d \in \semantic{\theta}$
-  \end{itemize}
+  \[\begin{array}{rcl}
+    \eta \models t_1 = t_2
+      &\text{iff}&
+      (\semantic{\tj{t_1}{\sigma}}\,\eta) = (\semantic{\tj{t_2}{\sigma}}\,\eta) \\
+    \eta \models \triple{p}{e}{q}
+      &\text{iff}&
+      \triple{\semantic{\tj{p}{\tassn}}\,\eta}{(e\,\eta)}{\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\eta} \\
+    \eta \models \qex{x^\theta}{h}
+      &\text{iff}&
+      \eta[d/x] \models h \text{ for some } d \in \semantic{\theta} \\
+    \eta \models h_1 \vee h_2
+      &\text{iff}&
+      \eta \models h_1 \text{ or } \eta \models h_2 \\
+    \eta \models \neg h
+      &\text{iff}&
+      \eta \not\models h \\
+  \end{array}\]
 \end{definition}
 
 \begin{lemma} \label{lemma:meaning_function_of_p_is_well_defined}
@@ -1246,6 +1223,15 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
             &\text{iff}& (\mu^\tassn\,(\semantic{\tj{h}{\tassn}}\,\hat{\eta}))\,s=\true.
           \end{array}\]
 
+    \item {\em Proof of (a):}
+          Let $\phi:\Store \pto \Bool$ with $\phi = \semantic{\tj{\neg\,p}{\tassn}}\,\eta$ and
+          let $L = \supp{\eta|_{\free{p}}}$. Then $\phi = \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta)$ and
+          by lemma~\ref{lemma:AUX_functions_are_well_defined} we have $\phi \in \semantic{\tassn}_L$
+          since $(\semantic{\tj{p}{\tassn}}\,\eta) \in \semantic{\tassn}_L$ by induction hypothesis.
+
+          {\em Proof of (b):}
+          Follows easily with lemma~\ref{lemma:AUX_functions_and_permutations}.
+
     \item $(\mu^\senv\,\eta) \models t_1 = t_2$ holds iff
           $\semantic{\tj{t_1}{\sigma}}\,(\mu^\senv\,\eta) =\semantic{\tj{t_2}{\sigma}}\,(\mu^\senv\,\eta)$.
           By lemma~\ref{lemma:meaning_function_of_t_is_well_defined} this is the case iff
@@ -1281,10 +1267,27 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
 
 \begin{theorem} \
   \begin{enumerate}
-    \item Let $t \in\Term$, $\sigma\in\SType$ and $\eta\in\Env_t$, then
-          $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}$.
-    \item Let $p \in\Assn$, $\pi\in\PType$ and $\eta\in\Env_p$, then
-          $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$.
+    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}$
+          for every $\sigma\in\SType$, $t\in\Term^\sigma$ and $\eta\in\Env_t$.
+    \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$
+          for every $\pi\in\PType$, $p\in\Assn^\pi$ and $\eta\in\Env_p$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Immediate consequence of lemma~\ref{lemma:meaning_function_of_t_is_well_defined}
+  and lemma~\ref{lemma:meaning_function_of_p_is_well_defined}.
+\end{proof}
+
+\begin{theorem}[Coincidence] \label{theorem:coincidence}
+  Let $\eta,\hat{\eta}\in\Env$ with $\eta =_X \hat{\eta}$ for some $X \subseteq \Var$.
+  \begin{enumerate}
+    \item $\semantic{\tj{t}{\sigma}}\,\eta = \semantic{\tj{t}{\sigma}}\,\hat{\eta}$
+          for all $\sigma\in\SType$, $t \in\Term^\sigma$ with $\free{t} \subseteq X$.
+    \item $\semantic{\tj{p}{\pi}}\,\eta = \semantic{\tj{p}{\pi}}\,\hat{\eta}$
+          for all $\pi\in\PType$, $p \in \Assn^\pi$ with $\free{p} \subseteq X$.
+    \item For every $h \in \Formula$
+          with $\free{h} \subseteq X$ we have $\eta \models h$ iff $\hat{\eta} \models h$.
   \end{enumerate}
 \end{theorem}
 
