@@ -1347,4 +1347,41 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
 \chapter{The calculus}
 
 
+%%
+%% Axioms for the programming language
+%%
+
+\section{Axioms for the programming language}
+
+\begin{tabular}{rl}
+  \RN{Val}    & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}}$ \\
+  \RN{Op}     & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tint,y^\tint}
+                      {\triple{a\,(\op^\I\,(x,y))}{\op\,x\,y}{a}}$ \\
+  \RN{Beta-V} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
+                      \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b}$ \\
+  \RN{Deref}  & $\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
+                      {\triple{x \mapsto y \wedge a\,y}{!x}{a}}$ \\
+  \RN{Assign} & $\qall{a^\tassn,x^{\tref{\tau}},y^\tau}
+                      {x \diamond a \Rightarrow \triple{a}{x\,\assign\,y}{\returns{u^\tunit}{a \wedge x \mapsto y}}}$ \\
+  \RN{Ref}    & $\qall{a^\tassn,b^\pi,x^\tau}
+                      {\triple{a}{\cref\,x}{\returns{y^{\tref{\tau}}}{y \mapsto x \wedge y \# b \wedge a}}}$ \\
+  \RN{Unfold} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+                      {\triple{a}{e[\fix\,(\abstr{x^\tau}{e})/x]}{b}
+                       \Rightarrow \triple{a}{\fix\,(\abstr{x^\tau}{e})}{b}}$ \\
+  \RN{App}    & $\qall{a^\tassn,\hat{a}^{\ttarrow{(\tarrow{\tau}{\tau'})}{\tassn}},
+                       \hat{b}^{\ttarrow{\ttarrow{(\tarrow{\tau}{\tau'})}{\tau}}{\tassn}},
+                       b^{\ttarrow{\tau'}{\tassn}}}{}$ \\
+              & $\triple{a}{e_1}{\hat{a}} \wedge
+                  (\qall{x^{\ttarrow{\tau}{\tau'}}}{\triple{\hat{a}\,x}{e_2}{\hat{b}\,x}}
+                   \wedge \qall{y^\tau}{\triple{\hat{b}\,x\,y}{x\,y}{b}})$ \\
+              & $\Rightarrow \triple{a}{e_1\,e_2}{b}$ \\
+  \RN{Cond-True}  & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+                  & $\triple{a}{e_0}{\returns{x^\tbool}{x = \true \wedge \hat{a}}} \wedge \triple{\hat{a}}{e_1}{b}$ \\
+                  & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
+  \RN{Cond-False} & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+                  & $\triple{a}{e_0}{\returns{x^\tbool}{x = \false \wedge \hat{a}}} \wedge \triple{\hat{a}}{e_2}{b}$ \\
+                  & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
+\end{tabular}
+
+
 \end{document}
