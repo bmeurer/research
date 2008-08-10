@@ -28,6 +28,8 @@
 \include{macros}
 
 % TODO
+\newcommand{\CAssn}{\sstyle{CAssn}}
+\newcommand{\CTerm}{\sstyle{CTerm}}
 \newcommand{\CExp}{\sstyle{CExp}}
 \newcommand{\CVal}{\sstyle{CVal}}
 \newcommand{\Conf}{\sstyle{Conf}}
@@ -496,6 +498,25 @@ We write
   \{p\}
   &\triangleq& \triple{\true}{e}{p}
 \end{array}\]
+We extend the logical connectives and quantifiers to functions. For each
+logical connective $\oplus$ we define $\oplus^\pi$ by
+\[\begin{array}{rcl}
+  p \oplus^\tassn q
+  &\triangleq& p \oplus q \\
+  p \oplus^{\ttarrow{\theta}{\pi}} q
+  &\triangleq& \tabstr{x^\theta}{(p\,x) \oplus^\pi (q\,x)}
+\end{array}\]
+and for every quantifier $Q$ we define $Q^\pi$ by
+\[\begin{array}{rcl}
+  Q^\tassn y^\theta\in[t].\,p
+  &\triangleq& Q y^\theta\in[t].\,p \\
+  Q^{\ttarrow{\theta}{\pi}} y^{\theta'}\in[t].\,p
+  &\triangleq& \tabstr{x^\theta}{Q^\pi y^{\theta'}\in[x].\,(p\,x)}
+\end{array}\]
+where $x$ denotes a fresh variable. Since the exact type is always clear from
+the context, we simply write $\oplus$ and $Q$ instead of $\oplus^\pi$ and
+$Q^\pi$.
+
 In addition to these rather obvious abbreviations we add a new type of formula
 $\inv{e}{p}$, read {\em `the assertion $p$ is invariant with respect to $e$'}.
 \[\begin{array}{rcll}
@@ -1511,15 +1532,18 @@ Some additional lemmata useful for proving the soundness of the calculus below.
 
 
 %%
-%% Axioms rules for total correctness
+%% Axioms for total correctness
 %%
 
-\section{Axioms rules for total correctness}
+\section{Axioms for total correctness}
 
 \begin{tabular}{rl}
   \RN{Consequence}  & $\qall{a^\tassn,\hat{a}^\tassn,\hat{b}^{\ttarrow{\tau}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
                     & $\{a \Rightarrow \hat{a}\} \wedge \triple{\hat{a}}{e}{\hat{b}}
                        \wedge \{\qall{x^\tau}{\hat{b}\,x \Rightarrow b\,x}\} \Rightarrow \triple{a}{e}{b}$ \\
+  \RN{Invariance} & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+                  & $e \diamond \hat{a} \wedge \triple{a}{e}{b}
+                     \Rightarrow \triple{a \wedge \hat{a}}{e}{\returns{x^\tau}{b\,x \wedge \hat{a}}}$ \\
   \RN{Pre-H}        & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
                             {(h \Rightarrow \triple{a}{e}{b}) \Rightarrow \triple{h \wedge a}{e}{b}}$ \\
   \RN{Pre-$\vee$}   & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}
@@ -1528,6 +1552,24 @@ Some additional lemmata useful for proving the soundness of the calculus below.
   \RN{Post-$\wedge$}  & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},\hat{b}^{\ttarrow{\tau}{\tassn}}}
                               {(\triple{a}{e}{b} \wedge \triple{a}{e}{\hat{b}})
                                \Rightarrow \triple{a}{e}{b \wedge \hat{b}}}$ \\
+\end{tabular}
+
+
+%%
+%% Logical rules
+%%
+
+\section{Logical rules}
+
+\begin{tabular}{rl}
+  \RN{$\forall$E-Assn} & $\RULE{p\in\CAssn^\pi}
+                               {(\qall{x^\pi}{h}) \Rightarrow h[p/x]}$ \\
+  \RN{$\forall$E-Term} & $\RULE{t\in\CTerm^\sigma}
+                               {(\qall{x^\sigma}{h}) \Rightarrow h[t/x]}$ \\
+  \RN{$\exists$I-Assn} & $\RULE{p\in\Assn^\pi}
+                               {h[p/x] \Rightarrow \qex{x^\pi}{h}}$ \\
+  \RN{$\exists$I-Term} & $\RULE{t\in\Term^\sigma}
+                               {h[t/x] \Rightarrow \qex{x^\sigma}{h}}$ \\
 \end{tabular}
 
 
