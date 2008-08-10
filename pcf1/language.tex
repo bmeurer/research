@@ -1372,15 +1372,81 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
                        \hat{b}^{\ttarrow{\ttarrow{(\tarrow{\tau}{\tau'})}{\tau}}{\tassn}},
                        b^{\ttarrow{\tau'}{\tassn}}}{}$ \\
               & $\triple{a}{e_1}{\hat{a}} \wedge
-                  (\qall{x^{\ttarrow{\tau}{\tau'}}}{\triple{\hat{a}\,x}{e_2}{\hat{b}\,x}}
+                  (\qall{x^{\tarrow{\tau}{\tau'}}}{\triple{\hat{a}\,x}{e_2}{\hat{b}\,x}}
                    \wedge \qall{y^\tau}{\triple{\hat{b}\,x\,y}{x\,y}{b}})$ \\
               & $\Rightarrow \triple{a}{e_1\,e_2}{b}$ \\
-  \RN{Cond-True}  & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
-                  & $\triple{a}{e_0}{\returns{x^\tbool}{x = \true \wedge \hat{a}}} \wedge \triple{\hat{a}}{e_1}{b}$ \\
-                  & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
-  \RN{Cond-False} & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
-                  & $\triple{a}{e_0}{\returns{x^\tbool}{x = \false \wedge \hat{a}}} \wedge \triple{\hat{a}}{e_2}{b}$ \\
-                  & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
+  \RN{Cond}   & $\qall{a^\tassn,\hat{a}^{\ttarrow{\tbool}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+              & $\triple{a}{e_0}{\hat{a}}
+                 \wedge \triple{\hat{a}\,\true}{e_1}{b}
+                 \wedge \triple{\hat{a}\,\false}{e_2}{b}$ \\
+              & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
+\end{tabular}
+
+\begin{lemma}[Soundness]
+  The axioms for the programming language are sound.
+\end{lemma}
+
+\begin{proof}
+  We need to prove $\models h$ for every axiom $h$.
+  \begin{itemize}
+    \item For \RN{Val} let $\eta\in\Env$, then
+          \[\begin{array}{rl}
+                      & \eta \models \qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}} \\
+            \text{if} & \eta[\psi/a][v/x] \models \triple{a\,x}{x}{a} \text{ for all }
+                          \psi\in\semantic{\ttarrow{\tau}{\tassn}}, v\in\semantic{\tau} \\
+            \text{if} & L \models \triple{\psi\,v}{v}{\psi} \text{ for some } L \supseteq \supp{\psi,v} \\
+            \text{if} & \text{for every $s \in \Store_L$ with $\psi\,v\,s = \true$ there exist $v'\in\CVal^\tau$} \\
+                      & \text{and $s'\in\Store$ such that $(v,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$,}
+          \end{array}\]
+          which is obvious since $(v,s) = (v',s')$.
+
+    \item For \RN{Beta-V} let $e \in \Exp$ and $\eta \in \Env_e$, then
+          \[\begin{array}{rl}
+                      & \eta \models \qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
+                                          {\triple{a}{e}{b} \Rightarrow
+                                           \triple{a}{(\abstr{x^\tau}{e})\,x}{b}} \\
+            \text{if} & \underbrace{\eta[\phi/a,\psi/b,v/x]}_{\eta'} \models
+                        \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
+                      & \text{for all } \psi\in\semantic{\tassn},\phi\in\semantic{\ttarrow{\tau}{\tassn}},
+                        v\in\semantic{\tau} \\
+            \text{if} & \eta'\models\triple{a}{e}{b} \text{ implies }
+                        \eta'\models\triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
+            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi} \text{ implies } L \models
+                        \triple{\phi}{\underbrace{((\abstr{x^\tau}{e})\,\eta')}_{\abstr{x^\tau}{e'}}\,v}{\psi} \\
+                      & \text{for some } L \supseteq \supp{\phi,e',\psi} \\
+          \end{array}\]
+          Now assuming that $L \models \triple{\phi}{e\,\eta'}{\psi}$ holds, we have
+          \[\begin{array}{rl}
+                      & L \models \triple{\phi}{(\abstr{x^\tau}{e'})\,v}{\psi} \\
+            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ there are $v'\in\CVal^\tau$ and} \\
+                      & \text{$s'\in\Store$ with $(\abstr{x^\tau}{e'},s) \xrightarrow*(v',s')$ and 
+                              $\psi\,v'\,s'=\true$} \\
+            \text{if} & (e'[v/x],s) \xrightarrow* (v',s') \\
+            \text{if} & (e\,\eta',s) \xrightarrow* (v',s') \text{ since } \free{e'} = \{x\} \\
+            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi}.
+          \end{array}\]
+  \end{itemize}
+\end{proof}
+
+
+%%
+%% Axioms rules for total correctness
+%%
+
+\section{Axioms rules for total correctness}
+
+\begin{tabular}{rl}
+  \RN{Consequence}  & $\qall{a^\tassn,\hat{a}^\tassn,\hat{b}^{\ttarrow{\tau}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+                    & $\{a \Rightarrow \hat{a}\} \wedge \triple{\hat{a}}{e}{\hat{b}}
+                       \wedge \{\qall{x^\tau}{\hat{b}\,x \Rightarrow b\,x}\} \Rightarrow \triple{a}{e}{b}$ \\
+  \RN{Pre-H}        & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+                            {(h \Rightarrow \triple{a}{e}{b}) \Rightarrow \triple{h \wedge a}{e}{b}}$ \\
+  \RN{Pre-$\vee$}   & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+                            {(\triple{a}{e}{b} \wedge \triple{\hat{a}}{e}{b})
+                             \Rightarrow \triple{a \vee \hat{a}}{e}{b}}$  \\
+  \RN{Post-$\wedge$}  & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},\hat{b}^{\ttarrow{\tau}{\tassn}}}
+                              {(\triple{a}{e}{b} \wedge \triple{a}{e}{\hat{b}})
+                               \Rightarrow \triple{a}{e}{b \wedge \hat{b}}}$ \\
 \end{tabular}
 
 
