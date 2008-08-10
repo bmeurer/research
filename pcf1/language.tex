@@ -1339,6 +1339,20 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
   and lemma~\ref{lemma:meaning_function_of_p_is_well_defined}.
 \end{proof}
 
+Some additional lemmata useful for proving the soundness of the calculus below.
+({\bf TODO:} add formulas and terms)
+
+\begin{theorem}[Substitution] \label{theorem:Substitution}
+  Let $\tau\in\Type$, $\pi\in\PType$, $p \in \Assn^{\ttarrow{\tau}{\pi}}$, $v\in\CVal^\tau$,
+  $x\in\Var$ and $\eta\in\Env_p$. Then
+  $(\semantic{\tj{p}{\ttarrow{\tau}{\pi}}}\,\eta)\,v
+   = \semantic{\tj{p\,x}{\pi}}\,(\eta[v/x])$.
+\end{theorem}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
 
 %%
 %% The calculus
@@ -1424,6 +1438,28 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
             \text{if} & (e'[v/x],s) \xrightarrow* (v',s') \\
             \text{if} & (e\,\eta',s) \xrightarrow* (v',s') \text{ since } \free{e'} = \{x\} \\
             \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi}.
+          \end{array}\]
+
+    \item For \RN{Deref} let $\eta\in\Env$, then
+          \[\begin{array}{rl}
+                      & \eta\models\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
+                                        {\triple{x \mapsto y \wedge a\,y}{!x}{a}} \\
+            \text{if} & \underbrace{\eta[\psi/a,l/y,v/x]}_{\eta'} \models
+                        \triple{x\mapsto y \wedge a\,y}{!x}{a} \\
+                      & \text{for every } \psi\in\semantic{\ttarrow{\tau}{\tassn}},l\in\Loc^\tau,v\in\CVal^\tau \\
+            \text{if} & L\models \triple{\phi}{!l}{\psi} \text{ for some } L \supseteq \supp{\phi,l,\psi} \\
+                      & \text{where } \phi = \semantic{\tj{x\mapsto y\wedge a\,y}{\tassn}}\,\eta' \\
+            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ we have $v'\in\CVal^\tau,s'\in\Store$} \\
+                      & \text{such that $(!l,s)\xrightarrow*(v',s')$ and $\psi\,v'\,s'=\true$} \\
+            \text{if} & \text{$s(l) = v'$, $s = s'$ and }
+                        (\semantic{\tj{a}{\ttarrow{\tau}{\tassn}}}\,\eta')\,v'\,s=\true \\
+            \text{if} & (\semantic{\tj{a\,y}{\tassn}}\,(\eta'[v'/y]))\,s=\true
+                        \text{ by theorem~\ref{theorem:Substitution}} \\
+            \text{if} & \text{$\eta'(x)=l$, $\eta'(y)=v'$ and }
+                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
+            \text{if} & (\semantic{\tj{x\mapsto y}{\tassn}}\,\eta')\,s = \true \text{ and } 
+                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
+            \text{if} & \phi\,s=\true.
           \end{array}\]
   \end{itemize}
 \end{proof}
