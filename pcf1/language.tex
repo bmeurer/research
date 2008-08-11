@@ -1361,13 +1361,37 @@ holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
 \end{proof}
 
 Some additional lemmata useful for proving the soundness of the calculus below.
-({\bf TODO:} add formulas and terms)
 
-\begin{theorem}[Substitution] \label{theorem:Substitution}
-  Let $\tau\in\Type$, $\pi\in\PType$, $p \in \Assn^{\ttarrow{\tau}{\pi}}$, $v\in\CVal^\tau$,
-  $x\in\Var$ and $\eta\in\Env_p$. Then
-  $(\semantic{\tj{p}{\ttarrow{\tau}{\pi}}}\,\eta)\,v
-   = \semantic{\tj{p\,x}{\pi}}\,(\eta[v/x])$.
+\begin{lemma}[Substitution] \label{lemma:Substitution}
+  \
+  \begin{enumerate}
+    \item $\semantic{\tj{t[t'/x]}{\pi}}\,\eta
+           = \semantic{\tj{t}{\sigma}}\,(\eta[\semantic{\tj{t'}{\sigma}}\,\eta/x])$
+    \item $\semantic{\tj{p[t/x]}{\pi}}\,\eta
+           = \semantic{\tj{p}{\pi}}\,(\eta[\semantic{\tj{t}{\sigma}}\,\eta/x])$
+    \item $\semantic{\tj{p[q/x]}{\pi}}\,\eta
+           = \semantic{\tj{p}{\pi}}\,(\eta[\semantic{\tj{q}{\pi}}\,\eta/x])$
+    \item $\eta \models h[t/x]$ iff $\eta[\semantic{\tj{t}{\sigma}}\,\eta/x] \models h$
+    \item $\eta \models h[p/x]$ iff $\eta[\semantic{\tj{p}{\sigma}}\,\eta/x] \models h$
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
+\begin{theorem} \label{theorem:Application}
+  Let $x\in\Var$.
+  \begin{enumerate}
+    \item Let $\sigma_1,\sigma_2\in\SType$, $t\in\Term^{\ttarrow{\sigma_1}{\sigma_2}}$,
+          $d \in \semantic{\sigma_1}$ and $\eta\in\Env_t$ with $x \not\in \free{t}$, then
+          $(\semantic{\tj{t}{\ttarrow{\sigma_1}{\sigma_2}}}\,\eta)\,d
+           = \semantic{\tj{t\,x}{\sigma_2}}\,(\eta[d/x])$.
+    \item Let $\theta \in \LType$, $\pi\in\PType$, $p\in\Assn^{\ttarrow{\theta}{\pi}}$,
+          $d\in\semantic{\theta}$ and $\eta\in\Env_p$ with $x \not\in \free{p}$, then
+          $(\semantic{\tj{p}{\ttarrow{\theta}{\pi}}}\,\eta)\,d
+           = \semantic{\tj{p\,x}{\pi}}\,(\eta[d/x])$.
+  \end{enumerate}
 \end{theorem}
 
 \begin{proof}
@@ -1476,7 +1500,7 @@ Some additional lemmata useful for proving the soundness of the calculus below.
             \text{if} & \text{$s(l) = v'$, $s = s'$ and }
                         (\semantic{\tj{a}{\ttarrow{\tau}{\tassn}}}\,\eta')\,v'\,s=\true \\
             \text{if} & (\semantic{\tj{a\,y}{\tassn}}\,(\eta'[v'/y]))\,s=\true
-                        \text{ by theorem~\ref{theorem:Substitution}} \\
+                        \text{ by theorem~\ref{theorem:Application}} \\
             \text{if} & \text{$\eta'(x)=l$, $\eta'(y)=v'$ and }
                         (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
             \text{if} & (\semantic{\tj{x\mapsto y}{\tassn}}\,\eta')\,s = \true \text{ and } 
