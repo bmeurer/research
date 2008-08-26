@@ -1,0 +1,1605 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+\usepackage{url}
+\usepackage[arrow, matrix, curve]{xy}
+
+%% LaTeX macros
+\include{macros}
+
+% TODO
+\newcommand{\CAssn}{\sstyle{CAssn}}
+\newcommand{\CTerm}{\sstyle{CTerm}}
+\newcommand{\CExp}{\sstyle{CExp}}
+\newcommand{\CVal}{\sstyle{CVal}}
+\newcommand{\Conf}{\sstyle{Conf}}
+\newcommand{\Con}{\sstyle{Con}}
+\newcommand{\Sto}{\sstyle{Sto}}
+\newcommand{\scon}{\nstyle{con}}
+\newcommand{\sexp}{\nstyle{exp}}
+\newcommand{\ssto}{\nstyle{sto}}
+\newcommand{\senv}{\nstyle{env}}
+\newcommand{\z}{\nstyle{int}}
+\newcommand{\DEF}{\sstyle{DEF}}
+\newcommand{\id}{\nstyle{id}}
+\newcommand{\I}{\mathcal{I}}
+\newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
+\newcommand{\returns}[2]{\ensuremath{\mathbf{returns}\,{#1}.\,{#2}}}
+
+\newcommand{\AUX}{\nstyle{AUX}}
+\newcommand{\Neg}{\nstyle{Neg}}
+\newcommand{\Or}{\nstyle{Or}}
+\newcommand{\Cont}{\nstyle{Cont}}
+\newcommand{\Disj}{\nstyle{Disj}}
+\newcommand{\Exists}{\nstyle{Exists}}
+
+
+\begin{document}
+
+
+%%
+%% The programming language
+%%
+
+\chapter{The programming language}
+
+As target language, we use eager PCF with the usual primitive types and imperative concepts.
+
+
+%%
+%% Abstract syntax
+%%
+
+\section{Abstract syntax}
+
+We assume that infinite sets of variables $x \in \Var$ and locations $l \in \Loc$ are given;
+variables are used to abstract expressions, locations are used to address memory cells.
+Expressions are considered equal modulo renaming of bound variables.
+$\Bool=\{\true,\false\}$ is the set of boolean constants $b$, $\Int$ is the set of integer
+constants $z$; we do not distinguish between integer values and their program representation.
+
+We assume an infinite set $\Loc$ of locations $l$.
+
+\begin{definition}[Expressions]
+  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
+  are defined by the grammars
+  \[\GRbeg
+    \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+    c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid !
+             \GRmid \assign \GRmid \fix \GRmid \op,
+  \GRend\]
+  the set $\Exp$ of {\em expressions} $e$ is defined by
+  \[\GRbeg
+    e \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+           \GRmid \ifte{e_0}{e_1}{e_2}
+  \GRend\]
+  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+  \[\GRbeg
+    v \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v}
+  \GRend\]
+\end{definition}
+
+$\fv{e}$ denotes the set of free variables and $\fl{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if $\fv{e}\cup\fl{e}=\emptyset$,
+that is if $e$ contains neither unbound variables nor
+locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
+considered for the logic later are valid programs (i.e. programmers aren't permitted to access
+abritrary memory locations).
+
+
+%%
+%% Static semantics
+%%
+
+\section{Static semantics}
+
+The static semantics of the programming language are defined by the typing relation
+$\tj{e}{\tau}$, with types $\tau$ as follows:
+
+\begin{definition}[Types]
+  The set $\Type$ of all {\em types} $\tau$ is defined by the context-free grammar below:
+  \[\GRbeg
+    \tau  \GRis \tbool \GRmid \tint \GRmid \tunit
+          \GRal \tref{\tau}
+          \GRal \tarrow{\tau_1}{\tau_2}
+  \GRend\]
+\end{definition}
+
+We don't want to fiddle with type environments and store typings, hence we assume that
+the elements of $\Var$ and $\Loc$ are already tagged with types. Therefore for every
+type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables $\tau$ and $\Loc^\tau$ the
+set of locations of type $\tau$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
+$\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
+required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
+$l^\tau$ for elements of $\Loc^\tau$.
+
+\begin{definition}[Typing relation]
+  A {\em typing judgement} is a formula $\tj{e}{\tau}$ with
+  $e\in\Exp$ and $\tau\in\Type$. A typing judgement is said to
+  be valid if it was derived using the typing rules {\bf defined
+  elsewhere}.
+\end{definition}
+
+The set $\Exp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$ includes all expressions of type $\tau$,
+$\CExp^\tau = \{e\in\Exp^\tau\,|\,\fv{e}=\emptyset\}$ is the subset of closed of expressions of
+type $\tau$ and $\CExp = \bigcup_{\tau\in\Type} \CExp^\tau$ is the set of all well-typed, closed
+expressions. Likewise we define $\Val^\tau = \Exp^\tau\cap\Val$, $\CVal^\tau = \CExp^\tau \cap \Val$
+and $\CVal = \CExp \cap \Val$.
+
+
+%%
+%% Operational semantics
+%%
+
+\section{Operational semantics}
+
+Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be the partial order of possible `worlds'.
+
+\begin{definition}[Store] \label{definition:Store} \
+  \begin{enumerate}
+    \item A {\em store} is a partial function $s:\Loc \pto \CVal$ with a finite domain and
+          \begin{enumerate}
+            \item $s(\Loc^\tau) \subseteq \CVal^\tau$ for every $\tau\in\Type$ and
+            \item $\fl{\cod{s}} \subseteq \dom{s}$.
+          \end{enumerate}
+
+    \item For every $L \in W$ the set of {\em $L$-stores} is defined as
+          \[\begin{array}{l}
+            \Store_L = \{s\,|\,\text{$s$ is a store with $L\subseteq\dom{s}$}\}.
+          \end{array}\]
+
+    \item $\Store = \bigcup_{L \in W} \Store_L$ denotes the set of all {\em stores}.
+  \end{enumerate}
+\end{definition}
+
+We thereby require stores to be well-typed and closed by definition, i.e. we don't permit {\em dangling
+references} within stores. Obviously $\Store_{L'} \subseteq \Store_L$ if $L \subseteq L'$.
+
+\begin{definition}[Configuration]
+  Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
+  if $\fl{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
+\end{definition}
+
+The stores $s$ are already guaranteed to be closed due to definition~\ref{definition:Store} and
+now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
+include {\em dangling references} to unallocated store cells.
+
+%For any given set $L \subseteq \Loc$ we let $\Conf_L = \{(e,s)\in\Conf\,|\,\dom{s}\subseteq L\}$
+%denote the subset of configurations which do not have locations allocated outside $L$.
+
+\begin{definition}[Small step semantics]
+  Let $k,k'\in\Conf$. A {\em small step} is a formula
+  $k \to k'$. A small step is said to be valid if it was derived with
+  the small step rules given {\bf somewhere else}.
+\end{definition}
+
+\begin{definition}[Big step semantics]
+  Let $k,k'\in\Conf$ with $k' \in \Val \times \Store$. A {\em big step} is a formula
+  $k \Downarrow k'$. A big step is said to be valid if it was derived with the
+  big step rules given {\bf somewhere else}.
+\end{definition}
+
+It is easy to see that both the small and the big step semantics are well defined
+with respect to configurations. We assume that type safety holds for the semantics
+(see Pierce, {\bf TODO}).
+
+
+%%%
+%%% Permutability
+%%%
+%
+%\subsection{Permutability}
+%
+%These permutations were inspired by the {\em partial bijections} used by Pitts ({\bf TODO}: citation);
+%but we prefer to use total bijections here, since we have to consider stores instead of just their domains.
+%The result will be similar since we will introduce a partial order on stores, which combined with the
+%total bijection on stores, results in something that is comparable to a partial bijection in the sense
+%of Pitts.
+%
+%\begin{definition}[Permutation]
+%  A {\em permutation} is a total, bijective function $\mu:\Loc\to\Loc$ with
+%  $\mu\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$. Let $\Perm$ be the
+%  set of all such permutations.
+%\end{definition}
+%
+%Let $\Fix{\mu} = \{l\in\Loc\,|\,\mu(l)=l\}$ be set the of all fixed points of $\mu$. Then
+%the set $\Fix{L} = \{\mu\in\Perm\,|\,L \subseteq \Fix{\mu}\}$ includes all
+%permutations $\mu$ with $(\mu|L) = \id_L$.
+%
+%\begin{lemma}
+%  For all $L \subseteq \Loc$ and $\mu_1,\mu_2\in\Perm$ we have
+%  $\mu_1\in\Fix{L}$ iff $(\mu_2 \circ \mu_1 \circ \mu_2^{-1})\in\Fix{{\mu_2(L)}}$.
+%\end{lemma}
+%
+%\begin{proof}
+%  Trivial.
+%\end{proof}
+%
+%Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
+%$\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
+%every $\gamma \in \Gamma$ we define a poset $D^\gamma$ and for every $d \in D^\gamma$
+%we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
+%\begin{itemize}
+%  \item $D^\sexp = (\Exp,\sqsubseteq_\Exp)$ \\
+%        $e \sqsubseteq_\Exp e' \,\Leftrightarrow\, e = e'$ \\
+%        $\supp{e} = \fl{e}$
+%  \item $D^\ssto = (\Store,\sqsubseteq_\Store)$ \\
+%        $s \sqsubseteq_\Store s' \,\Leftrightarrow\, \grph{s} \subseteq \grph{s'}$ \\
+%        $\supp{s} = \dom{s}$
+%  \item $D^\scon = (\Conf,\sqsubseteq_\Conf)$ \\
+%        $(e,s) \sqsubseteq_\Conf (e',s') \,\Leftrightarrow\, e \sqsubseteq_\Exp e' \wedge s \sqsubseteq_\Store s'$ \\
+%        $\supp{(e,s)} = \supp{e} \cup \supp{s}$
+%\end{itemize}
+%For every permutation $\mu \in \Perm$ and every $\gamma\in\Gamma$ we define
+%a function $\mu^\gamma:D^\gamma \to D^\gamma$ by
+%\begin{itemize}
+%  \item $\mu^\sexp\,e = e\mu$,
+%  \item $\mu^\ssto\,s = \mu^\sexp \circ s \circ \mu^{-1}$ and
+%  \item $\mu^\scon\,(e,s) = (\mu^\sexp\,e,\mu^\ssto\,s)$,
+%\end{itemize}
+%where $e\mu$ is the expression that results from applying $\mu$ to every location in $e$.
+%
+%Obviously $\mu^\sexp$ is well-defined and bijective. For $\mu^\ssto$ assume that $L \in W$ and $s\in\Store_L$,
+%then $\mu^\ssto\,s = \mu^\sexp \circ s \circ \mu^{-1}$ is closed with respect to locations in
+%$\dom{\mu^\ssto\,s}$ and
+%\[\begin{array}{rccccl}
+%  \dom{\mu^\ssto\,s} &=& \mu(\dom{s}) &\supseteq& \mu(L),
+%\end{array}\]
+%thereby $(\mu^\ssto\,s) \in \Store_{\mu(L)}$. It is also easy to see that $\mu^\ssto$ is bijective, since
+%we have
+%\[\begin{array}{rcl}
+%  (\mu^{-1})^\ssto(\mu^\ssto\,s)
+%  &=& (\mu^{-1})^\ssto\,(\mu^\sexp \circ s \circ \mu^{-1}) \\
+%  &=& (\mu^{-1})^\sexp \circ \mu^\sexp \circ s \circ \mu^{-1} \circ \mu \\
+%  &=& s
+%\end{array}\]
+%for all $\mu\in\Perm$ and $s\in\Store$. Obviously $\mu^\scon$ is also well-defined and bijective then.
+%
+%\begin{lemma}[Permutations] \label{lemma:Permutations}
+%  Let $\mu,\hat{\mu}\in\Perm$, $\gamma\in\Gamma$ and $d \in D^\gamma$, then
+%  \begin{enumerate}
+%    \item $\supp{\mu^\gamma\,d} = \mu\,(\supp{d})$
+%    \item $\mu =_{\supp{d}} \hat{\mu}$ implies $\mu^\gamma\,d = \hat{\mu}^\gamma\,d$
+%  \end{enumerate}
+%\end{lemma}
+%%
+%In the special case $\hat{\mu} = \id$ for the second property we conclude immediately that
+%$\supp{d} \subseteq \Fix{\mu}$ implies $\mu^\gamma\,d = d$ for all $\mu\in\Perm$, $d\in D^\gamma$.
+%
+%\begin{proof}
+%  Trivial.
+%\end{proof}
+%
+%\begin{theorem} \label{theorem:small_steps_and_permutations}
+%  Let $k_1,k_1',k_2,k_2'\in D^\scon$ and $\mu_1\in\Perm$ with
+%  $k_1 \to k_2$ and $k_1' = \mu_1^\scon\,k_1$. Then $k_1' \to k_2'$ iff there is a $\mu_2\in\Perm$
+%  with $\mu_1 =_{\supp{k_1}} \mu_2$ such that $k_2' = \mu_2^\scon\,k_2$.
+%\end{theorem}
+%
+%The theorem is probably easier to understand if we visualize the implications using commutative
+%diagrams.
+%\[
+%  \xymatrix{
+%    k_1 \ar[r]^{\to} \ar[d]_{\mu_1} & k_2 \ar@{.>}[d]^{\mu_2} \\
+%    k_1' \ar[r]^{\to} & k_2'
+%  }
+%  \hspace*{3cm}
+%  \xymatrix{
+%    k_1 \ar[r]^{\to} \ar[d]_{\mu_1} & k_2 \ar[d]^{\mu_2} \\
+%    k_1' \ar@{.>}[r]^{\to} & k_2'
+%  }
+%\]
+%
+%\begin{proof}
+%  $\mu^\sexp$ preserves the structure of expressions, hence the small steps $k_1 \to k_2$ and
+%  $k_1' \to k_2'$ (if they exist) must have been derived using the same small step rules. Therefore
+%  we can prove the theorem by induction on the length of the derivation of $k_1 \to k_2$.
+%  \begin{itemize}
+%    \item If $k_1 \to k_2$ was derived using rule \RN{Ref} then we have
+%          $k_1 = (\cref\,v,s)$,
+%          $k_2 = (l,s[v/l])$ with $l \not\in \dom{s}$
+%          and $k_1' = (\mu_1^\sexp(\cref\,v),\mu_1^\ssto\,s)$.
+%          \begin{itemize}
+%            \item[`$\Rightarrow$']
+%                  $k_2' = (l',(\mu_1^\ssto\,s)[\mu_1^\sexp\,v/l'])$ with $l' \not\in \dom{\mu_1^\ssto\,s}$
+%
+%                  We can choose any $\mu_2 \in \Perm$ with $\mu_1 =_{\supp{k_1}} \mu_2$ and $\mu_2\,l = l'$ since
+%                  $l \not\in \dom{s} = \supp{k_1}$ and $(\mu_1^\ssto\,s)[\mu_1^\sexp\,v/l'] = \mu_2^\ssto(s[v/l])$.
+%
+%            \item[`$\Leftarrow$']
+%                  $k_2' = (\mu_2\,l,\mu_2^\ssto(s[v/l]))$
+%
+%                  $l \not\in \dom{s}$ implies $(\mu_2\,l)\not\in\mu_2(\dom{s})=\dom{\mu_2^\ssto\,s}=\dom{\mu_1^\ssto\,s}$,
+%                  and $\mu_2^\ssto(s[v/l]) = (\mu_2^\ssto\,s)[\mu_2^\sexp\,v/\mu_2\,l] = (\mu_1^\ssto\,s)[\mu_1^\sexp\,v/\mu_2\,l]$
+%                  and thereby we conclude
+%                  $(\mu_1^\sexp(\cref\,v),\mu_1^\ssto\,s)\to(\mu_2\,l,\mu_2^\ssto(s[v/l]))$ by small step rule \RN{Ref}.
+%          \end{itemize}
+%
+%    \item If $k_1 \to k_2$ was derived using rule \RN{App-Left} then $k_1 = (e_1\,e_2,s)$,
+%          $k_2 = (e_1'\,e_2,s')$ and $k_1' = (\mu_1^\sexp(e_1\,e_2),\mu_1^\ssto\,s)$ with $(e_1,s) \to (e_1',s')$.
+%          \begin{itemize}
+%            \item[`$\Rightarrow$']
+%                  $k_2' = (\hat{e}_1'\,(\mu_1^\sexp\,e_2),\hat{s}')$ with
+%                  $(\mu_1^\sexp\,e_1,\mu_1^\ssto\,s) \to (\hat{e}_1',\hat{s}')$
+%
+%                  By induction hypothesis there is a $\mu_2\in\Perm$ with $\mu_1 =_{\dom{s}} \mu_2$ such that
+%                  $\hat{e}_1' = \mu_2^\sexp\,e_1'$ and $\hat{s}' = \mu_2^\ssto\,s'$. Since
+%                  $\mu_1 =_{\dom{s}} \mu_2$ and $\dom{s} = \supp{k_1}$ we have $\mu_1^\sexp\,e_2=\mu_e^\sexp\,e_2$
+%                  and so we conclude $k_2' = (\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$.
+%
+%            \item[`$\Leftarrow$']
+%                  $k_2' = (\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$
+%
+%                  $\mu_2 =_{\supp{k_1}} \mu_1$ implies $\mu_2^\sexp\,e_2 = \mu_1^\sexp\,e_1$ and by induction hypothesis
+%                  a small step $(\mu_1^\sexp\,e_1,\mu_1^\ssto\,s) \to (\mu_2^\sexp\,e_1',\mu_2^\ssto\,s')$ exists. Then
+%                  $(\mu_1^\sexp(e_1\,e_2),\mu_1^\ssto\,s)\to(\mu_2^\sexp(e_1'\,e_2),\mu_2^\ssto\,s')$ follows immediately
+%                  with \RN{App-Left}.
+%          \end{itemize}
+%  \end{itemize}
+%  The remaining cases are omitted, they are similar to the above. 
+%\end{proof}
+%
+%Now this theorem provides quite a lot of interesting results. For example, if we choose $\mu_1 = \id$ then we can
+%conclude that if $k_1 = k_1'$ has atleast one terminating computation, then all computations for $k_1$ terminate
+%with exactly the same number of steps, and for every two results $(v',s')$ and $(v'',s'')$ a permutation
+%$\mu_2 \in \Fix{\supp{k_1}}$ exists, such that $v' = \mu_2^\sexp\,v''$ and $v'' = \mu_2^\ssto\,s''$.
+%
+%\begin{theorem} \label{theorem:small_steps_and_graph}
+%  Let $k_1,k_1',k_2\in D^\scon$. If $k_1 \sqsubseteq k_1'$ and $k_1' \to k_2'$ then
+%  there exists a $k_2 \in D^\scon$ such that $k_1 \to k_2$ and $k_2 \sqsubseteq k_2'$.
+%\end{theorem}
+%
+%We can again visualize the theorem using a commutative diagram:
+%\[
+%  \xymatrix{
+%    k_1 \ar@{.>}[r]^{\to} \ar[d]_{\sqsubseteq} & k_2 \ar@{.>}[d]^{\sqsubseteq} \\
+%    k_1' \ar[r]^{\to} & k_2'
+%  }
+%\]
+%
+%\begin{proof}
+%  By induction on $k_1' \to k_2'$:
+%  \begin{itemize}
+%    \item If $k_1' \to k_2'$ was derived using \RN{Ref} then $k_1 = (\cref\,v,s)$, $k_1' = (\cref\,v,s')$
+%          with $s \sqsubseteq k'$ and $k_2' = (l,s'[v/l])$ with $l \not\in \dom{s'}$.
+%
+%          Now let $k_2 = (l,s[v/l])$. Since $l \not\in \dom{s'} \supseteq \dom{s}$ we can derive
+%          $k_1 \to k_2$ using \RN{Ref}.
+%
+%    \item If $k_1' \to k_2'$ was derived by \RN{Assign} then $k_1 = (l \assign v,s)$, $k_1' = (l \assign v,s')$
+%          and $k_2' = (\unit,s'[v/l])$ with $s \sqsubseteq s'$.
+%
+%          Then choose $k_2 = (\unit,s[v/l])$ since then $k_1 \to k_2$ with \RN{Assign} and obviously
+%          $(s[v/l]) \sqsubseteq (s'[v/l])$ since $s \sqsubseteq s'$ and $l \in \dom{s}\cap\dom{s'}$.
+%
+%    \item If $k_1' \to k_2'$ was derived using \RN{App-Left} then $k_1=(e_1\,e_2,s_1)$, $k_1'=(e_1\,e_2,s_1')$
+%          and $k_2' = (e_1'\,e_2,s_2')$ with $s_1 \sqsubseteq s_1'$ and $(e_1,s_1') \to (e_1',s_2')$.
+%
+%          By induction hypothesis there exists $s_2 \in D^\scon$ with $s_2 \sqsubseteq s_2'$ and
+%          $(e_1,s_1) \to (e_1',s_2)$. With \RN{App-Left} we conclude $(e_1\,e_2,s_1) \to (e_1'\,e_2,s_2)$.
+%  \end{itemize}
+%  The remaining cases are pretty similar in shape.
+%\end{proof}
+%
+%Obviously this theorem implies that for every two stores $s,\hat{s}$ with $s \sqsubseteq \hat{s}$ and
+%$(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ there exists another store $s'$ such that $(e,s) \xrightarrow* (v,s')$
+%and $s' \sqsubseteq \hat{s}'$.
+
+
+%%
+%% The assertion language
+%%
+
+\chapter{The assertion language}
+
+
+%%
+%% Syntax of the assertion language
+%%
+
+\section{Syntax of the assertion language}
+
+\[\GRbeg
+  t \GRis x \GRmid v \GRmid f \GRmid \app{t_1}{t_2} \GRmid \tabstr{x}{t}
+    \GRnl
+
+  p,q \GRis t_1 \mapsto t_2 \GRmid p \vee q \GRmid \neg p \GRmid \qbex{x}{t}{p}
+      \GRal \triple{p}{e_{:x}}{q} \GRmid \qex{x}{p} \GRmid t_1 = t_2
+      \GRal x\,(t_1,\ldots,t_n) \quad n \ge 0
+      \GRnl
+\GRend\]
+
+The subset of {\em stateless assertions} $h \in \Formula$, called {\em Hoare formulae}, is:
+\[\GRbeg
+  h \GRis t_1 = t_2 \GRmid \triple{p}{e}{q} \GRmid \qex{x}{h} \GRmid h_1 \vee h_2 \GRmid \neg h
+\GRend\]
+
+%\[\GRbeg
+%  t \GRis x
+%    \GRal v
+%    \GRal f
+%    \GRal \app{t_1}{t_2}
+%    \GRal \tabstr{x}{t}
+%    \GRnl
+%
+%  h \GRis t_1 = t_2
+%    \GRal \triple{p}{e}{q}
+%    \GRal \qex{x}{h}
+%    \GRal h_1 \vee h_2
+%    \GRal \neg h
+%    \GRnl
+%
+%  p,q \GRis x
+%      \GRal h
+%      \GRal \app{p}{t}
+%      \GRal \tabstr{x}{p}
+%      \GRal t_1 \mapsto t_2
+%      \GRal t \# p
+%      \GRal \qbex{x}{t}{p}
+%      \GRal p \vee q
+%      \GRal \neg p
+%\GRend\]
+%
+%The set $\LType$ of all {\em logical types} $\theta$ is defined
+%by the following grammar
+%\[\GRbeg
+%  \theta \GRis \tau \GRmid \tassn \GRmid \ttarrow{\theta_1}{\theta_2}.
+%\GRend\]
+%Notable subsets of $\LType$ are
+%\begin{itemize}
+%  \item the set $\SType$ of all {\em static types} $\sigma$, given by
+%        \[\GRbeg
+%          \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2},
+%        \GRend\]
+%
+%  \item and the set $\PType$ of all {\em predicate types} $\pi$, given by
+%        \[\GRbeg
+%          \pi \GRis \tassn \GRmid \ttarrow{\theta}{\pi}.
+%        \GRend\]
+%\end{itemize}
+
+The set $\SType$ of {\em static types} $\sigma$ is defined by the following grammar
+\[\GRbeg
+  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2}
+\GRend\]
+and the set $\LType$ of {\em logical types} $\theta$ is
+\[\GRbeg
+  \theta \GRis \sigma \GRmid \vec{\sigma}\,\tassn
+\GRend\]
+where $\vec{\sigma} = (\sigma_1,\ldots,\sigma_n)$ with $n \ge 0$. We write
+$\tassn$ if $n = 0$.
+
+%\subsubsection{Abbreviations}
+%
+%We write
+%\[\begin{array}{rcl}
+%  \tabstr{\unit}{t}
+%  &\triangleq& \tabstr{x^\tunit}{t} \quad \text{where } x^{\tunit}\not\in\fv{t} \\
+%  \\
+%  p \wedge q
+%  &\triangleq& \neg(\neg p \vee \neg q) \\
+%  p \Rightarrow q
+%  &\triangleq& \neg p \vee q \\
+%  p \Leftrightarrow q
+%  &\triangleq& (p \Rightarrow q) \wedge (q \Rightarrow p) \\
+%  \qball{x}{t}{p}
+%  &\triangleq& \neg\qbex{x}{t}{\neg p} \\
+%  \tabstr{\unit}{p}
+%  &\triangleq& \tabstr{x^\tunit}{p} \quad \text{where } x^{\tunit}\not\in\fv{p} \\
+%  \\
+%  \true
+%  &\triangleq& t = t \quad \text{where } t \in \Term \\
+%  \false
+%  &\triangleq& \neg \true \\
+%  h_1 \wedge h_2
+%  &\triangleq& \neg(\neg h_1 \vee \neg h_2) \\
+%  h_1 \Rightarrow h_2
+%  &\triangleq& \neg h_1 \vee h_2 \\
+%  h_1 \Leftrightarrow h_2
+%  &\triangleq& (h_1 \Rightarrow h_2) \wedge (h_2 \Rightarrow h_1) \\
+%  \qall{x}{h}
+%  &\triangleq& \neg\qex{x}{\neg h} \\
+%  \triple{p}{e}{\returns{x}{p}}
+%  &\triangleq& \triple{p}{e}{\tabstr{x}{p}} \\
+%  \{p\}
+%  &\triangleq& \triple{\true}{e}{p}
+%\end{array}\]
+%We extend the logical connectives and quantifiers to functions. For each
+%logical connective $\oplus$ we define $\oplus^\pi$ by
+%\[\begin{array}{rcl}
+%  p \oplus^\tassn q
+%  &\triangleq& p \oplus q \\
+%  p \oplus^{\ttarrow{\theta}{\pi}} q
+%  &\triangleq& \tabstr{x^\theta}{(p\,x) \oplus^\pi (q\,x)}
+%\end{array}\]
+%and for every quantifier $Q$ we define $Q^\pi$ by
+%\[\begin{array}{rcl}
+%  Q^\tassn y^\theta\in[t].\,p
+%  &\triangleq& Q y^\theta\in[t].\,p \\
+%  Q^{\ttarrow{\theta}{\pi}} y^{\theta'}\in[t].\,p
+%  &\triangleq& \tabstr{x^\theta}{Q^\pi y^{\theta'}\in[x].\,(p\,x)}
+%\end{array}\]
+%where $x$ denotes a fresh variable. Since the exact type is always clear from
+%the context, we simply write $\oplus$ and $Q$ instead of $\oplus^\pi$ and
+%$Q^\pi$.
+%
+%In addition to these rather obvious abbreviations we add a new type of formula
+%$\inv{e}{p}$, read {\em `the assertion $p$ is invariant with respect to $e$'}.
+%\[\begin{array}{rcll}
+%  \inv{e}{p} &\triangleq& \triple{p}{e}{\tabstr{\unit}{p}} \quad \text{for every } p\in\Assn^\tassn \\
+%  \inv{e}{p} &\triangleq& \qall{x^\theta}{\inv{e}{(p\,x)}} \quad \text{for every } p\in\Assn^{\ttarrow{\theta}{\theta'}}
+%\end{array}\]
+%{\bf TODO:} Won't work. Doesn't treat $\tj{e}{\tarrow{\tau_1}{\tau_2}}$ properly.
+
+
+%%
+%% Semantics of the logic
+%%
+
+\section{Semantics of the logic}
+
+
+%%%
+%%% Reachability
+%%%
+%
+%\subsection{Reachability}
+%
+%\begin{definition}[Reachability]
+%  Let $L\in W$ and $s\in\Store_L$. By induction we define sets $\reachn{i}{L}{s} \subseteq \Loc$
+%  \begin{itemize}
+%    \item $\reachn{0}{L}{s} = L$
+%    \item $\reachn{i+1}{L}{s} = \reachn{i}{L}{s} \cup \bigcup_{l\in\reachn{i}{L}{s}} \fl{s(l)}$.
+%  \end{itemize}
+%  The set $\reach{L}{s} = \bigcup_{i\in\N} \reachn{i}{L}{s}$ includes all locations in $s$ reachable
+%  by $L$.
+%\end{definition}
+%
+%Since a store $s\in\Store_L$ is always closed by definition, it is obvious that
+%$\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
+%
+%\begin{lemma}[Reachability] \label{lemma:Reachability}
+%  Let $L,L'\in W$ with $L \subseteq L'$ and $s,s'\in\Store_{L'}$.
+%  \begin{enumerate}
+%    \item $\reach{L}{s} \subseteq \reach{L'}{s}$
+%    \item $\reach{L}{s} = \reach{\reach{L}{s}}{s}$
+%    \item $\reach{L \cup L'}{s} = \reach{L}{s} \cup \reach{L'}{s}$
+%    \item $\reach{L}{s} = \reach{L}{s'}$ whenever $\reach{L'}{s} = \reach{L'}{s'}$
+%          and $s =_{\reach{L'}{s}} s'$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Trivial.
+%\end{proof}
+%
+%\begin{definition}[$L$-equivalence, $L$-definability]
+%  Given a world $L \in W$ we define:
+%  \begin{enumerate}
+%    \item Two stores $s,s'\in\Store_L$ are called {\em $L$-equivalent}, denoted $s \equiv_L s'$, if
+%          $\reach{L}{s} = \reach{L}{s'}$ and $s =_{\reach{L}{s}} s'$.
+%
+%    \item A predicate $\phi:\Store \pto \Bool$ with $\Store_L = \dom{\phi}$ is said to be
+%          {\em $L$-definable} if $\app{\phi}{s} = \app{\phi}{s'}$ for all stores
+%          $s,s'\in\Store_L$ with $s \equiv_L s'$. $\DEF_L$ denotes the set of all $L$-definable
+%          predicates.
+%  \end{enumerate}
+%\end{definition}
+%
+%\begin{lemma}[$L$-equivalence, $L$-definability] \label{lemma:L_equivalence_and_L_definability}
+%  Let $L \in W$ and $s,s' \in \Store_L$.
+%  \begin{enumerate}
+%    \item $s \equiv_{L} s'$ implies $s \equiv_{L'} s'$ for all $L' \subseteq \reach{L}{s}$
+%    \item $s \sqsubseteq s'$ implies $\phi\,s = \phi\,s'$ for every $\phi \in \DEF_L$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof} \
+%  \begin{enumerate}
+%    \item Let $L' \subseteq \reach{L}{s}$. Then lemma~\ref{lemma:Reachability} implies
+%          \[\begin{array}{rcl}
+%            \reach{L'}{s} &\subseteq& \reach{\reach{L}{s}}{s} \\
+%                          &=&         \reach{L}{s}
+%          \end{array}\]
+%          and therefore $s\,l = s'\,l$ for every $l \in \reach{L'}{s} \subseteq \reach{L}{s}$. The
+%          proof of $\reach{L'}{s} = \reach{L'}{s'}$ is a trivial induction then.
+%
+%    \item Since $\phi \in \DEF_L$ we have $\phi\,s = \phi\,s'$ for all $s,s'$ with $s \equiv_L s'$. Hence
+%          it suffices to show that $s \sqsubseteq s'$ implies $s \equiv_L s'$.
+%          \[\begin{array}{rcl}
+%            s \sqsubseteq s'
+%            &\Rightarrow& \grph{s} \subseteq \grph{s'} \\
+%            &\Rightarrow& \dom{s} \subseteq \dom{s'} \wedge \forall l\in\dom{s}.\,s\,l = s'\,l \\
+%            &\Rightarrow& \reach{L}{s} = \reach{L}{s'} \wedge \forall l\in\reach{L}{s}.\,s\,l = s'\,l \\
+%            &           & \text{by a trivial induction since $\reach{L}{s} \subseteq \dom{s}$} \\
+%            &\Rightarrow& s \equiv_L s'
+%          \end{array}\]
+%  \end{enumerate}
+%\end{proof}
+%
+%\begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
+%  Let $\mu \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
+%  Then
+%  \begin{enumerate}
+%    \item $\reach{\mu(L)}{\mu^\ssto\,s} = \mu\,(\reach{L}{s})$
+%    \item $s \equiv_L s' \,\Leftrightarrow\, (\mu^\ssto\,s) \equiv_{\mu(L)} (\mu^\ssto\,s')$
+%    \item $\phi \in \DEF_{\mu(L)} \,\Leftrightarrow\, (\phi \circ \mu^\ssto) \in \DEF_L$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof} \
+%  \begin{enumerate}
+%    \item It is sufficient to prove $\mu\,(\reachn{i}{L}{s}) = \reachn{i}{\mu(L)}{\mu^\ssto\,s}$ for every $i\in\N$:
+%          \begin{itemize}
+%            \item $\reachn{0}{\mu(L)}{\mu^\ssto\,s} = \mu(L) = \mu\,(\reachn{0}{L}{s})$
+%
+%            \item $\reachn{i+1}{\mu(L)}{\mu^\ssto\,s} \\
+%                  = \reachn{i}{\mu(L)}{\mu^\ssto\,s}
+%                    \cup \bigcup_{l\in\reachn{i}{\mu(L)}{\mu^\ssto\,s}} \fl{s(l)} \\
+%                  = \mu\,(\reachn{i}{L}{s})
+%                    \cup \bigcup_{l\in\reachn{i}{L}{s}} \fl{\mu^\sexp(s(l)} \\
+%                  = \mu\,(\reachn{i+1}{L}{s})$
+%          \end{itemize}
+%
+%    \item We prove only one direction, the reverse follows easily.
+%
+%          $\reach{\mu(L)}{\mu^\ssto\,s} = \mu\,(\reach{L}{s}) = \mu\,(\reach{L}{s'}) = \reach{\mu(L)}{\mu^\ssto\,s'}$
+%
+%          $l \in \reach{\mu(L)}{\mu^\ssto\,s} \\
+%            \,\Rightarrow\,
+%            \mu^{-1}(l) \in \reach{L}{s} \\
+%            \,\Rightarrow\,
+%            s(\mu^{-1}(l)) = s'(\mu^{-1}(l)) \\
+%            \,\Rightarrow\,
+%            (\mu^\ssto s)(l) = (\mu^\ssto s')(l)$
+%
+%    \item Again only one direction.
+%
+%          Let $s,s'\in\Store_L$ with $s \equiv_L s'$. Then $(\mu^\ssto\,s) \equiv_{\mu(L)} (\mu^\ssto\,s')$
+%          where $(\mu^\ssto\,s),(\mu^\ssto\,s')\in\Store_{\mu(L)}$, hence $\phi\,(\mu^\ssto\,s)=\phi\,(\mu^\ssto\,s')$
+%          and thereby $(\phi \circ \mu^\ssto) \in \DEF_L$.
+%  \end{enumerate}
+%\end{proof}
+%
+%
+%%%
+%%% Semantic domains
+%%%
+%
+%\subsection{Semantic domains}
+%
+%\begin{definition}[Semantic domains]
+%  For every type $\theta\in\LType$ we define {\em semantic domains} $\semantic{\theta} = (D^\theta,\I^\theta)$ where
+%  $D^\theta = \bigcup_{L \in W} D^\theta_L$ and $\I^\theta(\mu) : D^\theta \to D^\theta$ for every $\mu \in \Perm$ by
+%  \begin{itemize}
+%    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\supp{v} = L\}$ \\
+%          $\I^\tau(\mu): D^\tau \to D^\tau, v \mapsto \mu^\sexp\,v$
+%
+%    \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \mu\in\Fix{L}.\,\phi = \phi \circ (\mu^\ssto)^{-1}\}$ \\
+%          $\I^\tassn(\mu): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\mu^\ssto)^{-1}$
+%
+%    \item $D^{\ttarrow{\theta_1}{\theta_2}}_L = \{ \psi: D^{\theta_1} \to D^{\theta_2}\,|\,
+%              \forall L'\in W.\,\psi\,(D^{\theta_1}_{L'}) \subseteq D^{\theta_2}_{L \cup L'} \\
+%              \hspace*{4.5cm} \wedge \forall \mu\in\Fix{L}.\,\psi\circ\mu^{\theta_1}=\mu^{\theta_2}\circ\psi\}$\\
+%          $\I^{\ttarrow{\theta_1}{\theta_2}}(\mu):D^{\ttarrow{\theta_1}{\theta_2}}\to D^{\ttarrow{\theta_1}{\theta_2}},
+%                              \psi \mapsto \I^{\theta_2}(\mu) \circ \psi \circ (\I^{\theta_1}(\mu))^{-1}$
+%  \end{itemize}
+%\end{definition}
+%
+%We follow the usual mathematical convention and use $\semantic{\theta}$ not only as a notation
+%for the semantic domain $(D^\theta,\I^\theta)$ but also for the underlying set $D^\theta$,
+%hence $\semantic{\theta}_L$ denotes the set $D^\theta_L$. Moreover, we use $\mu^\theta$ as an abbreviation
+%for $\I^\theta(\mu)$.
+%
+%Given lemma~\ref{lemma:Permutations}
+%it is pretty much obvious that $\mu^\theta\,d = d$ for every $d \in \semantic{\theta}_L$ and
+%$\mu\in\Fix{L}$.
+%It is also easy to see that
+%\[\begin{array}{rcl}
+%  \semantic{\theta}_{L_1} \cap \semantic{\theta}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
+%\end{array}\]
+%holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\theta}$ a
+%unique world $L \in W$ exists, such that $d \in \semantic{\theta}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\theta}_{L'}$.
+%This unique world $L$ is called the {\em support of $d$}, written $\supp{d}$. In general we abbreviate
+%$\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$, and we write
+%$\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
+%
+%\begin{lemma}[Semantic domains] \
+%  Let $\theta \in \LType$, $\mu\in\Perm$ and $L\in W$.
+%  \begin{enumerate}
+%    \item $(\mu^\theta|\semantic{\theta}_L): \semantic{\theta}_L \to \semantic{\theta}_{\mu(L)}$ is
+%          well-defined and bijective.
+%    \item $\mu^\theta: \semantic{\theta} \to \semantic{\theta}$ is well-defined and bijective.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Given that $\semantic{\theta}$ is the union of disjoint sets $\semantic{\theta}_L$, the second
+%  property is simply an implication of the first one. Now assume that $(\mu^\theta|\semantic{\theta}_L)$
+%  is well-defined, i.e. $\mu^\theta\,\semantic{\theta}_L \subseteq \semantic{\theta}_{\mu(L)}$, then
+%  we also have $(\mu^{-1})^\theta\,\semantic{\theta}_{\mu(L)} \subseteq \semantic{\theta}_L$, which
+%  implies
+%  \[\begin{array}{rcl}
+%    (\mu^\theta \circ (\mu^{-1})^\theta)\,\semantic{\theta}_{\mu(L)} &\subseteq& \semantic{\theta}_{\mu(L)}
+%  \end{array}\]
+%  and
+%  \[\begin{array}{rcl}
+%    ((\mu^{-1})^\theta \circ \mu^\theta)\,\semantic{\theta}_L &\subseteq& \semantic{\theta}_L.
+%  \end{array}\]
+%  Given these results it is then sufficient to prove that $(\mu^\theta|\semantic{\theta}_L)$ is
+%  well-defined and $\mu^\theta \circ (\mu^{-1})^\theta$ is the identity on $\semantic{\theta}$.
+%  \begin{itemize}
+%    \item Let $v \in \semantic{\tau}_L$, then we have $\supp{v} = L$ and by lemma~\ref{lemma:Permutations}
+%          we also have $\mu(L) = \supp{\mu^\sexp\,v} = \supp{\mu^\tau\,v}$, thereby
+%          $(\mu^\tau\,v) \in \semantic{\tau}_{\mu(L)}$. Likewise
+%          $(\mu^\tau \circ(\mu^{-1})^\tau)\,v = \mu^\sexp((\mu^{-1})^\sexp\,v) = v$.
+%
+%    \item Let $\phi \in \semantic{\tassn}_L$ then $\phi \in \DEF_{\mu^{-1}(\mu(L))}$ and using
+%          lemma~\ref{lemma:Permutations_and_Reachability} we conclude $(\phi\circ(\mu^\ssto)^{-1})\in\DEF_{\mu(L)}$.
+%
+%          Now let $\bar{\mu}\in\Fix{\mu(L)}$ then $(\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L}$ and since
+%          $\phi\in\DEF_L$ we also have $\phi = \phi \circ ((\mu^{-1}\circ \bar{\mu} \circ \mu)^\ssto)^{-1}$,
+%          which easily transforms to $\phi\circ (\mu^\ssto)^{-1} = \phi \circ (\mu^\ssto)^{-1} \circ (\bar{\mu}^\ssto)^{-1}$.
+%
+%          Obviously $(\mu^\tassn\circ(\mu^{-1})^\tassn)\,\phi\,s
+%            = \phi\,((\mu^{-1})^\ssto\,(\mu^\ssto\,s)) = \phi$.
+%
+%    \item For $\mu^{\ttarrow{\theta_1}{\theta_2}}$ the statement follows immediately using the induction hypothesis.
+%%    \item Let $\psi\in\semantic{\ttarrow{\sigma}{\theta}}_L$, then
+%%          \begin{itemize}
+%%            \item $d \in \semantic{\sigma}_{L'}, L'\in W \\
+%%                   \,\Rightarrow\,
+%%                   ((\mu^\sigma)^{-1}\,d) \in \semantic{\sigma}_{\mu^{-1}(L')} \\
+%%                   \,\Rightarrow\,
+%%                   \psi\,((\mu^\sigma)^{-1}\,d) \in \semantic{\theta}_{L\cup\mu^{-1}(L')} \\
+%%                   \,\Rightarrow\,
+%%                   \mu^\theta\,(\psi\,((\mu^\sigma)^{-1}\,d))\in\semantic{\theta}_{\mu(L)\cup L'} \\
+%%                   \,\Rightarrow\,
+%%                   ((\mu^\theta\circ\psi\circ(\mu^\sigma)^{-1})\,d)\in\semantic{\theta}_{\mu(L)\cup L'}$
+%%
+%%            \item $\bar{\mu}\in\Perm_{\mu(L)} \\
+%%                   \,\Rightarrow\,
+%%                   (\mu^{-1}\circ \bar{\mu} \circ \mu) \in \Fix{L} \\
+%%                   \,\Rightarrow\,
+%%                   \psi = (\mu^{-1}\circ\bar{\mu}\circ\mu)^\theta\circ\psi\circ
+%%                      ((\mu^{-1}\circ\bar{\mu}\circ\mu)^\sigma)^{-1} \\
+%%                   \,\Rightarrow\,
+%%                   \psi = (\mu^\theta)^{-1}\circ\bar{\mu}^\theta\circ\mu^\theta\circ\psi
+%%                      \circ(\mu^\sigma)^{-1}\circ(\bar{\mu}^\sigma)^{-1}\circ\mu^\sigma \\
+%%                   \,\Rightarrow\,
+%%                   \mu^\theta \circ \psi \circ (\mu^\sigma)^{-1}
+%%                      = \bar{\mu}^\theta\circ[\mu^\theta\circ\psi\circ(\mu^\sigma)^{-1}]\circ(\bar{\mu}^\sigma)^{-1}$
+%%          \end{itemize}
+%%          so we conclude $(\mu^{\ttarrow{\sigma}{\theta}}\,\psi)\in\semantic{\ttarrow{\sigma}{\theta}}_{\mu(L)}$.
+%%
+%%          Given $\mu^\sigma\circ(\mu^{-1})^\sigma = \id_{\semantic{\sigma}}$ and
+%%          $\mu^\theta\circ(\mu^{-1})^\theta = \id_{\semantic{\theta}}$ by induction hypothesis it follows easily that
+%%          \[\begin{array}{rcccl}
+%%            (\mu^{\ttarrow{\sigma}{\theta}}\circ (\mu^{-1})^{\ttarrow{\sigma}{\theta}})\,\psi
+%%            &=& \mu^\theta \circ (\mu^{-1})^\theta \circ \psi \circ (\mu^{-1})^\sigma \circ \mu^\sigma 
+%%            &=& \psi.
+%%          \end{array}\]
+%  \end{itemize}
+%\end{proof}
+%
+%\begin{lemma} \label{lemma:Permutations_and_semantic_domains}
+%  Let $\mu,\hat{\mu}\in\Perm$, $\theta\in\LType$ and $d \in \semantic{\theta}$, then
+%  \begin{enumerate}
+%    \item $\supp{\mu^\theta\,d} = \mu\,(\supp{d})$
+%    \item $\mu =_{\supp{d}} \hat{\mu}$ implies $\mu^\theta\,d = \hat{\mu}^\theta\,d$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Follows easily with lemma~\ref{lemma:Permutations}.
+%\end{proof}
+%
+%
+%%%
+%%% Total correctness
+%%%
+%
+%\subsection{Total correctness}
+%
+%\begin{definition}[Total correctness]
+%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+%  and $L\in W$ with $\supp{\phi,e,\psi} \subseteq L$.
+%  $e$ is {\em $L$-totally correct}, or {\em $L$-correct} for short, with respect to $\phi$ and
+%  $\psi$, if for every $s\in\Store_L$ with $\phi\,s=\true$ each computation for $(e,s)$ terminates with some
+%  $(v',s')$ such that $\psi\,v'\,s'=\true$. We write $L \models \triple{\phi}{e}{\psi}$ in this case.
+%\end{definition}
+%
+%While the above definition reflects the usual understanding of {\em total correctness}, it is not really handy
+%in proving the soundness of the calculus later. This is because having to argue about all computations each
+%time is a tedious task. To get around this, we will show that it suffices to prove that if there exists a
+%terminating computation for $(e,s)$, then all possible computations terminate, and $\psi$ either holds for all
+%or none of the computations.
+%
+%Furtheron it is unusual to talk about a specific world $L$ in which $e$ is totally correct. Instead, one would
+%like to say that $e$ is totally correct with respect to $\phi$ and $\psi$, without talking about the world
+%explicitly. Hence we will show that if $e$ is totally correct in a sufficiently large world, then $e$ is
+%totally correct in all such worlds and we don't need to talk about the exact $L$ anymore.
+%
+%\begin{lemma}[Total correctness] \label{lemma:Total_correctness}
+%  Let $\tau\in\Type$, $e\in\CExp^\tau$, $\phi\in\semantic{\tassn}$, $\psi\in\semantic{\ttarrow{\tau}{\tassn}}$
+%  and $L,L'\in W$ with $\supp{\phi,e,\psi} \subseteq L \cap L'$.
+%  \begin{enumerate}
+%    \item $L\models\triple{\phi}{e}{\psi}$ if for every $s \in \Store_L$ with $\phi\,s=\true$ there exist $v'\in\CVal^\tau$ and 
+%          $s'\in\Store$ such that $(e,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$.
+%
+%    \item $L\models\triple{\phi}{e}{\psi}$ iff $L'\models\triple{\phi}{e}{\psi}$.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof} \
+%  \begin{enumerate}
+%    \item Let $s \in \Store_L$ with $\phi\,s = \true$. If there exists a terminating computation $(e,s) \xrightarrow* (v',s')$
+%          then theorem~\ref{theorem:small_steps_and_permutations} guarantees that each computation for $(e,s)$
+%          terminates with some $(v'',s'')$ such that a permutation $\mu\in\Fix{\dom{s}}$ exists with
+%          $\mu^\tau\,v' = \mu^\sexp\,v' = v''$ and $\mu^\ssto\,s' = s''$.
+%          Hence it suffices to prove that $\psi\,v'\,s' = \psi\,(\mu^\tau\,v')\,(\mu^\ssto\,s')$.
+%
+%          Since $\supp{\psi} \subseteq \dom{s} \subseteq \Fix{\mu}$ we have $\psi = (\mu^{\ttarrow{\tau}{\tassn}})^{-1}\,\psi$ by
+%          lemma~\ref{lemma:Permutations_and_semantic_domains} and so
+%          \[\begin{array}{rcl}
+%            \psi\,v'\,s' &=& ((\mu^\tassn)^{-1} \circ \psi \circ \mu^\tau)\,v'\,s' \\
+%                         &=& ((\mu^\tassn)^{-1} (\psi\,(\mu^\tau\,v')))\,s' \\
+%                         &=& \psi\,(\mu^\tau\,v')\,(\mu^\ssto\,s').
+%          \end{array}\]
+%
+%    \item Without loss of generality let $L= \supp{\phi,e,\psi}$ and hence $L \subseteq L'$.
+%          \begin{itemize}
+%            \item[`$\Rightarrow$']
+%                  Trivial since $\Store_{L'} \subseteq \Store_L$.
+%
+%            \item[`$\Leftarrow$']
+%                  Let $s \in \Store_L$ with $\phi\,s = \true$. Then we are able to construct a store $\hat{s}\in\Store_{L'}$
+%                  with $s \sqsubseteq \hat{s}$, and by lemma~\ref{lemma:L_equivalence_and_L_definability}
+%                  we also have $\phi\,\hat{s}=\true$ then.
+%
+%                  Since $(e,\hat{s})$ is a well-typed configuration, there must be atleast one computation such that
+%                  $(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ for which, by assumption, $\psi\,v\,\hat{s}'=\true$ holds.
+%                  Now theorem~\ref{theorem:small_steps_and_graph} guarantees that a store $s'$ exists such that
+%                  $(e,s) \xrightarrow* (v,s')$ and $s' \sqsubseteq \hat{s}'$.
+%
+%                  Since $(\psi\,v) \in \semantic{\tassn}_{\supp{\psi,v}}$ and 
+%                  $\supp{\psi,v}\subseteq\dom{s'}\subseteq\dom{\hat{s}'}$ we have $\psi\,v\,s' = \true$ by
+%                  lemma~\ref{lemma:L_equivalence_and_L_definability},
+%                  and therefore we conclude $L\models\triple{\phi}{e}{\psi}$.
+%          \end{itemize}
+%  \end{enumerate}
+%\end{proof}
+%
+%From these results it is easy to see that the exact $L$ doesn't matter for the total correctness, since
+%if $L\models\triple{\phi}{e}{\psi}$ holds for some $L \supseteq \supp{\phi,e,\psi}$
+%then $L'\models\triple{\phi}{e}{\psi}$ holds for all $L'\supseteq \supp{\phi,e,\psi}$.
+%Hence we write $\triple{\phi}{e}{\psi}$ if $\supp{\phi,e,\psi}\models\triple{\phi}{e}{\psi}$,
+%to denote that $e$ is {\em totally correct} with respect to $\phi$ and $\psi$. 
+%
+%\begin{lemma} \label{lemma:Permutations_and_total_correctness}
+%  Let $L \in W$, $\tau \in \Type$, $\phi \in \semantic{\tassn}$,
+%  $\psi \in \semantic{\ttarrow{\tau}{\tassn}}$ and $e \in \CExp^\tau$ with $\supp{\phi,e,\psi} \subseteq L$.
+%  For every $\mu \in \Perm$ we have $L\models\triple{\phi}{e}{\psi}$ iff
+%  $\mu(L) \models \triple{\mu^\tassn\,\phi}{(\mu^\sexp\,e)}{\mu^{\ttarrow{\tau}{\tassn}}\,\psi}$.
+%\end{lemma}
+%
+%\begin{proof}
+%  We prove only one direction, the other direction follows immediately with a similar reasoning.
+%
+%  So let $s \in \Store_{\mu(L)}$ with $(\mu^\tassn\,\phi)\,s = \true$, then
+%  $((\mu^\ssto)^{-1}\,s) \in \Store_L$ and $\phi\,((\mu^\ssto)^{-1}\,s)=\true$.
+%  According to lemma~\ref{lemma:Total_correctness} there are $v' \in \CVal^\tau$
+%  and $s' \in \Store$ such that
+%  $(e,(\mu^\ssto)^{-1}\,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s' = \true$.
+%
+%  By theorem~\ref{theorem:small_steps_and_permutations} there exists some
+%  $\hat{\mu}\in\Perm$ with $\hat{\mu} =_{\supp{e,(\mu^\ssto)^{-1}\,s}} \mu$ such that
+%  $(\mu^\sexp\,e,s) \xrightarrow* (\hat{\mu}^\tau\,v',\hat{\mu}^\ssto\,s')$.
+%  Since $\supp{\psi} \subseteq L \subseteq \supp{(\mu^\ssto)^{-1}\,s}$ we also have
+%  $\hat{\mu} =_{\supp{\psi}} \mu$ and thereby
+%  \[\begin{array}{rcl}
+%    (\mu^{\ttarrow{\tau}{\tassn}}\,\psi)\,(\hat{\mu}^\tau\,v')\,(\hat{\mu}^\ssto\,s')
+%    &=& (\hat{\mu}^{\ttarrow{\tau}{\tassn}}\,\psi)\,(\hat{\mu}^\tau\,v')\,(\hat{\mu}^\ssto\,s') \\
+%    &=& \psi\,((\hat{\mu}^\tau)^{-1}\,(\hat{\mu}^\tau\,v'))\,
+%              ((\hat{\mu}^\ssto)^{-1}\,(\hat{\mu}^\ssto\,s')) \\
+%    &=& \psi\,v'\,s' \\
+%    &=& \true.
+%  \end{array}\]
+%\end{proof}
+%
+%Given lemma~\ref{lemma:Total_correctness} we can generalize the statement of the previous lemma
+%to $\triple{\phi}{e}{\psi}$ iff $\triple{\mu^\tassn\,\phi}{(\mu^\sexp\,e)}{\mu^{\ttarrow{\tau}{\tassn}}\,\psi}$,
+%since the exact world doesn't matter for total correctness.
+
+
+%%
+%% Semantics of the assertion language
+%%
+
+\subsection{Semantics of the assertion language}
+
+%{\bf TODO:} Type system for the assertion language. Define $\Term^\sigma$, $\Assn^\pi$ (and make sure
+%to assert that expressions and values do not contain locations, i.e. $\fl{e} = \fl{v} = \emptyset$
+%for the appropriate rules).
+
+\begin{definition}[Environment] \label{definition:Environment}
+  An {\em environment} is a partial, finite function $\eta: \Var \pto \bigcup_{\theta\in\LType} \semantic{\theta}$
+  where $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for every $\theta \in \LType$. $\Env$ denotes
+  the set of all environments, $\Env_X = \{\eta\in\Env\,|\,X \subseteq \dom{\eta}\}$ denotes the set of
+  all environments whose domains include at least $X \subseteq \Var$.
+\end{definition}
+
+%We abbreviate $\Env_d = \Env_{\fv{d}}$. If $\eta \in \Env$ and $e \in \Exp$, then $e\,\eta$ denotes
+%the expression that results from replacing every variable $x$ in $e$ with $\eta\,x$. It is
+%easy to see that $e\,\eta$ is closed if $\eta \in \Env_e$. We define the support of an environment $\eta$
+%to be the set $\supp{\eta} = \bigcup_{x\in\dom{\eta}} \supp{\eta\,x}$ and for every permutation
+%$\mu\in\Perm$ we define a function
+%\[\begin{array}{c}
+%  \mu^\senv: \Env \to \Env, \eta \mapsto [x^\theta_i: \mu^\theta\,(\eta\,x^\theta_i)]_{x^\theta_i\in\dom{\eta}}
+%\end{array}\]
+%that applies $\mu$ to all elements in the image of $\eta$. It is trivial to prove that
+%\begin{enumerate}
+%  \item $\supp{\mu^\senv\,\eta} = \mu\,(\supp{\eta})$ and
+%  \item $(\mu|\supp{\eta}) = (\hat{\mu}|\supp{\eta}) \,\Rightarrow\, \mu^\senv\,\eta = \hat{\mu}^\senv\,\eta$
+%\end{enumerate}
+%holds for all $\mu,\hat{\mu}\in\Perm$ and $\eta\in\Env$.
+
+\begin{definition}[Meaning of terms]
+  For every well-typed term $t \in \Term$ of type $\sigma \in \SType$, the {\em meaning function}
+  $\semantic{\tj{t}{\sigma}}: \Env_t \to \semantic{\sigma}$ is defined by induction on the structure of $t$ as
+  follows:
+  \[\begin{array}{rcl}
+    \semantic{\tj{x^\sigma}{\sigma}}\,\eta
+      &=& \eta\,x \\
+    \semantic{\tj{f}{\sigma}}\,\eta 
+      &=& \semantic{f} \\
+    \semantic{\tj{v}{\tau}}\,\eta
+      &=& v\,\eta \\
+    \semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta
+      &=& (\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,
+          (\semantic{\tj{t_2}{\sigma'}}\,\eta) \\
+    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+      &=& \psi: \semantic{\sigma} \to \semantic{\sigma'} \\
+      & & \psi\, d = \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])
+  \end{array}\]
+\end{definition}
+
+%\begin{lemma} \label{lemma:meaning_function_of_t_is_well_defined}
+%  Let $\sigma \in \SType$, $t \in \Term^\sigma$, $\eta,\hat{\eta} \in \Env_t$ and $\mu,\hat{\mu}\in\Perm$. Then
+%  we have
+%  \begin{enumerate}
+%    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}_{\supp{\eta|_{\fv{t}}}}$
+%    \item $\semantic{\tj{t}{\sigma}}\,(\mu^\senv\,\eta) = \hat{\mu}^\sigma\,(\semantic{\tj{t}{\sigma}}\,\hat{\eta})$
+%          whenever $(\mu^\senv\,\eta) =_{\fv{t}} (\hat{\mu}^\senv\,\hat{\eta})$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  Mostly obvious induction on the structure of $t$. We show only the proof for the
+%  abstraction case.
+%
+%  Here we have $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+%    = \psi:\semantic{\sigma}\to\semantic{\sigma'},
+%      d \mapsto \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])$.
+%  Let $L = \supp{\eta|_{\fv{\tabstr{x}{t}}}}
+%         = \supp{\eta|_{\fv{t} \setminus \{x\}}}$. In order to prove
+%  that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$, we have to show
+%  \begin{enumerate}
+%    \item[(a)] $\psi\,(\semantic{\sigma}_{L'}) \subseteq \semantic{\sigma'}_{L \cup L'}$ for every $L' \in W$, and
+%    \item[(b)] $\psi \circ \mu^\sigma = \mu^{\sigma'} \circ \psi$ for every $\mu\in\Fix{L}$.
+%  \end{enumerate}
+%  {\em Proof of (a):} Let $d \in \semantic{\sigma}$. By induction hypothesis we have
+%  \[\begin{array}{rcl}
+%    \psi\,d = (\semantic{\tj{t}{\sigma'}}\,(\eta[d/x]))
+%    &\in& \semantic{\sigma'}_{\supp{\eta[d/x]|_{\fv{t}}}}
+%  \end{array}\]
+%  and we conclude
+%  \[\begin{array}{rcl}
+%    \supp{(\eta[d/x])|_{\fv{t}}}
+%    &=& \supp{\eta|_{\fv{t}\setminus\{x\}},d} \\
+%    &=& L \cup \supp{d}.
+%  \end{array}\]
+%   {\em Proof of (b):} Let $\mu\in\Fix{L}$ and $d\in\semantic{\sigma}$, then
+%   \[\begin{array}{rcl}
+%    \psi\,(\mu^\sigma\,d)
+%    &=& \semantic{\tj{t}{\sigma'}}\,(\eta[\mu^\sigma\,d/x]) \\
+%    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[d/x])) \\
+%    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[d/x])) \\
+%    &=& \mu^{\sigma'}\,(\psi\,d).
+%  \end{array}\]
+%  Hence we know that $\psi \in \semantic{\ttarrow{\sigma}{\sigma'}}_L$. Now in order to prove that
+%  \[\begin{array}{rcl}
+%    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)
+%    &=& \hat{\mu}^{\ttarrow{\sigma}{\sigma'}}\,
+%      (\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta})
+%  \end{array}\]
+%  whenever $(\mu^\senv\,\eta) =_{\fv{t}\setminus\{x\}} (\hat{\mu}^\senv\,\hat{\eta})$
+%  it is sufficient to show that
+%  \begin{enumerate}
+%    \item[(c)] $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
+%                = \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\hat{\eta}$ whenever
+%               $\eta =_{\fv{t}\setminus\{x\}} \hat{\eta}$, and
+%    \item[(d)] $\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)
+%                = \mu^{\ttarrow{\sigma}{\sigma'}}\,
+%                  (\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta)$.
+%  \end{enumerate}
+%  The proof of (c) is well-known and standard. For (d), let $d \in \semantic{\sigma}$, then
+%  \[\begin{array}{rcl}
+%    \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,(\mu^\senv\,\eta)\,d
+%    &=& \semantic{\tj{t}{\sigma'}}\,((\mu^\senv\,\eta)[d/x]) \\
+%    &=& \semantic{\tj{t}{\sigma'}}\,(\mu^\senv\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
+%    &=& \mu^{\sigma'}\,(\semantic{\tj{t}{\sigma'}}\,(\eta[(\mu^\sigma)^{-1}\,d/x])) \\
+%    &=& \mu^{\sigma'}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta\,
+%          ((\mu^\sigma)^{-1}\,d)) \\
+%    &=& \mu^{\ttarrow{\sigma}{\sigma'}}\,(\semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta)\,d.
+%  \end{array}\]
+%\end{proof}
+%
+%\noindent Auxiliary functions $\AUX = \{\Neg,\Or,\Cont,\Disj,\Exists\}$.
+%\begin{itemize}
+%  \item $\Neg: \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
+%        $\Neg\,\phi\,s =
+%          \bcase
+%            \uparrow  & \text{if } s \not\in \dom{\phi} \\
+%            \true     & \text{if } \phi\,s=\false \\
+%            \false    & \text{otherwise}
+%          \ecase$
+%
+%  \item $\Or: \semantic{\tassn} \to \semantic{\tassn} \to \semantic{\tassn}$ \\[1ex]
+%        $\Or\,\phi_1\,\phi_2\,s =
+%          \bcase
+%            \uparrow  & \text{if } s \not\in \dom{\phi_1} \cap \dom{\phi_2} \\
+%            \true     & \text{if } \phi_1\,s=\true \text{ or } \phi_2\,s=\true \\
+%            \false    & \text{otherwise}
+%          \ecase$
+%
+%  \item $\Cont: \semantic{\tref{\tau}} \to \semantic{\tau} \to \semantic{\tassn}$ \\[1ex]
+%        $\Cont\,l\,v\,s =
+%          \bcase
+%            \uparrow  & \text{if } \supp{l,v} \nsubseteq \dom{s} \\
+%            \true     & \text{if } s\,l = v \\
+%            \false    & \text{otherwise}
+%          \ecase$
+%
+%  \item $\Disj: \semantic{\theta_1} \to \semantic{\theta_2} \to \semantic{\tassn}$ \\[1ex]
+%        $\Disj\,d_1\,d_2\,s =
+%          \bcase
+%            \uparrow  & \text{if } \supp{d_1,d_2} \nsubseteq \dom{s} \\
+%            \true     & \text{if } \reach{d_1}{s} \cap \reach{d_2}{s} = \emptyset \\
+%            \false    & \text{otherwise}
+%          \ecase$
+%  
+%  \item $\Exists: \semantic{\theta_1} \to \semantic{\ttarrow{\theta_2}{\tassn}} \to \semantic{\tassn}$ \\[1ex]
+%        $\Exists\,d_1\,\psi\,s =
+%          \bcase
+%            \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{s} \\
+%            \true     & \text{if } \psi\,d_2\,s = \true
+%                        \text{ for some } d_2 \in \bigcup_{L\subseteq\reach{d_1}{s}}\semantic{\theta_2}_{L} \\
+%            \false    & \text{otherwise}
+%          \ecase$
+%\end{itemize}
+%
+%\begin{lemma} \label{lemma:AUX_functions_are_well_defined}
+%  Let $f \in \AUX$ with $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$
+%  and $\vec{L} \in W^n$ with $L = \bigcup_{i=1,\ldots,n} L_i$, then
+%  $f\,\semantic{\theta_1}_{L_1}\ldots\semantic{\theta_n}_{L_n}
+%    \subseteq \semantic{\tassn}_L$.
+%\end{lemma}
+%
+%\begin{proof}
+%  We will show that $\Neg$ and $\Exists$ are well-defined. The proofs for the remaining cases are
+%  similar to the ones considered below.
+%  \begin{itemize}
+%    \item Let $\phi_1 \in \semantic{\tassn}_{L_1}$, $\phi = \Neg\,\phi_1$. Then
+%          $\dom{\phi} = \dom{\phi_1} = \Store_{L_1}$ and for every two $s,s'\in\Store_{L_1}$
+%          with $s \equiv_{L_1} s'$ we have
+%          \[\begin{array}{rcl}
+%            \phi\,s = \true
+%            &\text{iff}&
+%            \phi_1\,s = \false \\
+%            &\text{iff}&
+%            \phi_1\,s' = \false \\
+%            &\text{iff}&
+%            \phi\,s' = \true
+%          \end{array}\]
+%          and thereby $\phi\in\DEF_{L_1}$. Now let $\mu \in \Fix{L_1}$, then we also have
+%          \[\begin{array}{rcl}
+%            \phi\,s = \true
+%            &\text{iff}&
+%            \phi_1\,s = \false \\
+%            &\text{iff}&
+%            \phi_1\,((\mu^\ssto)^{-1}\,s) = \false \\
+%            &\text{iff}&
+%            \phi\,((\mu^\ssto)^{-1}\,s) = \true,
+%          \end{array}\]
+%          hence we conclude $\phi \in \semantic{\tassn}_{L_1}$.
+%
+%    \item Let $d_1 \in \semantic{\theta_1}_{L_1}$,
+%          $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}$ and
+%          $\phi = (\Exists\,d_1\,\psi)$. It follows immediately that
+%          $\dom{\phi} = \Store_{L_1 \cup L_2}$. So let $s,s' \in \Store_{L_1 \cup L_2}$ with
+%          $s \equiv_{L_1 \cup L_2} s'$ and further assume that $\phi\,s = \true$. Then we know that
+%          $\psi\,d_2\,s = \true$ for some $d_2 \in \semantic{\theta_2}_L$,
+%          $L \subseteq \reach{L_1}{s}$, and thereby
+%          $(\psi\,d_2) \in \semantic{\tassn}_{L \cup L_2} \subseteq \DEF_{L \cup L_2}$.
+%          Since $s \equiv_{L_1\cup L_2} s'$ we also have $s \equiv_{L \cup L_2} s'$ by
+%          lemma~\ref{lemma:L_equivalence_and_L_definability}, and so we conclude
+%          $\psi\,d_2\,s' = \true$.
+%
+%          Furtheron let $\mu \in \Fix{L_1 \cup L_2}$ and $s \in \Store_{L_1 \cup L_2}$ with $\phi\,s = \true$.
+%          Again there exist $d_2 \in \semantic{\theta_2}_L$, $L \subseteq \reach{L_1}{s}$ such
+%          that $\psi\,d_2\,s=\true$. Then
+%          $d_2' = ((\mu^{\theta_2})^{-1}\,d_2)\in\semantic{\theta_2}_{L'}$ and
+%          $L' = (\mu^{-1}\,L) \subseteq \reach{L_1}{(\mu^\ssto)^{-1}\,s}$ exist such that
+%          $\psi\,(\mu^{\theta_2}\,d_2')\,s=\true$.
+%          Since $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}_{L_2}$ we conclude
+%          $\psi\,d_2'\,((\mu^\ssto)^{-1}\,s) = \true$ and so $\phi\,((\mu^\ssto)^{-1}\,s) = \true$.
+%  \end{itemize}
+%\end{proof}
+%
+%\begin{lemma} \label{lemma:AUX_functions_and_permutations}
+%  Let $\mu \in \Perm$, $f \in \AUX$ with
+%  $f: \semantic{\theta_1} \to \ldots \to \semantic{\theta_n} \to \semantic{\tassn}$ and
+%  $\vec{d} \in \semantic{\theta_1} \times \ldots \times \semantic{\theta_n}$, then
+%  $f\,(\mu^{\theta_1}\,d_1)\,\ldots\,(\mu^{\theta_n}\,d_n)=\mu^\tassn\,(f\,d_1\,\ldots\,d_n)$.
+%\end{lemma}
+%
+%\begin{proof}
+%  Again, we prove only $\Neg$ and $\Exists$, the remaining cases are similar.
+%  \begin{itemize}
+%    \item Let $\phi_1 \in \semantic{\tassn}$ and $s \in \Store$, then
+%          \[\begin{array}{rcl}
+%            \Neg\,(\mu^\tassn\,\phi_1)\,s 
+%            &=& \Neg\,(\phi_1\circ(\mu^\ssto)^{-1})\,s \\
+%            &=& \bcase
+%                  \uparrow  & \text{if } s \not\in \dom{\phi_1 \circ (\mu^\ssto)^{-1}} \\
+%                  \true     & \text{if } (\phi_1 \circ (\mu^\ssto)^{-1})\,s=\false \\
+%                  \false    & \text{otherwise}
+%                \ecase \\
+%            &=& \bcase
+%                  \uparrow  & \text{if } ((\mu^\ssto)^{-1}\,s) \not\in \dom{\phi_1} \\
+%                  \true     & \text{if } \phi_1\,((\mu^\ssto)^{-1}\,s) = \false \\
+%                  \false    & \text{otherwise}
+%                \ecase \\
+%            &=& \Neg\,\phi_1\,((\mu^\ssto)^{-1}\,s) \\
+%            &=& \mu^\tassn\,(\Neg\,\phi_1)\,s.
+%          \end{array}\]
+%
+%    \item Let $d_1 \in \semantic{\theta_1}$, $\psi \in \semantic{\ttarrow{\theta_2}{\tassn}}$
+%          and $s \in \Store$, then
+%          \[\begin{array}{rcl}
+%            & & \Exists\,(\mu^{\theta_1}\,d_1)\,(\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi)\,s \\
+%            &=& \bcase
+%                  \uparrow  & \text{if } \supp{\mu^{\theta_1}\,d_1,\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi}
+%                              \nsubseteq \dom{s} \\
+%                  \true     & \text{if } (\mu^{\ttarrow{\theta_2}{\tassn}}\,\psi)\,d_2\,s = \true \text{ for some }
+%                              d_2 \in \bigcup_{L\subseteq\reach{\mu^{\theta_1}\,d_1}{s}} \semantic{\theta_2}_L \\
+%                  \false    & \text{otherwise}
+%                \ecase \\
+%            &=& \bcase
+%                  \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{(\mu^\ssto)^{-1}\,s} \\
+%                  \true     & \text{if } \psi\,((\mu^{\theta_2})^{-1}\,d_2)\,((\mu^\ssto)^{-1}\,s)=\true \text{ for} \\
+%                            & \text{some } d_2 \in \bigcup_{L'\subseteq\reach{d_1}{(\mu^\ssto)^{-1}\,s}} 
+%                                  \semantic{\theta_2}_{\mu(L')} \\
+%                  \false    & \text{otherwise}
+%                \ecase \\
+%            &=& \bcase
+%                  \uparrow  & \text{if } \supp{d_1,\psi} \nsubseteq \dom{(\mu^\ssto)^{-1}\,s} \\
+%                  \true     & \text{if } \psi\,d_2'\,((\mu^\ssto)^{-1}\,s)=\true \text{ for some }
+%                              d_2'\in\bigcup_{L'\subseteq \reach{d_1}{(\mu^\ssto)^{-1}\,s}} \semantic{\theta_2}_{L'} \\
+%                  \false    & \text{otherwise}
+%                \ecase \\
+%            &=& \Exists\,d_1\,\psi\,((\mu^\ssto)^{-1}\,s) \\
+%            &=& \mu^\tassn\,(\Exists\,d_1\,\psi)\,s.
+%          \end{array}\]
+%  \end{itemize}
+%\end{proof}
+
+\begin{definition}[Satisfaction relation]
+  For every well-typed assertion $p$, each suitable environment $\eta \in \Env_p$ and each suitable store
+  $s \in \Store_{\eta}$, the {\em satisfaction relation} $(\eta,s) \models p$ is defined by induction
+  on the structure of $p$ as follows:
+  \begin{itemize}
+    \item $(\eta,s) \models t_1 \mapsto t_2$ iff $s(\semantic{t_1}\,\eta) = \semantic{t_2}\,\eta$
+    \item $(\eta,s) \models p \vee q$ iff $(\eta,s) \models p$ or $(\eta,s) \models q$
+    \item $(\eta,s) \models \neg p$ iff $(\eta,s) \not\models p$
+    \item $(\eta,s) \models \qbex{x^\theta}{t}{p}$ iff $(\eta[d/x],s) \models p$ for some
+          $d \in \semantic{\theta}_L$ and some $L \subseteq \reach{\semantic{t}\,\eta}{s}$
+    \item $(\eta,s) \models \triple{p}{e_{:x}}{q}$ iff for every $s' \in \Store_{\eta}$ with
+          $(\eta,s') \models p$ each compution for $(e\,\eta,s')$ terminates with some
+          configuration $(v,s'')$ such that $(\eta[v/x],s'')\models q$
+    \item $(\eta,s) \models \qex{x^\theta}{p}$ iff $(\eta[d/x],s') \models p$ for some $d \in \semantic{\theta}$,
+          $s' \in \Store_{\eta[d/x]}$
+    \item $(\eta,s) \models t_1 = t_2$ iff $\semantic{t_1}\,\eta = \semantic{t_2}\,\eta$
+    \item $(\eta,s) \models x\,(t_1,\ldots,t_n)$ iff $(\semantic{t_1}\,\eta,\ldots,\semantic{t_n}\,\eta,s)\in (\eta\,x)$
+  \end{itemize}
+\end{definition}
+
+\begin{lemma}
+  The satisfaction relation is well-defined.
+\end{lemma}
+
+\begin{lemma}
+  $(\eta,s) \models h$ iff $(\eta,s') \models h$ for arbitrary $s,s'\in\Store$.
+\end{lemma}
+
+\begin{lemma}
+  $(\eta,s) \models p$ iff $(\eta',s') \models p$ for all $\eta,\eta'\in\Env_p$, $s,s'\in\Store_L$ with
+  $\eta =_{X} \eta'$ and $s \equiv_L s'$, where $X = \fv{p}$ and $L = \fl{\eta|_X}$.
+\end{lemma}
+
+%\begin{lemma} \label{lemma:meaning_function_of_p_is_well_defined}
+%  Let $\mu,\hat{\mu}\in\Perm$.
+%  \begin{enumerate}
+%    \item Let $\pi \in \PType$, $p \in \Assn^\pi$ and $\eta,\hat{\eta} \in \Env_p$ with
+%          $(\mu^\senv\,\eta) =_{\fv{t}} (\hat{\mu}^\senv\,\hat{\eta})$, then
+%          \begin{enumerate}
+%            \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}_{\supp{\eta|_{\fv{p}}}}$
+%            \item $\semantic{\tj{p}{\pi}}\,(\mu^\senv\,\eta) = \hat{\mu}^\pi\,(\semantic{\tj{p}{\pi}}\,\hat{\eta})$
+%          \end{enumerate}
+%
+%    \item For every $h \in \Formula$ and all $\eta,\hat{\eta}\in\Env_h$ with 
+%          $(\mu^\senv\,\eta) =_{\fv{h}} (\hat{\mu}^\senv\,\hat{\eta})$ we have
+%          $(\mu^\senv\,\eta)\models h$ iff $\hat{\eta}\models h$.
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  By simultaneous induction on the size of $p$ and $h$, where it is important to note that
+%  $\nstyle{size}\,(\qbex{x}{t}{p}) > \nstyle{size}\,(\tabstr{x}{p})$ holds.
+%  \begin{itemize}
+%    \item {\em Proof of (a):}
+%          Let $\phi:\Store \pto \Bool$ with $\phi = \semantic{\tj{h}{\tassn}}\,\eta$
+%          and let $L = \supp{\eta|_{\fv{h}}}$,
+%          then $\dom{\phi} = \Store_L$. For all $s,s'\in\dom{\phi}$
+%          \[\begin{array}{rcccl}
+%            \phi\,s=\true &\text{iff}& \eta \models h &\text{iff}& \phi\,s'=\true,
+%          \end{array}\]
+%          and especially
+%          \[\begin{array}{rcl}
+%            \phi\,((\bar{\mu}^\ssto)^{-1}\,s) = \true &\text{iff}& \phi\,s=\true
+%          \end{array}\]
+%          for all $\bar{\mu}\in\Fix{L}$.
+%
+%          {\em Proof of (b):}
+%          Now let $\phi = \semantic{\tj{h}{\tassn}}\,(\mu^\senv\,\eta)$ and $s \in \dom{\phi}$, then
+%          \[\begin{array}{rcl}
+%            \phi\,s = \true
+%            &\text{iff}& (\mu^\senv\,\eta) \models h \\
+%            &\text{iff}& \hat{\eta} \models h \\
+%            &\text{iff}& (\semantic{\tj{h}{\tassn}}\,\hat{\eta})\,s=\true \\
+%            &\text{iff}& (\semantic{\tj{h}{\tassn}}\,\hat{\eta})\,((\mu^\ssto)^{-1}\,s) = \true \\
+%            &\text{iff}& (\mu^\tassn\,(\semantic{\tj{h}{\tassn}}\,\hat{\eta}))\,s=\true.
+%          \end{array}\]
+%
+%    \item {\em Proof of (a):}
+%          Let $\phi:\Store \pto \Bool$ with $\phi = \semantic{\tj{\neg\,p}{\tassn}}\,\eta$ and
+%          let $L = \supp{\eta|_{\fv{p}}}$. Then $\phi = \Neg\,(\semantic{\tj{p}{\tassn}}\,\eta)$ and
+%          by lemma~\ref{lemma:AUX_functions_are_well_defined} we have $\phi \in \semantic{\tassn}_L$
+%          since $(\semantic{\tj{p}{\tassn}}\,\eta) \in \semantic{\tassn}_L$ by induction hypothesis.
+%
+%          {\em Proof of (b):}
+%          Follows easily with lemma~\ref{lemma:AUX_functions_and_permutations}.
+%
+%    \item $(\mu^\senv\,\eta) \models t_1 = t_2$ holds iff
+%          $\semantic{\tj{t_1}{\sigma}}\,(\mu^\senv\,\eta) =\semantic{\tj{t_2}{\sigma}}\,(\mu^\senv\,\eta)$.
+%          By lemma~\ref{lemma:meaning_function_of_t_is_well_defined} this is the case iff
+%          $\hat{\mu}^\sigma\,(\semantic{\tj{t_1}{\sigma}}\,\hat{\eta})
+%           =\hat{\mu}^\sigma\,(\semantic{\tj{t_2}{\sigma}}\,\hat{\eta})$, which holds iff
+%          $\semantic{\tj{t_1}{\sigma}}\,\hat{\eta} = \semantic{\tj{t_2}{\sigma}}\,\hat{\eta}$, and
+%          therefore iff $\hat{\eta}\models t_1 = t_2$.
+%
+%    \item $(\mu^\senv\,\eta) \models \qex{x^\theta}{h}$ iff there exists some
+%          $d \in \semantic{\theta}$ with $(\mu^\senv\,\eta)[d/x] \models h$.
+%          Obviously $(\mu^\senv\,\eta)[d/x] = \mu^\senv\,(\eta[(\mu^\theta)^{-1}\,d/x])$.
+%          By induction hypothesis $\mu^\senv\,(\eta[(\mu^\theta)^{-1}\,d/x]) \models h$
+%          holds iff $\hat{\eta}[(\mu^\theta)^{-1}\,d/x] \models h$, hence iff
+%          $\hat{\eta}\models \qex{x^\theta}{h}$.
+%
+%    \item The total correctness formula $(\mu^\senv\,\eta)\models\triple{p}{e}{q}$ holds if and only if
+%          $\triple{\semantic{\tj{p}{\tassn}}\,(\mu^\senv\,\eta)}
+%                  {(e\,(\mu^\senv\,\eta))}
+%                  {\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,(\mu^\senv\,\eta)}$,
+%          which holds iff
+%          $\triple{\hat{\mu}^\tassn\,(\semantic{\tj{p}{\tassn}}\,\hat{\eta})}
+%                  {(\hat{\mu}^\sexp\,(e\,\hat{\eta}))}
+%                  {\hat{\mu}^{\ttarrow{\tau}{\tassn}}\,(\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\hat{\eta})}$
+%          by induction hypothesis. According to lemma~\ref{lemma:Permutations_and_total_correctness} this
+%          statement equals
+%          $\triple{\semantic{\tj{p}{\tassn}}\,\hat{\eta}}
+%                  {(e\,\hat{\eta})}
+%                  {\semantic{\tj{q}{\ttarrow{\tau}{\tassn}}}\,\hat{\eta}}$
+%          which is just $\hat{\eta} \models \triple{p}{e}{q}$.
+%  \end{itemize}
+%  The remaining cases are similar to the above.
+%\end{proof}
+%
+%\begin{theorem} \
+%  \begin{enumerate}
+%    \item $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}$
+%          for every $\sigma\in\SType$, $t\in\Term^\sigma$ and $\eta\in\Env_t$.
+%    \item $(\semantic{\tj{p}{\pi}}\,\eta) \in \semantic{\pi}$
+%          for every $\pi\in\PType$, $p\in\Assn^\pi$ and $\eta\in\Env_p$.
+%  \end{enumerate}
+%\end{theorem}
+%
+%\begin{proof}
+%  Immediate consequence of lemma~\ref{lemma:meaning_function_of_t_is_well_defined}
+%  and lemma~\ref{lemma:meaning_function_of_p_is_well_defined}.
+%\end{proof}
+%
+%\begin{theorem}[Coincidence] \label{theorem:coincidence}
+%  Let $\eta,\hat{\eta}\in\Env$ with $\eta =_X \hat{\eta}$ for some $X \subseteq \Var$.
+%  \begin{enumerate}
+%    \item $\semantic{\tj{t}{\sigma}}\,\eta = \semantic{\tj{t}{\sigma}}\,\hat{\eta}$
+%          for all $\sigma\in\SType$, $t \in\Term^\sigma$ with $\fv{t} \subseteq X$.
+%    \item $\semantic{\tj{p}{\pi}}\,\eta = \semantic{\tj{p}{\pi}}\,\hat{\eta}$
+%          for all $\pi\in\PType$, $p \in \Assn^\pi$ with $\fv{p} \subseteq X$.
+%    \item For every $h \in \Formula$
+%          with $\fv{h} \subseteq X$ we have $\eta \models h$ iff $\hat{\eta} \models h$.
+%  \end{enumerate}
+%\end{theorem}
+%
+%\begin{proof}
+%  Immediate consequence of lemma~\ref{lemma:meaning_function_of_t_is_well_defined}
+%  and lemma~\ref{lemma:meaning_function_of_p_is_well_defined}.
+%\end{proof}
+%
+%Some additional lemmata useful for proving the soundness of the calculus below.
+%
+%\begin{lemma}[Substitution] \label{lemma:Substitution}
+%  \
+%  \begin{enumerate}
+%    \item $\semantic{\tj{t[t'/x]}{\pi}}\,\eta
+%           = \semantic{\tj{t}{\sigma}}\,(\eta[\semantic{\tj{t'}{\sigma}}\,\eta/x])$
+%    \item $\semantic{\tj{p[t/x]}{\pi}}\,\eta
+%           = \semantic{\tj{p}{\pi}}\,(\eta[\semantic{\tj{t}{\sigma}}\,\eta/x])$
+%    \item $\semantic{\tj{p[q/x]}{\pi}}\,\eta
+%           = \semantic{\tj{p}{\pi}}\,(\eta[\semantic{\tj{q}{\pi}}\,\eta/x])$
+%    \item $\eta \models h[t/x]$ iff $\eta[\semantic{\tj{t}{\sigma}}\,\eta/x] \models h$
+%    \item $\eta \models h[p/x]$ iff $\eta[\semantic{\tj{p}{\sigma}}\,\eta/x] \models h$
+%  \end{enumerate}
+%\end{lemma}
+%
+%\begin{proof}
+%  {\bf TODO}
+%\end{proof}
+%
+%\begin{theorem} \label{theorem:Application}
+%  Let $x\in\Var$.
+%  \begin{enumerate}
+%    \item Let $\sigma_1,\sigma_2\in\SType$, $t\in\Term^{\ttarrow{\sigma_1}{\sigma_2}}$,
+%          $d \in \semantic{\sigma_1}$ and $\eta\in\Env_t$ with $x \not\in \fv{t}$, then
+%          $(\semantic{\tj{t}{\ttarrow{\sigma_1}{\sigma_2}}}\,\eta)\,d
+%           = \semantic{\tj{t\,x}{\sigma_2}}\,(\eta[d/x])$.
+%    \item Let $\theta \in \LType$, $\pi\in\PType$, $p\in\Assn^{\ttarrow{\theta}{\pi}}$,
+%          $d\in\semantic{\theta}$ and $\eta\in\Env_p$ with $x \not\in \fv{p}$, then
+%          $(\semantic{\tj{p}{\ttarrow{\theta}{\pi}}}\,\eta)\,d
+%           = \semantic{\tj{p\,x}{\pi}}\,(\eta[d/x])$.
+%  \end{enumerate}
+%\end{theorem}
+%
+%\begin{proof}
+%  {\bf TODO}
+%\end{proof}
+%
+%
+%%%
+%%% The calculus
+%%%
+%
+%\chapter{The calculus}
+%
+%
+%%%
+%%% Axioms for the programming language
+%%%
+%
+%\section{Axioms for the programming language}
+%
+%\begin{tabular}{rl}
+%  \RN{Val}    & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}}$ \\
+%  \RN{Op}     & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tint,y^\tint}
+%                      {\triple{a\,(\op^\I\,(x,y))}{\op\,x\,y}{a}}$ \\
+%  \RN{Beta-V} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
+%                      \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b}$ \\
+%  \RN{Deref}  & $\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
+%                      {\triple{x \mapsto y \wedge a\,y}{!x}{a}}$ \\
+%  \RN{Assign} & $\qall{a^\tassn,x^{\tref{\tau}},y^\tau}
+%                      {x \diamond a \Rightarrow \triple{a}{x\,\assign\,y}{\returns{u^\tunit}{a \wedge x \mapsto y}}}$ \\
+%  \RN{Ref}    & $\qall{a^\tassn,b^\pi,x^\tau}
+%                      {\triple{x \# b \wedge a}{\cref\,x}
+%                              {\returns{y^{\tref{\tau}}}{y \mapsto x \wedge y \# b \wedge a}}}$ \\
+%  \RN{Unfold} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+%                      {\triple{a}{e[\fix\,(\abstr{x^\tau}{e})/x]}{b}
+%                       \Rightarrow \triple{a}{\fix\,(\abstr{x^\tau}{e})}{b}}$ \\
+%  \RN{App}    & $\qall{a^\tassn,\hat{a}^{\ttarrow{(\tarrow{\tau}{\tau'})}{\tassn}},
+%                       \hat{b}^{\ttarrow{\ttarrow{(\tarrow{\tau}{\tau'})}{\tau}}{\tassn}},
+%                       b^{\ttarrow{\tau'}{\tassn}}}{}$ \\
+%              & $\triple{a}{e_1}{\hat{a}} \wedge
+%                  (\qall{x^{\tarrow{\tau}{\tau'}}}{\triple{\hat{a}\,x}{e_2}{\hat{b}\,x}}
+%                   \wedge \qall{y^\tau}{\triple{\hat{b}\,x\,y}{x\,y}{b}})$ \\
+%              & $\Rightarrow \triple{a}{e_1\,e_2}{b}$ \\
+%  \RN{Cond}   & $\qall{a^\tassn,\hat{a}^{\ttarrow{\tbool}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+%              & $\triple{a}{e_0}{\hat{a}}
+%                 \wedge \triple{\hat{a}\,\true}{e_1}{b}
+%                 \wedge \triple{\hat{a}\,\false}{e_2}{b}$ \\
+%              & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
+%\end{tabular}
+%
+%\begin{lemma}[Soundness of the axioms for the programming language]
+%  The axioms for the programming language are sound.
+%\end{lemma}
+%
+%\begin{proof}
+%  We need to prove $\models h$ for every axiom $h$.
+%  \begin{itemize}
+%    \item For \RN{Val} let $\eta\in\Env$, then
+%          \[\begin{array}{rl}
+%                      & \eta \models \qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}} \\
+%            \text{if} & \eta[\psi/a][v/x] \models \triple{a\,x}{x}{a} \text{ for all }
+%                          \psi\in\semantic{\ttarrow{\tau}{\tassn}}, v\in\semantic{\tau} \\
+%            \text{if} & L \models \triple{\psi\,v}{v}{\psi} \text{ for some } L \supseteq \supp{\psi,v} \\
+%            \text{if} & \text{for every $s \in \Store_L$ with $\psi\,v\,s = \true$ there exist $v'\in\CVal^\tau$} \\
+%                      & \text{and $s'\in\Store$ such that $(v,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$,}
+%          \end{array}\]
+%          which is obvious since $(v,s) = (v',s')$.
+%
+%    \item For \RN{Beta-V} let $e \in \Exp$ and $\eta \in \Env_e$, then
+%          \[\begin{array}{rl}
+%                      & \eta \models \qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
+%                                          {\triple{a}{e}{b} \Rightarrow
+%                                           \triple{a}{(\abstr{x^\tau}{e})\,x}{b}} \\
+%            \text{if} & \underbrace{\eta[\phi/a,\psi/b,v/x]}_{\eta'} \models
+%                        \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
+%                      & \text{for all } \psi\in\semantic{\tassn},\phi\in\semantic{\ttarrow{\tau}{\tassn}},
+%                        v\in\semantic{\tau} \\
+%            \text{if} & \eta'\models\triple{a}{e}{b} \text{ implies }
+%                        \eta'\models\triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
+%            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi} \text{ implies } L \models
+%                        \triple{\phi}{\underbrace{((\abstr{x^\tau}{e})\,\eta')}_{\abstr{x^\tau}{e'}}\,v}{\psi} \\
+%                      & \text{for some } L \supseteq \supp{\phi,e',\psi} \\
+%          \end{array}\]
+%          Now assuming that $L \models \triple{\phi}{e\,\eta'}{\psi}$ holds, we have
+%          \[\begin{array}{rl}
+%                      & L \models \triple{\phi}{(\abstr{x^\tau}{e'})\,v}{\psi} \\
+%            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ there are $v'\in\CVal^\tau$ and} \\
+%                      & \text{$s'\in\Store$ with $(\abstr{x^\tau}{e'},s) \xrightarrow*(v',s')$ and 
+%                              $\psi\,v'\,s'=\true$} \\
+%            \text{if} & (e'[v/x],s) \xrightarrow* (v',s') \\
+%            \text{if} & (e\,\eta',s) \xrightarrow* (v',s') \text{ since } \fv{e'} = \{x\} \\
+%            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi}.
+%          \end{array}\]
+%
+%    \item For \RN{Deref} let $\eta\in\Env$, then
+%          \[\begin{array}{rl}
+%                      & \eta\models\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
+%                                        {\triple{x \mapsto y \wedge a\,y}{!x}{a}} \\
+%            \text{if} & \underbrace{\eta[\psi/a,l/y,v/x]}_{\eta'} \models
+%                        \triple{x\mapsto y \wedge a\,y}{!x}{a} \\
+%                      & \text{for every } \psi\in\semantic{\ttarrow{\tau}{\tassn}},l\in\Loc^\tau,v\in\CVal^\tau \\
+%            \text{if} & L\models \triple{\phi}{!l}{\psi} \text{ for some } L \supseteq \supp{\phi,l,\psi} \\
+%                      & \text{where } \phi = \semantic{\tj{x\mapsto y\wedge a\,y}{\tassn}}\,\eta' \\
+%            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ we have $v'\in\CVal^\tau,s'\in\Store$} \\
+%                      & \text{such that $(!l,s)\xrightarrow*(v',s')$ and $\psi\,v'\,s'=\true$} \\
+%            \text{if} & \text{$s(l) = v'$, $s = s'$ and }
+%                        (\semantic{\tj{a}{\ttarrow{\tau}{\tassn}}}\,\eta')\,v'\,s=\true \\
+%            \text{if} & (\semantic{\tj{a\,y}{\tassn}}\,(\eta'[v'/y]))\,s=\true
+%                        \text{ by theorem~\ref{theorem:Application}} \\
+%            \text{if} & \text{$\eta'(x)=l$, $\eta'(y)=v'$ and }
+%                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
+%            \text{if} & (\semantic{\tj{x\mapsto y}{\tassn}}\,\eta')\,s = \true \text{ and } 
+%                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
+%            \text{if} & \phi\,s=\true.
+%          \end{array}\]
+%
+%    \item For \RN{Ref} let $\eta\in\Env$, then
+%          \[\begin{array}{rl}
+%                      & \eta\models\qall{a^\tassn,b^\pi,x^\tau}
+%                                        {\triple{x\#b\wedge a}{\cref\,x}
+%                                        {\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}} \\
+%            \text{if} & \underbrace{\eta[\phi/a,\psi/b,v/x]}_{\eta'}\models
+%                                    {\triple{x\#b\wedge a}{\cref\,x}
+%                                    {\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}} \\
+%                      & \text{for all } \phi\in\semantic{\tassn},\psi\in\semantic{\pi},v\in\semantic{\tau} \\
+%            \text{if} & L\models\triple{\phi'}{\cref\,v}{\psi'} \text{ for some } L \supseteq\supp{\phi',v,\psi'} \\
+%                      & \text{where }
+%                        \psi'=(\semantic{\tj{\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}
+%                                            {\ttarrow{\tref{\tau}}{\tassn}}}\,\eta') \\
+%                      & \text{and } \phi' = (\semantic{\tj{x\#b\wedge a}{\tassn}}\,\eta') \\
+%            \text{if} & \text{for every $s\in\Store_L$ with $\phi'\,s=\true$ there exist $v'\in\CVal^\tau$,} \\
+%                      & \text{$s'\in\Store$ such that $(\cref\,v,s)\xrightarrow*(v',s')$ and $\psi'\,v'\,s'=\true$} \\
+%            \text{if} & v'=l\not\in\dom{s}, s'=s[v/l] \text{ and } \phi''\,s'=\true \\
+%                      & \text{where }
+%                        \phi''=(\semantic{\tj{y\mapsto x\wedge y\#b \wedge a}{\tassn}}\,
+%                                (\underbrace{\eta'[l/y]}_{\eta''})) \\
+%            \text{if} & (\semantic{\tj{y \mapsto x}{\tassn}}\,\eta'')\,s'=\true,
+%                        (\semantic{\tj{y \# b}{\tassn}}\,\eta'')\,s'=\true \\
+%                      & \text{ and } (\semantic{\tj{a}{\tassn}}\,\eta'')\,s'=\true
+%          \end{array}\]
+%          Hence it suffices to prove these three statements under the assumption that
+%          $\phi'\,s=\true$ holds.
+%          \begin{enumerate}
+%            \item $(\semantic{\tj{y\mapsto x}{\tassn}}\,\eta'')\,s'=\true$ since
+%                  $s'(\eta''(y)) = s'(l) = v = \eta''(x)$.
+%            \item $(\semantic{\tj{y\#b}{\tassn}}\,\eta'')\,s'
+%                   = \Disj\,(\semantic{\tj{y}{\tref{\tau}}}\,\eta'')\,(\semantic{\tj{b}{\pi}}\,\eta'')\,s'=\true$
+%                  because $\reach{l}{s'}=\{l\}\cup\reach{v}{s'}$ and
+%                  $\{l\}\cup\reach{v}{s'}\cap\reach{\psi}{s'}=\emptyset$ since
+%                  \begin{enumerate}
+%                    \item $l\not\in\dom{s} \supseteq \reach{\psi}{s} = \reach{\psi}{s'}$ and
+%                    \item $(\semantic{\tj{x\#b}{\tassn}}\,\eta')\,s
+%                           =(\semantic{\tj{x\#b}{\tassn}}\,\eta')\,s'=\true$ implies
+%                          $\reach{v}{s'} \cap \reach{\psi}{s'} = \emptyset$.
+%                  \end{enumerate}
+%            \item Obviously
+%                  $(\semantic{\tj{a}{\tassn}}\,\eta'')\,s'=\phi\,s'=\phi\,s=\true$ since
+%                  $s \equiv_{\supp{\phi}} s'$ and $\phi'\,s=\true$ requires $\phi\,s=\true$.
+%          \end{enumerate}
+%  \end{itemize}
+%\end{proof}
+%
+%
+%%%
+%%% Axioms for total correctness
+%%%
+%
+%\section{Axioms for total correctness}
+%
+%\begin{tabular}{rl}
+%  \RN{Consequence}  & $\qall{a^\tassn,\hat{a}^\tassn,\hat{b}^{\ttarrow{\tau}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+%                    & $\{a \Rightarrow \hat{a}\} \wedge \triple{\hat{a}}{e}{\hat{b}}
+%                       \wedge \{\qall{x^\tau}{\hat{b}\,x \Rightarrow b\,x}\} \Rightarrow \triple{a}{e}{b}$ \\
+%  \RN{Invariance} & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
+%                  & $e \diamond \hat{a} \wedge \triple{a}{e}{b}
+%                     \Rightarrow \triple{a \wedge \hat{a}}{e}{\returns{x^\tau}{b\,x \wedge \hat{a}}}$ \\
+%  \RN{Pre-H}        & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+%                            {(h \Rightarrow \triple{a}{e}{b}) \Rightarrow \triple{h \wedge a}{e}{b}}$ \\
+%  \RN{Pre-$\vee$}   & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}
+%                            {(\triple{a}{e}{b} \wedge \triple{\hat{a}}{e}{b})
+%                             \Rightarrow \triple{a \vee \hat{a}}{e}{b}}$  \\
+%  \RN{Post-$\wedge$}  & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},\hat{b}^{\ttarrow{\tau}{\tassn}}}
+%                              {(\triple{a}{e}{b} \wedge \triple{a}{e}{\hat{b}})
+%                               \Rightarrow \triple{a}{e}{b \wedge \hat{b}}}$ \\
+%\end{tabular}
+%
+%
+%%%
+%%% Logical rules
+%%%
+%
+%\section{Logical rules}
+%
+%\begin{tabular}{rl}
+%  \RN{$\forall$E-Assn} & $\RULE{p\in\CAssn^\pi}
+%                               {(\qall{x^\pi}{h}) \Rightarrow h[p/x]}$ \\
+%  \RN{$\forall$E-Term} & $\RULE{t\in\CTerm^\sigma}
+%                               {(\qall{x^\sigma}{h}) \Rightarrow h[t/x]}$ \\
+%  \RN{$\exists$I-Assn} & $\RULE{p\in\Assn^\pi}
+%                               {h[p/x] \Rightarrow \qex{x^\pi}{h}}$ \\
+%  \RN{$\exists$I-Term} & $\RULE{t\in\Term^\sigma}
+%                               {h[t/x] \Rightarrow \qex{x^\sigma}{h}}$ \\
+%\end{tabular}
+
+
+\end{document}
