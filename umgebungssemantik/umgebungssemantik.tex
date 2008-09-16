@@ -1,0 +1,224 @@
+\documentclass[12pt,fleqn]{article}
+\usepackage{ngerman}
+\usepackage{hyperref,german,amssymb,amstext,amsmath,amsthm,array,stmaryrd,color,latexsym}
+
+% TP Macros
+\input{TP}
+
+\newcommand{\RN}[1]{\mbox{\textsc{(#1)}}}
+\newcommand{\Cl}{\name{Cl}}
+\newcommand{\cl}{\name{cl}}
+
+\begin{document}
+
+\section{Substitutionssemantik}
+
+Voraussetzungen:
+\begin{itemize}
+  \item $\Id \cap \Val = \emptyset$
+
+  \item Ausdr"ucke sind gleich modulo Umbenennung gebundener Namen.
+
+        Geht nat"urlich auch ohne diese Konvention, aber macht Definitionen und Beweise h"asslich.
+\end{itemize}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Substitutionssemantik ist eine Formel der Gestalt $e \Downarrow v$ mit $e\in\Exp$
+und $v \in \Val$. Ein solcher big step hei"st {\em g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Val}        & $v \Downarrow v$ \\[3mm]
+  \RN{Beta}       & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e[e_2/\id] \Downarrow v}
+                           {\app{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Op-1}       & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow n}
+                           {\app{e_1}{e_2} \Downarrow \app{\op}{n}}$ \\[3mm]
+  \RN{Op-2}       & $\regel{e_1 \Downarrow \app{\op}{n_1} \quad e_2 \Downarrow n_2 \quad \op^I(n_1,n_2) = n}
+                           {\app{e_1}{e_2} \Downarrow n}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{e_0 \Downarrow \true \quad e_1 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Cond-False} & $\regel{e_0 \Downarrow \false \quad e_2 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Unfold}     & $\regel{e[\rec{\id}{e}/\id] \Downarrow v}
+                           {\rec{\id}{e} \Downarrow v}$
+\end{tabular}
+\end{definition}
+
+
+\section{Umgebungssemantik}
+
+\begin{definition}[Closures und Umgebungen]
+  Die Mengen $\Env$ aller {\em Umgebungen} und $\Cl$ aller {\em Closures} sind wie folgt definiert:
+  \begin{enumerate}
+    \item $\Env = \{\eta:\Id \pto \Cl\ |\ \dom{\eta} \text{ endlich}\}$
+    \item $\Cl = \{(e,\eta)\in\Exp \times \Env\ |\ \free{e} \subseteq \dom{\eta}\}$
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow (e',\eta')$,
+wobei $e,e'\in\Exp$ und $\eta,\eta'\in\Env$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
+folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
+  \RN{Id}         & $\regel{\eta(\id) \Downarrow \cl}
+                           {(\id,\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
+                            \quad (e,\eta_1[(e_2,\eta)/\id]) \Downarrow \cl}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (n,\eta_2)}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{n},[])}$ \\[3mm]
+  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{n_1},\eta_1)
+                            \quad (e_2,\eta) \Downarrow (n_2,\eta_2)
+                            \quad \op^I(n_1,n_2) = n}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (n,[])}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,\eta_0) \quad (e_1,\eta) \Downarrow \cl}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,\eta_0) \quad (e_2,\eta) \Downarrow \cl}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Unfold}     & $\regel{(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow \cl}
+                           {(\rec{\id}{e},\eta) \Downarrow \cl}$
+\end{tabular}
+\end{definition}
+
+\begin{theorem}[Wohldefiniertheit der Umgebungssemantik] \label{satz:Wohldefiniertheit}
+  Seien $(e,\eta)\in \Cl$, $\hat{e} \in \Exp$ und $\hat{\eta}\in\Env$.
+  Wenn $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann gilt $\hat{e}\in \Val$ und $(\hat{e},\hat{\eta}) \in \Cl$.
+\end{theorem}
+
+\begin{proof}
+  Triviale Induktion.
+\end{proof}
+
+\begin{definition} \label{definition:Substitution}
+  Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt definiert:
+  \[\begin{array}{rcl}
+    c\,\eta &=& c \\
+    \id\,\eta &=& e'\,\eta', \text{ wobei } \eta(\id) = (e',\eta') \\
+    (\app{e_1}{e_2})\,\eta &=& \app{(e_1\,\eta)}{(e_2\,\eta)} \\
+    (\abstr{\id}{e})\,\eta &=& \abstr{\id'}{(e[\id'/\id]\,\eta)}, \text{ wobei } \id'\not\in\dom{\eta} \\
+    (\rec{\id}{e})\,\eta &=& \rec{\id'}{(e[\id'/\id]\,\eta)}, \text{ wobei } \id'\not\in\dom{\eta} \\
+    (\bifte{e_0}{e_1}{e_2})\,\eta &=& \bifte{(e_0\,\eta)}{(e_1\,\eta)}{(e_2\,\eta)}
+  \end{array}\]
+\end{definition}
+
+\begin{lemma} \label{lemma:Substitution}
+  Seien $(e,\eta), (e',\eta') \in \Cl$. Dann gilt:
+  \begin{enumerate}
+    \item $e\in\Val$ dann $(e\,\eta)\in\Val$
+    \item $(e\,\eta)\in\Val$, dann entweder $e\in\Val$ oder
+          $e=\id\in\Id$ und $\eta(\id) = (e',\eta')$ mit $(e'\,\eta')\in\Val$
+    %\item $(e\,\eta) = (e\,\eta')$ wenn $\eta' =_{\free{e}} \eta$
+    \item $e\,(\eta[(e',\eta')/\id]) = (e[\id'/\id]\,\eta)[(e'\,\eta')/\id']$ wenn $\id' \not\in \dom{\eta}$
+  \end{enumerate}
+\end{lemma}
+
+
+\section{"Aquivalenz der Modelle}
+
+\begin{theorem}[Korrektheit der Umgebungssemantik] \label{theorem:Korrektheit}
+  Seien $(e,\eta) \in \Cl$, $v'\in\Val$ und $\eta'\in\Env$. Wenn $(e,\eta) \Downarrow (v',\eta')$, dann
+  $(e\,\eta) \Downarrow (v'\,\eta')$.
+\end{theorem}
+
+\begin{proof}
+  Induktion "uber die L"ange der Herleitung des big steps $(e,\eta) \Downarrow (v',\eta')$ mit Fallunterscheidung
+  nach der zuletzt angewandten big step Regel:
+  \begin{itemize}
+    \item $(v,\eta) \Downarrow (v,\eta)$ mit \RN{Val}, dann ist $(v\,\eta) \in \Val$ und somit folgt
+          $(v\,\eta) \Downarrow (v\,\eta)$ mit \RN{Val}.
+
+    \item $(\id,\eta) \Downarrow (v',\eta')$ mit \RN{Id} bedingt $\eta(\id) = (\hat{e},\hat{\eta})$ und
+          $(\hat{e},\hat{\eta}) \Downarrow (v',\eta')$. Nach IV muss also $(\hat{e}\,\hat{\eta})\Downarrow(v'\,\eta')$
+          gelten, und somit folgt wegen $(\id\,\eta) = (\hat{e}\,\hat{\eta})$ die Behauptung.
+
+    \item $(\app{e_1}{e_2},\eta) \Downarrow (v',\eta')$ mit Regel \RN{Beta} kann nur aus Pr"amissen der Form
+          $(e_1,\eta) \Downarrow (\abstr{\id}{e},\hat{\eta})$ und $(e,\hat{\eta}[(e_2,\eta)/\id])\Downarrow(v',\eta')$
+          folgen. Mit IV folgt daraus $(e_1\,\eta) \Downarrow (\abstr{\id}{e})\,\hat{\eta}$ und
+          $e\,(\hat{\eta}[(e_2,\eta)/\id])\Downarrow(v'\,\eta')$. Nach Definition~\ref{definition:Substitution}
+          gilt $(\abstr{\id}{e})\,\hat{\eta} = \abstr{\id'}{(e[\id'/\id]\,\hat{\eta})}$ wobei
+          $\id'\not\in\dom{\hat{\eta}}$. Nach Lemma~\ref{lemma:Substitution} folgt dar"uberhinaus
+          $e\,(\hat{\eta}[(e_2,\eta)/\id]) = (e[\id'/\id]\,\hat{\eta})[e_2\,\eta/\id]$, und somit
+          $(\app{e_1}{e_2})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Beta}.
+
+    \item $(\rec{\id}{e},\eta) \Downarrow (v',\eta')$ kann ausschliesslich mit \RN{Unfold} aus der Pr"amisse
+          $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$ folgen. Nach IV gilt dann ebenfalls
+          $e\,(\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v'\,\eta')$ und nach Definition~\ref{definition:Substitution}
+          gilt $(\rec{\id}{e})\,\eta = \rec{\id'}{(e[\id'/\id]\,\eta)}$ mit $\id'\not\in\dom{\eta}$. Wegen
+          Lemma~\ref{lemma:Substitution} folgt dann
+          $e\,(\eta[(\rec{\id}{e},\eta)/\id]) = (e[\id'/\id]\,\eta)[\rec{\id'}{(e[\id'/\id]\,\eta)}/\id]$ und
+          somit $(\rec{\id}{e})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Unfold}.
+  \end{itemize}
+  Die "ubrigen F"alle folgen analog.
+\end{proof}
+
+\begin{lemma}[Koinzidenz] \label{lemma:Koinzidenz}
+  F"ur alle $\eta,\hat{\eta},\eta'\in\Env$, ...
+  Wenn $(e[(e_2\,\eta)/\id],[\,]) \Downarrow (v',\eta')$, dann ex. $\eta''$, so dass
+  $(e,\hat{\eta}[(e_2,\eta)/\id]) \Downarrow (v',\eta'')$.
+\end{lemma}
+
+\begin{proof}
+  Sollte gelten, m"usste aber allgemeiner formuliert werden, um einfach beweisbar zu sein.
+\end{proof}
+
+\begin{theorem}[Vollst"andigkeit der Umgebungssemantik] \label{theorem:Vollstaendigkeit}
+  Seien $(e,\eta)\in\Cl$ und $v \in \Val$.
+  Wenn $(e\,\eta) \Downarrow v$, dann ex. $(v',\eta')\in\Cl$ mit $(v'\,\eta') = v$, so dass
+  $(e,\eta) \Downarrow (v',\eta')$.
+\end{theorem}
+
+Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\eta'$ machen, so man das will.
+
+\begin{proof}
+  Offensichtlich gilt $\free{v} = \emptyset$. Die Behauptung folgt
+  dann per Induktion "uber die L"ange der Herleitung des big steps $(e\,\eta) \Downarrow v$, wobei jeweils nach der
+  zuletzt angewandten Regel unterschieden wird. Hierbei ist in jedem der F"alle zu unterscheiden, ob $e$ selbst
+  schon von der f"ur die Regel passenden Form ist, oder ob $e$ ein Identifier ist. Ist $e$ ein Identifier, so
+  folgt die Behauptung unmittelbar mit IV und big step Regel \RN{Id}; wir betrachten diesen Fall damit als erledigt
+  und konzentrieren uns im Folgenden auf die F"alle f"ur $e\not\in\Id$.
+  \begin{itemize}
+    \item $v \Downarrow v$ mit \RN{Val}, d.h. $(e\,\eta) = v$. Sei o.B.d.A. $e \in \Val$, dann existiert ein
+          big step $(e,\eta) \Downarrow (e,\eta)$ mit \RN{Val}.
+
+    \item $(\rec{\id}{e})\,\eta \Downarrow v$ mit \RN{Unfold} bedingt o.B.d.A.
+          $(e[\id'/\id]\,\eta)[(\rec{\id}{e})\,\eta/\id'] \Downarrow v$, wobei $\id' \not\in \dom{\eta}$.
+          Nach Lemma~\ref{lemma:Substitution} folgt $e\,(\eta[(\rec{\id}{e})\,\eta/\id])\Downarrow v$ und nach IV
+          existiert dann $(v',\eta') \in \Cl$ mit $(v'\,\eta') = v$, so dass
+          $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$. Die Behauptung folgt unmittelbar mit
+          \RN{Unfold}.
+
+    \item $(\app{e_1}{e_2})\,\eta \Downarrow v$ mit \RN{Beta} kann o.B.d.A. nur aus Pr"amissen der Form
+          $(e_1\,\eta) \Downarrow \abstr{\id}{e}$ und $e[(e_2\,\eta)/\id]\Downarrow v$ folgen. Nach IV ex.
+          $(\hat{v},\hat{\eta}),(v',\eta')\in\Cl$, so dass $(e_1,\eta) \Downarrow (\hat{v},\hat{\eta})$
+          und $(e[(e_2\,\eta)/\id],[\,])\Downarrow (v',\eta')$. Nach Lemma~\ref{lemma:Koinzidenz} ex. $\eta''$
+          mit $(e,\hat{\eta}[(e_2,\eta)/\id]) \Downarrow (v',\eta'')$. O.B.d.A. ex. $\hat{\id}\not\in\dom{\hat{\eta}}$,
+          so dass $(e_1,\eta) \Downarrow (\abstr{\hat{\id}}{e[\hat{\id}/\id]},\hat{\eta})$ und
+          $(e[\hat{\id}/\id],\hat{\eta}[(e_2,\eta)/\hat{\id}]) \Downarrow (v',\eta'')$. Die Behauptung folgt
+          unmittelbar mit \RN{Beta}.
+  \end{itemize}
+  Die restlichen F"alle folgen "ahnlich einfach.
+\end{proof}
+
+\begin{theorem}["Aquivalenzsatz]
+  Sei $e \in \Exp$, $v \in \Val$ mit $\free{e} = \emptyset$. Die folgenden Aussagen sind "aquivalent:
+  \begin{enumerate}
+    \item $e \Downarrow v$
+    \item ex. $(v',\eta')\in\Cl$ mit $v = (v'\,\eta')$, so dass $(e,[\,]) \Downarrow (v',\eta')$
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Folgt leicht aus Satz~\ref{theorem:Korrektheit} und Satz~\ref{theorem:Vollstaendigkeit}.
+\end{proof}
+
+\begin{corollary}
+  Sei $e \in \Exp$, $c \in \Const$ mit $\free{e} = \emptyset$. Die folgenden Aussagen sind "aquivalent:
+  \begin{enumerate}
+    \item $e \Downarrow c$
+    \item ex. $\eta\in\Cl$, so dass $(e,[\,]) \Downarrow (c,\eta)$
+  \end{enumerate}
+\end{corollary}
+
+\end{document}
+
+% vi:set ts=2 sw=2 et:
