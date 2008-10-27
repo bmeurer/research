@@ -79,29 +79,28 @@ Expressions are considered equal modulo renaming of bound variables.
 $\Bool=\{\true,\false\}$ is the set of boolean constants $b$, $\Int$ is the set of integer
 constants $z$; we do not distinguish between integer values and their program representation.
 
-We assume an infinite set $\Loc$ of locations $l$.
-
 \begin{definition}[Expressions]
   The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
   are defined by the grammars
   \[\GRbeg
     \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
     c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid !
-             \GRmid \assign \GRmid \fix \GRmid \op,
+             \GRmid \assign \GRmid \fix \GRmid \op \GRmid \proj{n}{i},
   \GRend\]
   the set $\Exp$ of {\em expressions} $e$ is defined by
   \[\GRbeg
     e \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
-           \GRmid \ifte{e_0}{e_1}{e_2}
+      \GRmid \ifte{e_0}{e_1}{e_2} \GRmid (e_1,\ldots,e_n)
   \GRend\]
   and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
   \[\GRbeg
     v \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v}
+      \GRmid (v_1,\ldots,v_n)
   \GRend\]
 \end{definition}
 
-$\fv{e}$ denotes the set of free variables and $\fl{e}$ denotes the set of locations in the
-expression $e$. We say that an expression $e$ is a {\em program} if $\fv{e}\cup\fl{e}=\emptyset$,
+$\free{e}$ denotes the set of free variables and $\supp{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if $\free{e}\cup\supp{e}=\emptyset$,
 that is if $e$ contains neither unbound variables nor
 locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
 considered for the logic later are valid programs (i.e. programmers aren't permitted to access
@@ -120,11 +119,11 @@ $\tj{e}{\tau}$, with types $\tau$ as follows:
 \begin{definition}[Types]
   The set $\BType$ of {\em base types} $\beta$ is defined by the context-free grammar
   \[\GRbeg
-  \beta \GRis \tbool \GRmid \tint \GRmid \tunit
+  \beta \GRis \tbool \GRmid \tint \GRmid \tunit \GRmid \beta_1 \times \ldots \times \beta_n
   \GRend\]
   while the set $\Type$ of all {\em types} $\tau$ is defined by:
   \[\GRbeg
-  \tau \GRis \beta \GRmid \tref{\beta} \GRmid \tarrow{\tau_1}{\tau_2}
+  \tau \GRis \beta \GRmid \tref{\beta} \GRmid \tarrow{\tau_1}{\tau_2} \GRmid \tau_1 \times \ldots \times \tau_n
   \GRend\]
 \end{definition}
 
@@ -144,7 +143,7 @@ $l^\beta$ for elements of $\Loc^\beta$.
 \end{definition}
 
 The set $\Exp^\tau = \{e\in\Exp\,|\,\tj{e}{\tau}\}$ includes all expressions of type $\tau$,
-$\CExp^\tau = \{e\in\Exp^\tau\,|\,\fv{e}=\emptyset\}$ is the subset of closed of expressions of
+$\CExp^\tau = \{e\in\Exp^\tau\,|\,\free{e}=\emptyset\}$ is the subset of closed of expressions of
 type $\tau$ and $\CExp = \bigcup_{\tau\in\Type} \CExp^\tau$ is the set of all well-typed, closed
 expressions. Likewise we define $\Val^\tau = \Exp^\tau\cap\Val$, $\CVal^\tau = \CExp^\tau \cap \Val$
 and $\CVal = \CExp \cap \Val$.
@@ -172,7 +171,7 @@ Obviously $\Store = \bigcup_{L\in W} \Store_L$ and $\Store_{L'} \subseteq \Store
 
 \begin{definition}[Configuration]
   Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
-  if $\fl{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
+  if $\supp{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
 \end{definition}
 
 Expressions that appear as part of an evaluation are required to be closed, i.e. do not
@@ -236,7 +235,7 @@ with respect to configurations. We assume that type safety holds for the semanti
 %\begin{itemize}
 %  \item $D^\sexp = (\Exp,\sqsubseteq_\Exp)$ \\
 %        $e \sqsubseteq_\Exp e' \,\Leftrightarrow\, e = e'$ \\
-%        $\supp{e} = \fl{e}$
+%        $\supp{e} = \supp{e}$
 %  \item $D^\ssto = (\Store,\sqsubseteq_\Store)$ \\
 %        $s \sqsubseteq_\Store s' \,\Leftrightarrow\, \grph{s} \subseteq \grph{s'}$ \\
 %        $\supp{s} = \dom{s}$
@@ -414,12 +413,12 @@ with respect to configurations. We assume that type safety holds for the semanti
 \section{Syntax of the assertion language}
 
 \[\GRbeg
-  t \GRis x \GRmid v \GRmid f \GRmid \app{t_1}{t_2} \GRmid \tabstr{x}{t}
+  t \GRis x \GRmid v \GRmid f \GRmid \app{t_1}{t_2} \GRmid \tabstr{x}{t} \GRmid (t_1,\ldots,t_n)
     \GRnl
 
   p,q \GRis t_1 \mapsto t_2 \GRmid p \vee q \GRmid \neg p \GRmid \qbex{x}{t}{p}
       \GRal \triple{p}{e_{:x}}{q} \GRmid \qex{x}{p} \GRmid t_1 = t_2
-      \GRal x\,(t_1,\ldots,t_n) \quad n \ge 0
+      \GRal x\,t
       \GRnl
 \GRend\]
 The subset of {\em stateless assertions} $h \in \Formula$, called {\em Hoare formulae}, is:
@@ -735,7 +734,7 @@ clear from the context.
   all environments whose domains include at least $X \subseteq \Var$.
 \end{definition}
 
-%We abbreviate $\Env_d = \Env_{\fv{d}}$. If $\eta \in \Env$ and $e \in \Exp$, then $e\,\eta$ denotes
+%We abbreviate $\Env_d = \Env_{\free{d}}$. If $\eta \in \Env$ and $e \in \Exp$, then $e\,\eta$ denotes
 %the expression that results from replacing every variable $x$ in $e$ with $\eta\,x$. It is
 %easy to see that $e\,\eta$ is closed if $\eta \in \Env_e$. We define the support of an environment $\eta$
 %to be the set $\supp{\eta} = \bigcup_{x\in\dom{\eta}} \supp{\eta\,x}$ and for every permutation
@@ -752,8 +751,8 @@ clear from the context.
 
 \begin{definition}[Meaning of terms]
   For every well-typed term $t \in \Term$ of type $\sigma \in \SType$, the {\em meaning function}
-  $\semantic{\tj{t}{\sigma}}: \Env_t \to \semantic{\sigma}$ is defined by induction on the structure of $t$ as
-  follows:
+  $\semantic{\tj{t}{\sigma}}: \Env_{\free{t}} \to \semantic{\sigma}$ is defined by induction on the size
+  of the typing derivation as follows:
   \[\begin{array}{rcl}
     \semantic{\tj{x^\sigma}{\sigma}}\,\eta
       &=& \eta\,x \\
@@ -765,36 +764,39 @@ clear from the context.
       &=& (\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,
           (\semantic{\tj{t_2}{\sigma'}}\,\eta) \\
     \semantic{\tj{\tabstr{x^\sigma}{t}}{\ttarrow{\sigma}{\sigma'}}}\,\eta
-      &=& \psi: \semantic{\sigma} \to \semantic{\sigma'} \\
-      & & \psi\, d = \semantic{\tj{t}{\sigma'}}\,(\eta[d/x])
+      &=& \psi: \semantic{\sigma} \to \semantic{\sigma'}, d \mapsto \semantic{\tj{t}{\sigma'}}\,(\eta[d/x]) \\
+    \semantic{\tj{(t_1,\ldots,t_n)}{\sigma_1\times\ldots\times\sigma_n}}\,\eta
+      &=& (\semantic{\tj{t_1}{\sigma_1}}\,\eta,\ldots,\semantic{\tj{t_n}{\sigma_n}}\,\eta)
   \end{array}\]
 \end{definition}
 
+We write $\semantic{t}\,\eta$ instead of $\semantic{\tj{t}{\sigma}}\,\eta$ if the type $\sigma$ is irrelevant or
+clear from the context.
+
 \begin{definition}[Model]
   Every pair $\mathcal{M} = (\eta,s) \in \Env \times \Store$ with $\supp{\eta} \subseteq \dom{s}$
-  is called a {\em model}. $\Model$ denotes
-  the set of all models, $\Model_p$ denotes the set of all $(\eta,s) \in \Model$ such that
-  $\fv{p} \subseteq \dom{\eta}$.
+  is called a {\em model}. $\Model$ denotes the set of all models, $\Model_X$ denotes the set of all
+  $(\eta,s) \in \Model$ such that $X \subseteq \dom{\eta}$.
 \end{definition}
 
-We write $(\eta,s) \equiv_X (\eta',s')$ iff $\eta =_X \eta'$ and $s \equiv_{\fl{\eta|_X}} s'$.
+We write $(\eta,s) =_X (\eta',s')$ iff $\eta =_X \eta'$ and $s =_{\supp{\eta|_X}} s'$.
 
 \begin{definition}[Satisfaction relation]
-  For every well-typed assertion $p$, each suitable model $(\eta,s) \in \Model_p$, the {\em satisfaction relation}
-  $(\eta,s) \models p$ is defined by induction on the structure of $p$ as follows:
+  For every well-typed assertion $p$ and every suitable model $(\eta,s) \in \Model_{\free{p}}$,
+  the {\em satisfaction relation} $(\eta,s) \models p$ is defined by induction on the structure of $p$ as follows:
   \begin{itemize}
     \item $(\eta,s) \models t_1 \mapsto t_2$ iff $s(\semantic{t_1}\,\eta) = \semantic{t_2}\,\eta$
     \item $(\eta,s) \models p \vee q$ iff $(\eta,s) \models p$ or $(\eta,s) \models q$
     \item $(\eta,s) \models \neg p$ iff $(\eta,s) \not\models p$
     \item $(\eta,s) \models \qbex{x^\theta}{t}{p}$ iff $(\eta[d/x],s) \models p$ for some
-          $d \in \semantic{\theta}_L$ and some $L \subseteq \reach{\semantic{t}\,\eta}{s}$
-    \item $(\eta,s) \models \triple{p}{e_{:x}}{q}$ iff for every $s' \in \Store_{\eta}$ with
+          $d \in \bigcup_{L\subseteq\supp{\semantic{t}\,\eta}}\semantic{\theta}_L$
+    \item $(\eta,s) \models \triple{p}{e_{:x}}{q}$ iff for every $s' \in \Store_{\supp{\eta}}$ with
           $(\eta,s') \models p$ each compution for $(e\,\eta,s')$ terminates with some
           configuration $(v,s'')$ such that $(\eta[v/x],s'')\models q$
-    \item $(\eta,s) \models \qex{x^\theta}{p}$ iff $(\eta[d/x],s') \models p$ for some $d \in \semantic{\theta}$,
-          $s' \in \Store_{\eta[d/x]}$
+    \item $(\eta,s) \models \qex{x^\theta}{p}$ iff $(\eta[d/x],s') \models p$ for some $d \in \semantic{\theta}$ and
+          $s' \in \Store_{\supp{d}}$ with $\grph{s} \subseteq \grph{s'}$
     \item $(\eta,s) \models t_1 = t_2$ iff $\semantic{t_1}\,\eta = \semantic{t_2}\,\eta$
-    \item $(\eta,s) \models x\,(t_1,\ldots,t_n)$ iff $(\semantic{t_1}\,\eta,\ldots,\semantic{t_n}\,\eta,s)\in (\eta\,x)$
+    \item $(\eta,s) \models x\,t$ iff $(\eta\,x)\,(\semantic{t}\,\eta)\,s = \true$
   \end{itemize}
 \end{definition}
 
@@ -803,12 +805,12 @@ We write $(\eta,s) \equiv_X (\eta',s')$ iff $\eta =_X \eta'$ and $s \equiv_{\fl{
 \end{lemma}
 
 \begin{lemma}
-  $(\eta,s) \models h$ iff $(\eta,s') \models h$ for arbitrary $(\eta,s),(\eta,s')\in\Model_h$.
+  $(\eta,s) \models h$ iff $(\eta,s') \models h$ for arbitrary $(\eta,s),(\eta,s')\in\Model_{\free{h}}$.
 \end{lemma}
 
 \begin{lemma}[Coincidence]
-  $\mathcal{M}_1 \models p$ iff $\mathcal{M}_2 \models p$ for all $\mathcal{M}_1,\mathcal{M}_2\in\Model_p$
-  with $\mathcal{M}_1 \equiv_{\fv{p}} \mathcal{M}_2$.
+  $\mathcal{M}_1 \models p$ iff $\mathcal{M}_2 \models p$ for all $\mathcal{M}_1,\mathcal{M}_2\in\Model_{\free{p}}$
+  with $\mathcal{M}_1 =_{\free{p}} \mathcal{M}_2$.
 \end{lemma}
 
 \begin{lemma}[Substitution]
@@ -819,204 +821,5 @@ We write $(\eta,s) \equiv_X (\eta',s')$ iff $\eta =_X \eta'$ and $s \equiv_{\fl{
     \item $(\eta,s) \models p[t/x]$ iff $(\eta[\semantic{\tj{t}{\sigma}}\,\eta/x],s) \models p$
   \end{enumerate}
 \end{lemma}
-
-
-%%
-%% The calculus
-%%
-
-\chapter{The calculus}
-
-
-%%%
-%%% Axioms for the programming language
-%%%
-%
-%\section{Axioms for the programming language}
-%
-%\begin{tabular}{rl}
-%  \RN{Val}    & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}}$ \\
-%  \RN{Op}     & $\qall{a^{\ttarrow{\tau}{\tassn}},x^\tint,y^\tint}
-%                      {\triple{a\,(\op^\I\,(x,y))}{\op\,x\,y}{a}}$ \\
-%  \RN{Beta-V} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
-%                      \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b}$ \\
-%  \RN{Deref}  & $\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
-%                      {\triple{x \mapsto y \wedge a\,y}{!x}{a}}$ \\
-%  \RN{Assign} & $\qall{a^\tassn,x^{\tref{\tau}},y^\tau}
-%                      {x \diamond a \Rightarrow \triple{a}{x\,\assign\,y}{\returns{u^\tunit}{a \wedge x \mapsto y}}}$ \\
-%  \RN{Ref}    & $\qall{a^\tassn,b^\pi,x^\tau}
-%                      {\triple{x \# b \wedge a}{\cref\,x}
-%                              {\returns{y^{\tref{\tau}}}{y \mapsto x \wedge y \# b \wedge a}}}$ \\
-%  \RN{Unfold} & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
-%                      {\triple{a}{e[\fix\,(\abstr{x^\tau}{e})/x]}{b}
-%                       \Rightarrow \triple{a}{\fix\,(\abstr{x^\tau}{e})}{b}}$ \\
-%  \RN{App}    & $\qall{a^\tassn,\hat{a}^{\ttarrow{(\tarrow{\tau}{\tau'})}{\tassn}},
-%                       \hat{b}^{\ttarrow{\ttarrow{(\tarrow{\tau}{\tau'})}{\tau}}{\tassn}},
-%                       b^{\ttarrow{\tau'}{\tassn}}}{}$ \\
-%              & $\triple{a}{e_1}{\hat{a}} \wedge
-%                  (\qall{x^{\tarrow{\tau}{\tau'}}}{\triple{\hat{a}\,x}{e_2}{\hat{b}\,x}}
-%                   \wedge \qall{y^\tau}{\triple{\hat{b}\,x\,y}{x\,y}{b}})$ \\
-%              & $\Rightarrow \triple{a}{e_1\,e_2}{b}$ \\
-%  \RN{Cond}   & $\qall{a^\tassn,\hat{a}^{\ttarrow{\tbool}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
-%              & $\triple{a}{e_0}{\hat{a}}
-%                 \wedge \triple{\hat{a}\,\true}{e_1}{b}
-%                 \wedge \triple{\hat{a}\,\false}{e_2}{b}$ \\
-%              & $\Rightarrow \triple{a}{\ifte{e_0}{e_1}{e_2}}{b}$ \\
-%\end{tabular}
-%
-%\begin{lemma}[Soundness of the axioms for the programming language]
-%  The axioms for the programming language are sound.
-%\end{lemma}
-%
-%\begin{proof}
-%  We need to prove $\models h$ for every axiom $h$.
-%  \begin{itemize}
-%    \item For \RN{Val} let $\eta\in\Env$, then
-%          \[\begin{array}{rl}
-%                      & \eta \models \qall{a^{\ttarrow{\tau}{\tassn}},x^\tau}{\triple{a\,x}{x}{a}} \\
-%            \text{if} & \eta[\psi/a][v/x] \models \triple{a\,x}{x}{a} \text{ for all }
-%                          \psi\in\semantic{\ttarrow{\tau}{\tassn}}, v\in\semantic{\tau} \\
-%            \text{if} & L \models \triple{\psi\,v}{v}{\psi} \text{ for some } L \supseteq \supp{\psi,v} \\
-%            \text{if} & \text{for every $s \in \Store_L$ with $\psi\,v\,s = \true$ there exist $v'\in\CVal^\tau$} \\
-%                      & \text{and $s'\in\Store$ such that $(v,s) \xrightarrow* (v',s')$ and $\psi\,v'\,s'=\true$,}
-%          \end{array}\]
-%          which is obvious since $(v,s) = (v',s')$.
-%
-%    \item For \RN{Beta-V} let $e \in \Exp$ and $\eta \in \Env_e$, then
-%          \[\begin{array}{rl}
-%                      & \eta \models \qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},x^\tau}
-%                                          {\triple{a}{e}{b} \Rightarrow
-%                                           \triple{a}{(\abstr{x^\tau}{e})\,x}{b}} \\
-%            \text{if} & \underbrace{\eta[\phi/a,\psi/b,v/x]}_{\eta'} \models
-%                        \triple{a}{e}{b} \Rightarrow \triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
-%                      & \text{for all } \psi\in\semantic{\tassn},\phi\in\semantic{\ttarrow{\tau}{\tassn}},
-%                        v\in\semantic{\tau} \\
-%            \text{if} & \eta'\models\triple{a}{e}{b} \text{ implies }
-%                        \eta'\models\triple{a}{(\abstr{x^\tau}{e})\,x}{b} \\
-%            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi} \text{ implies } L \models
-%                        \triple{\phi}{\underbrace{((\abstr{x^\tau}{e})\,\eta')}_{\abstr{x^\tau}{e'}}\,v}{\psi} \\
-%                      & \text{for some } L \supseteq \supp{\phi,e',\psi} \\
-%          \end{array}\]
-%          Now assuming that $L \models \triple{\phi}{e\,\eta'}{\psi}$ holds, we have
-%          \[\begin{array}{rl}
-%                      & L \models \triple{\phi}{(\abstr{x^\tau}{e'})\,v}{\psi} \\
-%            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ there are $v'\in\CVal^\tau$ and} \\
-%                      & \text{$s'\in\Store$ with $(\abstr{x^\tau}{e'},s) \xrightarrow*(v',s')$ and 
-%                              $\psi\,v'\,s'=\true$} \\
-%            \text{if} & (e'[v/x],s) \xrightarrow* (v',s') \\
-%            \text{if} & (e\,\eta',s) \xrightarrow* (v',s') \text{ since } \fv{e'} = \{x\} \\
-%            \text{if} & L \models \triple{\phi}{e\,\eta'}{\psi}.
-%          \end{array}\]
-%
-%    \item For \RN{Deref} let $\eta\in\Env$, then
-%          \[\begin{array}{rl}
-%                      & \eta\models\qall{a^{\ttarrow{\tau}{\tassn}},x^{\tref{\tau}},y^\tau}
-%                                        {\triple{x \mapsto y \wedge a\,y}{!x}{a}} \\
-%            \text{if} & \underbrace{\eta[\psi/a,l/y,v/x]}_{\eta'} \models
-%                        \triple{x\mapsto y \wedge a\,y}{!x}{a} \\
-%                      & \text{for every } \psi\in\semantic{\ttarrow{\tau}{\tassn}},l\in\Loc^\tau,v\in\CVal^\tau \\
-%            \text{if} & L\models \triple{\phi}{!l}{\psi} \text{ for some } L \supseteq \supp{\phi,l,\psi} \\
-%                      & \text{where } \phi = \semantic{\tj{x\mapsto y\wedge a\,y}{\tassn}}\,\eta' \\
-%            \text{if} & \text{for every $s\in\Store_L$ with $\phi\,s=\true$ we have $v'\in\CVal^\tau,s'\in\Store$} \\
-%                      & \text{such that $(!l,s)\xrightarrow*(v',s')$ and $\psi\,v'\,s'=\true$} \\
-%            \text{if} & \text{$s(l) = v'$, $s = s'$ and }
-%                        (\semantic{\tj{a}{\ttarrow{\tau}{\tassn}}}\,\eta')\,v'\,s=\true \\
-%            \text{if} & (\semantic{\tj{a\,y}{\tassn}}\,(\eta'[v'/y]))\,s=\true
-%                        \text{ by theorem~\ref{theorem:Application}} \\
-%            \text{if} & \text{$\eta'(x)=l$, $\eta'(y)=v'$ and }
-%                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
-%            \text{if} & (\semantic{\tj{x\mapsto y}{\tassn}}\,\eta')\,s = \true \text{ and } 
-%                        (\semantic{\tj{a\,y}{\tassn}}\,\eta')\,s = \true \\
-%            \text{if} & \phi\,s=\true.
-%          \end{array}\]
-%
-%    \item For \RN{Ref} let $\eta\in\Env$, then
-%          \[\begin{array}{rl}
-%                      & \eta\models\qall{a^\tassn,b^\pi,x^\tau}
-%                                        {\triple{x\#b\wedge a}{\cref\,x}
-%                                        {\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}} \\
-%            \text{if} & \underbrace{\eta[\phi/a,\psi/b,v/x]}_{\eta'}\models
-%                                    {\triple{x\#b\wedge a}{\cref\,x}
-%                                    {\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}} \\
-%                      & \text{for all } \phi\in\semantic{\tassn},\psi\in\semantic{\pi},v\in\semantic{\tau} \\
-%            \text{if} & L\models\triple{\phi'}{\cref\,v}{\psi'} \text{ for some } L \supseteq\supp{\phi',v,\psi'} \\
-%                      & \text{where }
-%                        \psi'=(\semantic{\tj{\tabstr{y^{\tref{\tau}}}{y\mapsto x\wedge y\#b \wedge a}}
-%                                            {\ttarrow{\tref{\tau}}{\tassn}}}\,\eta') \\
-%                      & \text{and } \phi' = (\semantic{\tj{x\#b\wedge a}{\tassn}}\,\eta') \\
-%            \text{if} & \text{for every $s\in\Store_L$ with $\phi'\,s=\true$ there exist $v'\in\CVal^\tau$,} \\
-%                      & \text{$s'\in\Store$ such that $(\cref\,v,s)\xrightarrow*(v',s')$ and $\psi'\,v'\,s'=\true$} \\
-%            \text{if} & v'=l\not\in\dom{s}, s'=s[v/l] \text{ and } \phi''\,s'=\true \\
-%                      & \text{where }
-%                        \phi''=(\semantic{\tj{y\mapsto x\wedge y\#b \wedge a}{\tassn}}\,
-%                                (\underbrace{\eta'[l/y]}_{\eta''})) \\
-%            \text{if} & (\semantic{\tj{y \mapsto x}{\tassn}}\,\eta'')\,s'=\true,
-%                        (\semantic{\tj{y \# b}{\tassn}}\,\eta'')\,s'=\true \\
-%                      & \text{ and } (\semantic{\tj{a}{\tassn}}\,\eta'')\,s'=\true
-%          \end{array}\]
-%          Hence it suffices to prove these three statements under the assumption that
-%          $\phi'\,s=\true$ holds.
-%          \begin{enumerate}
-%            \item $(\semantic{\tj{y\mapsto x}{\tassn}}\,\eta'')\,s'=\true$ since
-%                  $s'(\eta''(y)) = s'(l) = v = \eta''(x)$.
-%            \item $(\semantic{\tj{y\#b}{\tassn}}\,\eta'')\,s'
-%                   = \Disj\,(\semantic{\tj{y}{\tref{\tau}}}\,\eta'')\,(\semantic{\tj{b}{\pi}}\,\eta'')\,s'=\true$
-%                  because $\reach{l}{s'}=\{l\}\cup\reach{v}{s'}$ and
-%                  $\{l\}\cup\reach{v}{s'}\cap\reach{\psi}{s'}=\emptyset$ since
-%                  \begin{enumerate}
-%                    \item $l\not\in\dom{s} \supseteq \reach{\psi}{s} = \reach{\psi}{s'}$ and
-%                    \item $(\semantic{\tj{x\#b}{\tassn}}\,\eta')\,s
-%                           =(\semantic{\tj{x\#b}{\tassn}}\,\eta')\,s'=\true$ implies
-%                          $\reach{v}{s'} \cap \reach{\psi}{s'} = \emptyset$.
-%                  \end{enumerate}
-%            \item Obviously
-%                  $(\semantic{\tj{a}{\tassn}}\,\eta'')\,s'=\phi\,s'=\phi\,s=\true$ since
-%                  $s \equiv_{\supp{\phi}} s'$ and $\phi'\,s=\true$ requires $\phi\,s=\true$.
-%          \end{enumerate}
-%  \end{itemize}
-%\end{proof}
-%
-%
-%%%
-%%% Axioms for total correctness
-%%%
-%
-%\section{Axioms for total correctness}
-%
-%\begin{tabular}{rl}
-%  \RN{Consequence}  & $\qall{a^\tassn,\hat{a}^\tassn,\hat{b}^{\ttarrow{\tau}{\tassn}},b^{\ttarrow{\tau}{\tassn}}}{}$ \\
-%                    & $\{a \Rightarrow \hat{a}\} \wedge \triple{\hat{a}}{e}{\hat{b}}
-%                       \wedge \{\qall{x^\tau}{\hat{b}\,x \Rightarrow b\,x}\} \Rightarrow \triple{a}{e}{b}$ \\
-%  \RN{Invariance} & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}{}$ \\
-%                  & $e \diamond \hat{a} \wedge \triple{a}{e}{b}
-%                     \Rightarrow \triple{a \wedge \hat{a}}{e}{\returns{x^\tau}{b\,x \wedge \hat{a}}}$ \\
-%  \RN{Pre-H}        & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}}}
-%                            {(h \Rightarrow \triple{a}{e}{b}) \Rightarrow \triple{h \wedge a}{e}{b}}$ \\
-%  \RN{Pre-$\vee$}   & $\qall{a^\tassn,\hat{a}^\tassn,b^{\ttarrow{\tau}{\tassn}}}
-%                            {(\triple{a}{e}{b} \wedge \triple{\hat{a}}{e}{b})
-%                             \Rightarrow \triple{a \vee \hat{a}}{e}{b}}$  \\
-%  \RN{Post-$\wedge$}  & $\qall{a^\tassn,b^{\ttarrow{\tau}{\tassn}},\hat{b}^{\ttarrow{\tau}{\tassn}}}
-%                              {(\triple{a}{e}{b} \wedge \triple{a}{e}{\hat{b}})
-%                               \Rightarrow \triple{a}{e}{b \wedge \hat{b}}}$ \\
-%\end{tabular}
-%
-%
-%%%
-%%% Logical rules
-%%%
-%
-%\section{Logical rules}
-%
-%\begin{tabular}{rl}
-%  \RN{$\forall$E-Assn} & $\RULE{p\in\CAssn^\pi}
-%                               {(\qall{x^\pi}{h}) \Rightarrow h[p/x]}$ \\
-%  \RN{$\forall$E-Term} & $\RULE{t\in\CTerm^\sigma}
-%                               {(\qall{x^\sigma}{h}) \Rightarrow h[t/x]}$ \\
-%  \RN{$\exists$I-Assn} & $\RULE{p\in\Assn^\pi}
-%                               {h[p/x] \Rightarrow \qex{x^\pi}{h}}$ \\
-%  \RN{$\exists$I-Term} & $\RULE{t\in\Term^\sigma}
-%                               {h[t/x] \Rightarrow \qex{x^\sigma}{h}}$ \\
-%\end{tabular}
-
 
 \end{document}

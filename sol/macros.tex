@@ -62,8 +62,7 @@
 
 \newcommand{\dom}[1]{\ensuremath{\sstyle{dom}(#1)}}
 \newcommand{\cod}[1]{\ensuremath{\sstyle{cod}(#1)}}
-\newcommand{\fv}[1]{\ensuremath{\sstyle{fv}(#1)}}
-\newcommand{\fl}[1]{\ensuremath{\sstyle{fl}(#1)}}
+\newcommand{\free}[1]{\ensuremath{\sstyle{free}(#1)}}
 \newcommand{\grph}[1]{\ensuremath{\sstyle{graph}(#1)}}
 \newcommand{\supp}[1]{\ensuremath{\sstyle{supp}(#1)}}
 \newcommand{\reach}[2]{\ensuremath{\sstyle{reach}(#1,#2)}}
@@ -105,6 +104,7 @@
 \newcommand{\fix}{\pstyle{fix}}
 \newcommand{\cref}{\pstyle{ref}}
 \newcommand{\unit}{\pstyle{()}}
+\newcommand{\proj}[2]{\pstyle{proj}^{#1}_{#2}}
 
 
 %%
@@ -115,7 +115,6 @@
 \newcommand{\app}[2]{#1\,#2}
 \newcommand{\ifte}[3]{\pstyle{if}\,#1\,\pstyle{then}\,#2\,\pstyle{else}\,#3}
 \newcommand{\record}[1]{\left\{#1\right\}}
-\newcommand{\proj}[2]{#1.#2}
 
 
 %%
@@ -129,7 +128,7 @@
 
 \newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
 
-\newcommand{\tabstr}[2]{\Lambda #1.\,#2}
+\newcommand{\tabstr}[2]{\pstyle{fn}\,#1.\,#2}
 
 \newcommand{\inv}[2]{{{#1}\diamond{#2}}}
 
