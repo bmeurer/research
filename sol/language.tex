@@ -35,6 +35,7 @@
 \newcommand{\Conf}{\sstyle{Conf}}
 \newcommand{\Con}{\sstyle{Con}}
 \newcommand{\Sto}{\sstyle{Sto}}
+\newcommand{\BType}{\sstyle{BType}}
 \newcommand{\scon}{\nstyle{con}}
 \newcommand{\sexp}{\nstyle{exp}}
 \newcommand{\ssto}{\nstyle{sto}}
@@ -63,7 +64,7 @@
 
 \chapter{The programming language}
 
-As target language, we use eager PCF with the usual primitive types and imperative concepts.
+The target language is eager PCF with the usual primitive types and imperative concepts.
 
 
 %%
@@ -104,7 +105,7 @@ expression $e$. We say that an expression $e$ is a {\em program} if $\fv{e}\cup\
 that is if $e$ contains neither unbound variables nor
 locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
 considered for the logic later are valid programs (i.e. programmers aren't permitted to access
-abritrary memory locations).
+arbitrary memory locations).
 
 
 %%
@@ -117,21 +118,23 @@ The static semantics of the programming language are defined by the typing relat
 $\tj{e}{\tau}$, with types $\tau$ as follows:
 
 \begin{definition}[Types]
-  The set $\Type$ of all {\em types} $\tau$ is defined by the context-free grammar below:
+  The set $\BType$ of {\em base types} $\beta$ is defined by the context-free grammar
   \[\GRbeg
-    \tau  \GRis \tbool \GRmid \tint \GRmid \tunit
-          \GRal \tref{\tau}
-          \GRal \tarrow{\tau_1}{\tau_2}
+  \beta \GRis \tbool \GRmid \tint \GRmid \tunit
+  \GRend\]
+  while the set $\Type$ of all {\em types} $\tau$ is defined by:
+  \[\GRbeg
+  \tau \GRis \beta \GRmid \tref{\beta} \GRmid \tarrow{\tau_1}{\tau_2}
   \GRend\]
 \end{definition}
 
 We don't want to fiddle with type environments and store typings, hence we assume that
 the elements of $\Var$ and $\Loc$ are already tagged with types. Therefore for every
-type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables $\tau$ and $\Loc^\tau$ the
-set of locations of type $\tau$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
-$\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
+type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables of type $\tau$ and $\Loc^\beta$ the
+set of locations of type $\beta$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
+$\Loc=\bigcup_{beta\in\BType}\Loc^\beta$, where the $\Var^\tau$ and $\Loc^\beta$ are
 required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
-$l^\tau$ for elements of $\Loc^\tau$.
+$l^\beta$ for elements of $\Loc^\beta$.
 
 \begin{definition}[Typing relation]
   A {\em typing judgement} is a formula $\tj{e}{\tau}$ with
@@ -157,31 +160,22 @@ Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be the partial order of pos
 
 \begin{definition}[Store] \label{definition:Store} \
   \begin{enumerate}
-    \item A {\em store} is a partial function $s:\Loc \pto \CVal$ with a finite domain and
-          \begin{enumerate}
-            \item $s(\Loc^\tau) \subseteq \CVal^\tau$ for every $\tau\in\Type$ and
-            \item $\fl{\cod{s}} \subseteq \dom{s}$.
-          \end{enumerate}
+    \item A {\em store} is a partial function $s:\Loc \pto \bigcup_{\beta\in\BType}\CVal^\beta$
+      with a finite domain such that $s(\Loc^\beta) \subseteq \CVal^\beta$ for every $\beta\in\BType$.
+      $\Store$ denotes the set of all such stores.
 
-    \item For every $L \in W$ the set of {\em $L$-stores} is defined as
-          \[\begin{array}{l}
-            \Store_L = \{s\,|\,\text{$s$ is a store with $L\subseteq\dom{s}$}\}.
-          \end{array}\]
-
-    \item $\Store = \bigcup_{L \in W} \Store_L$ denotes the set of all {\em stores}.
+    \item For every $L \in W$ a subset $\Store_L = \{s\in\Store\,|\,L\subseteq\dom{s}\}$ is defined.
   \end{enumerate}
 \end{definition}
 
-We thereby require stores to be well-typed and closed by definition, i.e. we don't permit {\em dangling
-references} within stores. Obviously $\Store_{L'} \subseteq \Store_L$ if $L \subseteq L'$.
+Obviously $\Store = \bigcup_{L\in W} \Store_L$ and $\Store_{L'} \subseteq \Store_L$ if $L \subseteq L'$.
 
 \begin{definition}[Configuration]
   Let $e\in\CExp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
   if $\fl{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
 \end{definition}
 
-The stores $s$ are already guaranteed to be closed due to definition~\ref{definition:Store} and
-now expressions that appear as part of an evaluation are also required to be closed, i.e. do not
+Expressions that appear as part of an evaluation are required to be closed, i.e. do not
 include {\em dangling references} to unallocated store cells.
 
 %For any given set $L \subseteq \Loc$ we let $\Conf_L = \{(e,s)\in\Conf\,|\,\dom{s}\subseteq L\}$
@@ -428,128 +422,20 @@ with respect to configurations. We assume that type safety holds for the semanti
       \GRal x\,(t_1,\ldots,t_n) \quad n \ge 0
       \GRnl
 \GRend\]
-
 The subset of {\em stateless assertions} $h \in \Formula$, called {\em Hoare formulae}, is:
 \[\GRbeg
-  h \GRis t_1 = t_2 \GRmid \triple{p}{e}{q} \GRmid \qex{x}{h} \GRmid h_1 \vee h_2 \GRmid \neg h
+  h \GRis t_1 = t_2 \GRmid \triple{p}{e_{:x}}{q} \GRmid \qex{x}{h} \GRmid h_1 \vee h_2 \GRmid \neg h
 \GRend\]
-
-%\[\GRbeg
-%  t \GRis x
-%    \GRal v
-%    \GRal f
-%    \GRal \app{t_1}{t_2}
-%    \GRal \tabstr{x}{t}
-%    \GRnl
-%
-%  h \GRis t_1 = t_2
-%    \GRal \triple{p}{e}{q}
-%    \GRal \qex{x}{h}
-%    \GRal h_1 \vee h_2
-%    \GRal \neg h
-%    \GRnl
-%
-%  p,q \GRis x
-%      \GRal h
-%      \GRal \app{p}{t}
-%      \GRal \tabstr{x}{p}
-%      \GRal t_1 \mapsto t_2
-%      \GRal t \# p
-%      \GRal \qbex{x}{t}{p}
-%      \GRal p \vee q
-%      \GRal \neg p
-%\GRend\]
-%
-%The set $\LType$ of all {\em logical types} $\theta$ is defined
-%by the following grammar
-%\[\GRbeg
-%  \theta \GRis \tau \GRmid \tassn \GRmid \ttarrow{\theta_1}{\theta_2}.
-%\GRend\]
-%Notable subsets of $\LType$ are
-%\begin{itemize}
-%  \item the set $\SType$ of all {\em static types} $\sigma$, given by
-%        \[\GRbeg
-%          \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2},
-%        \GRend\]
-%
-%  \item and the set $\PType$ of all {\em predicate types} $\pi$, given by
-%        \[\GRbeg
-%          \pi \GRis \tassn \GRmid \ttarrow{\theta}{\pi}.
-%        \GRend\]
-%\end{itemize}
-
 The set $\SType$ of {\em static types} $\sigma$ is defined by the following grammar
 \[\GRbeg
   \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2}
+  \GRal \sigma_1 \times \ldots \times \sigma_n
 \GRend\]
 and the set $\LType$ of {\em logical types} $\theta$ is
 \[\GRbeg
-  \theta \GRis \sigma \GRmid \vec{\sigma}\,\tassn
+  \theta \GRis \sigma \GRmid \sigma\,\tassn
 \GRend\]
-where $\vec{\sigma} = (\sigma_1,\ldots,\sigma_n)$ with $n \ge 0$. We write
-$\tassn$ if $n = 0$.
-
-%\subsubsection{Abbreviations}
-%
-%We write
-%\[\begin{array}{rcl}
-%  \tabstr{\unit}{t}
-%  &\triangleq& \tabstr{x^\tunit}{t} \quad \text{where } x^{\tunit}\not\in\fv{t} \\
-%  \\
-%  p \wedge q
-%  &\triangleq& \neg(\neg p \vee \neg q) \\
-%  p \Rightarrow q
-%  &\triangleq& \neg p \vee q \\
-%  p \Leftrightarrow q
-%  &\triangleq& (p \Rightarrow q) \wedge (q \Rightarrow p) \\
-%  \qball{x}{t}{p}
-%  &\triangleq& \neg\qbex{x}{t}{\neg p} \\
-%  \tabstr{\unit}{p}
-%  &\triangleq& \tabstr{x^\tunit}{p} \quad \text{where } x^{\tunit}\not\in\fv{p} \\
-%  \\
-%  \true
-%  &\triangleq& t = t \quad \text{where } t \in \Term \\
-%  \false
-%  &\triangleq& \neg \true \\
-%  h_1 \wedge h_2
-%  &\triangleq& \neg(\neg h_1 \vee \neg h_2) \\
-%  h_1 \Rightarrow h_2
-%  &\triangleq& \neg h_1 \vee h_2 \\
-%  h_1 \Leftrightarrow h_2
-%  &\triangleq& (h_1 \Rightarrow h_2) \wedge (h_2 \Rightarrow h_1) \\
-%  \qall{x}{h}
-%  &\triangleq& \neg\qex{x}{\neg h} \\
-%  \triple{p}{e}{\returns{x}{p}}
-%  &\triangleq& \triple{p}{e}{\tabstr{x}{p}} \\
-%  \{p\}
-%  &\triangleq& \triple{\true}{e}{p}
-%\end{array}\]
-%We extend the logical connectives and quantifiers to functions. For each
-%logical connective $\oplus$ we define $\oplus^\pi$ by
-%\[\begin{array}{rcl}
-%  p \oplus^\tassn q
-%  &\triangleq& p \oplus q \\
-%  p \oplus^{\ttarrow{\theta}{\pi}} q
-%  &\triangleq& \tabstr{x^\theta}{(p\,x) \oplus^\pi (q\,x)}
-%\end{array}\]
-%and for every quantifier $Q$ we define $Q^\pi$ by
-%\[\begin{array}{rcl}
-%  Q^\tassn y^\theta\in[t].\,p
-%  &\triangleq& Q y^\theta\in[t].\,p \\
-%  Q^{\ttarrow{\theta}{\pi}} y^{\theta'}\in[t].\,p
-%  &\triangleq& \tabstr{x^\theta}{Q^\pi y^{\theta'}\in[x].\,(p\,x)}
-%\end{array}\]
-%where $x$ denotes a fresh variable. Since the exact type is always clear from
-%the context, we simply write $\oplus$ and $Q$ instead of $\oplus^\pi$ and
-%$Q^\pi$.
-%
-%In addition to these rather obvious abbreviations we add a new type of formula
-%$\inv{e}{p}$, read {\em `the assertion $p$ is invariant with respect to $e$'}.
-%\[\begin{array}{rcll}
-%  \inv{e}{p} &\triangleq& \triple{p}{e}{\tabstr{\unit}{p}} \quad \text{for every } p\in\Assn^\tassn \\
-%  \inv{e}{p} &\triangleq& \qall{x^\theta}{\inv{e}{(p\,x)}} \quad \text{for every } p\in\Assn^{\ttarrow{\theta}{\theta'}}
-%\end{array}\]
-%{\bf TODO:} Won't work. Doesn't treat $\tj{e}{\tarrow{\tau_1}{\tau_2}}$ properly.
+We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
 
 
 %%
@@ -558,128 +444,27 @@ $\tassn$ if $n = 0$.
 
 \section{Semantics of the logic}
 
-
-%%
-%% Reachability
-%%
-
-\subsection{Reachability}
-
-\begin{definition}[Reachability]
-  Let $L\in W$ and $s\in\Store_L$. By induction we define sets $\reachn{i}{L}{s} \subseteq \Loc$
-  \begin{itemize}
-    \item $\reachn{0}{L}{s} = L$
-    \item $\reachn{i+1}{L}{s} = \reachn{i}{L}{s} \cup \bigcup_{l\in\reachn{i}{L}{s}} \fl{s(l)}$.
-  \end{itemize}
-  The set $\reach{L}{s} = \bigcup_{i\in\N} \reachn{i}{L}{s}$ includes all locations in $s$ reachable
-  by $L$.
+\begin{definition}[$L$-definability]
+  Let $L\in W$ be an abitrary world. A predicate $\phi : \Store_L \to \Bool$ is said to be $L$-definable
+  if $\phi\,s = \phi\,s'$ for all stores $s,s' \in \Store_L$ with $s =_L s'$. $\DEF_L$ denotes the set of
+  all $L$-definable predicates.
 \end{definition}
 
-Since a store $s\in\Store_L$ is always closed by definition, it is obvious that
-$\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
+% For the semantic domains below we need $c_A \circ \pi = c_A$, which
+% holds iff $\forall
+% (d_1,\ldots,d_n,s)\in\dom{c_A}. c_A(\pi\,d_1,\ldots,\pi\,d_n,\pi\,s) =
+% c_A(d_1,\ldots,d_n)$. We omit the type annontation on $\pi$ if it is
+% obvious from the context.
 
-\begin{lemma}[Reachability] \label{lemma:Reachability}
-  Let $L,L'\in W$ with $L \subseteq L'$ and $s,s'\in\Store_{L'}$.
-  \begin{enumerate}
-    \item $\reach{L}{s} \subseteq \reach{L'}{s}$
-    \item $\reach{L}{s} = \reach{\reach{L}{s}}{s}$
-    \item $\reach{L \cup L'}{s} = \reach{L}{s} \cup \reach{L'}{s}$
-    \item $\reach{L}{s} = \reach{L}{s'}$ whenever $\reach{L'}{s} = \reach{L'}{s'}$
-          and $s =_{\reach{L'}{s}} s'$
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Trivial.
-\end{proof}
-
-\begin{definition}[$L$-equivalence, $L$-definability]
-  Given a world $L \in W$ we define:
-  \begin{enumerate}
-    \item Two stores $s,s'\in\Store_L$ are called {\em $L$-equivalent}, denoted $s \equiv_L s'$, if
-          $\reach{L}{s} = \reach{L}{s'}$ and $s =_{\reach{L}{s}} s'$.
-
-    \item A predicate $\phi:\Store \pto \Bool$ with $\Store_L = \dom{\phi}$ is said to be
-          {\em $L$-definable} if $\app{\phi}{s} = \app{\phi}{s'}$ for all stores
-          $s,s'\in\Store_L$ with $s \equiv_L s'$. $\DEF_L$ denotes the set of all $L$-definable
-          predicates.
-  \end{enumerate}
-\end{definition}
-
-\begin{lemma}[$L$-equivalence, $L$-definability] \label{lemma:L_equivalence_and_L_definability}
-  Let $L \in W$ and $s,s' \in \Store_L$.
-  \begin{enumerate}
-    \item $s \equiv_{L} s'$ implies $s \equiv_{L'} s'$ for all $L' \subseteq \reach{L}{s}$
-    \item $s \sqsubseteq s'$ implies $\phi\,s = \phi\,s'$ for every $\phi \in \DEF_L$
-  \end{enumerate}
-\end{lemma}
-
-%\begin{proof} \
-%  \begin{enumerate}
-%    \item Let $L' \subseteq \reach{L}{s}$. Then lemma~\ref{lemma:Reachability} implies
-%          \[\begin{array}{rcl}
-%            \reach{L'}{s} &\subseteq& \reach{\reach{L}{s}}{s} \\
-%                          &=&         \reach{L}{s}
-%          \end{array}\]
-%          and therefore $s\,l = s'\,l$ for every $l \in \reach{L'}{s} \subseteq \reach{L}{s}$. The
-%          proof of $\reach{L'}{s} = \reach{L'}{s'}$ is a trivial induction then.
-%
-%    \item Since $\phi \in \DEF_L$ we have $\phi\,s = \phi\,s'$ for all $s,s'$ with $s \equiv_L s'$. Hence
-%          it suffices to show that $s \sqsubseteq s'$ implies $s \equiv_L s'$.
-%          \[\begin{array}{rcl}
-%            s \sqsubseteq s'
-%            &\Rightarrow& \grph{s} \subseteq \grph{s'} \\
-%            &\Rightarrow& \dom{s} \subseteq \dom{s'} \wedge \forall l\in\dom{s}.\,s\,l = s'\,l \\
-%            &\Rightarrow& \reach{L}{s} = \reach{L}{s'} \wedge \forall l\in\reach{L}{s}.\,s\,l = s'\,l \\
-%            &           & \text{by a trivial induction since $\reach{L}{s} \subseteq \dom{s}$} \\
-%            &\Rightarrow& s \equiv_L s'
-%          \end{array}\]
-%  \end{enumerate}
-%\end{proof}
-
-\begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
-  Let $\pi \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
-  Then
-  \begin{enumerate}
-    \item $\reach{\pi(L)}{\pi^\ssto\,s} = \pi\,(\reach{L}{s})$
-    \item $s \equiv_L s' \,\Leftrightarrow\, (\pi^\ssto\,s) \equiv_{\pi(L)} (\pi^\ssto\,s')$
-    \item $\phi \in \DEF_{\pi(L)} \,\Leftrightarrow\, (\phi \circ \pi^\ssto) \in \DEF_L$
-  \end{enumerate}
-\end{lemma}
-
-%\begin{proof} \
-%  \begin{enumerate}
-%    \item It is sufficient to prove $\pi\,(\reachn{i}{L}{s}) = \reachn{i}{\pi(L)}{\pi^\ssto\,s}$ for every $i\in\N$:
-%          \begin{itemize}
-%            \item $\reachn{0}{\pi(L)}{\pi^\ssto\,s} = \pi(L) = \pi\,(\reachn{0}{L}{s})$
-%
-%            \item $\reachn{i+1}{\pi(L)}{\pi^\ssto\,s} \\
-%                  = \reachn{i}{\pi(L)}{\pi^\ssto\,s}
-%                    \cup \bigcup_{l\in\reachn{i}{\pi(L)}{\pi^\ssto\,s}} \fl{s(l)} \\
-%                  = \pi\,(\reachn{i}{L}{s})
-%                    \cup \bigcup_{l\in\reachn{i}{L}{s}} \fl{\pi^\sexp(s(l)} \\
-%                  = \pi\,(\reachn{i+1}{L}{s})$
-%          \end{itemize}
-%
-%    \item We prove only one direction, the reverse follows easily.
-%
-%          $\reach{\pi(L)}{\pi^\ssto\,s} = \pi\,(\reach{L}{s}) = \pi\,(\reach{L}{s'}) = \reach{\pi(L)}{\pi^\ssto\,s'}$
-%
-%          $l \in \reach{\pi(L)}{\pi^\ssto\,s} \\
-%            \,\Rightarrow\,
-%            \pi^{-1}(l) \in \reach{L}{s} \\
-%            \,\Rightarrow\,
-%            s(\pi^{-1}(l)) = s'(\pi^{-1}(l)) \\
-%            \,\Rightarrow\,
-%            (\pi^\ssto s)(l) = (\pi^\ssto s')(l)$
-%
-%    \item Again only one direction.
-%
-%          Let $s,s'\in\Store_L$ with $s \equiv_L s'$. Then $(\pi^\ssto\,s) \equiv_{\pi(L)} (\pi^\ssto\,s')$
-%          where $(\pi^\ssto\,s),(\pi^\ssto\,s')\in\Store_{\pi(L)}$, hence $\phi\,(\pi^\ssto\,s)=\phi\,(\pi^\ssto\,s')$
-%          and thereby $(\phi \circ \pi^\ssto) \in \DEF_L$.
-%  \end{enumerate}
-%\end{proof}
+% \begin{lemma}[Permutations and reachability] \label{lemma:Permutations_and_Reachability}
+%   Let $\pi \in \Perm$, $L \in W$, $s,s'\in\Store_L$ and $\phi:\Store\pto\Bool$.
+%   Then
+%   \begin{enumerate}
+%     \item $\reach{\pi(L)}{\pi^\ssto\,s} = \pi\,(\reach{L}{s})$
+%     \item $s \equiv_L s' \,\Leftrightarrow\, (\pi^\ssto\,s) \equiv_{\pi(L)} (\pi^\ssto\,s')$
+%     \item $\phi \in \DEF_{\pi(L)} \,\Leftrightarrow\, (\phi \circ \pi^\ssto) \in \DEF_L$
+%   \end{enumerate}
+% \end{lemma}
 
 
 %%
@@ -699,34 +484,23 @@ $\reach{L}{s} \subseteq \dom{s} \in  W$ holds.
               \forall L'\in W.\,\psi\,(D^{\sigma_1}_{L'}) \subseteq D^{\sigma_2}_{L \cup L'} \\
               \hspace*{4.5cm} \wedge \forall \pi\in\Fix{L}.\,\psi\circ\pi^{\sigma_1}=\pi^{\sigma_2}\circ\psi\}$\\
           $\I^{\ttarrow{\sigma_1}{\sigma_2}}(\pi):D^{\ttarrow{\sigma_1}{\sigma_2}}\to D^{\ttarrow{\sigma_1}{\sigma_2}},
-                              \psi \mapsto \I^{\sigma_2}(\pi) \circ \psi \circ (\I^{\sigma_1}(\pi))^{-1}$
-    \item 
+                              \psi \mapsto \pi^{\sigma_2} \circ \psi \circ (\pi^{\sigma_1})^{-1}$
+    \item $D^{\sigma_1 \times \ldots \times \sigma_n}_L = \ldots$
+    \item $D^{\sigma\,\tassn}_L =
+      \{\phi\in\DEF^{\sigma}_L\,|\,\forall \pi\in\Fix{L}.\,c_A
+      \circ \pi^{-1} = c_A\}$ \\
+      $\I^{\sigma\,\tassn}(\pi):D^{\sigma\,\tassn}\to
+      D^{\sigma\,\tassn}, A \to \pi(A)$
   \end{itemize}
+  where $\DEF_L^{\sigma}$ {\bf TODO}.
 \end{definition}
 
-%\begin{definition}[Semantic domains]
-%  For every type $\theta\in\LType$ we define {\em semantic domains} $\semantic{\theta} = (D^\theta,\I^\theta)$ where
-%  $D^\theta = \bigcup_{L \in W} D^\theta_L$ and $\I^\theta(\pi) : D^\theta \to D^\theta$ for every $\pi \in \Perm$ by
-%  \begin{itemize}
-%    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\supp{v} = L\}$ \\
-%          $\I^\tau(\pi): D^\tau \to D^\tau, v \mapsto \pi^\sexp\,v$
-%
-%    \item $D^\tassn_L = \{ \phi\in\DEF_L\,|\,\forall \pi\in\Fix{L}.\,\phi = \phi \circ (\pi^\ssto)^{-1}\}$ \\
-%          $\I^\tassn(\pi): D^\tassn \to D^\tassn, \phi \mapsto \phi \circ (\pi^\ssto)^{-1}$
-%
-%    \item $D^{\ttarrow{\theta_1}{\theta_2}}_L = \{ \psi: D^{\theta_1} \to D^{\theta_2}\,|\,
-%              \forall L'\in W.\,\psi\,(D^{\theta_1}_{L'}) \subseteq D^{\theta_2}_{L \cup L'} \\
-%              \hspace*{4.5cm} \wedge \forall \pi\in\Fix{L}.\,\psi\circ\pi^{\theta_1}=\pi^{\theta_2}\circ\psi\}$\\
-%          $\I^{\ttarrow{\theta_1}{\theta_2}}(\pi):D^{\ttarrow{\theta_1}{\theta_2}}\to D^{\ttarrow{\theta_1}{\theta_2}},
-%                              \psi \mapsto \I^{\theta_2}(\pi) \circ \psi \circ (\I^{\theta_1}(\pi))^{-1}$
-%  \end{itemize}
-%\end{definition}
-%
-%We follow the usual mathematical convention and use $\semantic{\theta}$ not only as a notation
-%for the semantic domain $(D^\theta,\I^\theta)$ but also for the underlying set $D^\theta$,
-%hence $\semantic{\theta}_L$ denotes the set $D^\theta_L$. Moreover, we use $\pi^\theta$ as an abbreviation
-%for $\I^\theta(\pi)$.
-%
+We follow the usual mathematical convention and use $\semantic{\theta}$ not only as a notation
+for the semantic domain $(D^\theta,\I^\theta)$ but also for the underlying set $D^\theta$,
+hence $\semantic{\theta}_L$ denotes the set $D^\theta_L$. Moreover, we use $\pi^\theta$ as an abbreviation
+for $\I^\theta(\pi)$, omitting the type annotation if the type is
+clear from the context.
+
 %Given lemma~\ref{lemma:Permutations}
 %it is pretty much obvious that $\pi^\theta\,d = d$ for every $d \in \semantic{\theta}_L$ and
 %$\pi\in\Fix{L}$.
