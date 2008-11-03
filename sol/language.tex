@@ -197,37 +197,37 @@ with respect to configurations. We assume that type safety holds for the semanti
 (see Pierce, {\bf TODO}).
 
 
-%%%
-%%% Permutability
-%%%
-%
-%\subsection{Permutability}
-%
-%These permutations were inspired by the {\em partial bijections} used by Pitts ({\bf TODO}: citation);
-%but we prefer to use total bijections here, since we have to consider stores instead of just their domains.
-%The result will be similar since we will introduce a partial order on stores, which combined with the
-%total bijection on stores, results in something that is comparable to a partial bijection in the sense
-%of Pitts.
-%
-%\begin{definition}[Permutation]
-%  A {\em permutation} is a total, bijective function $\pi:\Loc\to\Loc$ with
-%  $\pi\,(\Loc^\tau)=\Loc^\tau$ for each $\tau\in\Type$. Let $\Perm$ be the
-%  set of all such permutations.
-%\end{definition}
-%
-%Let $\Fix{\pi} = \{l\in\Loc\,|\,\pi(l)=l\}$ be set the of all fixed points of $\pi$. Then
-%the set $\Fix{L} = \{\pi\in\Perm\,|\,L \subseteq \Fix{\pi}\}$ includes all
-%permutations $\pi$ with $(\pi|L) = \id_L$.
-%
-%\begin{lemma}
-%  For all $L \subseteq \Loc$ and $\pi_1,\pi_2\in\Perm$ we have
-%  $\pi_1\in\Fix{L}$ iff $(\pi_2 \circ \pi_1 \circ \pi_2^{-1})\in\Fix{{\pi_2(L)}}$.
-%\end{lemma}
-%
-%\begin{proof}
-%  Trivial.
-%\end{proof}
-%
+%%
+%% Permutability
+%%
+
+\subsection{Permutability}
+
+These permutations were inspired by the {\em partial bijections} used by Pitts ({\bf TODO}: citation);
+but we prefer to use total bijections here, since we have to consider stores instead of just their domains.
+The result will be similar since we will introduce a partial order on stores, which combined with the
+total bijection on stores, results in something that is comparable to a partial bijection in the sense
+of Pitts.
+
+\begin{definition}[Permutation]
+  A {\em permutation} is a total, bijective function $\pi:\Loc\to\Loc$ with
+  $\pi\,(\Loc^\beta)=\Loc^\beta$ for each $\beta\in\BType$. Let $\Perm$ be the
+  set of all such permutations.
+\end{definition}
+
+Let $\Fix{\pi} = \{l\in\Loc\,|\,\pi(l)=l\}$ be set the of all fixed points of $\pi$. Then
+the set $\Fix{L} = \{\pi\in\Perm\,|\,L \subseteq \Fix{\pi}\}$ includes all
+permutations $\pi$ with $(\pi|L) = \id_L$.
+
+\begin{lemma}
+  For all $L \subseteq \Loc$ and $\pi_1,\pi_2\in\Perm$ we have
+  $\pi_1\in\Fix{L}$ iff $(\pi_2 \circ \pi_1 \circ \pi_2^{-1})\in\Fix{{\pi_2(L)}}$.
+\end{lemma}
+
+\begin{proof}
+  Trivial.
+\end{proof}
+
 %Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
 %$\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
 %every $\gamma \in \Gamma$ we define a poset $D^\gamma$ and for every $d \in D^\gamma$
@@ -432,8 +432,10 @@ The set $\SType$ of {\em static types} $\sigma$ is defined by the following gram
 \GRend\]
 and the set $\LType$ of {\em logical types} $\theta$ is
 \[\GRbeg
-  \theta \GRis \sigma \GRmid \sigma\,\tassn
+  \theta \GRis \sigma \GRmid \gamma\,\tassn
 \GRend\]
+where $\gamma$ denotes {\em purely mathematical types}, which are yet to be defined. It is basically
+the same as $\sigma$, but using $\beta$ instead of $\tau$ as ground type.
 We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
 
 
@@ -474,31 +476,18 @@ We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
 
 \begin{definition}[Semantic domains]
   For every type $\theta\in\LType$ we define {\em semantic domains}
-  $\semantic{\theta} = (D^\theta,\I^\theta)$ where
-  $D^\theta = \bigcup_{L \in W} D^\theta_L$ and $\I^\theta: \Perm \to (D^\theta \to D^\theta)$ by
+  $\semantic{\theta} = \bigcup_{L \in W} \semantic{\theta}_L$ by:
   \begin{itemize}
-    \item $D^\tau_L = \{v\in\CVal^\tau\,|\,\supp{v} = L\}$ \\
-          $\I^\tau(\pi): D^\tau \to D^\tau, v \mapsto \pi^\sexp\,v$
-    \item $D^{\ttarrow{\sigma_1}{\sigma_2}}_L = \{\psi: D^{\sigma_1} \to D^{\sigma_2}\,|\,
-              \forall L'\in W.\,\psi\,(D^{\sigma_1}_{L'}) \subseteq D^{\sigma_2}_{L \cup L'} \\
-              \hspace*{4.5cm} \wedge \forall \pi\in\Fix{L}.\,\psi\circ\pi^{\sigma_1}=\pi^{\sigma_2}\circ\psi\}$\\
-          $\I^{\ttarrow{\sigma_1}{\sigma_2}}(\pi):D^{\ttarrow{\sigma_1}{\sigma_2}}\to D^{\ttarrow{\sigma_1}{\sigma_2}},
-                              \psi \mapsto \pi^{\sigma_2} \circ \psi \circ (\pi^{\sigma_1})^{-1}$
-    \item $D^{\sigma_1 \times \ldots \times \sigma_n}_L = \ldots$
-    \item $D^{\sigma\,\tassn}_L =
-      \{\phi\in\DEF^{\sigma}_L\,|\,\forall \pi\in\Fix{L}.\,c_A
-      \circ \pi^{-1} = c_A\}$ \\
-      $\I^{\sigma\,\tassn}(\pi):D^{\sigma\,\tassn}\to
-      D^{\sigma\,\tassn}, A \to \pi(A)$
+    \item $\semantic{\tau}_L = \{v\in\CVal^\tau\,|\,\locns{v} = L\}$
+    \item $\semantic{\ttarrow{\sigma_1}{\sigma_2}}_L = \{\psi: \semantic{\sigma_1} \to \semantic{\sigma_2}\,|\,
+              \forall L'\in W.\,(\psi\,\semantic{\sigma_1}_{L'}) \subseteq \semantic{\sigma_2}_{L \cup L'}\}$
+    \item $\semantic{\sigma_1 \times \ldots \times \sigma_n}_L =
+      \{\vec{d} \in \semantic{\sigma_1}_{L_1} \times \ldots \times \semantic{\sigma_n}_{L_n}\,|\,
+      L = L_1 \cup \ldots \cup L_n\}$
+    \item $\semantic{\gamma\,\tassn}_L =
+      \{\phi:\semantic{\gamma}\to\Store_L \to \Bool\,|\,\forall d\in \semantic\gamma:\,(\phi\,d)\in\DEF_L\}$
   \end{itemize}
-  where $\DEF_L^{\sigma}$ {\bf TODO}.
 \end{definition}
-
-We follow the usual mathematical convention and use $\semantic{\theta}$ not only as a notation
-for the semantic domain $(D^\theta,\I^\theta)$ but also for the underlying set $D^\theta$,
-hence $\semantic{\theta}_L$ denotes the set $D^\theta_L$. Moreover, we use $\pi^\theta$ as an abbreviation
-for $\I^\theta(\pi)$, omitting the type annotation if the type is
-clear from the context.
 
 %Given lemma~\ref{lemma:Permutations}
 %it is pretty much obvious that $\pi^\theta\,d = d$ for every $d \in \semantic{\theta}_L$ and
