@@ -1,0 +1,166 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+\usepackage{url}
+\usepackage[arrow, matrix, curve]{xy}
+
+%% LaTeX macros
+\include{macros}
+
+\newcommand{\scon}{\nstyle{con}}
+\newcommand{\sexp}{\nstyle{exp}}
+\newcommand{\ssto}{\nstyle{sto}}
+
+\begin{document}
+
+%%
+%% Abstract syntax
+%%
+
+\section{Abstract syntax}
+
+The target language is eager PCF with the usual primitive types and imperative concepts.
+
+We assume that infinite sets of variables $x \in \Var$ and locations $l \in \Loc$ are given;
+variables are used to abstract expressions, locations are used to address memory cells.
+Expressions are considered equal modulo renaming of bound variables.
+$\Bool=\{\true,\false\}$ is the set of boolean constants $b$, $\Int$ is the set of integer
+constants $z$; we do not distinguish between integer values and their program representation.
+
+\begin{definition}[Expressions]
+  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$
+  are defined by the grammars
+  \[\GRbeg
+    \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+    c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid !
+             \GRmid \assign \GRmid \fix \GRmid \op \GRmid \proj{n}{i},
+  \GRend\]
+  the set $\Exp$ of {\em expressions} $e$ is defined by
+  \[\GRbeg
+    e \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+      \GRmid \ifte{e_0}{e_1}{e_2} \GRmid (e_1,\ldots,e_n)
+  \GRend\]
+  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+  \[\GRbeg
+    v \GRis c \GRmid x \GRmid l \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v}
+      \GRmid (v_1,\ldots,v_n)
+  \GRend\]
+\end{definition}
+
+$\free{e}$ denotes the set of free variables and $\supp{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if $\free{e}\cup\supp{e}=\emptyset$,
+that is if $e$ contains neither unbound variables nor
+locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
+considered for the logic later are valid programs (i.e. programmers aren't permitted to access
+arbitrary memory locations).
+
+\begin{definition}[Types]
+  The set $\Type$ of all {\em types} $\tau$ is defined by:
+  \[\GRbeg
+  \tau \GRis \tbool \GRmid \tint \GRmid tunit
+  \GRal \tref{\tau_1} \GRmid \tarrow{\tau_1}{\tau_2}
+  \GRal \tau_1 \times \ldots \times \tau_n
+  \GRend\]
+\end{definition}
+
+We don't want to fiddle with type environments and store typings, hence we assume that
+the elements of $\Var$ and $\Loc$ are already tagged with types. Therefore for every
+type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables of type $\tau$ and $\Loc^\tau$ the
+set of locations of type $\tau$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
+$\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
+required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
+$l^\tau$ for elements of $\Loc^\tau$.
+
+
+%%
+%% Static semantics
+%%
+
+\section{Static semantics}
+
+
+%%
+%% Operational semantics
+%%
+
+\section{Operational semantics}
+
+
+%%
+%% Operational properties
+%%
+
+\section{Operational properties}
+
+{\bf TODO:} Worlds $W$ of finite sets $L$
+
+Given finite worlds $L_1,L_2 \in W$ of locations, we write $R: L_1 \rightleftharpoons L_2$ to
+indicate that $R$ is (the graph of) a type-preserving {\em partial bijection} from $L_1$ to $L_2$.
+In other words, $R \subseteq L_1 \times L_2$ satifies the following properties:
+\begin{enumerate}
+\item $(l_1,l_2)\in R \Rightarrow \exists \tau\in\Type:\,l_1,l_2\in\Loc^\tau$
+\item $(l_1,l_2) \in R \wedge (l_1',l_2')\in R \Rightarrow (l_1=l_1' \Leftrightarrow l_2=l_2')$
+\end{enumerate}
+Note that $R \oplus R'$ is a partial bijection $L_1 \oplus L_1' \rightleftharpoons L_2 \oplus L_2'$
+if $R: L_1 \rightleftharpoons L_2$ and $R': L_1' \rightleftharpoons L_2'$ are disjoint partial
+bijections. The {\em identity} partial bijection, $\Id_L: L \rightleftharpoons L$, is given by
+$\Id_L \defeqn \delta L$.
+
+The domain and codomain of definition of a partial bijection $R: L_1 \leftrightharpoons L_2$ will
+be denoted
+\[\begin{array}{rcl}
+  \dom{R} &\defeqn& \{ l_1 \in L_1\,|\, \exists l_2\in L_2:\,l_1\ R\ l_2\} \\
+  \cod{R} &\defeqn& \{ l_2 \in L_2\,|\, \exists l_1\in L_1:\,l_1\ R\ l_2\} .
+\end{array}\]
+Therefore $R$ is a bijection if $\dom{R} = L_1$ and $\cod{R} = L_2$, in which case we
+write $R: L_1 \leftrightarrow L_2$.
+
+{\bf TODO:} Family of relations $(R_{\gamma})_{\gamma\in\Gamma}$ such that
+$R_\gamma \subseteq \semantic{\gamma}_{L_1} \times \semantic{\gamma}_{L_2}$
+where $\Gamma=\{\scon,\sexp,\ssto\}$. (then $\semantic{\sexp}$ has to include non-closed expressions
+otherwise the inductive definition won't work)
+\[\begin{array}{rcl}
+  R_{\sexp} &\defeqn& \text{by induction on the structure of expressions} \\
+  R_{\ssto} &\defeqn& \{ \vec{s} \in \Store_{L_1} \times \Store_{L_2}\,|\,\vec{s}(R) \subseteq R_{\sexp}\} \\
+  R_{\scon} &\defeqn& R_{\sexp} \times R_{\ssto}
+\end{array}\]
+We write $R$ instead of $R_\gamma$ if $\gamma$ is clear from the context.
+
+\begin{theorem}
+  Given $L_i\in W$ and $k_i\in\semantic{\scon}_{L_i}$ for $i=1,\ldots,4$ with $k_1 \to k_2$, and a partial
+  bijection $R: L_1 \rightleftharpoons L_3$ with $k_1\ R\ k_3$.
+  Then $k_3 \to k_4$ iff there exists a $R': (L_2 \setminus L_1) \rightleftharpoons (L_4\setminus L_3)$
+  such that $k_2\ (R \oplus R')\ k_4$.
+\end{theorem}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
+{\bf TODO:} show that $\oplus$ is associative for the corollary
+
+{\bf TODO:} check $s \sqsubseteq s' \Leftrightarrow s\ \Id_{\dom{s}}\ s'$.
+That should help to get from $L$-correctness to total correctness (independent of the $L$). It may be a trivial
+consequence of the theorem above.
+
+\end{document}
