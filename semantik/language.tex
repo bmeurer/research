@@ -27,6 +27,9 @@
 %% LaTeX macros
 \include{macros}
 
+\newcommand{\CExp}{\sstyle{CExp}}
+\newcommand{\CVal}{\sstyle{CVal}}
+\newcommand{\Conf}{\sstyle{Conf}}
 \newcommand{\scon}{\nstyle{con}}
 \newcommand{\sexp}{\nstyle{exp}}
 \newcommand{\ssto}{\nstyle{sto}}
@@ -67,8 +70,8 @@ constants $z$; we do not distinguish between integer values and their program re
   \GRend\]
 \end{definition}
 
-$\free{e}$ denotes the set of free variables and $\supp{e}$ denotes the set of locations in the
-expression $e$. We say that an expression $e$ is a {\em program} if $\free{e}\cup\supp{e}=\emptyset$,
+$\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the
+expression $e$. We say that an expression $e$ is a {\em program} if $\free{e}\cup\locns{e}=\emptyset$,
 that is if $e$ contains neither unbound variables nor
 locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
 considered for the logic later are valid programs (i.e. programmers aren't permitted to access
@@ -77,7 +80,7 @@ arbitrary memory locations).
 \begin{definition}[Types]
   The set $\Type$ of all {\em types} $\tau$ is defined by:
   \[\GRbeg
-  \tau \GRis \tbool \GRmid \tint \GRmid tunit
+  \tau \GRis \tbool \GRmid \tint \GRmid \tunit
   \GRal \tref{\tau_1} \GRmid \tarrow{\tau_1}{\tau_2}
   \GRal \tau_1 \times \ldots \times \tau_n
   \GRend\]
@@ -98,6 +101,8 @@ $l^\tau$ for elements of $\Loc^\tau$.
 
 \section{Static semantics}
 
+$\CExp$ includes all well-typed, closed expressions. $\CVal = \CExp \cap \Val$.
+
 
 %%
 %% Operational semantics
@@ -105,14 +110,49 @@ $l^\tau$ for elements of $\Loc^\tau$.
 
 \section{Operational semantics}
 
+Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be the partial order of possible `worlds'.
+
+\begin{definition}[Store] \label{definition:Store} \
+  A {\em store} is a partial function $s:\Loc \pto \CVal$
+  with a finite domain such that $\locns{s(\Loc)} \subseteq \dom{s}$ and
+  $s(\Loc^\tau) \subseteq \CVal^\tau$ for every $\tau\in\Type$.
+  $\Store$ denotes the set of all such stores.
+\end{definition}
+
+\begin{definition}[Configuration]
+  Let $e\in\Exp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration}
+  if $\locns{e} \subseteq \dom{s}$. We let $\Conf$ denote the set of all configurations.
+\end{definition}
+
+For every $L\in W$ we abbreviate
+\[\begin{array}{rcl}
+  \Exp(L) &\defeqn& \{e\in\Exp\,|\,L = \locns{e}\} \\
+  \Store(L) &\defeqn& \{s\in\Store\,|\,L \subseteq \dom{s}\} \\
+  \Conf(L) &\defeqn& \Exp(L) \times \Store(L)
+\end{array}\]
+
+\begin{tabular}{ll}
+  \RN{Op} & $(\app{\app{\op}{n_1}}{n_2},s) \to (\op^I(n_1,n_2),s)$ \\[3mm]
+  \RN{Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[3mm]
+  \RN{App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')}$ \\[5mm]
+  \RN{App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s) \to (\app{v}{e'},s')}$ \\[5mm]
+  \RN{Unfold} & $(\app{\fix}{(\abstr{x}{e})},s) \to (e[\app{\fix}{(\abstr{x}{e})}/x],s)$ \\[3mm]
+  \RN{Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s) \to (\ifte{e_0'}{e_1}{e_2},s')}$ \\[5mm]
+  \RN{Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[3mm]
+  \RN{Cond-False} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[3mm]
+  \RN{Tuple} & $\RULE{(e_i,s)\to(e_i',s')}{((v_1,\ldots,e_i,\ldots,e_n),s)\to((v_1,\ldots,e_i',\ldots,e_n),s')}$ \\[5mm]
+  \RN{Proj} & $(\app{\proj{n}{i}}{(v_1,\ldots,v_n)},s)\to(v_i,s)$ \\[3mm]
+  \RN{Ref} & $\RULE{l\not\in\dom{s}}{(\app{\cref}{v},s)\to(l,s[v/l])}$ \\[5mm]
+  \RN{Assign} & $\RULE{l\in\dom{s}}{(\app{\app{\assign}{l}}{v},s)\to(\unit,s[v/l])}$ \\[5mm]
+  \RN{Deref} & $\RULE{s(l)=v}{(\app{!}{l},s)\to(v,s)}$ \\[3mm]
+\end{tabular}
+
 
 %%
 %% Operational properties
 %%
 
 \section{Operational properties}
-
-{\bf TODO:} Worlds $W$ of finite sets $L$
 
 Given finite worlds $L_1,L_2 \in W$ of locations, we write $R: L_1 \rightleftharpoons L_2$ to
 indicate that $R$ is (the graph of) a type-preserving {\em partial bijection} from $L_1$ to $L_2$.
@@ -135,29 +175,36 @@ be denoted
 Therefore $R$ is a bijection if $\dom{R} = L_1$ and $\cod{R} = L_2$, in which case we
 write $R: L_1 \leftrightarrow L_2$.
 
-{\bf TODO:} Family of relations $(R_{\gamma})_{\gamma\in\Gamma}$ such that
-$R_\gamma \subseteq \semantic{\gamma}_{L_1} \times \semantic{\gamma}_{L_2}$
-where $\Gamma=\{\scon,\sexp,\ssto\}$. (then $\semantic{\sexp}$ has to include non-closed expressions
-otherwise the inductive definition won't work)
+For every partial bijection $R: L_1 \rightleftharpoons L_2$ we define relations
+$R_{\sexp} \subseteq \Exp(L_1) \times \Exp(L_2)$, $R_{\ssto} \subseteq \Store(L_1) \times \Store(L_2)$
+and $R_{\scon} \subseteq \Conf(L_1) \times \Conf(L_2)$ by:
 \[\begin{array}{rcl}
   R_{\sexp} &\defeqn& \text{by induction on the structure of expressions} \\
-  R_{\ssto} &\defeqn& \{ \vec{s} \in \Store_{L_1} \times \Store_{L_2}\,|\,\vec{s}(R) \subseteq R_{\sexp}\} \\
-  R_{\scon} &\defeqn& R_{\sexp} \times R_{\ssto}
+  R_{\ssto} &\defeqn& \{ \vec{s} \in \Store(L_1) \times \Store(L_2)\,|\,\vec{s}(R) \subseteq R_{\sexp}\} \\
+  R_{\scon} &\defeqn& \{((e_1,s_1),(e_2,s_2))\in\Conf(L_1)\times\Conf(L_2)\,|\,\vec{e}\in R_{\sexp}\wedge\vec{s}\in R_{\ssto}\}
 \end{array}\]
-We write $R$ instead of $R_\gamma$ if $\gamma$ is clear from the context.
+We write $R$ instead of $R_\gamma$ if $\gamma\in\{\sexp,\ssto,\scon\}$ is clear from the context.
 
 \begin{theorem}
-  Given $L_i\in W$ and $k_i\in\semantic{\scon}_{L_i}$ for $i=1,\ldots,4$ with $k_1 \to k_2$, and a partial
-  bijection $R: L_1 \rightleftharpoons L_3$ with $k_1\ R\ k_3$.
-  Then $k_3 \to k_4$ iff there exists a $R': (L_2 \setminus L_1) \rightleftharpoons (L_4\setminus L_3)$
-  such that $k_2\ (R \oplus R')\ k_4$.
+  Let $L_i\in W$, $k_i\in\Conf(L_i)$ for $i=1,\ldots,4$ and  $R: L_1 \rightleftharpoons L_3$. If
+  $k_1\ R\ k_3$, $k_1 \to k_2$ and $k_3 \to k_4$, then there exists a
+  $R': (L_2 \setminus L_1) \rightleftharpoons (L_4\setminus L_3)$ such that $k_2\ (R \oplus R')\ k_4$.
 \end{theorem}
+
+The theorem is probably easier to understand if we visualize the implication using a commutative
+diagram as shown below:
+\[
+\xymatrix{
+  k_1 \ar[r]^{\to} \ar@{<->}[d]_{R} & k_2 \ar@{<.>}[d]^{R\oplus R'} \\
+  k_3 \ar[r]^{\to} & k_4
+}
+\]
 
 \begin{proof}
   {\bf TODO}
 \end{proof}
 
-{\bf TODO:} show that $\oplus$ is associative for the corollary
+{\bf TODO:} obviously $\oplus$ is associative (for the corollary)
 
 {\bf TODO:} check $s \sqsubseteq s' \Leftrightarrow s\ \Id_{\dom{s}}\ s'$.
 That should help to get from $L$-correctness to total correctness (independent of the $L$). It may be a trivial
