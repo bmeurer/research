@@ -72,36 +72,8 @@ constants $z$; we do not distinguish between integer values and their program re
 
 $\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the
 expression $e$. We say that an expression $e$ is a {\em program} if $\free{e}\cup\locns{e}=\emptyset$,
-that is if $e$ contains neither unbound variables nor
-locations (i.e. memory addresses in terms of the underlying machine). We demand that all expressions
-considered for the logic later are valid programs (i.e. programmers aren't permitted to access
-arbitrary memory locations).
-
-\begin{definition}[Types]
-  The set $\Type$ of all {\em types} $\tau$ is defined by:
-  \[\GRbeg
-  \tau \GRis \tbool \GRmid \tint \GRmid \tunit
-  \GRal \tref{\tau_1} \GRmid \tarrow{\tau_1}{\tau_2}
-  \GRal \tau_1 \times \ldots \times \tau_n
-  \GRend\]
-\end{definition}
-
-We don't want to fiddle with type environments and store typings, hence we assume that
-the elements of $\Var$ and $\Loc$ are already tagged with types. Therefore for every
-type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables of type $\tau$ and $\Loc^\tau$ the
-set of locations of type $\tau$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
-$\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
-required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
-$l^\tau$ for elements of $\Loc^\tau$.
-
-
-%%
-%% Static semantics
-%%
-
-\section{Static semantics}
-
-$\CExp$ includes all well-typed, closed expressions. $\CVal = \CExp \cap \Val$.
+that is if $e$ contains neither unbound variables nor locations (i.e. memory addresses in terms
+of the underlying machine).
 
 
 %%
@@ -113,9 +85,8 @@ $\CExp$ includes all well-typed, closed expressions. $\CVal = \CExp \cap \Val$.
 Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be the partial order of possible `worlds'.
 
 \begin{definition}[Store] \label{definition:Store} \
-  A {\em store} is a partial function $s:\Loc \pto \CVal$
-  with a finite domain such that $\locns{s(\Loc)} \subseteq \dom{s}$ and
-  $s(\Loc^\tau) \subseteq \CVal^\tau$ for every $\tau\in\Type$.
+  A {\em store} is a partial function $s:\Loc \pto \Val$
+  with a finite domain such that $\locns{s(\Loc)} \subseteq \dom{s}$.
   $\Store$ denotes the set of all such stores.
 \end{definition}
 
@@ -126,13 +97,13 @@ Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be the partial order of pos
 
 For every $L\in W$ we abbreviate
 \[\begin{array}{rcl}
-  \Exp(L) &\defeqn& \{e\in\Exp\,|\,L = \locns{e}\} \\
+  \Exp(L) &\defeqn& \{e\in\Exp\,|\,\locns{e} \subseteq L\} \\
   \Store(L) &\defeqn& \{s\in\Store\,|\,L \subseteq \dom{s}\} \\
   \Conf(L) &\defeqn& \Exp(L) \times \Store(L)
 \end{array}\]
 
 \begin{tabular}{ll}
-  \RN{Op} & $(\app{\app{\op}{n_1}}{n_2},s) \to (\op^I(n_1,n_2),s)$ \\[3mm]
+  \RN{Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[3mm]
   \RN{Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[3mm]
   \RN{App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')}$ \\[5mm]
   \RN{App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s) \to (\app{v}{e'},s')}$ \\[5mm]
@@ -143,8 +114,8 @@ For every $L\in W$ we abbreviate
   \RN{Tuple} & $\RULE{(e_i,s)\to(e_i',s')}{((v_1,\ldots,e_i,\ldots,e_n),s)\to((v_1,\ldots,e_i',\ldots,e_n),s')}$ \\[5mm]
   \RN{Proj} & $(\app{\proj{n}{i}}{(v_1,\ldots,v_n)},s)\to(v_i,s)$ \\[3mm]
   \RN{Ref} & $\RULE{l\not\in\dom{s}}{(\app{\cref}{v},s)\to(l,s[v/l])}$ \\[5mm]
-  \RN{Assign} & $\RULE{l\in\dom{s}}{(\app{\app{\assign}{l}}{v},s)\to(\unit,s[v/l])}$ \\[5mm]
-  \RN{Deref} & $\RULE{s(l)=v}{(\app{!}{l},s)\to(v,s)}$ \\[3mm]
+  \RN{Assign} & $(\app{\app{\assign}{l}}{v},s)\to(\unit,s[v/l])$ \\[3mm]
+  \RN{Deref} & $(\app{!}{l},s)\to(s(l),s)$ \\[3mm]
 \end{tabular}
 
 
@@ -155,12 +126,11 @@ For every $L\in W$ we abbreviate
 \section{Operational properties}
 
 Given finite worlds $L_1,L_2 \in W$ of locations, we write $R: L_1 \rightleftharpoons L_2$ to
-indicate that $R$ is (the graph of) a type-preserving {\em partial bijection} from $L_1$ to $L_2$.
-In other words, $R \subseteq L_1 \times L_2$ satifies the following properties:
-\begin{enumerate}
-\item $(l_1,l_2)\in R \Rightarrow \exists \tau\in\Type:\,l_1,l_2\in\Loc^\tau$
-\item $(l_1,l_2) \in R \wedge (l_1',l_2')\in R \Rightarrow (l_1=l_1' \Leftrightarrow l_2=l_2')$
-\end{enumerate}
+indicate that $R$ is (the graph of) a {\em partial bijection} from $L_1$ to $L_2$.
+In other words, $R \subseteq L_1 \times L_2$ satifies the following property:
+\[
+(l_1,l_2) \in R \wedge (l_1',l_2')\in R \Rightarrow (l_1=l_1' \Leftrightarrow l_2=l_2')
+\]
 Note that $R \oplus R'$ is a partial bijection $L_1 \oplus L_1' \rightleftharpoons L_2 \oplus L_2'$
 if $R: L_1 \rightleftharpoons L_2$ and $R': L_1' \rightleftharpoons L_2'$ are disjoint partial
 bijections. The {\em identity} partial bijection, $\Id_L: L \rightleftharpoons L$, is given by
@@ -201,13 +171,88 @@ diagram as shown below:
 \]
 
 \begin{proof}
+  By induction on the size of the derivation of $k_1 \to k_3$:
+  \begin{enumerate}
+  \item In case of \RN{Ref} we have $k_1 = (\app{\cref}{v_1},s_1)$, $k_2 = (l_2,s_2)$ with
+    $l_2 \not\in \dom{s_1}$ and $s_2 = s_1[v_1/l_2]$, and $k_3 = (\app{\cref}{v_3},s_3)$, $k_4 = (l_4,s_4)$
+    with $l_4 \not\in \dom{s_3}$ and $s_4 = s_3[v_3/l_4]$. Choose $R': \{l_2\} \leftrightarrow \{l_4\}$ because
+    \begin{enumerate}
+    \item $l_2 \not\in \dom{s_1} \supseteq L_1$ and $l_4 \not\in \dom{s_3} \supseteq L_3$,
+    \item and by assumption we have $(s_2,s_4)(R) \subseteq R_{\sexp} \subseteq (R \oplus R')_{\sexp}$
+      and it is trivial to see that $(s_2,s_4)(R') \subseteq R_{\sexp} \subseteq (R \oplus R')_{\sexp}$.
+    \end{enumerate}
+    Hence we conclude $k_2\ (R \oplus R')\ k_4$.
+
+  \item \RN{Op}, \RN{Beta-V}, \RN{Unfold}, \RN{Cond-True}, \RN{Cond-False}, \RN{Proj}, \RN{Assign} and \RN{Deref}
+    follow easily with $R':\emptyset \leftrightarrow \emptyset$.
+
+  \item \RN{App-Left}, \RN{App-Right}, \RN{Cond-Eval} and \RN{Tuple} are straight-forward.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}
+  Let $L_i\in W$, $k_i\in\Conf(L_i)$ for $i=1,\ldots,3$ and $R:L_1 \rightleftharpoons L_2$. If $k_1\ R\ k_3$
+  and $k_1 \to k_2$, then there exists a $k_4 \in \Conf$ such that $k_3\to k_4$.
+\end{theorem}
+
+Again visualized:
+\[
+\xymatrix{
+  k_1 \ar[r]^{\to} \ar@{<->}[d]_{R} & k_2 \\
+  k_3 \ar@{.>}[r]^{\to} & k_4
+}
+\]
+
+\begin{proof}
   {\bf TODO}
 \end{proof}
 
-{\bf TODO:} obviously $\oplus$ is associative (for the corollary)
+\begin{corollary}
+  Let $L_i\in W$, $k_i\in\Conf(L_i)$ for $i=1,\ldots,3$ with $k_1 \to k_2$ and $R: L_1 \rightleftharpoons L_3$ with
+  $k_1\ R\ k_3$. Then there exist $L_4\in W$, $k_4 \in \Conf(L_4)$ and
+  $R': (L_2 \setminus L_1) \rightleftharpoons (L_4 \setminus L_3)$ such that $k_3 \to k_4$
+  and $k_2\ (R \oplus R') k_4$.
+\end{corollary}
+
+\begin{corollary}
+  If $(e,s)\in\Conf$ has atleast one terminating computation $(e,s) \xrightarrow* (v_1,s_1)$, then all computations
+  of $(e,s)$ terminate with some $(v_2,s_2)$ such that a partial bijection $R:\dom{s_1}\rightleftharpoons\dom{s_2}$
+  exists with $\Id_{\dom{s}} \subseteq R$ and $(v_1,s_1)\ R\ (v_2,s_2)$.
+\end{corollary}
+
+\begin{proof}
+  Trivial consequence of the first and second theorem.
+\end{proof}
 
 {\bf TODO:} check $s \sqsubseteq s' \Leftrightarrow s\ \Id_{\dom{s}}\ s'$.
 That should help to get from $L$-correctness to total correctness (independent of the $L$). It may be a trivial
 consequence of the theorem above.
+
+
+%%
+%% Static semantics
+%%
+
+\section{Static semantics}
+
+$\CExp$ includes all well-typed, closed expressions. $\CVal = \CExp \cap \Val$.
+
+\begin{definition}[Types]
+  The set $\Type$ of all {\em types} $\tau$ is defined by:
+  \[\GRbeg
+  \tau \GRis \tbool \GRmid \tint \GRmid \tunit
+  \GRal \tref{\tau_1} \GRmid \tarrow{\tau_1}{\tau_2}
+  \GRal \tau_1 \times \ldots \times \tau_n
+  \GRend\]
+\end{definition}
+
+% We don't want to fiddle with type environments and store typings, hence we assume that
+% the elements of $\Var$ and $\Loc$ are already tagged with types. Therefore for every
+% type $\tau\in\Type$, let $\Var^\tau$ denote the set of variables of type $\tau$ and $\Loc^\tau$ the
+% set of locations of type $\tau$. Then $\Var=\bigcup_{\tau\in\Type}\Var^\tau$ and
+% $\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
+% required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
+% $l^\tau$ for elements of $\Loc^\tau$.
+
 
 \end{document}
