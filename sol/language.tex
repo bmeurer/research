@@ -228,175 +228,175 @@ permutations $\pi$ with $(\pi|L) = \id_L$.
   Trivial.
 \end{proof}
 
-%Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
-%$\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
-%every $\gamma \in \Gamma$ we define a poset $D^\gamma$ and for every $d \in D^\gamma$
-%we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
-%\begin{itemize}
-%  \item $D^\sexp = (\Exp,\sqsubseteq_\Exp)$ \\
-%        $e \sqsubseteq_\Exp e' \,\Leftrightarrow\, e = e'$ \\
-%        $\supp{e} = \supp{e}$
-%  \item $D^\ssto = (\Store,\sqsubseteq_\Store)$ \\
-%        $s \sqsubseteq_\Store s' \,\Leftrightarrow\, \grph{s} \subseteq \grph{s'}$ \\
-%        $\supp{s} = \dom{s}$
-%  \item $D^\scon = (\Conf,\sqsubseteq_\Conf)$ \\
-%        $(e,s) \sqsubseteq_\Conf (e',s') \,\Leftrightarrow\, e \sqsubseteq_\Exp e' \wedge s \sqsubseteq_\Store s'$ \\
-%        $\supp{(e,s)} = \supp{e} \cup \supp{s}$
-%\end{itemize}
-%For every permutation $\pi \in \Perm$ and every $\gamma\in\Gamma$ we define
-%a function $\pi^\gamma:D^\gamma \to D^\gamma$ by
-%\begin{itemize}
-%  \item $\pi^\sexp\,e = e\pi$,
-%  \item $\pi^\ssto\,s = \pi^\sexp \circ s \circ \pi^{-1}$ and
-%  \item $\pi^\scon\,(e,s) = (\pi^\sexp\,e,\pi^\ssto\,s)$,
-%\end{itemize}
-%where $e\pi$ is the expression that results from applying $\pi$ to every location in $e$.
-%
-%Obviously $\pi^\sexp$ is well-defined and bijective. For $\pi^\ssto$ assume that $L \in W$ and $s\in\Store_L$,
-%then $\pi^\ssto\,s = \pi^\sexp \circ s \circ \pi^{-1}$ is closed with respect to locations in
-%$\dom{\pi^\ssto\,s}$ and
-%\[\begin{array}{rccccl}
-%  \dom{\pi^\ssto\,s} &=& \pi(\dom{s}) &\supseteq& \pi(L),
-%\end{array}\]
-%thereby $(\pi^\ssto\,s) \in \Store_{\pi(L)}$. It is also easy to see that $\pi^\ssto$ is bijective, since
-%we have
-%\[\begin{array}{rcl}
-%  (\pi^{-1})^\ssto(\pi^\ssto\,s)
-%  &=& (\pi^{-1})^\ssto\,(\pi^\sexp \circ s \circ \pi^{-1}) \\
-%  &=& (\pi^{-1})^\sexp \circ \pi^\sexp \circ s \circ \pi^{-1} \circ \pi \\
-%  &=& s
-%\end{array}\]
-%for all $\pi\in\Perm$ and $s\in\Store$. Obviously $\pi^\scon$ is also well-defined and bijective then.
-%
-%\begin{lemma}[Permutations] \label{lemma:Permutations}
-%  Let $\pi,\hat{\pi}\in\Perm$, $\gamma\in\Gamma$ and $d \in D^\gamma$, then
-%  \begin{enumerate}
-%    \item $\supp{\pi^\gamma\,d} = \pi\,(\supp{d})$
-%    \item $\pi =_{\supp{d}} \hat{\pi}$ implies $\pi^\gamma\,d = \hat{\pi}^\gamma\,d$
-%  \end{enumerate}
-%\end{lemma}
-%%
-%In the special case $\hat{\pi} = \id$ for the second property we conclude immediately that
-%$\supp{d} \subseteq \Fix{\pi}$ implies $\pi^\gamma\,d = d$ for all $\pi\in\Perm$, $d\in D^\gamma$.
-%
-%\begin{proof}
-%  Trivial.
-%\end{proof}
-%
-%\begin{theorem} \label{theorem:small_steps_and_permutations}
-%  Let $k_1,k_1',k_2,k_2'\in D^\scon$ and $\pi_1\in\Perm$ with
-%  $k_1 \to k_2$ and $k_1' = \pi_1^\scon\,k_1$. Then $k_1' \to k_2'$ iff there is a $\pi_2\in\Perm$
-%  with $\pi_1 =_{\supp{k_1}} \pi_2$ such that $k_2' = \pi_2^\scon\,k_2$.
-%\end{theorem}
-%
-%The theorem is probably easier to understand if we visualize the implications using commutative
-%diagrams.
-%\[
-%  \xymatrix{
-%    k_1 \ar[r]^{\to} \ar[d]_{\pi_1} & k_2 \ar@{.>}[d]^{\pi_2} \\
-%    k_1' \ar[r]^{\to} & k_2'
-%  }
-%  \hspace*{3cm}
-%  \xymatrix{
-%    k_1 \ar[r]^{\to} \ar[d]_{\pi_1} & k_2 \ar[d]^{\pi_2} \\
-%    k_1' \ar@{.>}[r]^{\to} & k_2'
-%  }
-%\]
-%
-%\begin{proof}
-%  $\pi^\sexp$ preserves the structure of expressions, hence the small steps $k_1 \to k_2$ and
-%  $k_1' \to k_2'$ (if they exist) must have been derived using the same small step rules. Therefore
-%  we can prove the theorem by induction on the length of the derivation of $k_1 \to k_2$.
-%  \begin{itemize}
-%    \item If $k_1 \to k_2$ was derived using rule \RN{Ref} then we have
-%          $k_1 = (\cref\,v,s)$,
-%          $k_2 = (l,s[v/l])$ with $l \not\in \dom{s}$
-%          and $k_1' = (\pi_1^\sexp(\cref\,v),\pi_1^\ssto\,s)$.
-%          \begin{itemize}
-%            \item[`$\Rightarrow$']
-%                  $k_2' = (l',(\pi_1^\ssto\,s)[\pi_1^\sexp\,v/l'])$ with $l' \not\in \dom{\pi_1^\ssto\,s}$
-%
-%                  We can choose any $\pi_2 \in \Perm$ with $\pi_1 =_{\supp{k_1}} \pi_2$ and $\pi_2\,l = l'$ since
-%                  $l \not\in \dom{s} = \supp{k_1}$ and $(\pi_1^\ssto\,s)[\pi_1^\sexp\,v/l'] = \pi_2^\ssto(s[v/l])$.
-%
-%            \item[`$\Leftarrow$']
-%                  $k_2' = (\pi_2\,l,\pi_2^\ssto(s[v/l]))$
-%
-%                  $l \not\in \dom{s}$ implies $(\pi_2\,l)\not\in\pi_2(\dom{s})=\dom{\pi_2^\ssto\,s}=\dom{\pi_1^\ssto\,s}$,
-%                  and $\pi_2^\ssto(s[v/l]) = (\pi_2^\ssto\,s)[\pi_2^\sexp\,v/\pi_2\,l] = (\pi_1^\ssto\,s)[\pi_1^\sexp\,v/\pi_2\,l]$
-%                  and thereby we conclude
-%                  $(\pi_1^\sexp(\cref\,v),\pi_1^\ssto\,s)\to(\pi_2\,l,\pi_2^\ssto(s[v/l]))$ by small step rule \RN{Ref}.
-%          \end{itemize}
-%
-%    \item If $k_1 \to k_2$ was derived using rule \RN{App-Left} then $k_1 = (e_1\,e_2,s)$,
-%          $k_2 = (e_1'\,e_2,s')$ and $k_1' = (\pi_1^\sexp(e_1\,e_2),\pi_1^\ssto\,s)$ with $(e_1,s) \to (e_1',s')$.
-%          \begin{itemize}
-%            \item[`$\Rightarrow$']
-%                  $k_2' = (\hat{e}_1'\,(\pi_1^\sexp\,e_2),\hat{s}')$ with
-%                  $(\pi_1^\sexp\,e_1,\pi_1^\ssto\,s) \to (\hat{e}_1',\hat{s}')$
-%
-%                  By induction hypothesis there is a $\pi_2\in\Perm$ with $\pi_1 =_{\dom{s}} \pi_2$ such that
-%                  $\hat{e}_1' = \pi_2^\sexp\,e_1'$ and $\hat{s}' = \pi_2^\ssto\,s'$. Since
-%                  $\pi_1 =_{\dom{s}} \pi_2$ and $\dom{s} = \supp{k_1}$ we have $\pi_1^\sexp\,e_2=\pi_e^\sexp\,e_2$
-%                  and so we conclude $k_2' = (\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$.
-%
-%            \item[`$\Leftarrow$']
-%                  $k_2' = (\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$
-%
-%                  $\pi_2 =_{\supp{k_1}} \pi_1$ implies $\pi_2^\sexp\,e_2 = \pi_1^\sexp\,e_1$ and by induction hypothesis
-%                  a small step $(\pi_1^\sexp\,e_1,\pi_1^\ssto\,s) \to (\pi_2^\sexp\,e_1',\pi_2^\ssto\,s')$ exists. Then
-%                  $(\pi_1^\sexp(e_1\,e_2),\pi_1^\ssto\,s)\to(\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$ follows immediately
-%                  with \RN{App-Left}.
-%          \end{itemize}
-%  \end{itemize}
-%  The remaining cases are omitted, they are similar to the above. 
-%\end{proof}
-%
-%Now this theorem provides quite a lot of interesting results. For example, if we choose $\pi_1 = \id$ then we can
-%conclude that if $k_1 = k_1'$ has atleast one terminating computation, then all computations for $k_1$ terminate
-%with exactly the same number of steps, and for every two results $(v',s')$ and $(v'',s'')$ a permutation
-%$\pi_2 \in \Fix{\supp{k_1}}$ exists, such that $v' = \pi_2^\sexp\,v''$ and $v'' = \pi_2^\ssto\,s''$.
-%
-%\begin{theorem} \label{theorem:small_steps_and_graph}
-%  Let $k_1,k_1',k_2\in D^\scon$. If $k_1 \sqsubseteq k_1'$ and $k_1' \to k_2'$ then
-%  there exists a $k_2 \in D^\scon$ such that $k_1 \to k_2$ and $k_2 \sqsubseteq k_2'$.
-%\end{theorem}
-%
-%We can again visualize the theorem using a commutative diagram:
-%\[
-%  \xymatrix{
-%    k_1 \ar@{.>}[r]^{\to} \ar[d]_{\sqsubseteq} & k_2 \ar@{.>}[d]^{\sqsubseteq} \\
-%    k_1' \ar[r]^{\to} & k_2'
-%  }
-%\]
-%
-%\begin{proof}
-%  By induction on $k_1' \to k_2'$:
-%  \begin{itemize}
-%    \item If $k_1' \to k_2'$ was derived using \RN{Ref} then $k_1 = (\cref\,v,s)$, $k_1' = (\cref\,v,s')$
-%          with $s \sqsubseteq k'$ and $k_2' = (l,s'[v/l])$ with $l \not\in \dom{s'}$.
-%
-%          Now let $k_2 = (l,s[v/l])$. Since $l \not\in \dom{s'} \supseteq \dom{s}$ we can derive
-%          $k_1 \to k_2$ using \RN{Ref}.
-%
-%    \item If $k_1' \to k_2'$ was derived by \RN{Assign} then $k_1 = (l \assign v,s)$, $k_1' = (l \assign v,s')$
-%          and $k_2' = (\unit,s'[v/l])$ with $s \sqsubseteq s'$.
-%
-%          Then choose $k_2 = (\unit,s[v/l])$ since then $k_1 \to k_2$ with \RN{Assign} and obviously
-%          $(s[v/l]) \sqsubseteq (s'[v/l])$ since $s \sqsubseteq s'$ and $l \in \dom{s}\cap\dom{s'}$.
-%
-%    \item If $k_1' \to k_2'$ was derived using \RN{App-Left} then $k_1=(e_1\,e_2,s_1)$, $k_1'=(e_1\,e_2,s_1')$
-%          and $k_2' = (e_1'\,e_2,s_2')$ with $s_1 \sqsubseteq s_1'$ and $(e_1,s_1') \to (e_1',s_2')$.
-%
-%          By induction hypothesis there exists $s_2 \in D^\scon$ with $s_2 \sqsubseteq s_2'$ and
-%          $(e_1,s_1) \to (e_1',s_2)$. With \RN{App-Left} we conclude $(e_1\,e_2,s_1) \to (e_1'\,e_2,s_2)$.
-%  \end{itemize}
-%  The remaining cases are pretty similar in shape.
-%\end{proof}
-%
-%Obviously this theorem implies that for every two stores $s,\hat{s}$ with $s \sqsubseteq \hat{s}$ and
-%$(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ there exists another store $s'$ such that $(e,s) \xrightarrow* (v,s')$
-%and $s' \sqsubseteq \hat{s}'$.
+Now let $\Gamma = \{\scon,\sexp,\ssto\}$, where $\scon$ (= `configuration'),
+$\sexp$ (= `expression') and $\ssto$ (= `store') are auxiliary symbols. For
+every $\gamma \in \Gamma$ we define a poset $D^\gamma$ and for every $d \in D^\gamma$
+we define a set $\supp{d} \in W$ -- called the {\em support} of $d$ -- by
+\begin{itemize}
+  \item $D^\sexp = (\Exp,\sqsubseteq_\Exp)$ \\
+        $e \sqsubseteq_\Exp e' \,\Leftrightarrow\, e = e'$ \\
+        $\supp{e} = \supp{e}$
+  \item $D^\ssto = (\Store,\sqsubseteq_\Store)$ \\
+        $s \sqsubseteq_\Store s' \,\Leftrightarrow\, \grph{s} \subseteq \grph{s'}$ \\
+        $\supp{s} = \dom{s}$
+  \item $D^\scon = (\Conf,\sqsubseteq_\Conf)$ \\
+        $(e,s) \sqsubseteq_\Conf (e',s') \,\Leftrightarrow\, e \sqsubseteq_\Exp e' \wedge s \sqsubseteq_\Store s'$ \\
+        $\supp{(e,s)} = \supp{e} \cup \supp{s}$
+\end{itemize}
+For every permutation $\pi \in \Perm$ and every $\gamma\in\Gamma$ we define
+a function $\pi^\gamma:D^\gamma \to D^\gamma$ by
+\begin{itemize}
+  \item $\pi^\sexp\,e = e\pi$,
+  \item $\pi^\ssto\,s = \pi^\sexp \circ s \circ \pi^{-1}$ and
+  \item $\pi^\scon\,(e,s) = (\pi^\sexp\,e,\pi^\ssto\,s)$,
+\end{itemize}
+where $e\pi$ is the expression that results from applying $\pi$ to every location in $e$.
+
+Obviously $\pi^\sexp$ is well-defined and bijective. For $\pi^\ssto$ assume that $L \in W$ and $s\in\Store_L$,
+then $\pi^\ssto\,s = \pi^\sexp \circ s \circ \pi^{-1}$ is closed with respect to locations in
+$\dom{\pi^\ssto\,s}$ and
+\[\begin{array}{rccccl}
+  \dom{\pi^\ssto\,s} &=& \pi(\dom{s}) &\supseteq& \pi(L),
+\end{array}\]
+thereby $(\pi^\ssto\,s) \in \Store_{\pi(L)}$. It is also easy to see that $\pi^\ssto$ is bijective, since
+we have
+\[\begin{array}{rcl}
+  (\pi^{-1})^\ssto(\pi^\ssto\,s)
+  &=& (\pi^{-1})^\ssto\,(\pi^\sexp \circ s \circ \pi^{-1}) \\
+  &=& (\pi^{-1})^\sexp \circ \pi^\sexp \circ s \circ \pi^{-1} \circ \pi \\
+  &=& s
+\end{array}\]
+for all $\pi\in\Perm$ and $s\in\Store$. Obviously $\pi^\scon$ is also well-defined and bijective then.
+
+\begin{lemma}[Permutations] \label{lemma:Permutations}
+ Let $\pi,\hat{\pi}\in\Perm$, $\gamma\in\Gamma$ and $d \in D^\gamma$, then
+ \begin{enumerate}
+   \item $\supp{\pi^\gamma\,d} = \pi\,(\supp{d})$
+   \item $\pi =_{\supp{d}} \hat{\pi}$ implies $\pi^\gamma\,d = \hat{\pi}^\gamma\,d$
+ \end{enumerate}
+\end{lemma}
+
+In the special case $\hat{\pi} = \id$ for the second property we conclude immediately that
+$\supp{d} \subseteq \Fix{\pi}$ implies $\pi^\gamma\,d = d$ for all $\pi\in\Perm$, $d\in D^\gamma$.
+
+\begin{proof}
+ Trivial.
+\end{proof}
+
+\begin{theorem} \label{theorem:small_steps_and_permutations}
+ Let $k_1,k_1',k_2,k_2'\in D^\scon$ and $\pi_1\in\Perm$ with
+ $k_1 \to k_2$ and $k_1' = \pi_1^\scon\,k_1$. Then $k_1' \to k_2'$ iff there is a $\pi_2\in\Perm$
+ with $\pi_1 =_{\supp{k_1}} \pi_2$ such that $k_2' = \pi_2^\scon\,k_2$.
+\end{theorem}
+
+The theorem is probably easier to understand if we visualize the implications using commutative
+diagrams.
+\[
+ \xymatrix{
+   k_1 \ar[r]^{\to} \ar[d]_{\pi_1} & k_2 \ar@{.>}[d]^{\pi_2} \\
+   k_1' \ar[r]^{\to} & k_2'
+ }
+ \hspace*{3cm}
+ \xymatrix{
+   k_1 \ar[r]^{\to} \ar[d]_{\pi_1} & k_2 \ar[d]^{\pi_2} \\
+   k_1' \ar@{.>}[r]^{\to} & k_2'
+ }
+\]
+
+\begin{proof}
+ $\pi^\sexp$ preserves the structure of expressions, hence the small steps $k_1 \to k_2$ and
+ $k_1' \to k_2'$ (if they exist) must have been derived using the same small step rules. Therefore
+ we can prove the theorem by induction on the length of the derivation of $k_1 \to k_2$.
+ \begin{itemize}
+   \item If $k_1 \to k_2$ was derived using rule \RN{Ref} then we have
+         $k_1 = (\cref\,v,s)$,
+         $k_2 = (l,s[v/l])$ with $l \not\in \dom{s}$
+         and $k_1' = (\pi_1^\sexp(\cref\,v),\pi_1^\ssto\,s)$.
+         \begin{itemize}
+           \item[`$\Rightarrow$']
+                 $k_2' = (l',(\pi_1^\ssto\,s)[\pi_1^\sexp\,v/l'])$ with $l' \not\in \dom{\pi_1^\ssto\,s}$
+
+                 We can choose any $\pi_2 \in \Perm$ with $\pi_1 =_{\supp{k_1}} \pi_2$ and $\pi_2\,l = l'$ since
+                 $l \not\in \dom{s} = \supp{k_1}$ and $(\pi_1^\ssto\,s)[\pi_1^\sexp\,v/l'] = \pi_2^\ssto(s[v/l])$.
+
+           \item[`$\Leftarrow$']
+                 $k_2' = (\pi_2\,l,\pi_2^\ssto(s[v/l]))$
+
+                 $l \not\in \dom{s}$ implies $(\pi_2\,l)\not\in\pi_2(\dom{s})=\dom{\pi_2^\ssto\,s}=\dom{\pi_1^\ssto\,s}$,
+                 and $\pi_2^\ssto(s[v/l]) = (\pi_2^\ssto\,s)[\pi_2^\sexp\,v/\pi_2\,l] = (\pi_1^\ssto\,s)[\pi_1^\sexp\,v/\pi_2\,l]$
+                 and thereby we conclude
+                 $(\pi_1^\sexp(\cref\,v),\pi_1^\ssto\,s)\to(\pi_2\,l,\pi_2^\ssto(s[v/l]))$ by small step rule \RN{Ref}.
+         \end{itemize}
+
+   \item If $k_1 \to k_2$ was derived using rule \RN{App-Left} then $k_1 = (e_1\,e_2,s)$,
+         $k_2 = (e_1'\,e_2,s')$ and $k_1' = (\pi_1^\sexp(e_1\,e_2),\pi_1^\ssto\,s)$ with $(e_1,s) \to (e_1',s')$.
+         \begin{itemize}
+           \item[`$\Rightarrow$']
+                 $k_2' = (\hat{e}_1'\,(\pi_1^\sexp\,e_2),\hat{s}')$ with
+                 $(\pi_1^\sexp\,e_1,\pi_1^\ssto\,s) \to (\hat{e}_1',\hat{s}')$
+
+                 By induction hypothesis there is a $\pi_2\in\Perm$ with $\pi_1 =_{\dom{s}} \pi_2$ such that
+                 $\hat{e}_1' = \pi_2^\sexp\,e_1'$ and $\hat{s}' = \pi_2^\ssto\,s'$. Since
+                 $\pi_1 =_{\dom{s}} \pi_2$ and $\dom{s} = \supp{k_1}$ we have $\pi_1^\sexp\,e_2=\pi_e^\sexp\,e_2$
+                 and so we conclude $k_2' = (\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$.
+
+           \item[`$\Leftarrow$']
+                 $k_2' = (\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$
+
+                 $\pi_2 =_{\supp{k_1}} \pi_1$ implies $\pi_2^\sexp\,e_2 = \pi_1^\sexp\,e_1$ and by induction hypothesis
+                 a small step $(\pi_1^\sexp\,e_1,\pi_1^\ssto\,s) \to (\pi_2^\sexp\,e_1',\pi_2^\ssto\,s')$ exists. Then
+                 $(\pi_1^\sexp(e_1\,e_2),\pi_1^\ssto\,s)\to(\pi_2^\sexp(e_1'\,e_2),\pi_2^\ssto\,s')$ follows immediately
+                 with \RN{App-Left}.
+         \end{itemize}
+ \end{itemize}
+ The remaining cases are omitted, they are similar to the above. 
+\end{proof}
+
+Now this theorem provides quite a lot of interesting results. For example, if we choose $\pi_1 = \id$ then we can
+conclude that if $k_1 = k_1'$ has atleast one terminating computation, then all computations for $k_1$ terminate
+with exactly the same number of steps, and for every two results $(v',s')$ and $(v'',s'')$ a permutation
+$\pi_2 \in \Fix{\supp{k_1}}$ exists, such that $v' = \pi_2^\sexp\,v''$ and $v'' = \pi_2^\ssto\,s''$.
+
+\begin{theorem} \label{theorem:small_steps_and_graph}
+ Let $k_1,k_1',k_2\in D^\scon$. If $k_1 \sqsubseteq k_1'$ and $k_1' \to k_2'$ then
+ there exists a $k_2 \in D^\scon$ such that $k_1 \to k_2$ and $k_2 \sqsubseteq k_2'$.
+\end{theorem}
+
+We can again visualize the theorem using a commutative diagram:
+\[
+ \xymatrix{
+   k_1 \ar@{.>}[r]^{\to} \ar[d]_{\sqsubseteq} & k_2 \ar@{.>}[d]^{\sqsubseteq} \\
+   k_1' \ar[r]^{\to} & k_2'
+ }
+\]
+
+\begin{proof}
+ By induction on $k_1' \to k_2'$:
+ \begin{itemize}
+   \item If $k_1' \to k_2'$ was derived using \RN{Ref} then $k_1 = (\cref\,v,s)$, $k_1' = (\cref\,v,s')$
+         with $s \sqsubseteq k'$ and $k_2' = (l,s'[v/l])$ with $l \not\in \dom{s'}$.
+
+         Now let $k_2 = (l,s[v/l])$. Since $l \not\in \dom{s'} \supseteq \dom{s}$ we can derive
+         $k_1 \to k_2$ using \RN{Ref}.
+
+   \item If $k_1' \to k_2'$ was derived by \RN{Assign} then $k_1 = (l \assign v,s)$, $k_1' = (l \assign v,s')$
+         and $k_2' = (\unit,s'[v/l])$ with $s \sqsubseteq s'$.
+
+         Then choose $k_2 = (\unit,s[v/l])$ since then $k_1 \to k_2$ with \RN{Assign} and obviously
+         $(s[v/l]) \sqsubseteq (s'[v/l])$ since $s \sqsubseteq s'$ and $l \in \dom{s}\cap\dom{s'}$.
+
+   \item If $k_1' \to k_2'$ was derived using \RN{App-Left} then $k_1=(e_1\,e_2,s_1)$, $k_1'=(e_1\,e_2,s_1')$
+         and $k_2' = (e_1'\,e_2,s_2')$ with $s_1 \sqsubseteq s_1'$ and $(e_1,s_1') \to (e_1',s_2')$.
+
+         By induction hypothesis there exists $s_2 \in D^\scon$ with $s_2 \sqsubseteq s_2'$ and
+         $(e_1,s_1) \to (e_1',s_2)$. With \RN{App-Left} we conclude $(e_1\,e_2,s_1) \to (e_1'\,e_2,s_2)$.
+ \end{itemize}
+ The remaining cases are pretty similar in shape.
+\end{proof}
+
+Obviously this theorem implies that for every two stores $s,\hat{s}$ with $s \sqsubseteq \hat{s}$ and
+$(e,\hat{s}) \xrightarrow* (v,\hat{s}')$ there exists another store $s'$ such that $(e,s) \xrightarrow* (v,s')$
+and $s' \sqsubseteq \hat{s}'$.
 
 
 %%
@@ -413,14 +413,14 @@ permutations $\pi$ with $(\pi|L) = \id_L$.
 \section{Syntax of the assertion language}
 
 \[\GRbeg
-  t \GRis x \GRmid v \GRmid f \GRmid \app{t_1}{t_2} \GRmid \tabstr{x}{t} \GRmid (t_1,\ldots,t_n)
+  t \GRis v \GRmid x \GRmid f \GRmid \app{t_1}{t_2} \GRmid \tabstr{x}{t} \GRmid (t_1,\ldots,t_n)
     \GRnl
 
   p,q \GRis t_1 \mapsto t_2 \GRmid p \vee q \GRmid \neg p \GRmid \qbex{x}{t}{p}
-      \GRal \triple{p}{e_{:x}}{q} \GRmid \qex{x}{p} \GRmid t_1 = t_2
-      \GRal x\,t
+      \GRal \triple{p}{e_{:x}}{q} \GRmid \qex{x}{p} \GRmid t_1 = t_2 \GRmid x\,t
       \GRnl
 \GRend\]
+where $\locns{v} \cup \locns{e} = \emptyset$.
 The subset of {\em stateless assertions} $h \in \Formula$, called {\em Hoare formulae}, is:
 \[\GRbeg
   h \GRis t_1 = t_2 \GRmid \triple{p}{e_{:x}}{q} \GRmid \qex{x}{h} \GRmid h_1 \vee h_2 \GRmid \neg h
@@ -485,20 +485,18 @@ We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
       \{\vec{d} \in \semantic{\sigma_1}_{L_1} \times \ldots \times \semantic{\sigma_n}_{L_n}\,|\,
       L = L_1 \cup \ldots \cup L_n\}$
     \item $\semantic{\gamma\,\tassn}_L =
-      \{\phi:\semantic{\gamma}\to\Store_L \to \Bool\,|\,\forall d\in \semantic\gamma:\,(\phi\,d)\in\DEF_L\}$
+      \{\phi:\semantic{\gamma}\to\Store_L \to \Bool\,|\,(\phi\,\semantic{\gamma})\subseteq\DEF_L\}$
   \end{itemize}
 \end{definition}
-
-%Given lemma~\ref{lemma:Permutations}
-%it is pretty much obvious that $\pi^\theta\,d = d$ for every $d \in \semantic{\theta}_L$ and
-%$\pi\in\Fix{L}$.
-%It is also easy to see that
-%\[\begin{array}{rcl}
-%  \semantic{\theta}_{L_1} \cap \semantic{\theta}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
-%\end{array}\]
-%holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\theta}$ a
-%unique world $L \in W$ exists, such that $d \in \semantic{\theta}_L$ and $d \not\in \bigcup_{L'\ne L} \semantic{\theta}_{L'}$.
-%This unique world $L$ is called the {\em support of $d$}, written $\supp{d}$. In general we abbreviate
+It is easy to see that
+\[\begin{array}{rcl}
+  \semantic{\theta}_{L_1} \cap \semantic{\theta}_{L_2} \ne \emptyset &\Rightarrow& L_1=L_2
+\end{array}\]
+holds for all $L_1,L_2\in W$. Thereby for each $d \in \semantic{\theta}$ a
+unique world $L \in W$ exists, such that $d \in \semantic{\theta}_L$ and
+$d \not\in \bigcup_{L'\ne L} \semantic{\theta}_{L'}$.
+This unique world $L$ is called the {\em support of $d$}, written $\supp{d}$.
+%In general we abbreviate
 %$\supp{d_1,\ldots,d_n} = \bigcup_{i=1\ldots n}\supp{d_i}$, and we write
 %$\reach{d}{s}$ for $\reach{\supp{d}}{s}$ if $s \in \Store_{\supp{d}}$.
 %
@@ -716,7 +714,7 @@ We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
 
 \subsection{Semantics of the assertion language}
 
-\begin{definition}[Model]
+\begin{definition}[Environment]
   An {\em environment} is a partial, finite function $\eta: \Var \pto \bigcup_{\theta\in\LType} \semantic{\theta}$
   where $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for every $\theta \in \LType$. $\Env$ denotes
   the set of all environments, $\Env_X = \{\eta\in\Env\,|\,X \subseteq \dom{\eta}\}$ denotes the set of
@@ -762,8 +760,23 @@ We use $\tassn$ to abbreviate the type $\tunit\,\tassn$.
 We write $\semantic{t}\,\eta$ instead of $\semantic{\tj{t}{\sigma}}\,\eta$ if the type $\sigma$ is irrelevant or
 clear from the context.
 
+\begin{lemma}
+  For every well-typed term $t\in\Term$ of type $\sigma\in\SType$ and each suitable environment
+  $\eta\in\Env_{\free{t}}$, we have
+  $(\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{\sigma}_L$ where $L = \supp{\eta|_{\free{t}}}$.
+\end{lemma}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
+% \begin{corollary}
+%   $(\semantic{\tj{t}{\sigma}}\,\eta)\in\semantic{\sigma}$ for each
+%   $t\in\Term$, $\sigma\in\SType$ with $\tj{t}{\sigma}$ and $\eta\in\Env_{\free{t}}$.
+% \end{corollary}
+
 \begin{definition}[Model]
-  Every pair $\mathcal{M} = (\eta,s) \in \Env \times \Store$ with $\supp{\eta} \subseteq \dom{s}$
+  Every pair $(\eta,s) \in \Env \times \Store$ with $s\in\Store_{\supp{\eta}}$
   is called a {\em model}. $\Model$ denotes the set of all models, $\Model_X$ denotes the set of all
   $(\eta,s) \in \Model$ such that $X \subseteq \dom{\eta}$.
 \end{definition}
@@ -780,7 +793,7 @@ We write $(\eta,s) =_X (\eta',s')$ iff $\eta =_X \eta'$ and $s =_{\supp{\eta|_X}
     \item $(\eta,s) \models \qbex{x^\theta}{t}{p}$ iff $(\eta[d/x],s) \models p$ for some
           $d \in \bigcup_{L\subseteq\supp{\semantic{t}\,\eta}}\semantic{\theta}_L$
     \item $(\eta,s) \models \triple{p}{e_{:x}}{q}$ iff for every $s' \in \Store_{\supp{\eta}}$ with
-          $(\eta,s') \models p$ each compution for $(e\,\eta,s')$ terminates with some
+          $(\eta,s') \models p$ each computation for $(e\,\eta,s')$ terminates with some
           configuration $(v,s'')$ such that $(\eta[v/x],s'')\models q$
     \item $(\eta,s) \models \qex{x^\theta}{p}$ iff $(\eta[d/x],s') \models p$ for some $d \in \semantic{\theta}$ and
           $s' \in \Store_{\supp{d}}$ with $\grph{s} \subseteq \grph{s'}$
