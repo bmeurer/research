@@ -30,16 +30,16 @@ l"asst: \\[5mm]
   \RN{Val}        & $v \Downarrow v$ \\[3mm]
   \RN{Beta}       & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e[e_2/\id] \Downarrow v}
                            {\app{e_1}{e_2} \Downarrow v}$ \\[3mm]
-  \RN{Op-1}       & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow n}
-                           {\app{e_1}{e_2} \Downarrow \app{\op}{n}}$ \\[3mm]
-  \RN{Op-2}       & $\regel{e_1 \Downarrow \app{\op}{n_1} \quad e_2 \Downarrow n_2 \quad \op^I(n_1,n_2) = n}
-                           {\app{e_1}{e_2} \Downarrow n}$ \\[3mm]
+  \RN{Op-1}       & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow z}
+                           {\app{e_1}{e_2} \Downarrow \app{\op}{z}}$ \\[3mm]
+  \RN{Op-2}       & $\regel{e_1 \Downarrow \app{\op}{z_1} \quad e_2 \Downarrow z_2 \quad \op^I(z_1,z_2) = z}
+                           {\app{e_1}{e_2} \Downarrow z}$ \\[3mm]
   \RN{Cond-True}  & $\regel{e_0 \Downarrow \true \quad e_1 \Downarrow v}
                            {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
   \RN{Cond-False} & $\regel{e_0 \Downarrow \false \quad e_2 \Downarrow v}
                            {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
-  \RN{Unfold}     & $\regel{e[\rec{\id}{e}/\id] \Downarrow v}
-                           {\rec{\id}{e} \Downarrow v}$
+  \RN{Unfold}     & $\regel{e_1 \Downarrow \bfix \quad \app{e_2}{(\app{\bfix}{e_2})} \Downarrow v}
+                           {\app{e_1}{e_2} \Downarrow v}$
 \end{tabular}
 \end{definition}
 
@@ -47,12 +47,33 @@ l"asst: \\[5mm]
 \section{Umgebungssemantik}
 
 \begin{definition}[Closures und Umgebungen]
-  Die Mengen $\Env$ aller {\em Umgebungen} und $\Cl$ aller {\em Closures} sind wie folgt definiert:
-  \begin{enumerate}
-    \item $\Env = \{\eta:\Id \pto \Cl\ |\ \dom{\eta} \text{ endlich}\}$
-    \item $\Cl = \{(e,\eta)\in\Exp \times \Env\ |\ \free{e} \subseteq \dom{\eta}\}$
-  \end{enumerate}
+  Die Menge $\Env$ aller {\em (Laufzeit-)Umgebungen} $\eta$ und die Menge $\Cl$ aller {\em Closures} $\cl$ sind
+  durch die folgende kontextfreie Grammatik definiert:
+  \bgram
+  \eta \is [\,] \mid \id:\cl;\eta \n
+  \cl \is (e,\eta)
+  \egram
+  Der {\em Definitionsbereich} $\dom{\eta}$ einer Umgebung $\eta$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \dom{[\,]} &=& \emptyset \\
+    \dom{\id:\cl;\eta} &=& \{\id\} \cup \dom{\eta}
+  \end{array}\]
+  Eine Closure $\cl = (e,\eta)$ hei"st {\em wohldefiniert}, wenn $\free{e} \subseteq \dom{\eta}$ und
+  $\eta$ wohldefiniert ist. Eine Umgebung $\eta$ hei"st {\em wohldefiniert}, wenn alle eingetragenen
+  Closures wohldefiniert sind.
 \end{definition}
+
+\noindent Schreibweisen
+\begin{enumerate}
+\item F\"ur $(\id_1:\cl_1;\ldots;\id_n:\cl_n;[\,])\in\Env$ schreiben wir
+  \[
+  [\id_1:\cl_1;\ldots;\id_n:\cl_n]
+  \]
+\item F\"ur $\eta=(\id_1:\cl_1;\ldots;\id_n:\cl_n;[\,])\in\Env$ und $\id\in\dom{\eta}$ sei
+  \[
+  \eta(\id) = \cl_i, \text{ wobei } i = \min\{j \in \{1,\ldots,n\}\,|\,\id_j=\id\}
+  \]
+\end{enumerate}
 
 \begin{definition}[Big step Regeln]
 Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow (e',\eta')$,
@@ -65,38 +86,43 @@ folgenden Regeln herleiten l"asst: \\[5mm]
   \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
                             \quad (e,\eta_1[(e_2,\eta)/\id]) \Downarrow \cl}
                            {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (n,\eta_2)}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{n},[])}$ \\[3mm]
-  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{n_1},\eta_1)
-                            \quad (e_2,\eta) \Downarrow (n_2,\eta_2)
-                            \quad \op^I(n_1,n_2) = n}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (n,[])}$ \\[3mm]
+  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{z},[])}$ \\[3mm]
+  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{z_1},\eta_1)
+                            \quad (e_2,\eta) \Downarrow (z_2,\eta_2)
+                            \quad \op^I(z_1,z_2) = z}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (z,[])}$ \\[3mm]
   \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,\eta_0) \quad (e_1,\eta) \Downarrow \cl}
                            {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
   \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,\eta_0) \quad (e_2,\eta) \Downarrow \cl}
                            {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Unfold}     & $\regel{(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow \cl}
-                           {(\rec{\id}{e},\eta) \Downarrow \cl}$
+  \RN{Unfold}     & $\regel{(e_1,\eta) \Downarrow (\bfix,\eta_1)
+                            \quad (\app{e_2}{(\app{\bfix}{e_2})},\eta) \Downarrow \cl}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$
 \end{tabular}
 \end{definition}
 
-\begin{theorem}[Wohldefiniertheit der Umgebungssemantik] \label{satz:Wohldefiniertheit}
-  Seien $(e,\eta)\in \Cl$, $\hat{e} \in \Exp$ und $\hat{\eta}\in\Env$.
-  Wenn $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann gilt $\hat{e}\in \Val$ und $(\hat{e},\hat{\eta}) \in \Cl$.
-\end{theorem}
+\begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:Wohldefiniertheit}
+  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\Cl$. Wenn $(e,\eta)$ wohldefiniert und
+  $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
+  wohldefiniert und es gilt $\hat{e}\in \Val$.
+\end{lemma}
 
 \begin{proof}
-  Triviale Induktion.
+  Vermutlich triviale Induktion.
 \end{proof}
 
+Im Weiteren betrachten wir nur noch wohldefinierte Closures und Umgebungen, d.h. wir nehmen an,
+$\Cl$ und $\Env$ enthalten nur noch wohldefinierte Elemente.
+
 \begin{definition} \label{definition:Substitution}
-  Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt definiert:
+  Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt
+  induktiv definiert:
   \[\begin{array}{rcl}
     c\,\eta &=& c \\
     \id\,\eta &=& e'\,\eta', \text{ wobei } \eta(\id) = (e',\eta') \\
     (\app{e_1}{e_2})\,\eta &=& \app{(e_1\,\eta)}{(e_2\,\eta)} \\
     (\abstr{\id}{e})\,\eta &=& \abstr{\id'}{(e[\id'/\id]\,\eta)}, \text{ wobei } \id'\not\in\dom{\eta} \\
-    (\rec{\id}{e})\,\eta &=& \rec{\id'}{(e[\id'/\id]\,\eta)}, \text{ wobei } \id'\not\in\dom{\eta} \\
     (\bifte{e_0}{e_1}{e_2})\,\eta &=& \bifte{(e_0\,\eta)}{(e_1\,\eta)}{(e_2\,\eta)}
   \end{array}\]
 \end{definition}
@@ -104,7 +130,7 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 \begin{lemma} \label{lemma:Substitution}
   Seien $(e,\eta), (e',\eta') \in \Cl$. Dann gilt:
   \begin{enumerate}
-    \item $e\in\Val$ dann $(e\,\eta)\in\Val$
+    \item $e\in\Val$ impliziert $(e\,\eta)\in\Val$.
     \item $(e\,\eta)\in\Val$, dann entweder $e\in\Val$ oder
           $e=\id\in\Id$ und $\eta(\id) = (e',\eta')$ mit $(e'\,\eta')\in\Val$
     %\item $(e\,\eta) = (e\,\eta')$ wenn $\eta' =_{\free{e}} \eta$
@@ -140,13 +166,13 @@ folgenden Regeln herleiten l"asst: \\[5mm]
           $e\,(\hat{\eta}[(e_2,\eta)/\id]) = (e[\id'/\id]\,\hat{\eta})[e_2\,\eta/\id]$, und somit
           $(\app{e_1}{e_2})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Beta}.
 
-    \item $(\rec{\id}{e},\eta) \Downarrow (v',\eta')$ kann ausschliesslich mit \RN{Unfold} aus der Pr"amisse
-          $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$ folgen. Nach IV gilt dann ebenfalls
-          $e\,(\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v'\,\eta')$ und nach Definition~\ref{definition:Substitution}
-          gilt $(\rec{\id}{e})\,\eta = \rec{\id'}{(e[\id'/\id]\,\eta)}$ mit $\id'\not\in\dom{\eta}$. Wegen
-          Lemma~\ref{lemma:Substitution} folgt dann
-          $e\,(\eta[(\rec{\id}{e},\eta)/\id]) = (e[\id'/\id]\,\eta)[\rec{\id'}{(e[\id'/\id]\,\eta)}/\id]$ und
-          somit $(\rec{\id}{e})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Unfold}.
+%     \item $(\rec{\id}{e},\eta) \Downarrow (v',\eta')$ kann ausschliesslich mit \RN{Unfold} aus der Pr"amisse
+%           $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$ folgen. Nach IV gilt dann ebenfalls
+%           $e\,(\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v'\,\eta')$ und nach Definition~\ref{definition:Substitution}
+%           gilt $(\rec{\id}{e})\,\eta = \rec{\id'}{(e[\id'/\id]\,\eta)}$ mit $\id'\not\in\dom{\eta}$. Wegen
+%           Lemma~\ref{lemma:Substitution} folgt dann
+%           $e\,(\eta[(\rec{\id}{e},\eta)/\id]) = (e[\id'/\id]\,\eta)[\rec{\id'}{(e[\id'/\id]\,\eta)}/\id]$ und
+%           somit $(\rec{\id}{e})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Unfold}.
   \end{itemize}
   Die "ubrigen F"alle folgen analog.
 \end{proof}
@@ -177,15 +203,15 @@ Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\e
   folgt die Behauptung unmittelbar mit IV und big step Regel \RN{Id}; wir betrachten diesen Fall damit als erledigt
   und konzentrieren uns im Folgenden auf die F"alle f"ur $e\not\in\Id$.
   \begin{itemize}
-    \item $v \Downarrow v$ mit \RN{Val}, d.h. $(e\,\eta) = v$. Sei o.B.d.A. $e \in \Val$, dann existiert ein
-          big step $(e,\eta) \Downarrow (e,\eta)$ mit \RN{Val}.
-
-    \item $(\rec{\id}{e})\,\eta \Downarrow v$ mit \RN{Unfold} bedingt o.B.d.A.
-          $(e[\id'/\id]\,\eta)[(\rec{\id}{e})\,\eta/\id'] \Downarrow v$, wobei $\id' \not\in \dom{\eta}$.
-          Nach Lemma~\ref{lemma:Substitution} folgt $e\,(\eta[(\rec{\id}{e})\,\eta/\id])\Downarrow v$ und nach IV
-          existiert dann $(v',\eta') \in \Cl$ mit $(v'\,\eta') = v$, so dass
-          $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$. Die Behauptung folgt unmittelbar mit
-          \RN{Unfold}.
+    \item $v \Downarrow v$ mit $\RN{Val}$, d.h. $(e\,\eta) = v$. Sei o.B.d.A. $e \in \Val$, dann existiert ein
+          big step $(e,\eta) \Downarrow (e,\eta)$ mit $\RN{Val}$.
+          
+%     \item $(\rec{\id}{e})\,\eta \Downarrow v$ mit $\RN{Unfold}$ bedingt o.B.d.A.
+%           $(e[\id'/\id]\,\eta)[(\rec{\id}{e})\,\eta/\id'] \Downarrow v$, wobei $\id' \not\in \dom{\eta}$.
+%           Nach Lemma~\ref{lemma:Substitution} folgt $e\,(\eta[(\rec{\id}{e})\,\eta/\id])\Downarrow v$ und nach IV
+%           existiert dann $(v',\eta') \in \Cl$ mit $(v'\,\eta') = v$, so dass
+%           $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$. Die Behauptung folgt unmittelbar mit
+%           \RN{Unfold}.
 
     \item $(\app{e_1}{e_2})\,\eta \Downarrow v$ mit \RN{Beta} kann o.B.d.A. nur aus Pr"amissen der Form
           $(e_1\,\eta) \Downarrow \abstr{\id}{e}$ und $e[(e_2\,\eta)/\id]\Downarrow v$ folgen. Nach IV ex.
@@ -218,6 +244,153 @@ Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\e
     \item ex. $\eta\in\Cl$, so dass $(e,[\,]) \Downarrow (c,\eta)$
   \end{enumerate}
 \end{corollary}
+
+
+\section{De Bruijn Indizes}
+
+\begin{definition}[Expressions]
+  Vorgeben sei eine (unendliche) Menge $\{\underline{1},\underline{2},\ldots\}$ von {\em De Bruijn-Indizes}
+  $\iota$. Die Menge $\dbExp$ aller {\em De Bruijn-Ausdr\"ucke} $e$ ist durch die kontextfreie Grammatik
+  \bgram
+  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2}
+  \egram
+  definiert. Der {\em Rang} $\rank{e} \in \setN$ eines De Bruijn-Ausdrucks $e$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \rank{c} &=& 0 \\
+    \rank{\iota} &=& \iota \\
+    \rank{\abstr{}{e}} &=& \max(\rank{e},1) - 1 \\
+    \rank{\app{e_1}{e_2}} &=& \max(\rank{e_1},\rank{e_2}) \\
+    \rank{\bifte{e_0}{e_1}{e_2}} &=& \max(\rank{e_0},\rank{e_1},\rank{e_2})
+  \end{array}\]
+\end{definition}
+
+\begin{definition}[Closures und Umgebungen]
+  Die Menge $\dbEnv$ aller {\em De Bruijn-(Laufzeit-)Umgebungen} $\eta$ und die Menge $\dbCl$ aller
+  {\em De Bruijn-Closures} $\cl$ sind durch die folgende kontextfreie Grammatik definiert:
+  \bgram
+  \eta \is [\,] \mid \cl;\eta \n
+  \cl \is (e,\eta)
+  \egram
+  Die {\em L\"ange} $\len{\eta}$ einer De Bruijn-Umgebung $\eta$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \len{[\,]} &=& 0 \\
+    \len{\cl;\eta} &=& 1 + \len{\eta}
+  \end{array}\]
+  Eine De Bruijn-Closure $\cl = (e,\eta)$ hei"st {\em wohldefiniert}, wenn $\rank{e} \le \len{\eta}$ und
+  $\eta$ wohldefiniert ist. Eine De Bruijn-Umgebung $\eta$ hei"st {\em wohldefiniert}, wenn alle eingetragenen
+  Closures wohldefiniert sind.
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der De Bruijn-Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow (e',\eta')$,
+wobei $e,e'\in\dbExp$ und $\eta,\eta'\in\dbEnv$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
+folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
+  \RN{Index}      & $\regel{\hat{\eta}(\iota) \Downarrow \cl}
+                           {(\iota,\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
+                            \quad (e,(e_2,\eta);\eta_1) \Downarrow \cl}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{z},[])}$ \\[3mm]
+  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{z_1},\eta_1)
+                            \quad (e_2,\eta) \Downarrow (z_2,\eta_2)
+                            \quad \op^I(z_1,z_2) = z}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (z,[])}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,\eta_0) \quad (e_1,\eta) \Downarrow \cl}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,\eta_0) \quad (e_2,\eta) \Downarrow \cl}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
+  \RN{Unfold}     & $\regel{(e_1,\eta) \Downarrow (\bfix,\eta_1)
+                            \quad (\app{e_2}{(\app{\bfix}{e_2})},\eta) \Downarrow \cl}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$
+\end{tabular}
+\end{definition}
+
+\begin{lemma}[Wohldefiniertheit der De Bruijn-Umgebungssemantik]
+  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\dbCl$. Wenn $(e,\eta)$ wohldefiniert und
+  $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
+  wohldefiniert und es gilt $\hat{e}\in\dbVal$.
+\end{lemma}
+
+\begin{proof}
+  Vermutlich triviale Induktion.
+\end{proof}
+
+Wie zuvor betrachten wir nun nur noch wohldefinierte De Bruijn-Closures und -Umgebungen, d.h. wir nehmen an,
+$\dbCl$ und $\dbEnv$ enthalten nur noch wohldefinierte Elemente.
+
+\begin{definition}[Namenskontext]
+  Die Menge $\Ncx$ aller {\em Namenskontexte} $\Gamma$ ist induktiv definiert durch:
+  \bgram
+  \Gamma \is [\,] \mid \id;\Gamma
+  \egram
+  Der {\em Definitionsbereich} $\dom{\Gamma}$ eines Namenskontext $\Gamma$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \dom{[\,]} &=& \emptyset \\
+    \dom{\id;\Gamma} &=& \{\id\} \cup \dom{\Gamma}
+  \end{array}\]
+\end{definition}
+
+\noindent Schreibweisen
+\begin{enumerate}
+\item F\"ur $\Gamma=(\id_1;\ldots;\id_n;[\,])\in\Ncx$ schreiben wir $[\id_1;\ldots;\id_n]$.
+\item F\"ur $\Gamma=[\id_1;\ldots;\id_n]$ und $\id\in\dom{\Gamma}$ sei
+  \[ \Gamma(\id) = \min\{j \in \{1,\ldots,n\}\,|\, \id_j = \id\} \]
+\end{enumerate}
+
+\begin{definition}[\"Ubersetzungsfunktion]
+  Gegeben $e \in Exp$, $\Gamma\in\Ncx$ mit $\free{e} \subseteq \dom{\Gamma}$. Der {\em De Bruijn-Ausdruck}
+  $\tr{\Gamma,e}$, welcher durch Entfernen der Bezeichner aus $e$ entsteht, ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \tr{\Gamma,c} &=& c \\
+    \tr{\Gamma,\id} &=& \underline{i} \quad \text{ falls } i = \Gamma(\id) \\
+    \tr{\Gamma,\abstr{\id}{e}} &=& \abstr{}{\tr{\id;\Gamma,e}} \\
+    \tr{\Gamma,\app{e_1}{e_2}} &=& \app{(\tr{\Gamma,e_1})}{(\tr{\Gamma,e_2})} \\
+    \tr{\Gamma,\bifte{e_0}{e_1}{e_2}} &=& \bifte{\tr{\Gamma,e_0}}{\tr{\Gamma,e_1}}{\tr{\Gamma,e_2}}
+  \end{array}\]
+  Sei weiter $\eta=[\id_1:\cl_1;\ldots;\id_n:\cl_n]\in\Env$ mit $\free{e}\subseteq \dom{\eta}$. Die
+  {\em De Bruijn-Closure} $\tr{e,\eta}$, welche durch Entfernen der Bezeichner aus $e$ und $\eta$ entsteht,
+  ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \tr{e,\eta} &=& (\tr{[\id_1;\ldots;\id_n],e},[\tr{\cl_1};\ldots;\tr{\cl_n}])
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}[Wohldefiniertheit der \"Ubersetzung] \
+  \begin{enumerate}
+  \item Seien $e \in \Exp$ und $\Gamma\in\Ncx$ mit $\free{e}\subseteq \dom{\Gamma}$, \\
+    dann gilt $(\tr{\Gamma,e})\in\dbExp$.
+  \item Sei $\cl\in\Cl$. Dann gilt $(\tr{\cl})\in\dbCl$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Straight forward induction.
+\end{proof}
+
+\begin{lemma}
+  Die \"Ubersetzungsfunktion $\name{tr}$ ist {\em strukturerhaltend}.
+\end{lemma}
+
+Insbesondere gilt $(\tr{\Gamma,v})\in\dbVal$ f\"ur alle $v\in\Val$ und $\Gamma\in\Ncx$ mit
+$\free{v}\subseteq\dom{\Gamma}$.
+
+\begin{proof}
+  Klar.
+\end{proof}
+
+\begin{theorem}[\"Aquivalenzsatz]
+  Sei $(e,\eta),(e',\eta')\in\Cl$. Dann gilt $(e,\eta) \Downarrow (e',\eta')$ gdw.
+  $\tr{e,\eta} \Downarrow \tr{e',\eta'}$.
+\end{theorem}
+
+\begin{proof}
+  Es sind zwei Richtungen zu zeigen, jeweils per Induktion \"uber die L\"ange der Herleitung des big steps mit
+  Fallunterscheidung nach der zuletzt angewandten Regel. Dabei muss man sowohl die {\em Strukturerhaltung} der
+  \"Ubersetzung als auch die Tatsache ausnutzen, dass die Closures wohldefiniert sind.
+\end{proof}
 
 \end{document}
 

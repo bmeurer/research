@@ -111,7 +111,7 @@
 \newcommand{\rsem}{\rrbracket}
 \newcommand{\impl}{\models}
 \newcommand{\step}{\vdash}
-\newcommand{\tr}{\triangleright}
+%\newcommand{\tr}{\triangleright}
 \newcommand{\cc}{\coloncolon}
 
 
@@ -138,6 +138,9 @@
 
 \newcommand{\dom}[1]{\name{dom}(#1)}
 \newcommand{\free}[1]{\name{free}\,(#1)}
+\newcommand{\rank}[1]{\name{rank}\,(#1)}
+\newcommand{\len}[1]{\name{len}\,(#1)}
+\newcommand{\tr}[1]{\name{tr}(#1)}
 
 % Names (upper case italic)
 
@@ -153,6 +156,12 @@
 \newcommand{\Exn}{\name{Exn}}
 \newcommand{\EP}{\name{EP}}
 \newcommand{\Exp}{\name{Exp}}
+
+\newcommand{\Ncx}{\name{Ncx}}
+\newcommand{\dbExp}{\name{dbExp}}
+\newcommand{\dbVal}{\name{dbVal}}
+\newcommand{\dbEnv}{\name{dbEnv}}
+\newcommand{\dbCl}{\name{dbCl}}
 
 \newcommand{\Id}{\name{Id}}
 \newcommand{\Int}{\name{Int}}
@@ -176,51 +185,52 @@
 
 % keywords
 
-\newcommand{\z}{\textbf{int}}
-\newcommand{\bool}{\textbf{bool}}
-\newcommand{\unit}{\textbf{unit}}
-\newcommand{\blist}{\textbf{list}}
-\newcommand{\bref}{\textbf{ref}}
+\newcommand{\z}{\mathbf{int}}
+\newcommand{\bool}{\mathbf{bool}}
+\newcommand{\unit}{\mathbf{unit}}
+\newcommand{\blist}{\mathbf{list}}
+\newcommand{\bref}{\mathbf{ref}}
 \newcommand{\ltype}[1]{#1\,\blist}
 \newcommand{\reftype}[1]{#1\,\bref}
 
-\renewcommand{\div}{\mathbin{\textbf{div}}}
+\renewcommand{\div}{\mathbin{\mathbf{div}}}
 \newcommand{\sel}{\mathbin{.}}
-%\newcommand{\mod}{\mathbin{\textbf{mod}}}
+%\newcommand{\mod}{\mathbin{\mathbf{mod}}}
 \renewcommand{\mod}{\text{mod}}
 
-\newcommand{\bif}{\textbf{if}}
-\newcommand{\bthen}{\textbf{then}}
-\newcommand{\belse}{\textbf{else}}
+\newcommand{\bif}{\mathbf{if}}
+\newcommand{\bthen}{\mathbf{then}}
+\newcommand{\belse}{\mathbf{else}}
 
-\newcommand{\blet}{\textbf{let}}
-\newcommand{\bin}{\textbf{in}}
-\newcommand{\bend}{\textbf{end}}
+\newcommand{\blet}{\mathbf{let}}
+\newcommand{\bin}{\mathbf{in}}
+\newcommand{\bend}{\mathbf{end}}
 
-\newcommand{\bval}{\textbf{val}}
-\newcommand{\brec}{\textbf{rec}}
-\newcommand{\bfun}{\textbf{fun}}
-\newcommand{\band}{\textbf{and}}
-\newcommand{\btype}{\textbf{type}}
+\newcommand{\bval}{\mathbf{val}}
+\newcommand{\brec}{\mathbf{rec}}
+\newcommand{\bfix}{\mathbf{fix}}
+\newcommand{\bfun}{\mathbf{fun}}
+\newcommand{\band}{\mathbf{and}}
+\newcommand{\btype}{\mathbf{type}}
 
 %\newcommand{\andalso}[2]{#1\,\&\&\,#2}
 %\newcommand{\orelse}[2]{#1\,\|\,#2}
 \newcommand{\andalso}{\&\&}
 \newcommand{\orelse}{\|}
-\newcommand{\bandalso}{\textbf{andalso}}
-\newcommand{\borelse}{\textbf{orelse}}
+\newcommand{\bandalso}{\mathbf{andalso}}
+\newcommand{\borelse}{\mathbf{orelse}}
 
-\newcommand{\bwhile}{\textbf{while}}
-\newcommand{\bdo}{\textbf{do}}
-\newcommand{\bfor}{\textbf{for}}
+\newcommand{\bwhile}{\mathbf{while}}
+\newcommand{\bdo}{\mathbf{do}}
+\newcommand{\bfor}{\mathbf{for}}
 
-\newcommand{\brepeat}{\textbf{repeat}}
-\newcommand{\buntil}{\textbf{until}}
+\newcommand{\brepeat}{\mathbf{repeat}}
+\newcommand{\buntil}{\mathbf{until}}
 
-\newcommand{\barray}{\textbf{array}}
-\newcommand{\bof}{\textbf{of}}
+\newcommand{\barray}{\mathbf{array}}
+\newcommand{\bof}{\mathbf{of}}
 
-\newcommand{\bclass}{\textbf{class}}
+\newcommand{\bclass}{\mathbf{class}}
 
 \newcommand{\app}[2]{#1\,#2}
 \newcommand{\bift}[2]{\bif\ #1\ \bthen\ #2}
@@ -256,9 +266,9 @@
 \newcommand{\cBig}[2]{#1 \\ \eval\ {\resultcolor #2}}
 \newcommand{\Clos}[2]{\name{Closure}_{#1}(#2)}
 
-\newcommand{\Tjl}[3]{#1 \,\tr_l\, #2\cc#3}
-\newcommand{\Tjm}[3]{#1 \,\tr_m\, #2\cc#3}
-\newcommand{\Tjh}[2]{#1 \tr  #2}
+\newcommand{\Tjl}[3]{#1 \,\triangleright_l\, #2\cc#3}
+\newcommand{\Tjm}[3]{#1 \,\triangleright_m\, #2\cc#3}
+\newcommand{\Tjh}[2]{#1 \triangleright  #2}
 
 \newcommand{\brule}[1]{\begin{markiere}[#1]}
 \newcommand{\erule}{\end{markiere}}
