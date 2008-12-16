@@ -287,7 +287,7 @@ wobei $e,e'\in\dbExp$ und $\eta,\eta'\in\dbEnv$. Ein derartiger big step hei"st 
 folgenden Regeln herleiten l"asst: \\[5mm]
 \begin{tabular}{ll}
   \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
-  \RN{Index}      & $\regel{\hat{\eta}(\iota) \Downarrow \cl}
+  \RN{Index}      & $\regel{\eta(\iota) \Downarrow \cl}
                            {(\iota,\eta) \Downarrow \cl}$ \\[3mm]
   \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
                             \quad (e,(e_2,\eta);\eta_1) \Downarrow \cl}
@@ -407,45 +407,88 @@ werden. Wir nennen die hier beschriebene Maschine {\em LazyCAM}, da es sich um d
 Programmiersprache mit {\em lazy evaluation Semantik} handelt.
 
 \begin{definition}[Syntax der Categorical Abstract Machine]
-  Vorgegeben sei eine (unendliche) Menge $\Loc$ von {\em Programmaddressen} $\ell$. Die Mengen $\Prog$ der g\"ultigen
-  {\em (CAM-)Programme} $P$, $\Instr$ der g\"ultigen {\em (CAM-)Instruktionen} $I$, $\Reg$ der g\"ultigen
-  {\em (CAM-)Registerinhalte} $R$ und $\Stack$ der g\"ultigen {\em (CAM-)Stackinhalte} $S$ sind wie folgt induktiv
+  Vorgegeben sei eine (unendliche) Menge $\Loc$ von {\em Programmaddressen} $\ell$. Die Mengen $\Prog$ aller
+  {\em (CAM-)Programme} $P$, $\Instr$ aller {\em (CAM-)Instruktionen} $I$, $\Reg$ aller
+  {\em (CAM-)Registerinhalte} $R$ und $\Stack$ aller {\em (CAM-)Stackinhalte} $S$ sind wie folgt induktiv
   definiert:
   \bgram
   P \is \ell: I \mid P_1;P_2 \\
   I \is \textsc{Fst} \mid \textsc{Snd} \mid \textsc{Push} \mid \textsc{Swap}
   \mid \textsc{Quote}\,c \mid \textsc{Prim}\,\op
-  \al \textsc{Closure}\,\ell \mid \textsc{Abstr}\,\ell \mid \textsc{App} \mid \textsc{Eval} \mid \textsc{Return}
+  \al \textsc{Closure}\,\ell \mid \textsc{App} \mid \textsc{Eval} \mid \textsc{Return}
   \al \textsc{GotoFalse}\,\ell \mid \textsc{Goto}\,\ell \mid \textsc{Skip} \mid \textsc{Stop} \\
   R \is c \mid \ell \mid \underbrace{(R_1,R_2)}_{\text{Umgebung}} \mid \underbrace{[R:\ell]}_{\text{Closure}} \\
   S \is [\,] \mid R;S
   \egram
-  Die Menge $\locns{P} \subseteq \Loc$ aller Programmadressen von $P$ ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \locns{\ell:I} &=& \{\ell\} \\
-    \locns{P_1;P_2} &=& \locns{P_1} \cup \locns{P_2}
-  \end{array}\]
-  Analog werden die Mengen $\locns{R}$ und $\locns{S}$ induktiv definiert ({\bf TODO}).
 \end{definition}
 
-Wir gehen im folgenden davon aus, dass jede Instruktion $I$ eine eindeutige Programmaddresse $\ell$ besitzt.
+Wir gehen im folgenden davon aus, dass jede Instruktion $I$ eine eindeutige Programmaddresse $\ell_i$ besitzt und
+diese in geeigneter Weise vergeben werden, so dass die syntaktisch folgende Programmaddress durch $\ell_{i+1}$
+bezeichnet werden kann.
 Letztere werden \"ublicherweise durch ganzzahlige Werte repr\"asentiert, was f\"ur uns an dieser Stelle aber
 irrelevant ist. Statt $\ell:I$ schreiben wir kurz $I$, wenn die konkrete Programmaddresse von $I$ nicht interessiert.
-Wir schreiben $P[\ell_i]$ f\"ur die Instruktion $I$ an der
-Programmaddresse $\ell_i\in\locns{P}$ im Programm $P$. Weiterhin schreiben wir $\ell_{i+1}$ f\"ur die auf $\ell_i$
-folgende Programmaddresse in $P$ (so sie existiert).
+Wir schreiben $P[\ell]$ f\"ur die Instruktion $I$ an der Programmaddresse $\ell\in\locns{P}$ im Programm $P$.
+Weiterhin schreiben wir $\ell\langle I\rangle$ f\"ur die Programmaddresse $\ell\in\dom{P}$ mit $P[\ell]=I$.
+
+\begin{definition}
+  Die Menge $\dom{P} \subseteq \Loc$ aller Programmaddressen von $P$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \dom{\ell:I} &=& \{\ell\} \\
+    \dom{P_1;P_2} &=& \dom{P_1} \cup \dom{P_2}
+  \end{array}\]
+  Die Menge $\locns{P} \subseteq \Loc$ aller in $P$ vorkommenden Sprungziele (implizit oder explizit) ist wie
+  folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    \locns{\ell_i:\textsc{Fst}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Snd}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Push}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Swap}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Quote}\,c} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Prim}\,\op} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Closure}\,\ell} &=& \{\ell_{i+1},\ell\} \\
+    \locns{\ell_i:\textsc{App}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Return}} &=& \emptyset \\
+    \locns{\ell_i:\textsc{GotoFalse}\,\ell} &=& \{\ell_{i+1},\ell\} \\
+    \locns{\ell_i:\textsc{Goto}\,\ell} &=& \{\ell\} \\
+    \locns{\ell_i:\textsc{Skip}} &=& \{\ell_{i+1}\} \\
+    \locns{\ell_i:\textsc{Stop}} &=& \emptyset \\
+    \locns{P_1;P_2} &=& \locns{P_1} \cup \locns{P_2}
+  \end{array}\]
+  Ein Programm $P\in\Prog$ hei"st {\em g\"ultig}, wenn $\locns{P} \subseteq \dom{P}$.
+\end{definition}
+
+Intuitiv sollte sofort ersichtlich sein, dass ein g\"ultiges Programm immer entweder mit $\textsc{Stop}$,
+$\textsc{Return}$ oder $\textsc{Goto}$ enden muss, da in der Sprungmenge sonst die Nachfolgeaddresse des
+letzten Befehls enthalten w\"are, die aber nicht mehr zum Programm geh\"ort. Obige Definition ist schon
+teilweise ein Vorgriff auf die Semantik der Maschine.
+
+\begin{definition}
+  Die Menge $\locns{R} \subseteq \Loc$ aller im Register $R$ vorkommenden Sprungziele ist wie folgt induktiv
+  definiert:
+  \[\begin{array}{rcl}
+    \locns{c} &=& \emptyset \\
+    \locns{\ell} &=& \{\ell\} \\
+    \locns{(R_1,R_2)} &=& \locns{R_1} \cup \locns{R_2} \\
+    \locns{[R:\ell]} &=& \locns{R} \cup \{\ell\}
+  \end{array}\]
+  Analog ist die Menge $\locns{S} \subseteq \Loc$ aller auf dem Stack $S$ vorkommenden Sprungziele definiert:
+  \[\begin{array}{rcl}
+    \locns{[\,]} &=& \emptyset \\
+    \locns{R;S} &=& \locns{R} \cup \locns{S}
+  \end{array}\]
+\end{definition}
+
 Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird nachfolgend beschrieben.
 
 \begin{definition}[Semantik der Categorical Abstract Machine]
-  Sei $P\in\Prog$ ein g\"ultiges Programm. Ein {\em (CAM-)Programmzustand} f\"ur $P$ ist ein Tripel der Form
+  Sei $P\in\Prog$ ein g\"ultiges Programm. Ein {\em g\"ultiger (CAM-)Programmzustand} f\"ur $P$ ist ein Tripel der Form
   $(R,S,\ell) \in \Reg \times \Stack \times \Loc$, mit
   \[
-  \locns{R}\cup\locns{S}\cup\{\ell\}\subseteq\locns{P}.
+  \locns{R}\cup\locns{S}\cup\{\ell\}\subseteq\dom{P}.
   \]
   Die Menge aller g\"ultigen Programmzust\"ande f\"ur $P$ bezeichnen wir mit $\State(P)$, oder kurz $\State$,
   wenn $P$ aus dem Kontext hervorgeht. Die \"Ubergangsrelation $\to$ der CAM ist in 
-  Tabelle~\ref{table:CAM_Reductions} beschrieben, wobei die Schreibweise $\ell_i:I$ die Programmaddresse
-  $\ell_i$ bezeichnet mit $P[\ell_i] = I$.
+  Tabelle~\ref{table:CAM_Reductions} beschrieben.
 \end{definition}
 
 \begin{figure}
@@ -455,25 +498,25 @@ Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird na
       \hline
       Zustand \hfill \quad && Nachfolger & Beschreibung \\
       \hline
-      $((R_1,R_2),S,\ell_i:\textsc{Fst})$ & $\to$ & $(R_1,S,\ell_{i+1})$ & Erste Projektion \\
-      $((R_1,R_2),S,\ell_i:\textsc{Snd})$ & $\to$ & $(R_2,S,\ell_{i+1})$ & Zweite Projektion \\
+      $((R_1,R_2),S,\ell_i\langle\textsc{Fst}\rangle)$ & $\to$ & $(R_1,S,\ell_{i+1})$ & Erste Projektion \\
+      $((R_1,R_2),S,\ell_i\langle\textsc{Snd}\rangle)$ & $\to$ & $(R_2,S,\ell_{i+1})$ & Zweite Projektion \\
       \hline
-      $(R,S,\ell_i:\textsc{Push})$ & $\to$ & $(R,R;S,\ell_{i+1})$ & Registerinhalt auf Stack \\
-      $(R_1,R_2;S,\ell_i:\textsc{Swap})$ & $\to$ & $(R_2,R_1;S,\ell_{i+1})$ & Registerinhalt und oberstes \\
+      $(R,S,\ell_i\langle\textsc{Push}\rangle)$ & $\to$ & $(R,R;S,\ell_{i+1})$ & Registerinhalt auf Stack \\
+      $(R_1,R_2;S,\ell_i\langle\textsc{Swap}\rangle)$ & $\to$ & $(R_2,R_1;S,\ell_{i+1})$ & Registerinhalt und oberstes \\
       &&& Stackelement vertauschen \\
       \hline
-      $(R,S,\ell_i:\textsc{Quote}\,c)$ & $\to$ & $(c,S,\ell_{i+1})$ & $c$ in Register laden \\
-      $(z_2,z_1;S,\ell_i:\textsc{Prim}\,\op)$ & $\to$ & $(\op^I(z_1,z_2),S,\ell_{i+1})$ & Operation $\op$ ausf\"uhren \\
-      $(R,S,\ell_i:\textsc{Closure}\,\ell)$ & $\to$ & $([R:\ell],S,\ell_{i+1})$ & Abschluss bilden \\
+      $(R,S,\ell_i\langle\textsc{Quote}\,c\rangle)$ & $\to$ & $(c,S,\ell_{i+1})$ & $c$ in Register laden \\
+      $(z_2,z_1;S,\ell_i\langle\textsc{Prim}\,\op\rangle)$ & $\to$ & $(\op^I(z_1,z_2),S,\ell_{i+1})$ & Operation $\op$ ausf\"uhren \\
+      $(R,S,\ell_i\langle\textsc{Closure}\,\ell\rangle)$ & $\to$ & $([R:\ell],S,\ell_{i+1})$ & Abschluss bilden \\
       \hline
-      $([R_1:\ell],R_2;S,\ell_i:\textsc{App})$ & $\to$ & $((R_1,R_2),\ell_{i+1};S,\ell)$ & Funktionsaufruf \\
-      $([R:\ell],S,\ell_i:\textsc{Eval})$ & $\to$ & $(R,\ell_{i+1};S,\ell)$ & Verz\"ogerte Auswertung \\
+      $([R_1:\ell],R_2;S,\ell_i\langle\textsc{App}\rangle)$ & $\to$ & $((R_1,R_2),\ell_{i+1};S,\ell)$ & Funktionsaufruf \\
+      $([R:\ell],S,\ell_i\langle\textsc{Eval}\rangle)$ & $\to$ & $(R,\ell_{i+1};S,\ell)$ & Verz\"ogerte Auswertung \\
       &&& einer Closure \\
-      $(R,\ell;S,\ell_i:\textsc{Return})$ & $\to$ & $(R,S,\ell)$ & R\"ucksprung aus Closure \\
-      $(\true,R;S,\ell_i:\textsc{GotoFalse}\,\ell)$ & $\to$ & $(R,S,\ell_{i+1})$ & Sprung zu $\ell$ wenn Register \\
-      $(\false,R;S,\ell_i:\textsc{GotoFalse}\,\ell)$ & $\to$ & $(R,S,\ell)$ & den Wert $\false$ enth\"alt \\
-      $(R,S,\ell_i:\textsc{Goto}\,\ell)$ & $\to$ & $(R,S,\ell)$ & Unbedingter Sprung zu $\ell$ \\
-      $(R,S,\ell_i:\textsc{Skip})$ & $\to$ & $(R,S,\ell_{i+1})$ & No-op \\
+      $(R,\ell;S,\ell_i\langle\textsc{Return}\rangle)$ & $\to$ & $(R,S,\ell)$ & R\"ucksprung aus Closure \\
+      $(\true,R;S,\ell_i\langle\textsc{GotoFalse}\,\ell\rangle)$ & $\to$ & $(R,S,\ell_{i+1})$ & Sprung zu $\ell$ wenn Register \\
+      $(\false,R;S,\ell_i\langle\textsc{GotoFalse}\,\ell\rangle)$ & $\to$ & $(R,S,\ell)$ & den Wert $\false$ enth\"alt \\
+      $(R,S,\ell_i\langle\textsc{Goto}\,\ell\rangle)$ & $\to$ & $(R,S,\ell)$ & Unbedingter Sprung zu $\ell$ \\
+      $(R,S,\ell_i\langle\textsc{Skip}\rangle)$ & $\to$ & $(R,S,\ell_{i+1})$ & No-op \\
       \hline
     \end{tabular}
   \end{center}}
@@ -482,32 +525,31 @@ Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird na
 \end{figure}
 
 \begin{lemma}[Wohldefiniertheit der \"Ubergangsrelation]
-  Sei $P\in\Prog$ ein Programm. Wenn $(R,S,\ell)\in\State(P)$ und $(R,S,\ell) \to (R',S',\ell')$, dann gilt auch
-  $(R',S',\ell')\in\State(P)$.
+  Sei $P$ ein g\"ultiges Programm. Wenn $(R,S,\ell)\in\State(P)$ und $(R,S,\ell) \to (R',S',\ell')$, dann
+  gilt auch $(R',S',\ell')\in\State(P)$.
 \end{lemma}
 
 \begin{proof}
   Sollte sich per Fallunterscheidung recht einfach zeigen lassen, wobei man immer wieder auf die Annahme zur\"uckkommen
-  muss, dass
-  der Anfangszustand schon g\"ultig ist, und man muss beachten, dass die Maschine keinen \"Ubergang macht, wenn
-  der Folgezustand $\ell_{i+1}$ nicht im Programm liegt (das steckt implizit in der Schreibweise).
+  muss, dass der Anfangszustand schon g\"ultig ist, und man muss beachten, dass alle m\"oglichen Folgeaddressen
+  im Programm enthalten sind, da $P$ nach Voraussetzung g\"ultig ist.
 \end{proof}
 
 \begin{lemma}[Eindeutigkeit der \"Ubergangsrelation]
-  Sei $P\in\Prog$ ein Programm. F\"ur jeden Zustand $s\in\State(P)$ existiert h\"ochstens ein $s'\in\State(P)$, so
+  Sei $P$ ein g\"ultiges Programm. F\"ur jeden Zustand $s\in\State(P)$ existiert h\"ochstens ein $s'\in\State(P)$, so
   dass $s \to s'$.
 \end{lemma}
 
 \begin{definition}[Berechnung]
-  Sei $P\in\Prog$ ein Programm. Eine {\em Berechnung} f\"ur $P$ ist eine (m\"oglicherweise unendliche) Folge von
+  Sei $P$ ein g\"ultiges Programm. Eine {\em Berechnung} f\"ur $P$ ist eine (m\"oglicherweise unendliche) Folge von
   Zust\"anden
   \[
   (R_0,S_0,\ell_0) \to (R_1,S_1,\ell_1) \to (R_2,S_2,\ell_2) \to \ldots,
   \]
   wobei $\ell_0$ die erste Addresse im Programm $P$ bezeichnet. Eine Berechnung hei"st
   \begin{enumerate}
-    \item {\em terminierend}, wenn sie endlich ist und der letzte Zustand die Form $(R_e,S_e,\ell_e)$
-      mit $P[\ell_e] = \textsc{Stop}$ hat, oder
+    \item {\em terminierend}, wenn sie endlich ist und der letzte Zustand die Form
+      $(R_e,S_e,\ell_e\langle\textsc{Stop}\rangle)$ hat, oder
     \item {\em divergierend}, wenn sie unendlich ist, oder
     \item {\em stecken bleibend}, sonst.
   \end{enumerate}
@@ -551,24 +593,34 @@ Diese Funktionen sind wie folgt induktiv definiert:
 \[\begin{array}{rcl}
   \mathcal{P}\sem{e} &=& \mathcal{V}\sem{e};\,\textsc{Stop} \\
   \\
-  \mathcal{C}\sem{e} &=& \textsc{Goto}\,\ell_2;\,\ell_1:\textsc{Skip};\,
+  \mathcal{C}\sem{e} &=& \textsc{Goto}\,\ell';\,\ell:\textsc{Skip};\,
                          \mathcal{V}\sem{e};\,\textsc{Return}; \\
-                      && \ell_2:\textsc{Closure}\,\ell_1 \\
+                      && \ell':\textsc{Closure}\,\ell \\
   \\
   \mathcal{V}\sem{c} &=& \textsc{Quote}\,c \\
   \mathcal{V}\sem{\underline{i}} &=& \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,
                                      \textsc{Snd};\,\textsc{Eval} \\
   \mathcal{V}\sem{\abstr{}{e}} &=& \mathcal{C}\sem{e} \\
   \mathcal{V}\sem{\app{e_1}{e_2}} &=& \textsc{Push};\,\mathcal{V}\sem{e_1};\,\textsc{Swap};\,
-                                      \mathcal{C}\sem{e_2};\,\textsc{App} \\
+                                      \mathcal{C}\sem{e_2};\,\textsc{Swap};\,\textsc{App} \\
   \mathcal{V}\sem{e_1\,\op\,e_2} &=& \textsc{Push};\,\mathcal{V}\sem{e_1};\,\textsc{Swap};\,
                                      \mathcal{V}\sem{e_2};\,\textsc{Prim}\,\op \\
-  \mathcal{V}\sem{\bifte{e_0}{e_1}{e_2}} &=& \textsc{Push};\,\mathcal{V}\sem{e_0};\,\textsc{GotoFalse}\,\ell_1;\,
+  \mathcal{V}\sem{\bifte{e_0}{e_1}{e_2}} &=& \textsc{Push};\,\mathcal{V}\sem{e_0};\,\textsc{GotoFalse}\,\ell;\,
                                              \mathcal{V}\sem{e_1}; \\
-                                         &&  \textsc{Goto}\,\ell_2;\,\ell_1:\textsc{Skip};\,
-                                             \mathcal{V}\sem{e_2};\,\ell_2:\textsc{Skip}
+                                         &&  \textsc{Goto}\,\ell';\,\ell:\textsc{Skip};\,
+                                             \mathcal{V}\sem{e_2};\,\ell':\textsc{Skip}
 \end{array}\]
+Wir nehmen an, dass die genaue Vergabe der Programmaddressen automatisch und korrekt geschieht. Dies ist
+im Wesentlichen trivial und dementsprechend uninteressant.
 
+\begin{lemma}[Wohldefiniertheit der \"Ubersetzungsfunktion]
+  Sei $e\in\Exp$. Dann ist $\mathcal{P}\sem{e}$ ein g\"ultiges Programm.
+\end{lemma}
+
+\begin{proof}
+  Hier m\"usste man dann erstmal die Sache passend formulieren f\"ur $\mathcal{C}$ und $\mathcal{V}$. Dann
+  sollte die Sache anschliessend einfach sein.
+\end{proof}
 
 Diese \"Ubersetzung ist herzlich ineffizient, denn z.B. werden f\"ur $\lambda$-Ausdr\"ucke Parameter-Position
 zwei Closures erzeugt, oder f\"ur einfache Konstanten wird auf Parameter-Position ebenfalls immer eine Closure
@@ -583,9 +635,10 @@ muss man zun\"achst geeignete Invarianten (wie sie oben schon angedeutet sind) b
 auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
 \begin{quote}
   Wenn $(e,[\,]) \Downarrow (v,\eta)$, dann existiert f\"ur $P=\mathcal{P}\sem{e}$ eine terminierende Berechnung
-  $(R_0,S_0,\ell_0) \xrightarrow* (R,S,\ell:\textsc{Stop})$, so dass $R$ zu $(v\,\eta)$ {\em passt}. Und man
-  m\"usste leicht zeigen k\"onnen, dass die Wahl von $R_0$ und $S_0$ egal ist wenn $e$ abgeschlossen ist (genaugenommen
-  braucht man irgendwie ein Lemma, welches $R_0$ und $S_0$ mit der initialen Umgebung in Verbindung bringt, um die
+  $(R_0,S_0,\ell_0) \xrightarrow* (R,S,\ell\langle\textsc{Stop}\rangle)$, so dass $R$ zu $(v\,\eta)$ {\em passt}. Und
+  man m\"usste leicht zeigen k\"onnen, dass die Wahl von $R_0$ und $S_0$ egal ist wenn $e$ abgeschlossen ist
+  (genaugenommen braucht man irgendwie ein Lemma, welches $R_0$ und $S_0$ mit der initialen Umgebung in Verbindung
+  bringt, um die
   Korrektheit induktiv zu zeigen; dann ist die Invarianz unter der Wahl von $R_0$/$S_0$ eine triviale Folgerung).
 \end{quote}
 
