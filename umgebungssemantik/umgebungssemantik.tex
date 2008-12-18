@@ -761,6 +761,18 @@ auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
   \end{itemize}
 \end{proof}
 
+\begin{theorem}[Korrektheit der Codeerzeugung]
+  Sei $e\in\dbExp$ mit $\free{e}=\emptyset$, $v\in\dbVal$, $\eta\in\dbEnv$, $P=\mathcal{P}\sem{e}$, $R\in\Reg(P)$
+  und $S\in\Stack(P)$. Wenn $(e,[\,])\Downarrow(v,\eta')$, dann existiert genau eine (terminierende) Berechnung
+  \[(R,S,0) \xrightarrow* (R_v,S,|P|-1),\]
+  und es gilt $R_v\in\Reg(v,\eta,P)$.
+\end{theorem}
+
+Insbesondere gilt f\"ur $v=c$, dass genau eine Berechnung \[(R,S,0) \xrightarrow* (c,S,|P|-1)\] existiert.
+
+\begin{proof}
+  Folgt unmittelbar aus dem vorangegangenen Lemma und der Eindeutigkeit der CAM Semantik.
+\end{proof}
 
 \end{document}
 
