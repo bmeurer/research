@@ -58,9 +58,9 @@ l"asst: \\[5mm]
     \dom{[\,]} &=& \emptyset \\
     \dom{\id:\cl;\eta} &=& \{\id\} \cup \dom{\eta}
   \end{array}\]
-  Eine Closure $\cl = (e,\eta)$ hei"st {\em wohldefiniert}, wenn $\free{e} \subseteq \dom{\eta}$ und
-  $\eta$ wohldefiniert ist. Eine Umgebung $\eta$ hei"st {\em wohldefiniert}, wenn alle eingetragenen
-  Closures wohldefiniert sind.
+  Eine Closure $\cl = (e,\eta)$ hei"st {\em g\"ultig}, wenn $\free{e} \subseteq \dom{\eta}$ und
+  $\eta$ g\"ultig ist. Eine Umgebung $\eta$ hei"st {\em g\"ultig}, wenn alle eingetragenen
+  Closures g\"ultig sind.
 \end{definition}
 
 \noindent Schreibweisen
@@ -103,17 +103,22 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 \end{definition}
 
 \begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:Wohldefiniertheit}
-  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\Cl$. Wenn $(e,\eta)$ wohldefiniert und
+  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\Cl$. Wenn $(e,\eta)$ g\"ultig und
   $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
-  wohldefiniert und es gilt $\hat{e}\in \Val$.
+  g\"ultig und es gilt $\hat{e}\in \Val$.
 \end{lemma}
 
 \begin{proof}
   Vermutlich triviale Induktion.
 \end{proof}
 
-Im Weiteren betrachten wir nur noch wohldefinierte Closures und Umgebungen, d.h. wir nehmen an,
-$\Cl$ und $\Env$ enthalten nur noch wohldefinierte Elemente.
+Im Weiteren betrachten wir nur noch g\"ultige Closures und Umgebungen, d.h. wir nehmen an,
+$\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
+
+\begin{lemma}[Eindeutigkeit des big steps]
+  F\"ur jede g\"ultige Closure $cl\in\Cl$ existiert h\"ochstens ein $cl'\in\Cl$, so dass
+  $\cl \Downarrow \cl'$.
+\end{lemma}
 
 \begin{definition} \label{definition:Substitution}
   Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt
@@ -276,9 +281,9 @@ Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\e
     \len{[\,]} &=& 0 \\
     \len{\cl;\eta} &=& 1 + \len{\eta}
   \end{array}\]
-  Eine De Bruijn-Closure $\cl = (e,\eta)$ hei"st {\em wohldefiniert}, wenn $\rank{e} \le \len{\eta}$ und
-  $\eta$ wohldefiniert ist. Eine De Bruijn-Umgebung $\eta$ hei"st {\em wohldefiniert}, wenn alle eingetragenen
-  Closures wohldefiniert sind.
+  Eine De Bruijn-Closure $\cl = (e,\eta)$ hei"st {\em g\"ultig}, wenn $\rank{e} \le \len{\eta}$ und
+  $\eta$ g\"ultig ist. Eine De Bruijn-Umgebung $\eta$ hei"st {\em g\"ultig}, wenn alle eingetragenen
+  Closures g\"ultig sind.
 \end{definition}
 
 \begin{definition}[Big step Regeln]
@@ -309,17 +314,22 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 \end{definition}
 
 \begin{lemma}[Wohldefiniertheit der De Bruijn-Umgebungssemantik]
-  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\dbCl$. Wenn $(e,\eta)$ wohldefiniert und
+  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\dbCl$. Wenn $(e,\eta)$ g\"ultig und
   $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
-  wohldefiniert und es gilt $\hat{e}\in\dbVal$.
+  g\"ultig und es gilt $\hat{e}\in\dbVal$.
 \end{lemma}
 
 \begin{proof}
   Vermutlich triviale Induktion.
 \end{proof}
 
-Wie zuvor betrachten wir nun nur noch wohldefinierte De Bruijn-Closures und -Umgebungen, d.h. wir nehmen an,
-$\dbCl$ und $\dbEnv$ enthalten nur noch wohldefinierte Elemente.
+Wie zuvor betrachten wir nun nur noch g\"ultige De Bruijn-Closures und -Umgebungen, d.h. wir nehmen an,
+$\dbCl$ und $\dbEnv$ enthalten nur noch g\"ultige Elemente.
+
+\begin{lemma}[Eindeutigkeit des big steps]
+  F\"ur jede g\"ultige Closure $cl\in\dbCl$ existiert h\"ochstens ein $cl'\in\dbCl$, so dass
+  $\cl \Downarrow \cl'$.
+\end{lemma}
 
 \begin{definition}[Namenskontext]
   Die Menge $\Ncx$ aller {\em Namenskontexte} $\Gamma$ ist induktiv definiert durch:
@@ -389,7 +399,7 @@ $\free{v}\subseteq\dom{\Gamma}$.
 \begin{proof}
   Es sind zwei Richtungen zu zeigen, jeweils per Induktion \"uber die L\"ange der Herleitung des big steps mit
   Fallunterscheidung nach der zuletzt angewandten Regel. Dabei muss man sowohl die {\em Strukturerhaltung} der
-  \"Ubersetzung als auch die Tatsache ausnutzen, dass die Closures wohldefiniert sind.
+  \"Ubersetzung als auch die Tatsache ausnutzen, dass die Closures g\"ultig sind.
 \end{proof}
 
 
@@ -468,14 +478,21 @@ teilweise ein Vorgriff auf die Semantik der Maschine.
   \[\begin{array}{rcl}
     \locns{c} &=& \emptyset \\
     \locns{\ell} &=& \{\ell\} \\
-    \locns{(R_1,R_2)} &=& \locns{R_1} \cup \locns{R_2} \\
-    \locns{[R:\ell]} &=& \locns{R} \cup \{\ell\}
+    \locns{[R:\ell]} &=& \locns{R} \cup \locns{\ell} \\
+    \locns{(R_1,R_2)} &=& \locns{R_1} \cup \locns{R_2}
   \end{array}\]
+  Ein Registerinhalt $R$ hei"st {\em g\"ultig} f\"ur ein Programm $P$, wenn $\locns{R}\subseteq\dom{P}$. Die Menge
+  aller g\"ultigen Registerinhalte f\"ur $P$ bezeichnen wir mit $\Reg(P)$.
+\end{definition}
+
+\begin{definition}
   Analog ist die Menge $\locns{S} \subseteq \Loc$ aller auf dem Stack $S$ vorkommenden Sprungziele definiert:
   \[\begin{array}{rcl}
     \locns{[\,]} &=& \emptyset \\
     \locns{R;S} &=& \locns{R} \cup \locns{S}
   \end{array}\]
+  Ein Stackinhalt $S$ hei"st {\em g\"ultig} f\"ur ein Programm $P$, wenn $\locns{S}\subseteq\dom{P}$. Die Menge
+  aller g\"ultigen Stackinhalte f\"ur $P$ bezeichnen wir mit $\Stack(P)$.
 \end{definition}
 
 Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird nachfolgend beschrieben.
@@ -486,9 +503,8 @@ Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird na
   \[
   \locns{R}\cup\locns{S}\cup\{\ell\}\subseteq\dom{P}.
   \]
-  Die Menge aller g\"ultigen Programmzust\"ande f\"ur $P$ bezeichnen wir mit $\State(P)$, oder kurz $\State$,
-  wenn $P$ aus dem Kontext hervorgeht. Die \"Ubergangsrelation $\to$ der CAM ist in 
-  Tabelle~\ref{table:CAM_Reductions} beschrieben.
+  Die Menge aller g\"ultigen Programmzust\"ande f\"ur $P$ bezeichnen wir mit $\State(P)$.
+  Die \"Ubergangsrelation $\to$ der CAM ist in Tabelle~\ref{table:CAM_Transitions} beschrieben.
 \end{definition}
 
 \begin{figure}
@@ -520,7 +536,7 @@ Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird na
     \end{tabular}
   \end{center}}
   \caption{\"Ubergangsrelation}
-  \label{table:CAM_Reductions}
+  \label{table:CAM_Transitions}
 \end{figure}
 
 \begin{lemma}[Wohldefiniertheit der \"Ubergangsrelation]
@@ -630,6 +646,9 @@ Diese Funktionen sind wie folgt induktiv definiert:
   sollte die Sache anschliessend einfach sein.
 \end{proof}
 
+
+\subsubsection{Anmerkungen}
+
 Diese \"Ubersetzung ist herzlich ineffizient, denn z.B. werden f\"ur $\lambda$-Ausdr\"ucke Parameter-Position
 zwei Closures erzeugt, oder f\"ur einfache Konstanten wird auf Parameter-Position ebenfalls immer eine Closure
 erzeugt, obwohl dies nicht notwendig w\"are. Noch sinnloser sind die De Bruijn-Indizes, hier wird dann eine
@@ -638,7 +657,7 @@ Closure erzeugt, die die Closure aus der Umgebung holt und auswertet. Letzteres 
 l\"osen, dass man zwischen Closure und Funktionswert unterscheidet und entsprechend die \textsc{Eval}-Instruktion
 ab\"andert, wie dies im Willhelm/Maurer gemacht wird (allerdings dann ohne Call-by-need).
 
-Zun\"achst sollte man aber diese sehr naive \"Ubersetzung nehmen und beweisen, dass die semantikerhaltend ist. Dazu
+Zun\"achst sollte man aber diese sehr naive \"Ubersetzung nehmen und beweisen, dass diese semantikerhaltend ist. Dazu
 muss man zun\"achst geeignete Invarianten (wie sie oben schon angedeutet sind) bestimmen. Daraus sollte man dann
 auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
 \begin{quote}
@@ -649,6 +668,98 @@ auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
   bringt, um die
   Korrektheit induktiv zu zeigen; dann ist die Invarianz unter der Wahl von $R_0$/$S_0$ eine triviale Folgerung).
 \end{quote}
+
+
+\subsection{Korrektheit der Codegenerierung}
+
+\begin{definition}
+  Die Menge $\Reg(\eta,P)$ der {\em g\"ultigen Register-Repr\"asentationen} der Umgebung $\eta$ im Programm $P$ ist
+  induktiv durch
+  \[\begin{array}{rcl}
+    \Reg([\,],P) &=& \Reg(P) \\
+    \Reg((e,\eta);\eta',P) &=& \{(R',[R:\ell])\,|\,R'\in\Reg(\eta',P) \wedge R\in\Reg(\eta,P) \\
+    && \ \wedge\ P = I_0;\ldots;I_{\ell-1};\mathcal{V}\sem{e}\ell;\textsc{Return};\ldots\}
+  \end{array}\]
+  und die Menge $\Reg(v,\eta,P)$ der {\em g\"ultigen Register-Repr\"asentationen} des Wertes $v$ im Programm
+  $P$ ist induktiv durch
+  \[\begin{array}{rcl}
+    \Reg(c,\eta,P) &=& \{c\} \\
+    \Reg(\abstr{}{e},\eta,P) &=& \{[R:\ell]\,|\,R\in\Reg(\eta,P) \\
+    && \ \wedge\ P = I_0;\ldots;I_{\ell-1};\mathcal{V}\sem{e}\ell;\textsc{Return};\ldots\}
+  \end{array}\]
+  definiert.
+\end{definition}
+
+\begin{lemma}
+  Sei $(e,\eta)\in\dbCl$, $P_e=\mathcal{V}\sem{e}\ell$, $P=I_0;\ldots;I_{\ell-1};P_e;\ldots;\textsc{Stop}$
+  ein g\"ultiges Programm, $R\in\Reg(\eta,P)$ und $S\in\Stack(P)$. Dann gilt:
+  \begin{quote}
+    Wenn $(e,\eta) \Downarrow (v',\eta')$, dann existiert eine Berechnung \\
+    $(R,S,\ell) \xrightarrow* (R',S,\ell+|P_e|)$ mit $R'\in\Reg(v',\eta',P)$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Induktion \"uber die L\"ange der Herleitung des big steps $(e,\eta) \Downarrow (v',\eta')$ mit Fallunterscheidung
+  nach der zuletzt angewandten big step Regel:
+  \begin{itemize}
+  \item Im Falle von \RN{Val} gilt $\eta=\eta'$ und entweder $e = c$ oder $e = \abstr{}{e'}$.
+
+    F\"ur $e = c$ gilt $P_e = \textsc{Quote}\,c$, also
+    $(R,S,\ell) \to (c,S,\ell+1)$. Weiterhin gilt $v' = c \in \Reg(c,\eta',P)$.
+
+    F\"ur $e = \abstr{}{e'}$ gilt $P_e = \textsc{Goto}\,\ell';\,P_{e'};\,\textsc{Return};\,\textsc{Closure}\,(\ell+1)$
+    mit $P_{e'} = \mathcal{V}\sem{e'}(\ell+1)$ und $\ell' = \ell + |P_{e'}| + 2$. Daf\"ur ergibt sich:
+    \[\begin{array}{rcccl}
+      (R,S,\ell) &\to& (R,S,\ell') &\to& ([R:(\ell+1)],S,\ell'+1)
+    \end{array}\]
+    Also gilt $P = I_0;\ldots;I_{\ell-1};\textsc{Goto}\,\ell';P_{e'};\textsc{Return};\ldots$ und somit folgt
+    unmittelbar, dass $[R:(\ell+1)]\in\Reg(\abstr{}{e'},\eta,P)$.
+
+  \item \RN{Index} als letzte Regel impliziert $e = \underline{i}$ mit
+    $\eta(\underline{i}) = (e_i,\eta_i) \Downarrow (v',\eta')$, und $\eta = [(e_1,\eta_1);\ldots;(e_i,\eta_i);\ldots]$.
+    Weiter gilt
+    \[P_e = \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,\textsc{Snd};\,\textsc{Eval}\]
+    und
+    \[R = ((\ldots(R'',[R_i:\ell_i]),\ldots),[R_1:\ell_1]).\]
+    Daraus ergibt sich:
+    \[\begin{array}{rcl}
+      (R,S,\ell)
+      &\xrightarrow{(i-1)}& ((R'',[R_i:\ell_i]),S,\ell+i-1) \\
+      &\xrightarrow& ([R_i:\ell_i],S,\ell+i) \\
+      &\xrightarrow& (R_i,(\ell+|P_e|);S,\ell_i)
+    \end{array}\]
+    Nach Voraussetzung steht $P_i=\mathcal{V}\sem{e_i}\ell_i;\textsc{Return}$ an Addresse $\ell_i$ in $P$, und
+    es gilt $R_i \in \Reg(\eta_i,P)$. Entsprechend folgt nach Induktionsvoraussetzung
+    \[\begin{array}{rcl}
+      (R_i,(\ell+|P_e|);S,\ell_i)
+      &\xrightarrow*& (R',(\ell+|P_e|);S,\ell_i+|P_i|) \\
+      &\xrightarrow& (R',S,\ell+|P_e|)
+    \end{array}\]
+    wobei $R'\in\Reg(v',\eta',P)$.
+
+  \item F\"ur \RN{Op} gilt $e = e_1\,\op\,e_2$, $(e_1,\eta) \Downarrow (z_1,\eta_1)$,
+    $(e_2,\eta) \Downarrow (z_2,\eta_2)$,
+    $v' = \op^I(z_1,z_2)$ und $\eta = [\,]$. Weiterhin gilt
+    $P_e = \textsc{Push};\,P_1;\,\textsc{Swap};\,P_2;\,\textsc{Prim}\,\op$ mit
+    $P_1=\mathcal{V}\sem{e_1}(\ell+1)$ und $P_2=\mathcal{V}\sem{e_2}(\ell+|P_1|+2)$. Daraus folgt unmittelbar
+    \[\begin{array}{rcl}
+      (R,S,\ell)
+      &\xrightarrow& (R,R;S,\ell+1) \\
+      &\xrightarrow*& (z_1,R;S,\ell+|P_1|+1) \quad \text{wg. I.V.} \\
+      &\xrightarrow& (R,z_1;S,\ell+|P_1|+2) \\
+      &\xrightarrow*& (z_2,z_1;S,\ell+|P|-1) \quad \text{wg. I.V.} \\
+      &\xrightarrow& (op^I(z_1,z_2),S,\ell+|P|)
+    \end{array}\]
+    und trivialerweise gilt $\op^I(z_1,z_2) \in \Reg(\op^I(z_1,z_2),[\,],P)$.
+
+  \item \RN{Beta} {\bf TODO}
+
+  \item \RN{Cond-True} {\bf TODO}
+    
+  \item \RN{Cond-False} analog.
+  \end{itemize}
+\end{proof}
 
 
 \end{document}
