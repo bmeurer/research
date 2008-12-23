@@ -1,4 +1,4 @@
-\documentclass[12pt,fleqn]{article}
+\documentclass[12pt,fleqn,a4paper]{article}
 \usepackage{ngerman}
 \usepackage{hyperref,german,amssymb,amstext,amsmath,amsthm,array,stmaryrd,color,latexsym}
 
@@ -423,7 +423,7 @@ Programmiersprache mit {\em lazy evaluation Semantik} handelt.
   definiert:
   \bgram
   P \is I \mid P_1;P_2 \\
-  I \is \textsc{Fst} \mid \textsc{Snd} \mid \textsc{Push} \mid \textsc{Swap}
+  I \is \textsc{Fst} \mid \textsc{Snd} \mid \textsc{Push} \mid \textsc{Swap} \mid \textsc{Cons}
   \mid \textsc{Quote}\,c \mid \textsc{Prim}\,\op
   \al \textsc{Closure}\,\ell \mid \textsc{App} \mid \textsc{Eval} \mid \textsc{Return}
   \al \textsc{GotoFalse}\,\ell \mid \textsc{Goto}\,\ell \mid \textsc{Stop} \\
@@ -520,6 +520,7 @@ Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird na
       $(R,S,\ell:\textsc{Push})$ & $\to$ & $(R,R;S,\ell+1)$ & Registerinhalt auf Stack \\
       $(R_1,R_2;S,\ell:\textsc{Swap})$ & $\to$ & $(R_2,R_1;S,\ell+1)$ & Registerinhalt und oberstes \\
       &&& Stackelement vertauschen \\
+      $(R_2,R_1;S,\ell:\textsc{Cons})$ & $\to$ & $((R_1,R_2),S,\ell+1)$ & Paarbildung \\
       \hline
       $(R,S,\ell:\textsc{Quote}\,c)$ & $\to$ & $(c,S,\ell+1)$ & $c$ in Register laden \\
       $(z_2,z_1;S,\ell:\textsc{Prim}\,\op)$ & $\to$ & $(\op^I(z_1,z_2),S,\ell+1)$ & Operation $\op$ ausf\"uhren \\
@@ -763,7 +764,7 @@ auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
 
 \begin{theorem}[Korrektheit der Codeerzeugung]
   Sei $e\in\dbExp$ mit $\free{e}=\emptyset$, $v\in\dbVal$, $\eta\in\dbEnv$, $P=\mathcal{P}\sem{e}$, $R\in\Reg(P)$
-  und $S\in\Stack(P)$. Wenn $(e,[\,])\Downarrow(v,\eta')$, dann existiert genau eine (terminierende) Berechnung
+  und $S\in\Stack(P)$. Wenn $(e,[\,])\Downarrow(v,\eta)$, dann existiert genau eine (terminierende) Berechnung
   \[(R,S,0) \xrightarrow* (R_v,S,|P|-1),\]
   und es gilt $R_v\in\Reg(v,\eta,P)$.
 \end{theorem}
@@ -773,6 +774,59 @@ Insbesondere gilt f\"ur $v=c$, dass genau eine Berechnung \[(R,S,0) \xrightarrow
 \begin{proof}
   Folgt unmittelbar aus dem vorangegangenen Lemma und der Eindeutigkeit der CAM Semantik.
 \end{proof}
+
+
+\subsection{Verbesserungen}
+
+\subsubsection{Closurebildung minimieren}
+
+Die naive \"Ubersetzung von Ausdr\"ucken f\"uhrt zu einem einfachen Korrektbeweis, hat allerdings den nicht
+unerheblichen Nachteil, dass der generierte Code sehr ineffizient ist. Dies wird vorallem dadurch bedingt, dass
+zuviele unn\"otige Closures erzeugt werden.
+
+Der erste Ansatzpunkt ist die Umsetzung der \RN{Index}-Regel. Steht ein De Bruijn-Index auf Closure-Position,
+so wird Closure-Code erzeugt, der zun\"achst die f\"ur den Index eingetragene Closure aus der Umgebung holt und
+anschliessend auswertet. Stattdessen k\"onnte man einfach die existerende Closure aus der Umgebung nehmen. Dazu
+werden $\mathcal{C}$ und $\mathcal{V}$ wie folgt ge\"andert:
+\[\begin{array}{rcl}
+  \mathcal{C}\sem{\underline{i}}\ell
+  &=& \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,\textsc{Snd} \\
+  \\
+  \mathcal{V}\sem{\underline{i}}\ell
+  &=& \mathcal{C}\sem{\underline{i}}\ell;\,\textsc{Eval}
+\end{array}\]
+Nun wird f\"ur einen De Bruijn-Index auf Closure-Position nur noch der Zugriff auf die Umgebung erzeugt,
+f\"ur einen Index auf Value-Position \"andert sich nichts. Es ist offensichtlich, dass die \"Ubersetzung
+immer noch korrekt ist.
+
+
+\subsubsection{Rekursion}
+
+Statt dem Fixpunktoperator, welcher zugegebenerma"sen sehr ineffizient \"ubersetzt wird, k\"onnte man stattdessen
+einen speziellen Ausdruck f\"ur Rekursion einbauen, wie in {\em Pierce} beschrieben, d.h.
+\bgram
+e \is \brec.\,e
+\egram
+mit folgender Semantik: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Unfold} & $\regel{(e,(\brec.\,e,\eta);\eta) \Downarrow \cl}
+                       {(\brec.\,e,\eta) \Downarrow \cl}$
+\end{tabular} \\[3mm]
+Die \"Ubersetzungsfunktionen werden dann wie folgt erweitert:
+\[\begin{array}{rcl}
+  \mathcal{C}\sem{\brec.\,e}\ell
+  &=& \textsc{Goto}\,\ell';\,\textsc{Push};\,\textsc{Closure}\,(\ell+1);\,\textsc{Cons}; \\
+  && P;\,\textsc{Return};\,\textsc{Closure}\,(\ell+1) \\
+  && \footnotesize{\text{mit $P=\mathcal{V}\sem{e}(\ell+4), \ell'=\ell+|P|+5$}} \\
+  \\
+  \mathcal{V}\sem{\brec.\,e}\ell
+  &=& \mathcal{C}\sem{\brec.\,e}\ell;\,\textsc{Eval}
+\end{array}\]
+Diese \"Ubersetzung ist weitaus effizienter als die naive \"Ubersetzung des Fixpunktoperators. Sie wirkt
+zun\"achst wenig intuitiv, die Bedeutung erschlie"st bei n\"aherer Betrachtung sich aber schnell. Die
+erzeugte Closure enth\"alt als Umgebung das urspr\"ungliche $\eta$, welches dann bei Auswertung der
+Closure um den Eintrag f\"ur $(\brec.\,e,\eta)$ erweitert wird (die ersten drei Instruktionen des
+Closure-Codes), und anschlie"send wird der Wert f\"ur $e$ in der erweiterten Umgebung berechnet.
 
 \end{document}
 
