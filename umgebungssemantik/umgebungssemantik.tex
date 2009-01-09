@@ -19,8 +19,25 @@ Voraussetzungen:
 
   \item Ausdr"ucke sind gleich modulo Umbenennung gebundener Namen.
 
-        Geht nat"urlich auch ohne diese Konvention, aber macht Definitionen und Beweise h"asslich.
+        Geht nat"urlich auch ohne diese Konvention, aber macht Definitionen und Beweise h"a"slich.
 \end{itemize}
+
+\begin{definition}[Syntax der Programmiersprache]
+  Vorgegeben seien
+  \begin{itemize}
+  \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
+  \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
+  \item eine (unendliche) Menge $\Id$ von Namen $\id$.
+  \end{itemize}
+  Die Mengen $\Op$ aller {\em Operatoren} $\op$, $\Const$ aller {\em Konstanten} $c$, $\Exp$ aller 
+  {\em Ausdr\"ucke} $e$ und $\Val$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
+  \bgram
+  \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
+  c \is b \mid z \mid \op \mid \bfix \\
+  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2} \\
+  v \is c \mid \app{\op}{z} \mid \abstr{\id}{e}
+  \egram
+\end{definition}
 
 \begin{definition}[Big step Regeln]
 Ein {\em big step} in der Substitutionssemantik ist eine Formel der Gestalt $e \Downarrow v$ mit $e\in\Exp$
@@ -47,7 +64,7 @@ l"asst: \\[5mm]
 \section{Umgebungssemantik}
 
 \begin{definition}[Closures und Umgebungen]
-  Die Menge $\Env$ aller {\em (Laufzeit-)Umgebungen} $\eta$ und die Menge $\Cl$ aller {\em Closures} $\cl$ sind
+  Die Mengen $\Env$ aller {\em (Laufzeit-)Umgebungen} $\eta$ und $\Cl$ aller {\em Closures} $\cl$ sind
   durch die folgende kontextfreie Grammatik definiert:
   \bgram
   \eta \is [\,] \mid \id:\cl;\eta \n
@@ -84,7 +101,7 @@ folgenden Regeln herleiten l"asst: \\[5mm]
   \RN{Id}         & $\regel{\eta(\id) \Downarrow \cl}
                            {(\id,\eta) \Downarrow \cl}$ \\[3mm]
   \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
-                            \quad (e,\eta_1[(e_2,\eta)/\id]) \Downarrow \cl}
+                            \quad (e,\id:(e_2,\eta);\eta_1) \Downarrow \cl}
                            {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
   \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
                            {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{z},[])}$ \\[3mm]
@@ -115,11 +132,6 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 Im Weiteren betrachten wir nur noch g\"ultige Closures und Umgebungen, d.h. wir nehmen an,
 $\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
 
-\begin{lemma}[Eindeutigkeit des big steps]
-  F\"ur jede g\"ultige Closure $cl\in\Cl$ existiert h\"ochstens ein $cl'\in\Cl$, so dass
-  $\cl \Downarrow \cl'$.
-\end{lemma}
-
 \begin{definition} \label{definition:Substitution}
   Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt
   induktiv definiert:
@@ -139,7 +151,7 @@ $\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
     \item $(e\,\eta)\in\Val$, dann entweder $e\in\Val$ oder
           $e=\id\in\Id$ und $\eta(\id) = (e',\eta')$ mit $(e'\,\eta')\in\Val$
     %\item $(e\,\eta) = (e\,\eta')$ wenn $\eta' =_{\free{e}} \eta$
-    \item $e\,(\eta[(e',\eta')/\id]) = (e[\id'/\id]\,\eta)[(e'\,\eta')/\id']$ wenn $\id' \not\in \dom{\eta}$
+    \item $e\,(\id:(e',\eta');\eta]) = (e[\id'/\id]\,\eta)[(e'\,\eta')/\id']$ wenn $\id' \not\in \dom{\eta}$
   \end{enumerate}
 \end{lemma}
 
@@ -163,12 +175,13 @@ $\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
           gelten, und somit folgt wegen $(\id\,\eta) = (\hat{e}\,\hat{\eta})$ die Behauptung.
 
     \item $(\app{e_1}{e_2},\eta) \Downarrow (v',\eta')$ mit Regel \RN{Beta} kann nur aus Pr"amissen der Form
-          $(e_1,\eta) \Downarrow (\abstr{\id}{e},\hat{\eta})$ und $(e,\hat{\eta}[(e_2,\eta)/\id])\Downarrow(v',\eta')$
+          $(e_1,\eta) \Downarrow (\abstr{\id}{e},\hat{\eta})$ und
+          $(e,\id:(e_2,\eta);\hat{\eta})\Downarrow(v',\eta')$
           folgen. Mit IV folgt daraus $(e_1\,\eta) \Downarrow (\abstr{\id}{e})\,\hat{\eta}$ und
-          $e\,(\hat{\eta}[(e_2,\eta)/\id])\Downarrow(v'\,\eta')$. Nach Definition~\ref{definition:Substitution}
+          $e\,(\id:(e_2,\eta);\hat{\eta})\Downarrow(v'\,\eta')$. Nach Definition~\ref{definition:Substitution}
           gilt $(\abstr{\id}{e})\,\hat{\eta} = \abstr{\id'}{(e[\id'/\id]\,\hat{\eta})}$ wobei
           $\id'\not\in\dom{\hat{\eta}}$. Nach Lemma~\ref{lemma:Substitution} folgt dar"uberhinaus
-          $e\,(\hat{\eta}[(e_2,\eta)/\id]) = (e[\id'/\id]\,\hat{\eta})[e_2\,\eta/\id]$, und somit
+          $e\,(\id:(e_2,\eta);\hat{\eta}]) = (e[\id'/\id]\,\hat{\eta})[e_2\,\eta/\id]$, und somit
           $(\app{e_1}{e_2})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Beta}.
 
 %     \item $(\rec{\id}{e},\eta) \Downarrow (v',\eta')$ kann ausschliesslich mit \RN{Unfold} aus der Pr"amisse
@@ -185,7 +198,7 @@ $\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
 \begin{lemma}[Koinzidenz] \label{lemma:Koinzidenz}
   F"ur alle $\eta,\hat{\eta},\eta'\in\Env$, ...
   Wenn $(e[(e_2\,\eta)/\id],[\,]) \Downarrow (v',\eta')$, dann ex. $\eta''$, so dass
-  $(e,\hat{\eta}[(e_2,\eta)/\id]) \Downarrow (v',\eta'')$.
+  $(e,\id:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$.
 \end{lemma}
 
 \begin{proof}
@@ -222,9 +235,9 @@ Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\e
           $(e_1\,\eta) \Downarrow \abstr{\id}{e}$ und $e[(e_2\,\eta)/\id]\Downarrow v$ folgen. Nach IV ex.
           $(\hat{v},\hat{\eta}),(v',\eta')\in\Cl$, so dass $(e_1,\eta) \Downarrow (\hat{v},\hat{\eta})$
           und $(e[(e_2\,\eta)/\id],[\,])\Downarrow (v',\eta')$. Nach Lemma~\ref{lemma:Koinzidenz} ex. $\eta''$
-          mit $(e,\hat{\eta}[(e_2,\eta)/\id]) \Downarrow (v',\eta'')$. O.B.d.A. ex. $\hat{\id}\not\in\dom{\hat{\eta}}$,
+          mit $(e,\id:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$. O.B.d.A. ex. $\hat{\id}\not\in\dom{\hat{\eta}}$,
           so dass $(e_1,\eta) \Downarrow (\abstr{\hat{\id}}{e[\hat{\id}/\id]},\hat{\eta})$ und
-          $(e[\hat{\id}/\id],\hat{\eta}[(e_2,\eta)/\hat{\id}]) \Downarrow (v',\eta'')$. Die Behauptung folgt
+          $(e[\hat{\id}/\id],\hat{\id}:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$. Die Behauptung folgt
           unmittelbar mit \RN{Beta}.
   \end{itemize}
   Die restlichen F"alle folgen "ahnlich einfach.
@@ -250,14 +263,30 @@ Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\e
   \end{enumerate}
 \end{corollary}
 
+\subsection*{Offene Punkte}
+
+\begin{itemize}
+\item Erweiterung/\"Ubertragung der Ergebnisse auf weitere Sprachkonstrukte wie $\blet$, $\brec$, $\ldots$
+  Dabei ist zu zeigen, dass es sich um abgeleitete Konzepte handelt.
+\item Betrachtung einer alternativen Schreibweise f\"ur Operatoren $e_1\,\op\,e_2$ mit passender Semantik
+  (siehe Abschnitt {\em Erzeugung von Zielcode}). Zeigen, dass Sprache immer noch gleich m\"achtig.
+\item Zeigen, dass $\bfix$ tats\"achlich nur eine Abk. f\"ur $Y$ (mglw. trickreich, wird f\"ur Codegenerierung
+  ben\"otigt, Literatur w\"are u.a. Mitchell).
+\item Call-by-value Semantik \"Anderungen beschreiben und \"Aquivalenz. Hier muss insb. beachtet werden, dass
+  cbv einen anderen Fixpunktoperator bedingt, da die cbn Version in cbv einfach divergieren w\"urde.
+\item Eine \"aquivalente small step Semantik (vermutlich schwierig, erstmal aussen vor lassen).
+\end{itemize}
+
 
 \section{De Bruijn Indizes}
 
 \begin{definition}[Expressions]
   Vorgeben sei eine (unendliche) Menge $\{\underline{1},\underline{2},\ldots\}$ von {\em De Bruijn-Indizes}
-  $\iota$. Die Menge $\dbExp$ aller {\em De Bruijn-Ausdr\"ucke} $e$ ist durch die kontextfreie Grammatik
+  $\iota$. Die Mengen $\dbExp$ aller {\em De Bruijn-Ausdr\"ucke} $e$ und $\dbVal$ aller {\em De Bruijn-Werte}
+  sind durch die kontextfreie Grammatik
   \bgram
-  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2}
+  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2} \\
+  v \is c \mid \app{\op}{z} \mid \abstr{}{e}
   \egram
   definiert. Der {\em Rang} $\rank{e} \in \setN$ eines De Bruijn-Ausdrucks $e$ ist wie folgt induktiv definiert:
   \[\begin{array}{rcl}
@@ -294,7 +323,7 @@ folgenden Regeln herleiten l"asst: \\[5mm]
   \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
   \RN{Index}      & $\regel{\eta(\iota) \Downarrow \cl}
                            {(\iota,\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
+  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{}{e},\eta_1)
                             \quad (e,(e_2,\eta);\eta_1) \Downarrow \cl}
                            {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
   \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
@@ -325,11 +354,6 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 
 Wie zuvor betrachten wir nun nur noch g\"ultige De Bruijn-Closures und -Umgebungen, d.h. wir nehmen an,
 $\dbCl$ und $\dbEnv$ enthalten nur noch g\"ultige Elemente.
-
-\begin{lemma}[Eindeutigkeit des big steps]
-  F\"ur jede g\"ultige Closure $cl\in\dbCl$ existiert h\"ochstens ein $cl'\in\dbCl$, so dass
-  $\cl \Downarrow \cl'$.
-\end{lemma}
 
 \begin{definition}[Namenskontext]
   Die Menge $\Ncx$ aller {\em Namenskontexte} $\Gamma$ ist induktiv definiert durch:
@@ -401,6 +425,20 @@ $\free{v}\subseteq\dom{\Gamma}$.
   Fallunterscheidung nach der zuletzt angewandten Regel. Dabei muss man sowohl die {\em Strukturerhaltung} der
   \"Ubersetzung als auch die Tatsache ausnutzen, dass die Closures g\"ultig sind.
 \end{proof}
+
+\subsection*{Offene Punkte}
+
+\begin{itemize}
+\item Erweiterung/\"Ubertragung der Ergebnisse auf weitere Sprachkonstrukte wie $\blet$, $\brec$, $\ldots$
+  Dabei ist zu zeigen, dass es sich um abgeleitete Konzepte handelt.
+\item Betrachtung einer alternativen Schreibweise f\"ur Operatoren $e_1\,\op\,e_2$ mit passender Semantik
+  (siehe Abschnitt {\em Erzeugung von Zielcode}). Kann sich auf Ergebnisse aus dem ersten Kapitel berufen, so dass hier
+  nur die Semantik anzugeben ist, \"Aquivalenzsatzerweiterung ist trivial.
+\item Zeigen, dass $\bfix$ tats\"achlich nur eine Abk. f\"ur $Y$. Hier wieder mit erstem Kapitel abstimmen.
+\item Call-by-value Semantik \"Anderungen beschreiben und \"Aquivalenz. Hier muss insb. beachtet werden, dass
+  cbv einen anderen Fixpunktoperator bedingt, da die cbn Version in cbv einfach divergieren w\"urde.
+\item Eine \"aquivalente small step Semantik (vermutlich schwierig, erstmal aussen vor lassen).
+\end{itemize}
 
 
 \section{Codegenerierung}

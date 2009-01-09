@@ -6,6 +6,13 @@
 
 
 %%
+%% TODO - unsorted
+%%
+
+\newcommand{\DEF}{\nstyle{DEF}}
+
+
+%%
 %% Generic style macros
 %%
 
@@ -73,8 +80,8 @@
 \newcommand{\reachn}[3]{\ensuremath{\sstyle{reach}_{#1}(#2,#3)}}
 \newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
 
-\newcommand{\powerset}[1]{\ensuremath{\wp\,(#1)}}
-\newcommand{\powersetfin}[1]{\ensuremath{\wp_{fin}\,(#1)}}
+\newcommand{\powerset}[1]{\ensuremath{\mathcal{P}\,(#1)}}
+\newcommand{\powersetfin}[1]{\ensuremath{\mathcal{P}_{fin}\,(#1)}}
 
 
 %%
@@ -88,7 +95,7 @@
 %% Types
 %%
 
-\newcommand{\tassn}{\pstyle{assn}}
+\newcommand{\tassn}[1]{#1\,\pstyle{assn}}
 \newcommand{\tunit}{\pstyle{unit}}
 \newcommand{\tbool}{\pstyle{bool}}
 \newcommand{\tint}{\pstyle{int}}

@@ -103,19 +103,19 @@ For every $L\in W$ we abbreviate
 \end{array}\]
 
 \begin{tabular}{ll}
-  \RN{Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[3mm]
-  \RN{Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[3mm]
-  \RN{App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')}$ \\[5mm]
-  \RN{App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s) \to (\app{v}{e'},s')}$ \\[5mm]
-  \RN{Unfold} & $(\app{\fix}{(\abstr{x}{e})},s) \to (e[\app{\fix}{(\abstr{x}{e})}/x],s)$ \\[3mm]
-  \RN{Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s) \to (\ifte{e_0'}{e_1}{e_2},s')}$ \\[5mm]
-  \RN{Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[3mm]
-  \RN{Cond-False} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[3mm]
-  \RN{Tuple} & $\RULE{(e_i,s)\to(e_i',s')}{((v_1,\ldots,e_i,\ldots,e_n),s)\to((v_1,\ldots,e_i',\ldots,e_n),s')}$ \\[5mm]
-  \RN{Proj} & $(\app{\proj{n}{i}}{(v_1,\ldots,v_n)},s)\to(v_i,s)$ \\[3mm]
-  \RN{Ref} & $\RULE{l\not\in\dom{s}}{(\app{\cref}{v},s)\to(l,s[v/l])}$ \\[5mm]
-  \RN{Assign} & $(\app{\app{\assign}{l}}{v},s)\to(\unit,s[v/l])$ \\[3mm]
-  \RN{Deref} & $(\app{!}{l},s)\to(s(l),s)$ \\[3mm]
+  \RN{E-Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[3mm]
+  \RN{E-BetaV} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[3mm]
+  \RN{E-AppLeft} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s) \to (\app{e_1'}{e_2},s')}$ \\[5mm]
+  \RN{E-AppRight} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s) \to (\app{v}{e'},s')}$ \\[5mm]
+  \RN{E-Unfold} & $(\app{\fix}{(\abstr{x}{e})},s) \to (e[\app{\fix}{(\abstr{x}{e})}/x],s)$ \\[3mm]
+  \RN{E-CondEval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s) \to (\ifte{e_0'}{e_1}{e_2},s')}$ \\[5mm]
+  \RN{E-CondTrue} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[3mm]
+  \RN{E-CondFalse} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[3mm]
+  \RN{E-Tuple} & $\RULE{(e_i,s)\to(e_i',s')}{((v_1,\ldots,e_i,\ldots,e_n),s)\to((v_1,\ldots,e_i',\ldots,e_n),s')}$ \\[5mm]
+  \RN{E-Proj} & $(\app{\proj{n}{i}}{(v_1,\ldots,v_n)},s)\to(v_i,s)$ \\[3mm]
+  \RN{E-Ref} & $\RULE{l\not\in\dom{s}}{(\app{\cref}{v},s)\to(l,s[v/l])}$ \\[5mm]
+  \RN{E-Assign} & $(\app{\app{\assign}{l}}{v},s)\to(\unit,s[v/l])$ \\[3mm]
+  \RN{E-Deref} & $(\app{!}{l},s)\to(s(l),s)$ \\[3mm]
 \end{tabular}
 
 
@@ -173,7 +173,7 @@ diagram as shown below:
 \begin{proof}
   By induction on the size of the derivation of $k_1 \to k_3$:
   \begin{enumerate}
-  \item In case of \RN{Ref} we have $k_1 = (\app{\cref}{v_1},s_1)$, $k_2 = (l_2,s_2)$ with
+  \item In case of \RN{E-Ref} we have $k_1 = (\app{\cref}{v_1},s_1)$, $k_2 = (l_2,s_2)$ with
     $l_2 \not\in \dom{s_1}$ and $s_2 = s_1[v_1/l_2]$, and $k_3 = (\app{\cref}{v_3},s_3)$, $k_4 = (l_4,s_4)$
     with $l_4 \not\in \dom{s_3}$ and $s_4 = s_3[v_3/l_4]$. Choose $R': \{l_2\} \leftrightarrow \{l_4\}$ because
     \begin{enumerate}
@@ -183,10 +183,10 @@ diagram as shown below:
     \end{enumerate}
     Hence we conclude $k_2\ (R \oplus R')\ k_4$.
 
-  \item \RN{Op}, \RN{Beta-V}, \RN{Unfold}, \RN{Cond-True}, \RN{Cond-False}, \RN{Proj}, \RN{Assign} and \RN{Deref}
-    follow easily with $R':\emptyset \leftrightarrow \emptyset$.
+  \item \RN{E-Op}, \RN{E-BetaV}, \RN{E-Unfold}, \RN{E-CondTrue}, \RN{E-CondFalse}, \RN{E-Proj}, \RN{E-Assign}
+    and \RN{Deref} follow easily with $R':\emptyset \leftrightarrow \emptyset$.
 
-  \item \RN{App-Left}, \RN{App-Right}, \RN{Cond-Eval} and \RN{Tuple} are straight-forward.
+  \item \RN{E-AppLeft}, \RN{E-AppRight}, \RN{E-CondEval} and \RN{E-Tuple} are straight-forward.
   \end{enumerate}
 \end{proof}
 
@@ -204,7 +204,7 @@ Again visualized:
 \]
 
 \begin{proof}
-  {\bf TODO}
+  Straight forward induction.
 \end{proof}
 
 \begin{corollary}
@@ -253,6 +253,59 @@ $\CExp$ includes all well-typed, closed expressions. $\CVal = \CExp \cap \Val$.
 % $\Loc=\bigcup_{\tau\in\Type}\Loc^\tau$, where the $\Var^\tau$ and $\Loc^\tau$ are
 % required to be disjoint. We write $x^\tau$ to identify elements of $\Var^\tau$ and
 % $l^\tau$ for elements of $\Loc^\tau$.
+
+\begin{tabular}{ll}
+  \RN{T-Unit} & $\tj{\unit}{\tunit}$ \\[3mm]
+  \RN{T-Bool} & $\tj{b}{\tbool}$ \\[3mm]
+  \RN{T-Int} & $\tj{z}{\tint}$ \\[3mm]
+  \RN{T-Aop} & $\tj{\op}{\tarrow{\tint}{\tarrow{\tint}{\tint}}}$ \\[3mm]
+  \RN{T-Rop} & $\tj{\op}{\tarrow{\tint}{\tarrow{\tint}{\tbool}}}$ \\[3mm]
+  \RN{T-Fix} & $\tj{\fix}{\tarrow{(\tarrow{\tau}{\tau})}{\tau}}$ \\[3mm]
+  \RN{T-Ref} & $\tj{\cref}{\tarrow{\tau}{\tref{\tau}}}$ \\[3mm]
+  \RN{T-Deref} & $\tj{!}{\tarrow{\tref{\tau}}{\tau}}$ \\[3mm]
+  \RN{T-Assign} & $\tj{\assign}{\tarrow{\tref{\tau}}{\tarrow{\tau}{\tunit}}}$ \\[3mm]
+\end{tabular}
+
+\begin{tabular}{ll}
+  \RN{T-Const} & $\RULE{\tj{c}{\tau}}{\Tj{\Gamma}{c}{\tau}}$ \\[5mm]
+  \RN{T-Var} & $\RULE{\Gamma(x) = \tau}{\Tj{\Gamma}{x}{\tau}}$ \\[5mm]
+  \RN{T-Abstr} & $\RULE{\Tj{\Gamma[\tau/x]}{e}{\tau'}}{\Tj{\Gamma}{\abstr{x}{e}}{\tarrow{\tau}{\tau'}}}$ \\[5mm]
+  \RN{T-Tuple} & $\RULE{\Tj{\Gamma}{e_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{e_n}{\tau_n}}{\Tj{\Gamma}{(e_1,\ldots,e_n)}{\tau_1 \times \ldots \times \tau_n}}$ \\[5mm]
+  \RN{T-App} & $\RULE{\Tj{\Gamma}{e_1}{\tarrow{\tau}{\tau'}} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[5mm]
+  \RN{T-Cond} & $\RULE{\Tj{\Gamma}{e_0}{\tbool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[5mm]
+\end{tabular}
+
+
+%%
+%% The assertion language
+%%
+
+\section{The assertion language}
+
+Static types $\sigma \in \SType$, logical types $\theta \in \LType$
+\[\GRbeg
+\sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2} \GRnl
+\theta \GRis \sigma \GRmid \tassn{\underline{\sigma}}
+\GRend\]
+
+\[
+\DEF_L = \{R:L_1 \rightleftharpoons L_2\,|\,L_1,L_2\in W \wedge \Id_L \subseteq R\}
+\]
+
+\begin{definition}[Semantic domains]
+  For every logical type $\theta \in \LType$ we define semantic domains
+  $\semantic{\theta} = \bigcup_{L\in W} \semantic{\theta}_L$ by:
+  \begin{itemize}
+  \item $\semantic{\tau}_L
+    = \{v \in \Val\,|\,\tj{v}{\tau} \wedge \locns{v} = L\}$
+  \item $\semantic{\ttarrow{\sigma_1}{\sigma_2}}_L
+    = \{\psi:\semantic{\sigma_1}\to\semantic{\sigma_2}\,|\,
+    \forall L'\in W.\,\psi(\semantic{\sigma_1}_{L'}) \subseteq \semantic{\sigma_2}_{L \cup L'}\}$
+  \item $\semantic{\tassn{\underline{\sigma}}}_L
+    = \{\phi:\Store_L \to \powerset{\semantic{\underline{\sigma}}}\,|\,
+    \forall R\in \DEF_L, (s_1,s_2)\in R.\, \phi(s_1) = \phi(s_2)\}$
+  \end{itemize}
+\end{definition}
 
 
 \end{document}
