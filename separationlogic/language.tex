@@ -1,0 +1,178 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+\usepackage{url}
+\usepackage[arrow, matrix, curve]{xy}
+
+%% LaTeX macros
+\include{macros}
+
+% TODO
+\newcommand{\CAssn}{\sstyle{CAssn}}
+\newcommand{\CTerm}{\sstyle{CTerm}}
+\newcommand{\CExp}{\sstyle{CExp}}
+\newcommand{\CVal}{\sstyle{CVal}}
+\newcommand{\Conf}{\sstyle{Conf}}
+\newcommand{\Con}{\sstyle{Con}}
+\newcommand{\Sto}{\sstyle{Sto}}
+\newcommand{\BType}{\sstyle{BType}}
+\newcommand{\scon}{\nstyle{con}}
+\newcommand{\sexp}{\nstyle{exp}}
+\newcommand{\ssto}{\nstyle{sto}}
+\newcommand{\senv}{\nstyle{env}}
+\newcommand{\z}{\nstyle{int}}
+\newcommand{\DEF}{\sstyle{DEF}}
+\newcommand{\id}{\nstyle{id}}
+\newcommand{\I}{\mathcal{I}}
+\newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
+\newcommand{\returns}[2]{\ensuremath{\mathbf{returns}\,{#1}.\,{#2}}}
+
+\newcommand{\AUX}{\nstyle{AUX}}
+\newcommand{\Neg}{\nstyle{Neg}}
+\newcommand{\Or}{\nstyle{Or}}
+\newcommand{\Cont}{\nstyle{Cont}}
+\newcommand{\Disj}{\nstyle{Disj}}
+\newcommand{\Exists}{\nstyle{Exists}}
+
+
+\begin{document}
+
+\section{The programming language}
+
+We assume that infinite sets of variables $x \in \Var$ and locations $\ell \in \Loc$ are given,
+where variables are used to abstract expressions and locations are used to address memory cells.
+Expressions are considered equal modulo renaming of bound variables. $\Bool=\{\true,\false\}$ is
+the set of boolean constants $b$, $\Int$ is the set of integer constants $z$. We do not distinguish
+between integer values their program representation.
+
+\begin{definition}[Expressions]
+  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$ are defined by
+  the grammars
+  \[\GRbeg
+  \op \GRis + \GRmid - \GRmid * \GRmid = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+  c \GRis z \GRmid b \GRmid \unit \GRmid \cref \GRmid ! \GRmid \assign \GRmid \fix \GRmid \op \GRmid \fst \GRmid \snd,
+  \GRend\]
+  the set $\Exp$ of {\em expressions} $e$ is defined by
+  \[\GRbeg
+  e \GRis c \GRmid x \GRmid \ell \GRmid \abstr{x}{e} \GRmid \app{e_1}{e_2}
+  \GRmid \ifte{e_0}{e_1}{e_2} \GRmid (e_1,e_2)
+  \GRend\]
+  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+  \[\GRbeg
+  v \GRis c \GRmid \ell \GRmid \abstr{x}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v} \GRmid (v_1,v_2).
+  \GRend\]
+\end{definition}
+
+$\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the expression $e$.
+We say that $e$ is {\em closed} if $\free{e}=\emptyset$. $e$ is called a {\em program} if
+$\free{e}\cup\locns{e}=\emptyset$, that is, if $e$ contains neither unbound variables nor locations (i.e.
+memory addresses in terms of the underlying machine). We demand that all expressions considered for the
+logic later are valid programs (i.e. programmers aren't permitted to access arbitrary memory locations).
+
+
+\subsection{Operational semantics}
+
+Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be a partial order of ``possible worlds''.
+
+\begin{definition}[Store] \
+  \begin{enumerate}
+  \item A {\em store} is a finite partial mapping $s:\Loc \pto \CVal$. $\Store$ denotes the set of all
+    such stores.
+  \item For every $L \in W$ a subset $\Store_L = \{s\in\Store\,|\,L\subseteq\dom{s}\}$ is defined.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Configuration]
+  Let $e\in\Exp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration} if
+  $\locns{e} \subseteq \dom{s}$. $\Conf$ denotes the set of all configurations.
+\end{definition}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tabular}{rl}
+    \RN{App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s)\to(\app{e_1'}{e_2},s')}$ \\[3mm]
+    \RN{App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s)\to(\app{v}{e'},s')}$ \\[3mm]
+    \RN{Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[1mm]
+    \RN{Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[1mm]
+    \RN{Unfold} & $(\app{\fix}{(\abstr{x}{e})},s) \to (e[\app{\fix}{(\abstr{x}{e})}/x],s)$ \\[1mm]
+    \RN{Fst} & $(\app{\fst}{(v_1,v_2)},s) \to (v_1,s)$ \\[1mm]
+    \RN{Snd} & $(\app{\snd}{(v_1,v_2)},s) \to (v_2,s)$ \\[1mm]
+    \RN{Deref} & $(\app{!}{\ell},s) \to (s(\ell),s)$ \\[1mm]
+    \RN{Assign} & $(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])$ \\[1mm]
+    \RN{Ref} & $\RULE{\ell \not\in \dom{s}}{(\app{\cref}{v},s) \to (\ell,s[v/\ell])}$ \\[3mm]
+    \RN{Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
+    \RN{Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
+    \RN{Cond-False} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[1mm]
+    \RN{Pair-Left} & $\RULE{(e_1,s)\to(e_1',s')}{((e_1,e_2),s) \to ((e_1',e_2),s')}$ \\[3mm]
+    \RN{Pair-Right} & $\RULE{(e,s)\to(e',s')}{((v,e),s) \to ((v,e'),s')}$
+  \end{tabular}
+  \caption{Small step rules}
+  \label{fig:Small_step_rules}
+\end{figure}
+
+\begin{definition}[Small step relation]
+  The {\em small step relation}, written $k \to k'$, is the smallest binary relation between configurations
+  satisfying all instances of the rules in figure~\ref{fig:Small_step_rules}.
+\end{definition}
+
+Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e',s')$. Then
+\begin{itemize}
+\item if $(e,s)\in\Conf$ then $(e',s')\in\Conf$, and
+\item if $\free{e'} \subseteq \free{e}$.
+\end{itemize}
+
+
+\subsection{Static semantics}
+
+\begin{definition}[Types for the programming language]
+  The set $\Type$ of {\em types} $\tau$ is defined by the grammar
+  \[\GRbeg
+  \tau \GRis \tbool \GRmid \tbool \GRmid \tunit \GRmid \tref{\tau}
+  \GRal \tarrow{\tau_1}{\tau_2} \GRmid \tau_1 \times \tau_2.
+  \GRend\]
+\end{definition}
+
+\begin{definition}[Typing relation]
+  A {\em type environment} is a finite partial mapping $\Gamma:\Var \pto \Type$. $\TEnv$ denotes the
+  set of all such type environments. The {\em typing relation}, written $\Tj{\Gamma}{e}{\tau}$, is
+  the smallest relation between type environments, expressions and types satisfying all instances
+  of the rules in figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} wrt.
+  $\Gamma$ if there is some $\tau\in\Type$ such that $\Tj{\Gamma}{e}{\tau}$.
+\end{definition}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tabular}{rl}
+    \RN{Const} & $\RULE{\tj{c}{\tau}}{\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
+    \RN{Var} & $\RULE{\Gamma(x) = \tau}{\Tj{\Gamma}{x}{\tau}}$ \\[3mm]
+    \RN{Loc} & {\bf TODO} \\[1mm]
+    \RN{Abstr} & $\RULE{\Tj{\Gamma[\tau/x]}{e}{\tau'}}{\Tj{\Gamma}{\abstr{x}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
+    \RN{App} & $\RULE{\Tj{\Gamma}{e_1}{\tarrow{\tau}{\tau'}} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+    \RN{Cond} & $\RULE{\Tj{\Gamma}{e_0}{\tbool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+    \RN{Pair} & $\RULE{\Tj{\Gamma}{e_1}{\tau_1} \quad \Tj{\Gamma}{e_2}{\tau_2}}{\Tj{\Gamma}{(e_1,e_2)}{\tau_1 \times \tau_2}}$
+  \end{tabular}
+  \caption{Typing rules for expressions}
+  \label{fig:Typing_rules_for_expressions}
+\end{figure}
+
+\end{document}
