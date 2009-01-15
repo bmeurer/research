@@ -104,10 +104,7 @@ Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be a partial order of ``pos
   \end{enumerate}
 \end{definition}
 
-\begin{definition}[Configuration]
-  Let $e\in\Exp$ and $s\in\Store$. The pair $(e,s)$ is a {\em configuration} if
-  $\locns{e} \subseteq \dom{s}$. $\Conf$ denotes the set of all configurations.
-\end{definition}
+A {\em configuration} is a pair $(e,s)$. $\Conf$ denotes the set of all configurations.
 
 \begin{figure}[ht]
   \centering
@@ -119,8 +116,8 @@ Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be a partial order of ``pos
     \RN{Unfold} & $(\app{\fix}{(\abstr{x}{e})},s) \to (e[\app{\fix}{(\abstr{x}{e})}/x],s)$ \\[1mm]
     \RN{Fst} & $(\app{\fst}{(v_1,v_2)},s) \to (v_1,s)$ \\[1mm]
     \RN{Snd} & $(\app{\snd}{(v_1,v_2)},s) \to (v_2,s)$ \\[1mm]
-    \RN{Deref} & $(\app{!}{\ell},s) \to (s(\ell),s)$ \\[1mm]
-    \RN{Assign} & $(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])$ \\[1mm]
+    \RN{Deref} & $\RULE{s(\ell) = v}{(\app{!}{\ell},s) \to (v,s)}$ \\[3mm]
+    \RN{Assign} & $\RULE{\ell\in\dom{s}}{(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])}$ \\[3mm]
     \RN{Ref} & $\RULE{\ell \not\in \dom{s}}{(\app{\cref}{v},s) \to (\ell,s[v/\ell])}$ \\[3mm]
     \RN{Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
     \RN{Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
@@ -150,157 +147,97 @@ Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e
   Let $\mathcal{F}$ be some predefined set of {\em function symbols} $f$.
   The sets $\Term$ of {\em terms} $t$ and $\Assn$ of {\em assertions} $p$ are defined by the following grammar:
   \[\GRbeg
-  t \GRis f \GRmid v \GRmid x \GRmid \app{t_1}{t_2} \GRmid (t_1,t_2)
+  t \GRis v \GRmid x \GRmid f\,(t_1,\ldots,t_n)
   \\
-  p \GRis t \GRmid \neg p \GRmid p_1 \wedge p_2 \GRmid \exists x:\sigma.\,p
+  p \GRis t_1 = t_2 \GRmid \neg p \GRmid p_1 \wedge p_2 \GRmid \exists x.\,p
   \GRal \emp \GRmid t_1 \mapsto t_2 \GRmid p_1 \sepcon p_2 \GRmid p_1 \sepimp p_2
   \GRend\]
 \end{definition}
 
 
-\section{Static semantics}
+\subsection{Meaning of assertions}
 
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{E-Const} & $\RULE{\tj{c}{\tau}}{\Tje{\Gamma}{c}{\tau}}$ \\[3mm]
-    \RN{E-Var} & $\RULE{\Gamma(x) = \tau}{\Tje{\Gamma,\Sigma}{x}{\tau}}$ \\[3mm]
-    \RN{E-Loc} & $\RULE{\Sigma(\ell) = \tau}{\Tje{\Gamma,\Sigma}{\ell}{\tref{\tau}}}$ \\[3mm]
-    \RN{E-Abstr} & $\RULE{\Tje{\Gamma[\tau/x],\Sigma}{e}{\tau'}}{\Tje{\Gamma,\Sigma}{\abstr{x}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
-    \RN{E-App} & $\RULE{\Tje{\Gamma,\Sigma}{e_1}{\tarrow{\tau}{\tau'}} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau}}{\Tje{\Gamma,\Sigma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
-    \RN{E-Cond} & $\RULE{\Tje{\Gamma,\Sigma}{e_0}{\tbool} \quad \Tje{\Gamma,\Sigma}{e_1}{\tau} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau}}{\Tje{\Gamma,\Sigma}{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
-    \RN{E-Pair} & $\RULE{\Tje{\Gamma,\Sigma}{e_1}{\tau_1} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau_2}}{\Tje{\Gamma,\Sigma}{(e_1,e_2)}{\tau_1 \times \tau_2}}$
-  \end{tabular}
-  \caption{Typing rules for expressions}
-  \label{fig:Typing_rules_for_expressions}
-\end{figure}
-
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{T-Func} & $\RULE{\tj{f}{\sigma}}{\Tjt{\Gamma,\Sigma}{f}{\sigma}}$ \\[3mm]
-    \RN{T-Val} & $\RULE{\Tje{\Gamma,\Sigma}{v}{\tau}}{\Tjt{\Gamma,\Sigma}{v}{\tau}}$ \\[3mm]
-    \RN{T-Var} & $\RULE{\Gamma(x) = \sigma}{\Tjt{\Gamma,\Sigma}{x}{\sigma}}$ \\[3mm]
-    \RN{T-App} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\ttarrow{\sigma}{\sigma'}} \quad \Tjt{\Gamma,\Sigma}{t_2}{\sigma}}{\Tjt{\Gamma,\Sigma}{\app{t_1}{t_2}}{\sigma'}}$ \\[3mm]
-    \RN{T-Pair} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\sigma_1} \quad \Tjt{\Gamma,\Sigma}{t_2}{\sigma_2}}{\Tjt{\Gamma,\Sigma}{(t_1,t_2)}{\sigma_1 \ttimes \sigma_2}}$
-  \end{tabular}
-  \caption{Typing rules for terms}
-  \label{fig:Typing_rules_for_terms}
-\end{figure}
-
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{P-Term} & $\RULE{\Tjt{\Gamma,\Sigma}{t}{\tbool}}{\Tjp{\Gamma,\Sigma}{t}}$ \\[3mm]
-    \RN{P-Neg} & $\RULE{\Tjp{\Gamma,\Sigma}{p}}{\Tjp{\Gamma,\Sigma}{\neg p}}$ \\[3mm]
-    \RN{P-And} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \wedge p_2}}$ \\[3mm]
-    \RN{P-Exists} & $\RULE{\Tjp{\Gamma[\sigma/x],\Sigma}{p}}{\Tjp{\Gamma,\Sigma}{\exists x:\sigma.\,p}}$ \\[3mm]
-    \RN{P-Emp} & $\Tjp{\Gamma,\Sigma}{\emp}$ \\[1mm]
-    \RN{P-Cont} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\tref{\tau}} \quad \Tjt{\Gamma,\Sigma}{t_2}{\tau}}{\Tjp{\Gamma,\Sigma}{t_1 \mapsto t_2}}$ \\[3mm]
-    \RN{P-SepCon} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \sepcon p_2}}$ \\[3mm]
-    \RN{P-SepImp} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \sepimp p_2}}$
-  \end{tabular}
-  \caption{Typing rules for assertions}
-  \label{fig:Typing_rules_for_assertions}
-\end{figure}
-
-\begin{definition}
-  The sets $\Type$ of {\em expression types} $\tau$ and $\TType$ of {\em term types} $\sigma$ are defined by the
-  grammar
-  \[\GRbeg
-  \tau \GRis \tbool \GRmid \tint \GRmid \tunit \GRmid \tref{\tau}
-  \GRmid \tarrow{\tau_1}{\tau_2} \GRmid \tau_1 \times \tau_2
-  \\
-  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2} \GRmid \sigma_1 \ttimes \sigma_2.
-  \GRend\]
-  A {\em type environment} is a finite partial mapping $\Gamma:\Var \pto \TType$
-  and a {\em store typing} is a finite partial mapping $\Sigma:\Loc \pto \Type$.
-\end{definition}
-
-\begin{definition}[Typing relations] \
-  \begin{enumerate}
-  \item The {\em typing relation for expressions}, written $\Tje{\Gamma,\Sigma}{e}{\tau}$, is
-    the smallest relation between type environments, expressions and expression types satisfying all instances
-    of the rules in figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} wrt.
-    $\Gamma$ and $\Sigma$ if there is some $\tau\in\Type$ such that $\Tje{\Gamma,\Sigma}{e}{\tau}$.
-  \item The {\em typing relation for terms}, written $\Tjt{\Gamma,\Sigma}{t}{\sigma}$, is
-    the smallest relation between type environments, terms and term types satisfying all instances
-    of the rules in figure~\ref{fig:Typing_rules_for_terms}. A term $t$ is {\em well typed} wrt. $\Gamma$ and
-    $\Sigma$ if there is some $\sigma\in\TType$ such that $\Tjt{\Gamma,\Sigma}{t}{\sigma}$.
-  \item The {\em typing relation for assertions}, written $\Tjp{\Gamma,\Sigma}{p}$, is the
-    smallest binary relation between type environments and assertions satisfying all instances
-    of the rules in figure~\ref{fig:Typing_rules_for_assertions}. An assertion $p$ is {\em well typed} wrt.
-    $\Gamma$ and $\Sigma$ if $\Tjp{\Gamma,\Sigma}{p}$ holds.
-  \end{enumerate}
-\end{definition}
-
-We omit the subscript from the typing relations for expressions and terms if it the relation is clear from the context.
-In addition we omit the type environemt/store typing in typing judgements if it is empty.
-
-\section{Meaning of assertions}
-
-\begin{definition}
-  For every term type $\sigma\in\TType$, a {\em semantic domain}
-  $\semantic{\sigma} = \bigcup_{\Sigma}\semantic{\sigma}_{\Sigma}$ is defined,
-  with
-  \[\begin{array}{rcl}
-    \semantic{\tau}_\Sigma
-    &=& \{v\in\Val\,|\,\Tje{\Sigma}{v}{\tau}\} \\
-    \semantic{\ttarrow{\sigma_1}{\sigma_2}}_\Sigma
-    &=& \{f:\semantic{\sigma_1} \to \semantic{\sigma_2}\,|\,
-    f(\semantic{\sigma_1}_{\Sigma'}) \subseteq \semantic{\sigma_2}_{\Sigma \cup \Sigma'}\} \\
-    \semantic{\sigma_1 \ttimes \sigma_2}_\Sigma
-    &=& \semantic{\sigma_1}_\Sigma \times \semantic{\sigma_2}_\Sigma
-  \end{array}\]
-  An {\em environment} is a partial finite mapping $\eta:\Var \pto \bigcup_{\sigma\in\TType}\semantic{\sigma}$.
-  $\eta$ is {\em well typed} wrt. $\Gamma$ and $\Sigma$, written $\Gamma,\Sigma\,\triangleright\,\eta$, if
-  $\dom{\Gamma} \subseteq \dom{\eta}$ and $\eta(x) \in \semantic{\Gamma(x)}_\Sigma$ for every $x \in \dom{\Gamma}$.
-\end{definition}
+Let $D = \bigcup_{L\in W} D_L$ with $D_L = \{v\in\CVal\,|\,\locns{v} \subseteq L\}$.
+For each $n$-ary function symbol $f\in\mathcal{F}$ let
+$\semantic{f}: D^n \to D$ be the interpretation of $f$ satisfying
+\[
+\semantic{f}(D_{L_1},\ldots,D_{L_n}) \subseteq D_{L_1 \cup \ldots \cup L_n}.
+\]
+An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
 
 \begin{definition}[Meaning of terms]
-  Assume that an interpretation $\semantic{\tj{f}{\sigma}} \in \semantic{\sigma}$ is given for each
-  function symbol $f$.
-  Let $t$ be a well typed term with $\Tj{\Gamma,\Sigma}{t}{\sigma}$ and let $\eta$ be a suitable environment
-  with $\Gamma,\Sigma\,\triangleright\,\eta$. The meaning of $t$, written
-  $\semantic{\Tj{\Gamma,\Sigma}{t}{\sigma}}\,\eta$, is defined by:
+  Let $t$ be a term and $\eta$ a suitable environment with $\free{t} \subseteq \dom{\eta}$.
+  The {\em meaning of $t$} wrt. $\eta$, written $\semantic{t}\,\eta$, is defined by:
   \[\begin{array}{rcl}
-    \semantic{\Tj{\Gamma,\Sigma}{f}{\sigma}}\,\eta
-    &=& \semantic{\tj{f}{\sigma}} \\
-    \semantic{\Tj{\Gamma,\Sigma}{v}{\sigma}}\,\eta
+    \semantic{v}\,\eta
     &=& v\,\eta \\
-    \semantic{\Tj{\Gamma,\Sigma}{x}{\sigma}}\,\eta
+    \semantic{x}\,\eta
     &=& \eta(x) \\
-    \semantic{\Tj{\Gamma,\Sigma}{\app{t_1}{t_2}}{\sigma}}\,\eta
-    &=& (\semantic{\Tj{\Gamma,\Sigma}{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,(\semantic{\Tj{\Gamma,\Sigma}{t_2}{\sigma'}}\,\eta) \\
-    \semantic{\Tj{\Gamma,\Sigma}{(t_1,t_2)}{\sigma_1 \ttimes \sigma_2}}\,\eta
-    &=& (\semantic{\Tj{\Gamma,\Sigma}{t_1}{\sigma_1}}\,\eta,\semantic{\Tj{\Gamma,\Sigma}{t_2}{\sigma_2}}\,\eta)
+    \semantic{f\,(t_1,\ldots,t_n)}\,\eta
+    &=& \semantic{f}(\semantic{t_1}\,\eta,\ldots,\semantic{t_n}\,\eta)
   \end{array}\]
 \end{definition}
 
-A store $s\in\Store$ is well typed wrt. $\Sigma$ if $\dom{s} \subseteq \dom{\Sigma}$ and
-$\Tj{\Sigma}{s(\ell)}{\Sigma(\ell)}$ for every $\ell\in\dom{s}$.
+\begin{lemma}
+  $\free{t} \subseteq \dom{\eta} \ \Rightarrow\  (\semantic{t}\,\eta)\in D$
+\end{lemma}
 
 \begin{definition}[Meaning of assertions]
+  The {\em satisfaction relation}, written $\eta,s \models p$, is the smallest relation between 
+  environments, stores and assertions, satisfying $\free{p} \subseteq \dom{\eta}$ and all of the
+  following properties:
   \[\begin{array}{rcl}
-    \eta,s \models \Tjp{\Gamma,\Sigma}{t}
-    &\text{iff}& \semantic{\Tj{\Gamma,\Sigma}{t}{\tbool}} = \true \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{\neg p}
-    &\text{iff}& \eta,s \not\models \Tjp{\Gamma,\Sigma}{p} \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \wedge p_2}
-    &\text{iff}& \eta,s \models \Tjp{\Gamma,\Sigma}{p_1} \text{ and } \eta,s \models \Tjp{\Gamma,\Sigma}{p_2} \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{\exists x:\sigma.\,p}
-    &\text{iff}& \exists d \in \semantic{\sigma}_{\Sigma}.\,\eta[d/x],s \models \Tjp{\Gamma[\sigma/d],\Sigma}{p} \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{\emp}
+    \eta,s \models t_1 = t_2
+    &\text{iff}& \semantic{t_1}\,\eta = \semantic{t_2}\,\eta \\
+    \eta,s \models \neg p
+    &\text{iff}& \eta,s \not\models p \\
+    \eta,s \models p_1 \wedge p_2
+    &\text{iff}& \eta,s \models p_1 \text{ and } \eta,s \models p_2 \\
+    \eta,s \models \exists x.\,p
+    &\text{iff}& \exists d \in D.\,\eta[d/x],s \models p \\
+    \eta,s \models \emp
     &\text{iff}& \grph{s} = \emptyset \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{t_1 \mapsto t_2}
-    &\text{iff}& \grph{s} = \{\semantic{\Tj{\Gamma,\Sigma}{t_1}{\tref{\tau}}}\,\eta,\semantic{\Tj{\Gamma,\Sigma}{t_2}{\tau}}\,\eta\} \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \sepcon p_2}
-    &\text{iff}& \exists s_1,s_2.\,s=s_1 \oplus s_2 \text{ and } \eta,s_1 \models \Tjp{\Gamma,\Sigma}{p_1} \\
-    && \text{and } \eta,s_2 \models \Tjp{\Gamma,\Sigma}{p_2} \\
-    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \sepimp p_2}
-    &\text{iff}& \forall s_1,s_2.\,(s_2 = s \oplus s_1 \text{ and } \eta,s_1 \models \Tjp{\Gamma,\Sigma}{p_1}) \\
-    && \text{implies } \eta,s_2 \models \Tjp{\Gamma,\Sigma}{p_2}
+    \eta,s \models t_1 \mapsto t_2
+    &\text{iff}& \grph{s} = \{(\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\} \\
+    \eta,s \models p_1 \sepcon p_2
+    &\text{iff}& \exists s_1,s_2.\,s=s_1 \oplus s_2 \text{ and } \eta,s_1 \models p_1 \\
+    && \text{and } \eta,s_2 \models p_2 \\
+    \eta,s \models p_1 \sepimp p_2
+    &\text{iff}& \forall s_1,s_2.\,(s_2 = s \oplus s_1 \text{ and } \eta,s_1 \models p_1) \\
+    && \text{implies } \eta,s_2 \models p_2
   \end{array}\]
 \end{definition}
+
+
+\section{Hoare triples}
+
+\noindent Given $\free{p}\cup\free{e}\cup\free{q} \subseteq \dom{\eta}$:
+\[\begin{array}{rcl}
+  \eta \models \triple{p}{e_{:x}}{q}
+  &\text{iff}&
+  \text{for all $s\in\Store$ with $\eta,s \models p$, all} \\
+  && \text{computations for $(e,s)$ terminate with} \\
+  && \text{some $(v',s')$ such that $\eta[v'/x],s' \models q$}
+\end{array}\]
+
+
+\subsection{Inference rules}
+
+\begin{tabular}{rl}
+  \RN{Val} & $\triple{\emp}{x_{:y}}{y = x \wedge \emp}$ \\[1mm]
+  \RN{App} & $\RULE{\triple{p}{{e_1}_{:x}}{\hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{\hat{q}} \quad \triple{\hat{q}}{{\app{x}{y}}_{:z}}{q}}{\triple{p}{{\app{e_1}{e_2}}_{:z}}{q}}$ \\[3mm]
+  \RN{Op} & $\triple{\emp}{\app{\app{\op}{x}}{y}_{:z}}{z = f_{\op}(x,y) \wedge \emp}$ \\[1mm]
+  \RN{Beta-V} & $\RULE{\triple{p}{e_{:y}}{q}}{\triple{p}{{\app{(\abstr{x}{e})}{x}}_{:y}}{q}}$ \\[3mm]
+  \RN{Unfold} & $\RULE{\triple{p}{{e[\app{\fix}{(\abstr{x}{e})}/x]}_{:y}}{q}}{\triple{p}{{\app{\fix}{(\abstr{x}{e})}}_{:y}}{q}}$ \\[3mm]
+  \RN{Fst} & $\triple{\emp}{{\app{\fst}{(x,y)}}_{:z}}{z = x \wedge \emp}$ \\[1mm]
+  \RN{Snd} & $\triple{\emp}{{\app{\snd}{(x,y)}}_{:z}}{z = y \wedge \emp}$ \\[1mm]
+  \RN{Deref} & $\triple{x \mapsto y}{{!x}_{:z}}{z = y \wedge x \mapsto y}$ \\[1mm]
+  \RN{Assign} & $\triple{\exists y.\,x \mapsto y}{{\app{\app{\assign}{x}}{z}}_{:u}}{u = \unit \wedge x \mapsto z}$ \\[1mm]
+  \RN{Ref} & $\triple{\emp}{{\cref\,y}_{:x}}{x \mapsto y}$ \\[1mm]
+  \RN{Cond-True} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \true \wedge \hat{p}} \quad \triple{\hat{p}}{{e_1}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
+  \RN{Cond-False} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \false \wedge \hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
+  \RN{Pair} & $\RULE{\triple{p}{{e_1}_{:x}}{\hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{\hat{q}} \quad \triple{\hat{q}}{{(x,y)}_{:z}}{q}}{\triple{p}{{(e_1,e_2)}_{:z}}{q}}$
+\end{tabular}
+
 
 \end{document}
