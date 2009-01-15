@@ -1,7 +1,7 @@
 %%
 %% macros.tex - Useful LaTeX macros
 %%
-%% Copyright (c) 2006-2008 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% Copyright (c) 2006-2009 Benedikt Meurer <benedikt.meurer@googlemail.com>
 %%
 
 
@@ -20,7 +20,11 @@
 
 \newcommand{\coloncolon}{\mathrel{::}}
 \newcommand{\pto}{\rightharpoonup} %{\hookrightarrow}
-\newcommand{\tto}{\stackrel{_t}{\to}}
+%\newcommand{\tto}{\dot{\to}} %{\stackrel{_t}{\to}}
+\DeclareMathOperator{\tto}{\dot{\to}}
+\DeclareMathOperator{\ttimes}{\dot{\times}}
+\DeclareMathOperator{\sepcon}{\ast}
+\DeclareMathOperator{\sepimp}{-\kern-.05em\ast}
 
 
 %%
@@ -160,6 +164,9 @@
 
 \newcommand{\tj}[2]{{#1}\coloncolon{#2}}
 \newcommand{\Tj}[3]{#1\,\triangleright\,#2\coloncolon#3}
+\newcommand{\Tje}[3]{#1\,\triangleright_e\,#2\coloncolon#3}
+\newcommand{\Tjt}[3]{#1\,\triangleright_t\,#2\coloncolon#3}
+\newcommand{\Tjp}[2]{#1\,\triangleright\,#2}
 
 
 %%

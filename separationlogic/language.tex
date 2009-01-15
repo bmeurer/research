@@ -35,7 +35,7 @@
 \newcommand{\Conf}{\sstyle{Conf}}
 \newcommand{\Con}{\sstyle{Con}}
 \newcommand{\Sto}{\sstyle{Sto}}
-\newcommand{\BType}{\sstyle{BType}}
+\newcommand{\TType}{\sstyle{TType}}
 \newcommand{\scon}{\nstyle{con}}
 \newcommand{\sexp}{\nstyle{exp}}
 \newcommand{\ssto}{\nstyle{sto}}
@@ -54,12 +54,14 @@
 \newcommand{\Disj}{\nstyle{Disj}}
 \newcommand{\Exists}{\nstyle{Exists}}
 
+\newcommand{\emp}{\ensuremath{\mathbf{emp}}}
+
 
 \begin{document}
 
 \section{The programming language}
 
-We assume that infinite sets of variables $x \in \Var$ and locations $\ell \in \Loc$ are given,
+We assume that disjoint infinite sets of variables $x \in \Var$ and locations $\ell \in \Loc$ are given,
 where variables are used to abstract expressions and locations are used to address memory cells.
 Expressions are considered equal modulo renaming of bound variables. $\Bool=\{\true,\false\}$ is
 the set of boolean constants $b$, $\Int$ is the set of integer constants $z$. We do not distinguish
@@ -142,37 +144,163 @@ Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e
 \end{itemize}
 
 
-\subsection{Static semantics}
+\section{Assertions}
 
-\begin{definition}[Types for the programming language]
-  The set $\Type$ of {\em types} $\tau$ is defined by the grammar
+\begin{definition}[Assertions]
+  Let $\mathcal{F}$ be some predefined set of {\em function symbols} $f$.
+  The sets $\Term$ of {\em terms} $t$ and $\Assn$ of {\em assertions} $p$ are defined by the following grammar:
   \[\GRbeg
-  \tau \GRis \tbool \GRmid \tbool \GRmid \tunit \GRmid \tref{\tau}
-  \GRal \tarrow{\tau_1}{\tau_2} \GRmid \tau_1 \times \tau_2.
+  t \GRis f \GRmid v \GRmid x \GRmid \app{t_1}{t_2} \GRmid (t_1,t_2)
+  \\
+  p \GRis t \GRmid \neg p \GRmid p_1 \wedge p_2 \GRmid \exists x:\sigma.\,p
+  \GRal \emp \GRmid t_1 \mapsto t_2 \GRmid p_1 \sepcon p_2 \GRmid p_1 \sepimp p_2
   \GRend\]
 \end{definition}
 
-\begin{definition}[Typing relation]
-  A {\em type environment} is a finite partial mapping $\Gamma:\Var \pto \Type$. $\TEnv$ denotes the
-  set of all such type environments. The {\em typing relation}, written $\Tj{\Gamma}{e}{\tau}$, is
-  the smallest relation between type environments, expressions and types satisfying all instances
-  of the rules in figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} wrt.
-  $\Gamma$ if there is some $\tau\in\Type$ such that $\Tj{\Gamma}{e}{\tau}$.
-\end{definition}
 
-\begin{figure}[ht]
+\section{Static semantics}
+
+\begin{figure}[htb]
   \centering
   \begin{tabular}{rl}
-    \RN{Const} & $\RULE{\tj{c}{\tau}}{\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
-    \RN{Var} & $\RULE{\Gamma(x) = \tau}{\Tj{\Gamma}{x}{\tau}}$ \\[3mm]
-    \RN{Loc} & {\bf TODO} \\[1mm]
-    \RN{Abstr} & $\RULE{\Tj{\Gamma[\tau/x]}{e}{\tau'}}{\Tj{\Gamma}{\abstr{x}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
-    \RN{App} & $\RULE{\Tj{\Gamma}{e_1}{\tarrow{\tau}{\tau'}} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
-    \RN{Cond} & $\RULE{\Tj{\Gamma}{e_0}{\tbool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}{\Tj{\Gamma}{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
-    \RN{Pair} & $\RULE{\Tj{\Gamma}{e_1}{\tau_1} \quad \Tj{\Gamma}{e_2}{\tau_2}}{\Tj{\Gamma}{(e_1,e_2)}{\tau_1 \times \tau_2}}$
+    \RN{E-Const} & $\RULE{\tj{c}{\tau}}{\Tje{\Gamma}{c}{\tau}}$ \\[3mm]
+    \RN{E-Var} & $\RULE{\Gamma(x) = \tau}{\Tje{\Gamma,\Sigma}{x}{\tau}}$ \\[3mm]
+    \RN{E-Loc} & $\RULE{\Sigma(\ell) = \tau}{\Tje{\Gamma,\Sigma}{\ell}{\tref{\tau}}}$ \\[3mm]
+    \RN{E-Abstr} & $\RULE{\Tje{\Gamma[\tau/x],\Sigma}{e}{\tau'}}{\Tje{\Gamma,\Sigma}{\abstr{x}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
+    \RN{E-App} & $\RULE{\Tje{\Gamma,\Sigma}{e_1}{\tarrow{\tau}{\tau'}} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau}}{\Tje{\Gamma,\Sigma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+    \RN{E-Cond} & $\RULE{\Tje{\Gamma,\Sigma}{e_0}{\tbool} \quad \Tje{\Gamma,\Sigma}{e_1}{\tau} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau}}{\Tje{\Gamma,\Sigma}{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+    \RN{E-Pair} & $\RULE{\Tje{\Gamma,\Sigma}{e_1}{\tau_1} \quad \Tje{\Gamma,\Sigma}{e_2}{\tau_2}}{\Tje{\Gamma,\Sigma}{(e_1,e_2)}{\tau_1 \times \tau_2}}$
   \end{tabular}
   \caption{Typing rules for expressions}
   \label{fig:Typing_rules_for_expressions}
 \end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{rl}
+    \RN{T-Func} & $\RULE{\tj{f}{\sigma}}{\Tjt{\Gamma,\Sigma}{f}{\sigma}}$ \\[3mm]
+    \RN{T-Val} & $\RULE{\Tje{\Gamma,\Sigma}{v}{\tau}}{\Tjt{\Gamma,\Sigma}{v}{\tau}}$ \\[3mm]
+    \RN{T-Var} & $\RULE{\Gamma(x) = \sigma}{\Tjt{\Gamma,\Sigma}{x}{\sigma}}$ \\[3mm]
+    \RN{T-App} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\ttarrow{\sigma}{\sigma'}} \quad \Tjt{\Gamma,\Sigma}{t_2}{\sigma}}{\Tjt{\Gamma,\Sigma}{\app{t_1}{t_2}}{\sigma'}}$ \\[3mm]
+    \RN{T-Pair} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\sigma_1} \quad \Tjt{\Gamma,\Sigma}{t_2}{\sigma_2}}{\Tjt{\Gamma,\Sigma}{(t_1,t_2)}{\sigma_1 \ttimes \sigma_2}}$
+  \end{tabular}
+  \caption{Typing rules for terms}
+  \label{fig:Typing_rules_for_terms}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{rl}
+    \RN{P-Term} & $\RULE{\Tjt{\Gamma,\Sigma}{t}{\tbool}}{\Tjp{\Gamma,\Sigma}{t}}$ \\[3mm]
+    \RN{P-Neg} & $\RULE{\Tjp{\Gamma,\Sigma}{p}}{\Tjp{\Gamma,\Sigma}{\neg p}}$ \\[3mm]
+    \RN{P-And} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \wedge p_2}}$ \\[3mm]
+    \RN{P-Exists} & $\RULE{\Tjp{\Gamma[\sigma/x],\Sigma}{p}}{\Tjp{\Gamma,\Sigma}{\exists x:\sigma.\,p}}$ \\[3mm]
+    \RN{P-Emp} & $\Tjp{\Gamma,\Sigma}{\emp}$ \\[1mm]
+    \RN{P-Cont} & $\RULE{\Tjt{\Gamma,\Sigma}{t_1}{\tref{\tau}} \quad \Tjt{\Gamma,\Sigma}{t_2}{\tau}}{\Tjp{\Gamma,\Sigma}{t_1 \mapsto t_2}}$ \\[3mm]
+    \RN{P-SepCon} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \sepcon p_2}}$ \\[3mm]
+    \RN{P-SepImp} & $\RULE{\Tjp{\Gamma,\Sigma}{p_1} \quad \Tjp{\Gamma,\Sigma}{p_2}}{\Tjp{\Gamma,\Sigma}{p_1 \sepimp p_2}}$
+  \end{tabular}
+  \caption{Typing rules for assertions}
+  \label{fig:Typing_rules_for_assertions}
+\end{figure}
+
+\begin{definition}
+  The sets $\Type$ of {\em expression types} $\tau$ and $\TType$ of {\em term types} $\sigma$ are defined by the
+  grammar
+  \[\GRbeg
+  \tau \GRis \tbool \GRmid \tint \GRmid \tunit \GRmid \tref{\tau}
+  \GRmid \tarrow{\tau_1}{\tau_2} \GRmid \tau_1 \times \tau_2
+  \\
+  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2} \GRmid \sigma_1 \ttimes \sigma_2.
+  \GRend\]
+  A {\em type environment} is a finite partial mapping $\Gamma:\Var \pto \TType$
+  and a {\em store typing} is a finite partial mapping $\Sigma:\Loc \pto \Type$.
+\end{definition}
+
+\begin{definition}[Typing relations] \
+  \begin{enumerate}
+  \item The {\em typing relation for expressions}, written $\Tje{\Gamma,\Sigma}{e}{\tau}$, is
+    the smallest relation between type environments, expressions and expression types satisfying all instances
+    of the rules in figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} wrt.
+    $\Gamma$ and $\Sigma$ if there is some $\tau\in\Type$ such that $\Tje{\Gamma,\Sigma}{e}{\tau}$.
+  \item The {\em typing relation for terms}, written $\Tjt{\Gamma,\Sigma}{t}{\sigma}$, is
+    the smallest relation between type environments, terms and term types satisfying all instances
+    of the rules in figure~\ref{fig:Typing_rules_for_terms}. A term $t$ is {\em well typed} wrt. $\Gamma$ and
+    $\Sigma$ if there is some $\sigma\in\TType$ such that $\Tjt{\Gamma,\Sigma}{t}{\sigma}$.
+  \item The {\em typing relation for assertions}, written $\Tjp{\Gamma,\Sigma}{p}$, is the
+    smallest binary relation between type environments and assertions satisfying all instances
+    of the rules in figure~\ref{fig:Typing_rules_for_assertions}. An assertion $p$ is {\em well typed} wrt.
+    $\Gamma$ and $\Sigma$ if $\Tjp{\Gamma,\Sigma}{p}$ holds.
+  \end{enumerate}
+\end{definition}
+
+We omit the subscript from the typing relations for expressions and terms if it the relation is clear from the context.
+In addition we omit the type environemt/store typing in typing judgements if it is empty.
+
+\section{Meaning of assertions}
+
+\begin{definition}
+  For every term type $\sigma\in\TType$, a {\em semantic domain}
+  $\semantic{\sigma} = \bigcup_{\Sigma}\semantic{\sigma}_{\Sigma}$ is defined,
+  with
+  \[\begin{array}{rcl}
+    \semantic{\tau}_\Sigma
+    &=& \{v\in\Val\,|\,\Tje{\Sigma}{v}{\tau}\} \\
+    \semantic{\ttarrow{\sigma_1}{\sigma_2}}_\Sigma
+    &=& \{f:\semantic{\sigma_1} \to \semantic{\sigma_2}\,|\,
+    f(\semantic{\sigma_1}_{\Sigma'}) \subseteq \semantic{\sigma_2}_{\Sigma \cup \Sigma'}\} \\
+    \semantic{\sigma_1 \ttimes \sigma_2}_\Sigma
+    &=& \semantic{\sigma_1}_\Sigma \times \semantic{\sigma_2}_\Sigma
+  \end{array}\]
+  An {\em environment} is a partial finite mapping $\eta:\Var \pto \bigcup_{\sigma\in\TType}\semantic{\sigma}$.
+  $\eta$ is {\em well typed} wrt. $\Gamma$ and $\Sigma$, written $\Gamma,\Sigma\,\triangleright\,\eta$, if
+  $\dom{\Gamma} \subseteq \dom{\eta}$ and $\eta(x) \in \semantic{\Gamma(x)}_\Sigma$ for every $x \in \dom{\Gamma}$.
+\end{definition}
+
+\begin{definition}[Meaning of terms]
+  Assume that an interpretation $\semantic{\tj{f}{\sigma}} \in \semantic{\sigma}$ is given for each
+  function symbol $f$.
+  Let $t$ be a well typed term with $\Tj{\Gamma,\Sigma}{t}{\sigma}$ and let $\eta$ be a suitable environment
+  with $\Gamma,\Sigma\,\triangleright\,\eta$. The meaning of $t$, written
+  $\semantic{\Tj{\Gamma,\Sigma}{t}{\sigma}}\,\eta$, is defined by:
+  \[\begin{array}{rcl}
+    \semantic{\Tj{\Gamma,\Sigma}{f}{\sigma}}\,\eta
+    &=& \semantic{\tj{f}{\sigma}} \\
+    \semantic{\Tj{\Gamma,\Sigma}{v}{\sigma}}\,\eta
+    &=& v\,\eta \\
+    \semantic{\Tj{\Gamma,\Sigma}{x}{\sigma}}\,\eta
+    &=& \eta(x) \\
+    \semantic{\Tj{\Gamma,\Sigma}{\app{t_1}{t_2}}{\sigma}}\,\eta
+    &=& (\semantic{\Tj{\Gamma,\Sigma}{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)\,(\semantic{\Tj{\Gamma,\Sigma}{t_2}{\sigma'}}\,\eta) \\
+    \semantic{\Tj{\Gamma,\Sigma}{(t_1,t_2)}{\sigma_1 \ttimes \sigma_2}}\,\eta
+    &=& (\semantic{\Tj{\Gamma,\Sigma}{t_1}{\sigma_1}}\,\eta,\semantic{\Tj{\Gamma,\Sigma}{t_2}{\sigma_2}}\,\eta)
+  \end{array}\]
+\end{definition}
+
+A store $s\in\Store$ is well typed wrt. $\Sigma$ if $\dom{s} \subseteq \dom{\Sigma}$ and
+$\Tj{\Sigma}{s(\ell)}{\Sigma(\ell)}$ for every $\ell\in\dom{s}$.
+
+\begin{definition}[Meaning of assertions]
+  \[\begin{array}{rcl}
+    \eta,s \models \Tjp{\Gamma,\Sigma}{t}
+    &\text{iff}& \semantic{\Tj{\Gamma,\Sigma}{t}{\tbool}} = \true \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{\neg p}
+    &\text{iff}& \eta,s \not\models \Tjp{\Gamma,\Sigma}{p} \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \wedge p_2}
+    &\text{iff}& \eta,s \models \Tjp{\Gamma,\Sigma}{p_1} \text{ and } \eta,s \models \Tjp{\Gamma,\Sigma}{p_2} \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{\exists x:\sigma.\,p}
+    &\text{iff}& \exists d \in \semantic{\sigma}_{\Sigma}.\,\eta[d/x],s \models \Tjp{\Gamma[\sigma/d],\Sigma}{p} \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{\emp}
+    &\text{iff}& \grph{s} = \emptyset \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{t_1 \mapsto t_2}
+    &\text{iff}& \grph{s} = \{\semantic{\Tj{\Gamma,\Sigma}{t_1}{\tref{\tau}}}\,\eta,\semantic{\Tj{\Gamma,\Sigma}{t_2}{\tau}}\,\eta\} \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \sepcon p_2}
+    &\text{iff}& \exists s_1,s_2.\,s=s_1 \oplus s_2 \text{ and } \eta,s_1 \models \Tjp{\Gamma,\Sigma}{p_1} \\
+    && \text{and } \eta,s_2 \models \Tjp{\Gamma,\Sigma}{p_2} \\
+    \eta,s \models \Tjp{\Gamma,\Sigma}{p_1 \sepimp p_2}
+    &\text{iff}& \forall s_1,s_2.\,(s_2 = s \oplus s_1 \text{ and } \eta,s_1 \models \Tjp{\Gamma,\Sigma}{p_1}) \\
+    && \text{implies } \eta,s_2 \models \Tjp{\Gamma,\Sigma}{p_2}
+  \end{array}\]
+\end{definition}
 
 \end{document}
