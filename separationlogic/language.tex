@@ -225,18 +225,27 @@ An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
 
 \begin{tabular}{rl}
   \RN{Val} & $\triple{\emp}{x_{:y}}{y = x \wedge \emp}$ \\[1mm]
-  \RN{App} & $\RULE{\triple{p}{{e_1}_{:x}}{\hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{\hat{q}} \quad \triple{\hat{q}}{{\app{x}{y}}_{:z}}{q}}{\triple{p}{{\app{e_1}{e_2}}_{:z}}{q}}$ \\[3mm]
+  \RN{App} & $\RULE{\triple{p}{{e_1}_{:x}}{p'} \quad \triple{p'}{{e_2}_{:y}}{q'} \quad \triple{q'}{{\app{x}{y}}_{:z}}{q}}{\triple{p}{{\app{e_1}{e_2}}_{:z}}{q}}$ \\[3mm]
   \RN{Op} & $\triple{\emp}{\app{\app{\op}{x}}{y}_{:z}}{z = f_{\op}(x,y) \wedge \emp}$ \\[1mm]
   \RN{Beta-V} & $\RULE{\triple{p}{e_{:y}}{q}}{\triple{p}{{\app{(\abstr{x}{e})}{x}}_{:y}}{q}}$ \\[3mm]
   \RN{Unfold} & $\RULE{\triple{p}{{e[\app{\fix}{(\abstr{x}{e})}/x]}_{:y}}{q}}{\triple{p}{{\app{\fix}{(\abstr{x}{e})}}_{:y}}{q}}$ \\[3mm]
   \RN{Fst} & $\triple{\emp}{{\app{\fst}{(x,y)}}_{:z}}{z = x \wedge \emp}$ \\[1mm]
   \RN{Snd} & $\triple{\emp}{{\app{\snd}{(x,y)}}_{:z}}{z = y \wedge \emp}$ \\[1mm]
   \RN{Deref} & $\triple{x \mapsto y}{{!x}_{:z}}{z = y \wedge x \mapsto y}$ \\[1mm]
-  \RN{Assign} & $\triple{\exists y.\,x \mapsto y}{{\app{\app{\assign}{x}}{z}}_{:u}}{u = \unit \wedge x \mapsto z}$ \\[1mm]
+  \RN{Assign} & $\triple{x \mapsto \_}{{\app{\app{\assign}{x}}{z}}_{:u}}{u = \unit \wedge x \mapsto z}$ \\[1mm]
   \RN{Ref} & $\triple{\emp}{{\cref\,y}_{:x}}{x \mapsto y}$ \\[1mm]
-  \RN{Cond-True} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \true \wedge \hat{p}} \quad \triple{\hat{p}}{{e_1}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
-  \RN{Cond-False} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \false \wedge \hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
-  \RN{Pair} & $\RULE{\triple{p}{{e_1}_{:x}}{\hat{p}} \quad \triple{\hat{p}}{{e_2}_{:y}}{\hat{q}} \quad \triple{\hat{q}}{{(x,y)}_{:z}}{q}}{\triple{p}{{(e_1,e_2)}_{:z}}{q}}$
+  \RN{Cond-True} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \true \wedge p'} \quad \triple{p'}{{e_1}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
+  \RN{Cond-False} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \false \wedge p'} \quad \triple{p'}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
+  \RN{Pair} & $\RULE{\triple{p}{{e_1}_{:x}}{p'} \quad \triple{p'}{{e_2}_{:y}}{q'} \quad \triple{q'}{{(x,y)}_{:z}}{q}}{\triple{p}{{(e_1,e_2)}_{:z}}{q}}$ \\[3mm]
+\end{tabular}
+
+\subsubsection{Structural rules}
+
+\begin{tabular}{rl}
+  \RN{Consequence} & $\RULE{p' \Rightarrow p \quad \triple{p}{e_{:x}}{q} \quad q \Rightarrow q'}{\triple{p'}{e_{:x}}{q'}}$ \\[3mm]
+  \RN{Aux-Var-Elimination} & $\RULE{\triple{p}{e_{:x}}{q}}{\triple{\exists y.\,p}{e_{:x}}{\exists y.\,q}}$ $\quad\text{where } y \not\in \free{e}$ \\[3mm]
+  \RN{Substitution} & $\RULE{\triple{p}{e_{:x}}{q}}{(\triple{p}{e_{:x}}{q})[t/y]}$ $\quad\text{where } (e[t/y]) \in \Exp$ \\[3mm]
+  \RN{Frame} & $\RULE{\triple{p}{{e}_{:x}}{q}}{\triple{p \sepcon r}{{e}_{:x}}{q \sepcon r}}$ $\quad\text{where } x \not\in\free{r}$ \\[3mm]
 \end{tabular}
 
 
