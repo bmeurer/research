@@ -232,7 +232,7 @@ An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
   \RN{Fst} & $\triple{\emp}{{\app{\fst}{(x,y)}}_{:z}}{z = x \wedge \emp}$ \\[1mm]
   \RN{Snd} & $\triple{\emp}{{\app{\snd}{(x,y)}}_{:z}}{z = y \wedge \emp}$ \\[1mm]
   \RN{Deref} & $\triple{x \mapsto y}{{!x}_{:z}}{z = y \wedge x \mapsto y}$ \\[1mm]
-  \RN{Assign} & $\triple{x \mapsto \_}{{\app{\app{\assign}{x}}{z}}_{:u}}{u = \unit \wedge x \mapsto z}$ \\[1mm]
+  \RN{Assign} & $\triple{x \mapsto \_}{{\app{\app{\assign}{x}}{y}}_{:u}}{u = \unit \wedge x \mapsto y}$ \\[1mm]
   \RN{Ref} & $\triple{\emp}{{\cref\,y}_{:x}}{x \mapsto y}$ \\[1mm]
   \RN{Cond-True} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \true \wedge p'} \quad \triple{p'}{{e_1}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
   \RN{Cond-False} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \false \wedge p'} \quad \triple{p'}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
