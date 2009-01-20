@@ -154,6 +154,17 @@ Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e
   \GRend\]
 \end{definition}
 
+Obvious abbreviations:
+\[\begin{array}{rcl}
+  \btrue &=_{def}& \true = \true \\
+  \bfalse &=_{def}& \neg \btrue
+\end{array}\]
+It is useful to introduce several more complex forms as abbreviations:
+\[\begin{array}{rcl}
+  t \mapsto - &=_{def}& \exists x.\,t \mapsto x \quad \text{where $x\not\in\free{t}$} \\
+  t_1 \hookrightarrow t_2 &=_{def}& t_1 \mapsto t_2 \sepcon \btrue
+\end{array}\]
+
 
 \subsection{Meaning of assertions}
 
@@ -208,6 +219,14 @@ An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
   \end{array}\]
 \end{definition}
 
+Meaning of abbreviations:
+\[\begin{array}{rcl}
+  \eta,s \models t \mapsto -
+  &\text{iff}& \dom{s} = \{\semantic{t}\,\eta\} \\
+  \eta,s \models t_1 \hookrightarrow t_2
+  &\text{iff}& (\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\in\grph{s}
+\end{array}\]
+
 
 \section{Hoare triples}
 
@@ -217,12 +236,18 @@ An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
   &\text{iff}&
   \text{for all $s\in\Store$ with $\eta,s \models p$, all} \\
   && \text{computations for $(e,s)$ terminate with} \\
-  && \text{some $(v',s')$ such that $\eta[v'/x],s' \models q$}
+  && \text{some $(v',s')$ such that $\eta[v'/x],s' \models q$} \\
+  \\
+  \models \triple{p}{e_{:x}}{q}
+  &\text{iff}&
+  \eta \models \triple{p}{e_{:x}}{q} \text{ for all $\eta$ with } \\
+  && \free{\triple{p}{e_{:x}}{q}} \subseteq \dom{\eta}
 \end{array}\]
 
 
 \subsection{Inference rules}
 
+{\small
 \begin{tabular}{rl}
   \RN{Val} & $\triple{\emp}{x_{:y}}{y = x \wedge \emp}$ \\[1mm]
   \RN{App} & $\RULE{\triple{p}{{e_1}_{:x}}{p'} \quad \triple{p'}{{e_2}_{:y}}{q'} \quad \triple{q'}{{\app{x}{y}}_{:z}}{q}}{\triple{p}{{\app{e_1}{e_2}}_{:z}}{q}}$ \\[3mm]
@@ -232,21 +257,20 @@ An {\em environment} is a partial finite mapping $\eta:\Var \pto D$.
   \RN{Fst} & $\triple{\emp}{{\app{\fst}{(x,y)}}_{:z}}{z = x \wedge \emp}$ \\[1mm]
   \RN{Snd} & $\triple{\emp}{{\app{\snd}{(x,y)}}_{:z}}{z = y \wedge \emp}$ \\[1mm]
   \RN{Deref} & $\triple{x \mapsto y}{{!x}_{:z}}{z = y \wedge x \mapsto y}$ \\[1mm]
-  \RN{Assign} & $\triple{x \mapsto \_}{{\app{\app{\assign}{x}}{y}}_{:u}}{u = \unit \wedge x \mapsto y}$ \\[1mm]
+  \RN{Assign} & $\triple{x \mapsto -}{{\app{\app{\assign}{x}}{y}}_{:u}}{u = \unit \wedge x \mapsto y}$ \\[1mm]
   \RN{Ref} & $\triple{\emp}{{\cref\,y}_{:x}}{x \mapsto y}$ \\[1mm]
-  \RN{Cond-True} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \true \wedge p'} \quad \triple{p'}{{e_1}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
-  \RN{Cond-False} & $\RULE{\triple{p}{{e_0}_{:x}}{x = \false \wedge p'} \quad \triple{p'}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
-  \RN{Pair} & $\RULE{\triple{p}{{e_1}_{:x}}{p'} \quad \triple{p'}{{e_2}_{:y}}{q'} \quad \triple{q'}{{(x,y)}_{:z}}{q}}{\triple{p}{{(e_1,e_2)}_{:z}}{q}}$ \\[3mm]
-\end{tabular}
+  \RN{Cond} & $\RULE{\triple{p}{{e_0}_{:x}}{p'} \quad \triple{p'[\true/x]}{{e_1}_{:y}}{q} \quad \triple{p'[\false/x]}{{e_2}_{:y}}{q}}{\triple{p}{{\ifte{e_0}{e_1}{e_2}}_{:y}}{q}}$ \\[3mm]
+  \RN{Pair} & $\RULE{\triple{p}{{e_1}_{:x}}{p'} \quad \triple{p'}{{e_2}_{:y}}{q'} \quad \triple{q'}{{(x,y)}_{:z}}{q}}{\triple{p}{{(e_1,e_2)}_{:z}}{q}}$  \\[3mm]
+\end{tabular}}
 
 \subsubsection{Structural rules}
 
+{\small
 \begin{tabular}{rl}
   \RN{Consequence} & $\RULE{p' \Rightarrow p \quad \triple{p}{e_{:x}}{q} \quad q \Rightarrow q'}{\triple{p'}{e_{:x}}{q'}}$ \\[3mm]
   \RN{Aux-Var-Elimination} & $\RULE{\triple{p}{e_{:x}}{q}}{\triple{\exists y.\,p}{e_{:x}}{\exists y.\,q}}$ $\quad\text{where } y \not\in \free{e}$ \\[3mm]
   \RN{Substitution} & $\RULE{\triple{p}{e_{:x}}{q}}{(\triple{p}{e_{:x}}{q})[t/y]}$ $\quad\text{where } (e[t/y]) \in \Exp$ \\[3mm]
   \RN{Frame} & $\RULE{\triple{p}{{e}_{:x}}{q}}{\triple{p \sepcon r}{{e}_{:x}}{q \sepcon r}}$ $\quad\text{where } x \not\in\free{r}$ \\[3mm]
-\end{tabular}
-
+\end{tabular}}
 
 \end{document}
