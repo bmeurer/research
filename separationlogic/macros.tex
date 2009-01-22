@@ -44,15 +44,13 @@
 \newcommand{\Op}{\sstyle{Op}}
 \newcommand{\Store}{\sstyle{Store}}
 \newcommand{\Type}{\sstyle{Type}}
+\newcommand{\LType}{\sstyle{LType}}
+\newcommand{\TType}{\sstyle{TType}}
 \newcommand{\Val}{\sstyle{Val}}
 
 \newcommand{\Env}{\sstyle{Env}}
 \newcommand{\TEnv}{\sstyle{TEnv}}
 \newcommand{\Model}{\sstyle{Model}}
-
-\newcommand{\PType}{\sstyle{PType}}
-\newcommand{\SType}{\sstyle{SType}}
-\newcommand{\LType}{\sstyle{LType}}
 
 \newcommand{\Assn}{\sstyle{Assn}}
 \newcommand{\Formula}{\sstyle{Formula}}
@@ -90,7 +88,6 @@
 %% Types
 %%
 
-\newcommand{\tassn}{\pstyle{assn}}
 \newcommand{\tunit}{\pstyle{unit}}
 \newcommand{\tbool}{\pstyle{bool}}
 \newcommand{\tint}{\pstyle{int}}
@@ -98,6 +95,7 @@
 \newcommand{\ttarrow}[2]{#1\tto#2}
 \newcommand{\trecord}[1]{\left\{#1\right\}}
 \newcommand{\tref}[1]{#1\,\pstyle{ref}}
+\newcommand{\tassn}[1]{#1\,\pstyle{assn}}
 
 
 %%
@@ -110,6 +108,7 @@
 \newcommand{\fix}{\pstyle{fix}}
 \newcommand{\cref}{\pstyle{ref}}
 \newcommand{\unit}{\pstyle{()}}
+\newcommand{\proj}[2]{\pstyle{proj}^{#1}_{#2}}
 \newcommand{\fst}{\pstyle{fst}}
 \newcommand{\snd}{\pstyle{snd}}
 
@@ -125,6 +124,8 @@
 \newcommand{\app}[2]{#1\,#2}
 \newcommand{\ifte}[3]{\pstyle{if}\,#1\,\pstyle{then}\,#2\,\pstyle{else}\,#3}
 \newcommand{\record}[1]{\left\{#1\right\}}
+\newcommand{\tuple}[1]{\langle #1 \rangle}
+\newcommand{\pair}[2]{\tuple{#1,#2}}
 
 
 %%
@@ -137,6 +138,7 @@
 \newcommand{\qball}[3]{\forall{#1}\in{[#2]}.\,{#3}}
 
 \newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
+\newcommand{\triplex}[4]{\triple{#1}{{#2}_{:{#3}}}{#4}}
 
 \newcommand{\tabstr}[2]{\pstyle{fn}\,#1.\,#2}
 
@@ -166,6 +168,7 @@
 \newcommand{\RULE}[2]{\begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}}
 
 \newcommand{\tj}[2]{{#1}\coloncolon{#2}}
+\newcommand{\tjt}[2]{{#1}\coloncolon_t{#2}}
 \newcommand{\Tj}[3]{#1\,\triangleright\,#2\coloncolon#3}
 \newcommand{\Tje}[3]{#1\,\triangleright_e\,#2\coloncolon#3}
 \newcommand{\Tjt}[3]{#1\,\triangleright_t\,#2\coloncolon#3}
