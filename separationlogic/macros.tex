@@ -95,7 +95,8 @@
 \newcommand{\ttarrow}[2]{#1\tto#2}
 \newcommand{\trecord}[1]{\left\{#1\right\}}
 \newcommand{\tref}[1]{#1\,\pstyle{ref}}
-\newcommand{\tassn}[1]{#1\,\pstyle{assn}}
+%\newcommand{\tassn}[1]{#1\,\pstyle{assn}}
+\newcommand{\tassn}[1][]{{\ifthenelse{\equal{#1}{}}{}{#1\,}}\pstyle{assn}}
 
 
 %%
@@ -107,7 +108,8 @@
 \newcommand{\assign}{\pstyle{:=}}
 \newcommand{\fix}{\pstyle{fix}}
 \newcommand{\cref}{\pstyle{ref}}
-\newcommand{\unit}{\pstyle{()}}
+%\newcommand{\unit}{\pstyle{()}}
+\newcommand{\unit}{\pstyle{unit}}
 \newcommand{\proj}[2]{\pstyle{proj}^{#1}_{#2}}
 \newcommand{\fst}{\pstyle{fst}}
 \newcommand{\snd}{\pstyle{snd}}
@@ -126,6 +128,9 @@
 \newcommand{\record}[1]{\left\{#1\right\}}
 \newcommand{\tuple}[1]{\langle #1 \rangle}
 \newcommand{\pair}[2]{\tuple{#1,#2}}
+
+%\newcommand{\ttuple}[1]{\langle\kern-0.25em\langle#1\rangle\kern-0.25em\rangle}
+\newcommand{\ttuple}[1]{(#1)}
 
 
 %%
