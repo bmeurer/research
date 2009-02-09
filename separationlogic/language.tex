@@ -179,20 +179,21 @@ $\Conf$ denotes the set of all configurations.
 
 \begin{figure}[ht]
   \centering
+  {\small
   \begin{tabular}{rl}
-    \RN{App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s)\to(\app{e_1'}{e_2},s')}$ \\[3mm]
-    \RN{App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s)\to(\app{v}{e'},s')}$ \\[3mm]
-    \RN{Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[1mm]
-    \RN{Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[1mm]
-    \RN{Proj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \to (v_i,s)$ \\[1mm]
-    \RN{Deref} & $\RULE{s(\ell) = v}{(\app{!}{\ell},s) \to (v,s)}$ \\[3mm]
-    \RN{Assign} & $\RULE{\ell\in \dom{s}}{(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])}$ \\[3mm]
-    \RN{Ref} & $\RULE{\tj{v}{\tau} \quad \ell \in \Loc^\tau \setminus \dom{s}}{(\app{\cref}{v},s) \to (\ell,s[v/\ell])}$ \\[3mm]
-    \RN{Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
-    \RN{Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
-    \RN{Cond-False} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[1mm]
-    \RN{Tuple} & $\RULE{(e_i,s) \to (e_i',s')}{(\tuple{v_1,\ldots,v_{i-1},e_i,\ldots,e_n},s) \to (\tuple{v_1,\ldots,v_{i-1},e_i',\ldots,e_n},s')}$
-  \end{tabular}
+    \RN{E-App-Left} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s)\to(\app{e_1'}{e_2},s')}$ \\[3mm]
+    \RN{E-App-Right} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s)\to(\app{v}{e'},s')}$ \\[3mm]
+    \RN{E-Op} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[1mm]
+    \RN{E-Beta-V} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[1mm]
+    \RN{E-Proj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \to (v_i,s)$ \\[1mm]
+    \RN{E-Deref} & $(\app{!}{\ell},s) \to (s(\ell),s)$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+    \RN{E-Assign} & $(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+    \RN{E-Ref} & $(\app{\cref}{v},s) \to (\ell,s[v/\ell])$ $\quad$ where $\tj{v}{\tau}$ and $\ell \in \Loc^\tau \setminus \dom{s}$ \\[1mm]
+    \RN{E-Cond-Eval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
+    \RN{E-Cond-True} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
+    \RN{E-Cond-False} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[1mm]
+    \RN{E-Tuple} & $\RULE{(e_i,s) \to (e_i',s')}{(\tuple{v_1,\ldots,v_{i-1},e_i,\ldots,e_n},s) \to (\tuple{v_1,\ldots,v_{i-1},e_i',\ldots,e_n},s')}$
+  \end{tabular}}
   \caption{Small step rules}
   \label{fig:Small_step_rules}
 \end{figure}
@@ -224,17 +225,22 @@ terminate.
 
 Similar to O'Hearn ({\em ``A semantic basis for Local Reasoning''}) we state:
 
-\begin{lemma}[Safety and Termination Monotonicity] \
-  \begin{enumerate}
-  \item If $(e,s)$ is safe and $s' = s \oplus s''$, then $(e,s')$ is also safe.
-  \item If $(e,s)$ must terminate normally and $s' = s \oplus s''$, then $(e,s')$ must also terminate normally.
-  \end{enumerate}
+\begin{lemma}[Termination Monotonicity] \label{lemma:Termination_Monotonicity}
+  If $(e,s)$ must terminate normally and $s' = s \oplus s''$, then $(e,s')$ must also terminate normally.
 \end{lemma}
 
-\begin{lemma}[Frame Property]
-  Suppose $(e,s_0)$ is safe, and $(e,s_0 \oplus s_1) \to^* (v,s')$. Then there exists some $s_0'$ such that
-  $(s,s_0) \to^* (v,s_0')$ and $s' = s_0' \oplus s_1$.
+\begin{proof}
+  {\bf TODO}
+\end{proof}
+
+\begin{lemma}[Frame Property] \label{lemma:Frame_Property}
+  Suppose $(e,s_0)$ must terminate normally, and $(e,s_0 \oplus s_1) \to^* (v,s')$. Then there exists some
+  $s_0'$ such that $(s,s_0) \to^* (v,s_0')$ and $s' = s_0' \oplus s_1$.
 \end{lemma}
+
+\begin{proof}
+  {\bf TODO}
+\end{proof}
 
 
 \section{Assertions}
@@ -243,14 +249,7 @@ Let $\mathcal{F}^\sigma$ be some predefined set of {\em $\sigma$-function symbol
 $\mathcal{F} = \bigcup_{\sigma\in\TType}\mathcal{F}^\sigma$ be the set of all {\em function symbols} $f$, such that
 \begin{itemize}
 \item $f_\aop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tint}}}$, and
-\item $f_\rop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tbool}}}$,
-\end{itemize}
-and let $\mathcal{R}^\sigma$ be some predefined set of {\em $\sigma$-relation symbols} $R^\sigma$ and
-$\mathcal{R} = \bigcup_{\sigma\in\TType}\mathcal{R}^\sigma$ be the set of all {\em relation symbols} $R$, such that
-\begin{itemize}
-\item $\btrue,\bfalse\in \mathcal{R}^\tunit$,
-\item $=\ \in \mathcal{R}^\sigma$ for each $\sigma\in\TType$, and
-\item $<,>,\le,\ge\ \in \mathcal{R}^{\ttuple{\tint,\tint}}$.
+\item $f_\rop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tbool}}}$.
 \end{itemize}
 
 \begin{definition}[Assertions]
@@ -258,7 +257,7 @@ $\mathcal{R} = \bigcup_{\sigma\in\TType}\mathcal{R}^\sigma$ be the set of all {\
   \[\GRbeg
   t \GRis f \GRmid x \GRmid v \GRmid \app{t_1}{t_2} \GRmid \ttuple{t_1,\ldots,t_n}
   \\
-  p \GRis \app{R}{t} \GRmid \app{x}{t} \GRmid \neg p \GRmid p \wedge q \GRmid \exists x.\,p
+  p \GRis t_1 = t_2 \GRmid \app{x}{t} \GRmid \neg p \GRmid p \wedge q \GRmid \exists x.\,p
   \GRal \emp \GRmid t_1 \mapsto t_2 \GRmid p \sepcon q \GRmid p \sepimp q  \GRmid \triplex{p}{e}{x}{q}
   \GRend\]
 \end{definition}
@@ -266,7 +265,7 @@ $\mathcal{R} = \bigcup_{\sigma\in\TType}\mathcal{R}^\sigma$ be the set of all {\
 \begin{definition}[Hoare formulae]
   The set $\Formula \subseteq \Assn$ of {\em hoare formulae} $h$ is defined by the following grammar:
   \[\GRbeg
-  h \GRis \app{R}{t} \GRmid \neg h \GRmid h_1 \wedge h_2 \GRmid \exists x.\,h
+  h \GRis t_1 = t_2 \GRmid \neg h \GRmid h_1 \wedge h_2 \GRmid \exists x.\,h
   \GRal h_1 \sepcon h_2 \GRmid h_1 \sepimp h_2 \GRmid \triplex{p}{e}{x}{q}
   \GRend\]
 \end{definition}
@@ -299,7 +298,7 @@ $\mathcal{R} = \bigcup_{\sigma\in\TType}\mathcal{R}^\sigma$ be the set of all {\
 \begin{figure}[htb]
   \centering
   \begin{tabular}{rl}
-    \RN{T-Rel} & $\RULE{\tj{t}{\sigma}}{\tj{\app{R^\sigma}{t}}{\tassn}}$ \\[3mm]
+    \RN{T-Eq} & $\RULE{\tj{t_1}{\sigma} \quad \tj{t_2}{\sigma}}{\tj{t_1 = t_2}{\tassn}}$ \\[3mm]
     \RN{T-Var} & $\RULE{\tj{t}{\sigma}}{\tj{\app{x^{\tassn[\sigma]}}{t}}{\tassn}}$ \\[3mm]
     \RN{T-Neg} & $\RULE{\tj{p}{\tassn}}{\tj{\neg p}{\tassn}}$ \\[3mm]
     \RN{T-Conj} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \wedge q}{\tassn}}$ \\[3mm]
@@ -333,14 +332,6 @@ $f$, with
 \item $\semantic{f_\rop} : \semantic{\tint} \to \semantic{\tint} \to \semantic{\tbool},
   z_1 z_2 \mapsto \rop^I(z_1,z_2)$.
 \end{itemize}
-For each predefined relation symbol $R^\sigma$, let $\semantic{R^\sigma}\subseteq\semantic{\sigma}$ be the meaning
-of $f$, with
-\begin{itemize}
-\item $\semantic{\btrue^\tunit} = \{\unit\}$ and $\semantic{\bfalse^\tunit} = \emptyset$,
-\item $\semantic{=^\sigma} = \{(d,d)\,|\,d\in\semantic{\sigma}\}$ for each $\sigma\in\TType$, and
-\item $\semantic{\op^{\ttuple{\tint,\tint}}} = \{(z_1,z_2)\in\semantic{\ttuple{\tint,\tint}}\,|\,\op^I(z_1,z_2)=\true\}$
-  for each $\op\in\{<,>,\le,\ge\}$.
-\end{itemize}
 
 An {\em environment} is a partial finite mapping $\eta:\Var \pto \bigcup_{\theta\in\LType}\semantic{\theta}$ such
 that $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for each $\theta\in\LType$.
@@ -366,6 +357,10 @@ that $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for each $\theta\in\LType$.
   $\free{t} \subseteq \dom{\eta} \Rightarrow (\semantic{\tj{t}{\sigma}}\,\eta)\in\semantic{\sigma}$
 \end{lemma}
 
+\begin{proof}
+  Straightforward induction.
+\end{proof}
+
 We write $\semantic{t}$ instead of $\semantic{\tj{t}{\sigma}}$, since for each well typed term $t$ there is
 exactly one $\sigma$ such that $\tj{t}{\sigma}$.
 
@@ -374,10 +369,10 @@ exactly one $\sigma$ such that $\tj{t}{\sigma}$.
   environments, stores and well typed assertions, satisfying $\free{p} \subseteq \dom{\eta}$ and all of the
   following properties:
   \[\begin{array}{lcl}
-    \eta,s \models \app{R^\sigma}{t}
-    &\text{iff}& (\semantic{\tj{t}{\sigma}}\,\eta) \in \semantic{R^\sigma} \\
+    \eta,s \models t_1 = t_2
+    &\text{iff}& \semantic{t_1}\,\eta = \semantic{t_2}\,\eta \\
     \eta,s \models \app{x^{\tassn[\sigma]}}{t}
-    &\text{iff}& (\semantic{\tj{t}{\sigma}}\,\eta,s) \in \eta(x) \\
+    &\text{iff}& (\semantic{t}\,\eta,s) \in \eta(x) \\
     \eta,s \models \neg p
     &\text{iff}& \eta,s \not\models p \\
     \eta,s \models p \wedge q
@@ -398,9 +393,11 @@ exactly one $\sigma$ such that $\tj{t}{\sigma}$.
   \end{array}\]
 \end{definition}
 
-We write $R^\tunit$ instead of $\app{R^\tunit}{\unit}$ and likewise $x^{\tassn}$ instead of $\app{x^{\tassn}}{\unit}$.
+We write $x^{\tassn}$ instead of $\app{x^{\tassn}}{\unit}$.
 Furtheron we abbreviate:
 \[\begin{array}{rcl}
+  \btrue &=_{def}& \true = \true \\
+  \bfalse &=_{def}& \neg \btrue \\
   \forall x.\,p &=_{def}& \neg \exists x.\,\neg p \\
   p \vee q &=_{def}& \neg (\neg p \wedge \neg q) \\
   p \Rightarrow q &=_{def}& \neg p \vee q \\
@@ -435,6 +432,19 @@ Meaning of abbreviations:
   &\text{iff}& \forall s'.\,\eta,s' \models p
 \end{array}\]
 
+\begin{lemma} \
+  \begin{enumerate}
+  \item Let $t\in\Term$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{t}} \eta_2$. Then
+    $\semantic{t}\,\eta_1 = \semantic{t}\,\eta_2$.
+  \item Let $p\in\Assn$, $s\in\Store$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{p}} \eta_2$. Then
+    $\eta_1,s \models p$ iff $\eta_2,s\models p$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Trivial inductions.
+\end{proof}
+
 \subsubsection{Pure assertions}
 
 \begin{definition}
@@ -450,6 +460,29 @@ Obviously all hoare formulae $h$ are pure.
 
 \subsection{The calculus}
 
+\subsubsection{The frame axiom}
+
+\begin{center}
+\begin{tabular}{rl}
+  \RN{Frame} & $\triplex{p}{e}{x}{q} \Rightarrow \triplex{p \sepcon r}{e}{x}{q \sepcon r}$ \\
+  & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
+\end{tabular}
+\end{center}
+
+To see that the \RN{Frame} axiom is sound, assume that $\eta\in\Env$ with $\free{p,e,q,r}\subseteq\dom{\eta}$ and
+$s\in\Store$ with $\eta,s \models p \sepcon r$. This implies that there are $s_1,s_2$ such that $s = s_1 \oplus s_2$,
+$\eta,s_1 \models p$ and $\eta,s_2 \models r$. Now by lemma~\ref{lemma:Termination_Monotonicity} we know
+that each computation for $(e\,\eta,s)$ terminates with some $(v,s')$, since $\eta\models\triplex{p}{e}{x}{q}$.
+Now lemma~\ref{lemma:Frame_Property} states that there must be a computation
+$(e\,\eta,s_1) \to^* (v,s_1')$ with $s' = s_1' \oplus s_2$. {\bf TODO}
+
+\subsubsection{Rules for total correctness}
+
+{\small
+\begin{tabular}{rl}
+  \RN{Conseq} & $(\{p \Rightarrow p'\} \wedge \triplex{p'}{e}{x}{q'} \wedge \forall x.\,\{q' \Rightarrow q\}) \Rightarrow \triplex{p}{e}{x}{q}$ \\[1mm]
+\end{tabular}}
+
 \subsubsection{Rules for the programming language}
 
 {\small
@@ -458,11 +491,12 @@ Obviously all hoare formulae $h$ are pure.
   \RN{App} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\app{x}{y}}{z}{q})$ \\
   & $\Rightarrow \triplex{p}{\app{e_1}{e_2}}{z}{q}$ \\
   & {\footnotesize where $x \not\in \free{e_2}$, $x,y \not\in\free{q}$} \\[1mm]
-  \RN{Op} & $\triplex{\emp}{\app{\app{\op}{x}}{y}}{z}{z = \app{f_{\op}}{\tuple{x,y}} \wedge \emp}$ \\[1mm]
+  \RN{Op} & $\triplex{\emp}{\app{\app{\op}{x}}{y}}{z}{z = \app{f_{\op}}{\ttuple{x,y}} \wedge \emp}$ \\[1mm]
   \RN{Beta-V} & $\forall x.\,\triplex{p}{e}{y}{q} \Rightarrow \triplex{p}{\app{(\abstr{x}{e})}{x}}{y}{q}$ \\[1mm]
 %  \RN{Unfold} & $\triplex{p}{e[\app{\fix}{(\abstr{x}{e})}/x]}{y}{q} \Rightarrow \triplex{p}{\app{\fix}{(\abstr{x}{e})}}{y}{q}$ \\[1mm]
-  \RN{Fst} & $\forall x,y.\,\triplex{\emp}{\app{\fst}{\pair{x}{y}}}{z}{z = x \wedge \emp}$ \\[1mm]
-  \RN{Snd} & $\forall x,y.\,\triplex{\emp}{\app{\snd}{\pair{x}{y}}}{z}{z = y \wedge \emp}$ \\[1mm]
+%  \RN{Fst} & $\forall x,y.\,\triplex{\emp}{\app{\fst}{\pair{x}{y}}}{z}{z = x \wedge \emp}$ \\[1mm]
+%  \RN{Snd} & $\forall x,y.\,\triplex{\emp}{\app{\snd}{\pair{x}{y}}}{z}{z = y \wedge \emp}$ \\[1mm]
+  \RN{Proj} & $\forall x_1,\ldots,x_n.\,\triplex{\emp}{\app{\proj{n}{i}}{\tuple{x_1,\ldots,x_n}}}{y}{y = x_i \wedge \emp}$ \\[1mm]
   \RN{Deref} & $\forall x,y.\,\triplex{x \mapsto y}{!x}{z}{z = y \wedge x \mapsto y}$ \\[1mm]
   \RN{Assign} & $\forall x,y.\,\triplex{x \mapsto -}{\app{\app{\assign}{x}}{y}}{u}{u = \unit \wedge x \mapsto y}$ \\[1mm]
   \RN{Ref} & $\forall x.\,\triplex{\emp}{\cref\,x}{y}{y \mapsto x}$ \\[1mm]
@@ -472,9 +506,10 @@ Obviously all hoare formulae $h$ are pure.
   \RN{Cond-False} & $\triplex{p}{e_0}{x}{x = \false \wedge r} \wedge \triplex{r}{e_2}{y}{q}$ \\
   & $\Rightarrow \triplex{p}{\ifte{e_0}{e_1}{e_2}}{y}{q}$ \\
   & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
-  \RN{Pair} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\pair{x}{y}}{z}{q})$ \\
-  & $\Rightarrow \triplex{p}{\pair{e_1}{e_2}}{z}{q}$ \\
-  & \footnotesize{where $x \not\in \free{e_2}$, $x,y \not\in \free{q}$}
+  \RN{Tuple} & {\bf TODO} \\
+%  \RN{Pair} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\pair{x}{y}}{z}{q})$ \\
+%  & $\Rightarrow \triplex{p}{\pair{e_1}{e_2}}{z}{q}$ \\
+%  & \footnotesize{where $x \not\in \free{e_2}$, $x,y \not\in \free{q}$}
 \end{tabular}}
 
 \subsubsection{Rules for separation}
@@ -487,21 +522,9 @@ Obviously all hoare formulae $h$ are pure.
   \RN{Sep-4} & $(p_1 \vee p_2) \sepcon q \Leftrightarrow (p_1 \vee q) \sepcon (p_2 \vee q)$ \\[1mm]
   \RN{Sep-5} & $(p_1 \wedge p_2) \sepcon q \Rightarrow (p_1 \wedge q) \sepcon (p_2 \wedge q)$ \\[1mm]
   \RN{Sep-6} & $(\exists x.\,p) \sepcon q \Leftrightarrow \exists x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
-  \RN{Sep-7} & $(\exists X.\,p) \sepcon q \Leftrightarrow \exists X.\,p \sepcon q$ $\quad$ where $X\not\in\free{q}$ \\[1mm]
-  \RN{Sep-8} & $(\forall x.\,p) \sepcon q \Rightarrow \forall x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
-  \RN{Sep-9} & $(\forall X.\,p) \sepcon q \Rightarrow \forall X.\,p \sepcon q$ $\quad$ where $X\not\in\free{q}$ \\[1mm]
-  \RN{Sep-10} & $\{p_1 \Rightarrow p_2\} \wedge \{q_1 \Rightarrow q_2\} \Rightarrow \{p_1 \sepcon q_1 \Rightarrow p_2 \sepcon q_2\}$ \\[1mm]
-  \RN{Sep-11} & $\{p_1 \sepcon p_2 \Rightarrow p_3\} \Leftrightarrow \{p_1 \Rightarrow (p_2 \sepimp p_3)\}$ 
-\end{tabular}}
-
-
-\subsubsection{Rules for total correctness}
-
-{\small
-\begin{tabular}{rl}
-  \RN{Conseq} & $(\{p \Rightarrow p'\} \wedge \triplex{p'}{e}{x}{q'} \wedge \forall x.\,\{q' \Rightarrow q\}) \Rightarrow \triplex{p}{e}{x}{q}$ \\[1mm]
-  \RN{Frame} & $\triplex{p}{e}{x}{q} \Rightarrow \triplex{p \sepcon r}{e}{x}{q \sepcon r}$ \\
-  & {\footnotesize where $x \not\in \free{r}$}
+  \RN{Sep-7} & $(\forall x.\,p) \sepcon q \Rightarrow \forall x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
+  \RN{Sep-8} & $\{p_1 \Rightarrow p_2\} \wedge \{q_1 \Rightarrow q_2\} \Rightarrow \{p_1 \sepcon q_1 \Rightarrow p_2 \sepcon q_2\}$ \\[1mm]
+  \RN{Sep-9} & $\{p_1 \sepcon p_2 \Rightarrow p_3\} \Leftrightarrow \{p_1 \Rightarrow (p_2 \sepimp p_3)\}$ 
 \end{tabular}}
 
 
@@ -509,11 +532,12 @@ Obviously all hoare formulae $h$ are pure.
 
 {\small
 \begin{tabular}{rl}
-  \RN{Refl-Term} & $\forall x.\,x = x$ \\[1mm]
+  \RN{Refl-Term} & $\forall x^\sigma.\,x = x$ \\[1mm]
   \RN{Subst-Term} & $t_1 = t_2 \Rightarrow (p[t_1/x] \Leftrightarrow p[t_2/x])$ \\
   & {\footnotesize where $(p[t_1/x]), (p[t_2/x]) \in \Assn$} \\[1mm]
   \RN{Spec-Term} & $(\forall x.\,p) \Rightarrow p[t/x]$ \\
   & {\footnotesize where $(p[t/x])\in\Assn$} \\[1mm]
 \end{tabular}}
+
 
 \end{document}
