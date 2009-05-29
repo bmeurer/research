@@ -28,555 +28,635 @@
 %% LaTeX macros
 \include{macros}
 
-% TODO
-\newcommand{\aop}{\nstyle{aop}}
-\newcommand{\rop}{\nstyle{rop}}
-\newcommand{\CAssn}{\sstyle{CAssn}}
-\newcommand{\CTerm}{\sstyle{CTerm}}
-\newcommand{\CExp}{\sstyle{CExp}}
-\newcommand{\CVal}{\sstyle{CVal}}
-\newcommand{\Conf}{\sstyle{Conf}}
-\newcommand{\Con}{\sstyle{Con}}
-\newcommand{\Sto}{\sstyle{Sto}}
-\newcommand{\scon}{\nstyle{con}}
-\newcommand{\sexp}{\nstyle{exp}}
-\newcommand{\ssto}{\nstyle{sto}}
-\newcommand{\senv}{\nstyle{env}}
-\newcommand{\z}{\nstyle{int}}
-\newcommand{\DEF}{\sstyle{DEF}}
-\newcommand{\id}{\nstyle{id}}
-\newcommand{\I}{\mathcal{I}}
-\newcommand{\Fix}[1]{\nstyle{Fix}\,(#1)}
-\newcommand{\returns}[2]{\ensuremath{\mathbf{returns}\,{#1}.\,{#2}}}
-
-\newcommand{\AUX}{\nstyle{AUX}}
-\newcommand{\Neg}{\nstyle{Neg}}
-\newcommand{\Or}{\nstyle{Or}}
-\newcommand{\Cont}{\nstyle{Cont}}
-\newcommand{\Disj}{\nstyle{Disj}}
-\newcommand{\Exists}{\nstyle{Exists}}
-
-\newcommand{\emp}{\ensuremath{\mathbf{emp}}}
-
 
 \begin{document}
 
-
-\section{Types}
-
-\begin{definition}
-  The sets $\Type$ of {\em expression types} $\tau$, $\TType$ of {\em term types} $\sigma$ and
-  $\LType$ of {\em logical types} $\theta$ are defined by the following grammar:
-  \[\GRbeg
-  \tau \GRis \tbool \GRmid \tint \GRmid \tref{\tau}
-  \GRmid \tarrow{\tau_1}{\tau_2} \GRmid \tuple{\tau_1,\ldots,\tau_n} \quad (n \ge 0)
-  \\
-  \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2} \GRmid \ttuple{\sigma_1,\ldots,\sigma_n} \quad (n \ge 2)
-  \\
-  \theta \GRis \sigma \GRmid \tassn[\sigma]
-  \GRend\]
-\end{definition}
-
-We write $\tunit$ instead of $\tuple{}$ and $\tassn$ instead of $\tassn[\tunit]$.
-
-We assume that disjoint infinite sets $\Var^\theta$ of {\em $\theta$-variables} $x^\theta$ for each
-$\theta\in\LType$ and $\Loc^\tau$ of {\em $\tau$-locations} $\ell^\tau$ for each $\tau\in\Type$ are given.
-Then we have sets $\Var = \bigcup_{\theta\in\LType}\Var^\theta$ of
-{\em variables} $x$ and $\Loc = \bigcup_{\tau\in\Type}\Loc^\tau$ of {\em locations} $\ell$, where variables are
-used to abstract expressions and locations are used to identify memory cells.
-
-
 \section{The programming language}
 
-Expressions are considered equal modulo renaming of bound variables. $\Bool=\{\true,\false\}$ is
-the set of boolean constants $b$, $\Int$ is the set of integer constants $z$. We do not distinguish
-between integer values their program representation.
-
-\begin{definition}[Expressions]
-  The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$ are defined by
-  the grammars
+\begin{definition}[Expressions, Values]
   \[\GRbeg
-  \aop \GRis + \GRmid - \GRmid * \\
-  \rop \GRis = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
-  \op \GRis \aop \GRmid \rop \\
-  c \GRis z \GRmid b \GRmid \cref \GRmid ! \GRmid \assign
-% \GRmid \fix
-  \GRmid \op
-  \GRmid \proj{n}{i},
-% \GRmid \fst \GRmid \snd,
-  \GRend\]
-  the set $\Exp$ of {\em expressions} $e$ is defined by
-  \[\GRbeg
-  e \GRis c \GRmid x^\tau \GRmid \ell \GRmid \abstr{x^\tau}{e} \GRmid \app{e_1}{e_2}
-  \GRmid \ifte{e_0}{e_1}{e_2} \GRmid \tuple{e_1,\ldots,e_n}
-  \GRend\]
-  and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
-  \[\GRbeg
-  v \GRis c \GRmid \ell \GRmid \abstr{x^\tau}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v} \GRmid \tuple{v_1,\ldots,v_n}
+  \tau \in \ProgType \GRis \Nat \GRmid \Unit
+  \GRal \Ref{\tau} \GRmid \tau_1 \to \tau_2 \GRmid \tau_1 \times \tau_2
+  \\
+  e \in \Exp \GRis \z \GRmid \succ{e} \GRmid \iternat{e}{e_z}{x^\tau}{e_n}
+  \GRal x^\tau \GRmid \abstr{x^\tau}{e} \GRmid \app{e_1}{e_2}
+  \GRal \unit
+  \GRal (e_1,e_2) \GRmid \fst{e} \GRmid \snd{e}
+  \GRal \ell^\tau \GRmid \new{\tau}{e} \GRmid \deref{e} \GRmid \assign{e_1}{e_2}
+  \\
+  v \in \Val \GRis \z \GRmid \succ{v} \GRmid \abstr{x^\tau}{e} \GRmid \unit \GRmid (v_1,v_2) \GRmid \ell^\tau
   \GRend\]
 \end{definition}
 
-The empty tuple $\tuple{}$ is sometimes referred to as the {\em unit constant}.
+\section{Assertion language}
 
-$\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the expression $e$.
-We say that $e$ is {\em closed} if $\free{e}=\emptyset$. $e$ is called a {\em program} if
-$\free{e}\cup\locns{e}=\emptyset$, that is, if $e$ contains neither unbound variables nor locations (i.e.
-memory addresses in terms of the underlying machine). We demand that all expressions considered for the
-logic later are valid programs (i.e. programmers aren't permitted to access arbitrary memory locations).
-
-
-\subsection{Static semantics}
-
-\begin{definition}[Typing relation for expressions]
-  The {\em typing relation for expressions}, written $\tj{e}{\tau}$, is the smallest relation between expressions
-  and types satisfying all instances of the rules in figure~\ref{fig:Typing_rules_for_constants} and
-  figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} if there is some
-  $\tau\in\Type$ such that $\tj{e}{\tau}$.
+\begin{definition}[Terms]
+  \[\GRbeg
+  t \in \Term \GRis \z \GRmid \succ{t} \GRmid \iternat{t}{t_z}{x^\tau}{t_n}
+  \GRal x^\tau %\GRmid \abstr{x^\tau}{t} \GRmid \app{t_1}{t_2}
+  \GRal \unit
+  \GRal (t_1,t_2) \GRmid \fst{t} \GRmid \snd{t}
+  \GRend\]
 \end{definition}
 
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rll}
-    \RN{T-Int} & $\tj{z}{\tint}$ \\[1mm]
-    \RN{T-Bool} & $\tj{b}{\tbool}$ \\[1mm]
-    \RN{T-Ref} & $\tj{\cref}{\tarrow{\tau}{\tref{\tau}}}$ \\[1mm]
-    \RN{T-Deref} & $\tj{!}{\tarrow{\tref{\tau}}{\tau}}$ \\[1mm]
-    \RN{T-Assign} & $\tj{\assign}{\tarrow{\tref{\tau}}{\tarrow{\tau}{\tunit}}}$ \\[1mm]
-    \RN{T-Aop} & $\tj{\aop}{\tarrow{\tint}{\tarrow{\tint}{\tint}}}$ \\[1mm]
-    \RN{T-Rop} & $\tj{\rop}{\tarrow{\tint}{\tarrow{\tint}{\tbool}}}$ \\[1mm]
-    \RN{T-Proj} & $\tj{\proj{n}{i}}{\tarrow{\tuple{\tau_1,\ldots,\tau_n}}{\tau_i}}$
-  \end{tabular}
-  \caption{Typing rules for constants}
-  \label{fig:Typing_rules_for_constants}
-\end{figure}
-
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{T-Var} & $\tj{x^\tau}{\tau}$ \\[1mm]
-    \RN{T-Loc} & $\tj{\ell^\tau}{\tref{\tau}}$ \\[1mm]
-    \RN{T-Abstr} & $\RULE{\tj{e}{\tau'}}{\tj{\abstr{x^\tau}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
-    \RN{T-App} & $\RULE{\tj{e_1}{\tarrow{\tau}{\tau'}} \quad \tj{e_2}{\tau}}{\tj{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
-    \RN{T-Cond} & $\RULE{\tj{e_0}{\tbool} \quad \tj{e_1}{\tau} \quad \tj{e_2}{\tau}}{\tj{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
-    \RN{T-Tuple} & $\RULE{\tj{e_1}{\tau_1} \quad \ldots \quad \tj{e_n}{\tau_n}}{\tj{\tuple{e_1,\ldots,e_n}}{\tuple{\tau_1,\ldots,\tau_n}}}$
-  \end{tabular}
-  \caption{Typing rules for expressions}
-  \label{fig:Typing_rules_for_expressions}
-\end{figure}
-
-
-\subsection{Operational semantics}
-
-Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be a partial order of ``possible worlds''.
-
-\begin{definition}[Store]
-  A {\em store} is a finite partial mapping $s:\Loc \pto \CVal$, such that
-  $s(\Loc^\tau) \subseteq \CVal^\tau$ for all $\tau\in\Type$.
-  $\Store$ denotes the set of all such stores.
+\begin{definition}[Assertions]
+  \[\GRbeg
+  \omega \in \AssnType \GRis \tau \GRmid \Prop \GRmid \omega_1 \tto \omega_2
+  \\
+  p,q \in \Assn \GRis t \GRmid \top \GRmid \bot \GRmid p =^\omega q
+  \GRal p \wedge q \GRmid p \vee q \GRmid \neg p \GRmid p \supset q
+  \GRal x^\omega \GRmid \abstr{x^\omega}{p} \GRmid \app{p}{q} \GRmid \qall{x^\omega}{p} \GRmid \qex{x^\omega}{p}
+  \GRal \emp \GRmid p \sepcon q \GRmid t_1 \mapsto^\tau t_2 \GRmid \triplex{p}{e}{x^\tau}{q} \GRmid \{p\}
+  \GRal \iternat{t}{p_z}{x^\omega}{p_n}
+  \GRend\]
 \end{definition}
 
-A {\em configuration} $k$ is a pair $(e,s)$.
-$\Conf$ denotes the set of all configurations.
+\begin{tabular}{rl}
+  \RN{E-IterEval} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}
+  {\conf{\iternat{e}{e_z}{x^\tau}{e_n}}{s} \to \conf{\iternat{e'}{e_z}{x^\tau}{e_n}}{s'}}$ \\[3mm]
+  \RN{E-IterZero} & $\conf{\iternat{\z}{e_z}{x^\tau}{e_n}}{s} \to \conf{e_z}{s}$ \\[1mm]
+  \RN{E-IterSucc} & $\conf{\iternat{\succ{v}}{e_z}{x^\tau}{e_n}}{s}
+  \to \conf{e_n[\iternat{v}{e_z}{x^\tau}{e_n}/x^\tau]}{s}$ \\[1mm]
+  \RN{E-AppLeft} & $\RULE{\conf{e_1}{s} \to \conf{e_1'}{s'}}
+  {\conf{\app{e_1}{e_2}}{s} \to \conf{\app{e_1'}{e_2}}{s'}}$ \\[3mm]
+  \RN{E-AppRight} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}
+  {\conf{\app{v}{e}}{s} \to \conf{\app{v}{e'}}{s'}}$ \\[3mm]
+  \RN{E-AppAbs} & $\conf{\app{(\abstr{x^\tau}{e})}{v}}{s} \to \conf{e[v/x^\tau]}{s}$ \\[1mm]
+  \RN{E-PairLeft} & $\RULE{\conf{e_1}{s} \to \conf{e_1'}{s'}}{\conf{(e_1,e_2)}{s} \to \conf{(e_1',e_2)}{s'}}$ \\[3mm]
+  \RN{E-PairRight} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}{\conf{(v,e)}{s} \to \conf{(v,e)}{s'}}$ \\[3mm]
+  \RN{E-PairFst} & $\conf{\fst{(v_1,v_2)}}{s} \to \conf{v_1}{s}$ \\[1mm]
+  \RN{E-PairSnd} & $\conf{\snd{(v_1,v_2)}}{s} \to \conf{v_2}{s}$ \\[1mm]
+  \RN{E-NewEval} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}
+  {\conf{\new{\tau}{e}}{s} \to \conf{\new{\tau}{e'}}{s'}}$ \\[3mm]
+  \RN{E-NewExec} & $\RULE{\ell^\tau \not\in\dom{s} \quad v \in \cVal^\tau}
+  {\conf{\new{\tau}{v}}{s} \to \conf{\ell^\tau}{s[v/\ell^\tau]}}$ \\[3mm]
+  \RN{E-DerefEval} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}
+  {\conf{\deref{e}}{s} \to \conf{\deref{e'}}{s'}}$ \\[3mm]
+  \RN{E-DerefExec} & $\RULE{(\ell^\tau,v) \in \grph{s}}{\conf{\deref{\ell^\tau}}{s} \to \conf{v}{s}}$ \\[3mm]
+  \RN{E-AssignLeft} & $\RULE{\conf{e_1}{s} \to \conf{e_1'}{s'}}
+  {\conf{\assign{e_1}{e_2}}{s} \to \conf{\assign{e_1'}{e_2}}{s'}}$ \\[3mm]
+  \RN{E-AssignRight} & $\RULE{\conf{e}{s} \to \conf{e'}{s'}}
+  {\conf{\assign{\ell^\tau}{e}}{s} \to \conf{\assign{\ell^\tau}{e'}}{s'}}$ \\[3mm]
+  \RN{E-AssignExec} & $\RULE{\ell^\tau \in \dom{s} \quad v \in \cVal^\tau}
+  {\conf{\assign{\ell^\tau}{v}}{s} \to \conf{\unit}{s[v/\ell^\tau]}}$ \\[3mm]
+\end{tabular}
 
-\begin{figure}[ht]
-  \centering
-  {\small
-  \begin{tabular}{rl}
-    \RN{E-AppLeft} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s)\to(\app{e_1'}{e_2},s')}$ \\[3mm]
-    \RN{E-AppRight} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s)\to(\app{v}{e'},s')}$ \\[3mm]
-    \RN{E-AppOp} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[1mm]
-    \RN{E-AppAbs} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[1mm]
-    \RN{E-AppProj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \to (v_i,s)$ \\[1mm]
-    \RN{E-AppDeref} & $(\app{!}{\ell},s) \to (s(\ell),s)$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
-    \RN{E-AppAssign} & $(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
-    \RN{E-AppRef} & $(\app{\cref}{v},s) \to (\ell,s[v/\ell])$ $\quad$ where $\tj{v}{\tau}$ and $\ell \in \Loc^\tau \setminus \dom{s}$ \\[1mm]
-    \RN{E-CondEval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
-    \RN{E-CondTrue} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
-    \RN{E-CondFalse} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[1mm]
-    \RN{E-Tuple} & $\RULE{(e_i,s) \to (e_i',s')}{(\tuple{v_1,\ldots,v_{i-1},e_i,\ldots,e_n},s) \to (\tuple{v_1,\ldots,v_{i-1},e_i',\ldots,e_n},s')}$
-  \end{tabular}}
-  \caption{Small step rules}
-  \label{fig:Small_step_rules}
-\end{figure}
+\subsection{The Semantics of Assertions}
+
+\begin{definition}[Semantic domains]
+  \[\begin{array}{rcl}
+  \semantic{\tau} &=& \{v\in\Val\,|\,\free{v}=\emptyset \wedge \tj{v}{\tau}\} \\
+  \semantic{\Prop} &=& \{S\,|\,S \subseteq \Store\} \\
+  \semantic{\omega_1 \tto \omega_2} &=& \semantic{\omega_2}^{\semantic{\omega_1}}
+  \end{array}\]
+\end{definition}
+
+$(\semantic{\tj{p}{\omega}}\,\eta) \in \semantic{\omega}$
+\[\begin{array}{rcl}
+  \semantic{\tj{\z}{\Nat}}\,\eta &=& \z \\
+  \semantic{\tj{\succ{t}}{\Nat}}\,\eta &=& \succ{(\semantic{\tj{t}{\Nat}}\,\eta)} \\
+  \semantic{\tj{\unit}{\Unit}}\,\eta &=& \unit \\
+  \semantic{\tj{(t_1,t_2)}{\tau_1 \times \tau_2}}\,\eta &=& (\semantic{\tj{t_1}{\tau_1}}\,\eta,\semantic{\tj{t_2}{\tau_2}}\,\eta) \\
+  \semantic{\tj{\fst{t}}{\tau_1}}\,\eta &=& v_1, \text{where } (v_1,v_2) = (\semantic{\tj{t}{\tau_1 \times \tau_2}}\,\eta) \\
+  \semantic{\tj{\snd{t}}{\tau_2}}\,\eta &=& v_2, \text{where } (v_1,v_2) = (\semantic{\tj{t}{\tau_1 \times \tau_2}}\,\eta) \\
+\end{array}\]
+\[\begin{array}{rcl}
+  \semantic{\tj{\top}{\Prop}}\,\eta &=& \Store \\
+  \semantic{\tj{\bot}{\Prop}}\,\eta &=& \emptyset \\
+  \semantic{\tj{p =^\omega q}{\Prop}}\,\eta &=& \{s\,|\,\semantic{\tj{p}{\omega}}\,\eta = \semantic{\tj{q}{\omega}}\,\eta\} \\
+  \semantic{\tj{\iternat{t}{p_z}{x^\omega}{p_n}}{\omega}}\,\eta &=& \fold_\N\,(\semantic{\tj{p_z}{\omega}}\,\eta)\,(\abstr{d\in\semantic{\omega}}{\semantic{\tj{p_n}{\omega}}\,(\eta[d/x^\omega])})\,(\semantic{\tj{t}{\Nat}}\,\eta) \\
+  \semantic{\tj{p \wedge q}{\Prop}}\,\eta &=& (\semantic{\tj{p}{\Prop}}\,\eta) \cap (\semantic{\tj{q}{\Prop}}\,\eta) \\
+  \semantic{\tj{p \vee q}{\Prop}}\,\eta &=& (\semantic{\tj{p}{\Prop}}\,\eta) \cup (\semantic{\tj{q}{\Prop}}\,\eta) \\
+  \semantic{\tj{\neg p}{\Prop}}\,\eta &=& \Store \setminus (\semantic{\tj{p}{\Prop}}\,\eta) \\
+  \semantic{\tj{p \supset q}{\Prop}}\,\eta &=& \{s\,|\,s\in(\semantic{\tj{p}{\Prop}}\,\eta) \text{ implies } s\in(\semantic{\tj{q}{\Prop}}\,\eta)\} \\
+  \semantic{\tj{x^\omega}{\omega}}\,\eta &=& \eta(x^\omega) \\
+  \semantic{\tj{\abstr{x^\omega}{p}}{\omega \tto \omega'}}\,\eta &=& \abstr{d\in \semantic{\omega}}{\semantic{\tj{p}{\omega'}}\,(\eta[d/x^\omega])} \\
+  \semantic{\tj{\app{p}{q}}{\omega}}\,\eta &=& \app{(\semantic{\tj{p}{\omega' \tto \omega}}\,\eta)}{(\semantic{\tj{q}{\omega'}}\,\eta)} \\
+  \semantic{\tj{\qall{x^\omega}{p}}{\Prop}}\,\eta &=& \bigcap_{d \in \semantic{\omega}} \semantic{\tj{p}{\Prop}}\,(\eta[d/x^\omega]) \\
+  \semantic{\tj{\qex{x^\omega}{p}}{\Prop}}\,\eta &=& \bigcup_{d \in \semantic{\omega}} \semantic{\tj{p}{\Prop}}\,(\eta[d/x^\omega]) \\
+  \semantic{\tj{\emp}{\Prop}}\,\eta &=& \{s\,|\,\dom{s} = \emptyset\} \\
+  \semantic{\tj{p \sepcon q}{\Prop}}\,\eta &=& \{s_1 \oplus s_2\,|\,s_1 \in (\semantic{\tj{p}{\Prop}}\,\eta) \text{ and } s_2 \in (\semantic{\tj{q}{\Prop}}\,\eta)\} \\
+  \semantic{\tj{t_1 \mapsto^\tau t_2}{\Prop}}\,\eta &=& \{s\,|\,\grph{s} = \{(\semantic{\tj{t_1}{\Ref{\tau}}}\,\eta,\semantic{\tj{t_2}{\tau}}\,\eta)\}\} \\
+  \semantic{\tj{\triplex{p}{e}{x^\tau}{q}}{\Prop}}\,\eta &=& \{s\,|\,\text{if $\eta(e)$ is totally correct wrt. $\semantic{\tj{p}{\Prop}}\,\eta$} \\
+    && \text{and $\semantic{\tj{\abstr{x^\tau}{q}}{\tau \tto \Prop}}\,\eta$}\}
+\end{array}\]
+
+% \section{Types}
+
+% \begin{definition}
+%   The sets $\Type$ of {\em expression types} $\tau$, $\TType$ of {\em term types} $\sigma$ and
+%   $\LType$ of {\em logical types} $\theta$ are defined by the following grammar:
+%   \[\GRbeg
+%   \tau \GRis \tbool \GRmid \tint \GRmid \tref{\tau}
+%   \GRmid \tarrow{\tau_1}{\tau_2} \GRmid \tuple{\tau_1,\ldots,\tau_n} \quad (n \ge 0)
+%   \\
+%   \sigma \GRis \tau \GRmid \ttarrow{\sigma_1}{\sigma_2} \GRmid \ttuple{\sigma_1,\ldots,\sigma_n} \quad (n \ge 2)
+%   \\
+%   \theta \GRis \sigma \GRmid \tassn[\sigma]
+%   \GRend\]
+% \end{definition}
+
+% We write $\tunit$ instead of $\tuple{}$ and $\tassn$ instead of $\tassn[\tunit]$.
+
+% We assume that disjoint infinite sets $\Var^\theta$ of {\em $\theta$-variables} $x^\theta$ for each
+% $\theta\in\LType$ and $\Loc^\tau$ of {\em $\tau$-locations} $\ell^\tau$ for each $\tau\in\Type$ are given.
+% Then we have sets $\Var = \bigcup_{\theta\in\LType}\Var^\theta$ of
+% {\em variables} $x$ and $\Loc = \bigcup_{\tau\in\Type}\Loc^\tau$ of {\em locations} $\ell$, where variables are
+% used to abstract expressions and locations are used to identify memory cells.
+
+
+% \section{The programming language}
+
+% $\Bool=\{\true,\false\}$ is
+% the set of boolean constants $b$, $\Int$ is the set of integer constants $z$. We do not distinguish
+% between integer values their program representation.
+
+% \begin{definition}[Expressions]
+%   The set $\Op$ of {\em operators} $\op$ and the set $\Const$ of {\em constants} $c$ are defined by
+%   the grammars
+%   \[\GRbeg
+%   \aop \GRis + \GRmid - \GRmid * \\
+%   \rop \GRis = \GRmid < \GRmid > \GRmid \le \GRmid \ge \\
+%   \op \GRis \aop \GRmid \rop \\
+%   c \GRis z \GRmid b \GRmid \cref \GRmid ! \GRmid \assign
+% % \GRmid \fix
+%   \GRmid \op
+%   \GRmid \proj{n}{i},
+% % \GRmid \fst \GRmid \snd,
+%   \GRend\]
+%   the set $\Exp$ of {\em expressions} $e$ is defined by
+%   \[\GRbeg
+%   e \GRis c \GRmid x^\tau \GRmid \ell \GRmid \abstr{x^\tau}{e} \GRmid \app{e_1}{e_2}
+%   \GRmid \ifte{e_0}{e_1}{e_2} \GRmid \tuple{e_1,\ldots,e_n}
+%   \GRend\]
+%   and the set $\Val \subseteq \Exp$ of {\em values} $v$ is defined by
+%   \[\GRbeg
+%   v \GRis c \GRmid \ell \GRmid \abstr{x^\tau}{e} \GRmid \app{\op}{v} \GRmid \app{\assign}{v} \GRmid \tuple{v_1,\ldots,v_n}
+%   \GRend\]
+% \end{definition}
+
+% Expressions are considered equal modulo renaming of bound variables.
+% The empty tuple $\tuple{}$ is sometimes referred to as the {\em unit constant}.
+
+% $\free{e}$ denotes the set of free variables and $\locns{e}$ denotes the set of locations in the expression $e$.
+% We say that $e$ is {\em closed} if $\free{e}=\emptyset$. $e$ is called a {\em program} if
+% $\free{e}\cup\locns{e}=\emptyset$, that is, if $e$ contains neither unbound variables nor locations (i.e.
+% memory addresses in terms of the underlying machine). We demand that all expressions considered for the
+% logic later are valid programs (i.e. programmers aren't permitted to access arbitrary memory locations).
+
+
+% \subsection{Static semantics}
+
+% \begin{definition}[Typing relation for expressions]
+%   The {\em typing relation for expressions}, written $\tj{e}{\tau}$, is the smallest relation between expressions
+%   and types satisfying all instances of the rules in figure~\ref{fig:Typing_rules_for_constants} and
+%   figure~\ref{fig:Typing_rules_for_expressions}. An expression $e$ is {\em well typed} if there is some
+%   $\tau\in\Type$ such that $\tj{e}{\tau}$.
+% \end{definition}
+
+% \begin{figure}[htb]
+%   \centering
+%   \begin{tabular}{rll}
+%     \RN{T-Int} & $\tj{z}{\tint}$ \\[1mm]
+%     \RN{T-Bool} & $\tj{b}{\tbool}$ \\[1mm]
+%     \RN{T-Ref} & $\tj{\cref}{\tarrow{\tau}{\tref{\tau}}}$ \\[1mm]
+%     \RN{T-Deref} & $\tj{!}{\tarrow{\tref{\tau}}{\tau}}$ \\[1mm]
+%     \RN{T-Assign} & $\tj{\assign}{\tarrow{\tref{\tau}}{\tarrow{\tau}{\tunit}}}$ \\[1mm]
+%     \RN{T-Aop} & $\tj{\aop}{\tarrow{\tint}{\tarrow{\tint}{\tint}}}$ \\[1mm]
+%     \RN{T-Rop} & $\tj{\rop}{\tarrow{\tint}{\tarrow{\tint}{\tbool}}}$ \\[1mm]
+%     \RN{T-Proj} & $\tj{\proj{n}{i}}{\tarrow{\tuple{\tau_1,\ldots,\tau_n}}{\tau_i}}$
+%   \end{tabular}
+%   \caption{Typing rules for constants}
+%   \label{fig:Typing_rules_for_constants}
+% \end{figure}
+
+% \begin{figure}[htb]
+%   \centering
+%   \begin{tabular}{rl}
+%     \RN{T-Var} & $\tj{x^\tau}{\tau}$ \\[1mm]
+%     \RN{T-Loc} & $\tj{\ell^\tau}{\tref{\tau}}$ \\[1mm]
+%     \RN{T-Abstr} & $\RULE{\tj{e}{\tau'}}{\tj{\abstr{x^\tau}{e}}{\tarrow{\tau}{\tau'}}}$ \\[3mm]
+%     \RN{T-App} & $\RULE{\tj{e_1}{\tarrow{\tau}{\tau'}} \quad \tj{e_2}{\tau}}{\tj{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+%     \RN{T-Cond} & $\RULE{\tj{e_0}{\tbool} \quad \tj{e_1}{\tau} \quad \tj{e_2}{\tau}}{\tj{\ifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+%     \RN{T-Tuple} & $\RULE{\tj{e_1}{\tau_1} \quad \ldots \quad \tj{e_n}{\tau_n}}{\tj{\tuple{e_1,\ldots,e_n}}{\tuple{\tau_1,\ldots,\tau_n}}}$
+%   \end{tabular}
+%   \caption{Typing rules for expressions}
+%   \label{fig:Typing_rules_for_expressions}
+% \end{figure}
+
+
+% \subsection{Operational semantics}
+
+% Let $(W,\subseteq) = (\powersetfin{\Loc},\subseteq)$ be a partial order of ``possible worlds''.
+
+% \begin{definition}[Store]
+%   A {\em store} is a finite partial mapping $s:\Loc \pto \CVal$, such that
+%   $s(\Loc^\tau) \subseteq \CVal^\tau$ for all $\tau\in\Type$.
+%   $\Store$ denotes the set of all such stores.
+% \end{definition}
+
+% A {\em configuration} $k$ is a pair $(e,s)$.
+% $\Conf$ denotes the set of all configurations.
 
 % \begin{figure}[ht]
 %   \centering
-%   {\small\begin{tabular}{rl}
-%       \RN{E-Val} & $(v,s) \Downarrow (v,s)$ \\[1mm]
-%       \RN{E-App} & $\RULE{(e_1,s) \Downarrow (v_1,s') \quad (e_2,s') \Downarrow (v_2,s'') \quad (\app{v_1}{v_2},s'') \Downarrow (v,s''')}{(\app{e_1}{e_2},s) \Downarrow (v,s''')}$ \\[3mm]
-%       \RN{E-Op} & $(\app{\app{\op}{z_1}}{z_2},s) \Downarrow (\op^I(z_1,z_2),s)$ \\[1mm]
-%       \RN{E-BetaV} & $\RULE{(e[v/x],s) \Downarrow (v',s')}{(\app{(\abstr{x}{e})}{v},s) \Downarrow (v',s')}$ \\[3mm]
-%       \RN{E-Proj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \Downarrow (v_i,s)$ \\[1mm]
-%       \RN{E-Deref} & $(\app{!}{\ell},s) \Downarrow (s(\ell),s)$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
-%       \RN{E-Assign} & $(\app{\app{\assign}{\ell}}{v},s) \Downarrow (\unit,s[v/\ell])$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
-%       \RN{E-Ref} & $(\app{\cref}{v},s) \Downarrow (\ell,s[v/\ell])$ $\quad$ where $\tj{v}{\tau}$ and $\ell\in\Loc^\tau\setminus\dom{s}$ \\[1mm]
-%       \RN{E-CondTrue} & $\RULE{(e_0,s) \Downarrow (\true,s') \quad (e_1,s') \Downarrow (v',s'')}{(\ifte{e_0}{e_1}{e_2},s) \Downarrow (v',s'')}$ \\[3mm]
-%       \RN{E-CondFalse} & $\RULE{(e_0,s) \Downarrow (\false,s') \quad (e_2,s') \Downarrow (v',s'')}{(\ifte{e_0}{e_1}{e_2},s) \Downarrow (v',s'')}$ \\[3mm]
-%       \RN{E-Tuple} & $\RULE{(e_1,s) \Downarrow (v_1,s_1) \quad \ldots \quad (e_n,s_{n-1})\Downarrow (v_n,s_n)}{(\tuple{e_1,\ldots,e_n},s) \Downarrow (\tuple{v_1,\ldots,v_n},s_n)}$
+%   {\small
+%   \begin{tabular}{rl}
+%     \RN{E-AppLeft} & $\RULE{(e_1,s) \to (e_1',s')}{(\app{e_1}{e_2},s)\to(\app{e_1'}{e_2},s')}$ \\[3mm]
+%     \RN{E-AppRight} & $\RULE{(e,s) \to (e',s')}{(\app{v}{e},s)\to(\app{v}{e'},s')}$ \\[3mm]
+%     \RN{E-AppOp} & $(\app{\app{\op}{z_1}}{z_2},s) \to (\op^I(z_1,z_2),s)$ \\[1mm]
+%     \RN{E-AppAbs} & $(\app{(\abstr{x}{e})}{v},s) \to (e[v/x],s)$ \\[1mm]
+%     \RN{E-AppProj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \to (v_i,s)$ \\[1mm]
+%     \RN{E-AppDeref} & $(\app{!}{\ell},s) \to (s(\ell),s)$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+%     \RN{E-AppAssign} & $(\app{\app{\assign}{\ell}}{v},s) \to (\unit,s[v/\ell])$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+%     \RN{E-AppRef} & $(\app{\cref}{v},s) \to (\ell,s[v/\ell])$ $\quad$ where $\tj{v}{\tau}$ and $\ell \in \Loc^\tau \setminus \dom{s}$ \\[1mm]
+%     \RN{E-CondEval} & $\RULE{(e_0,s) \to (e_0',s')}{(\ifte{e_0}{e_1}{e_2},s)\to(\ifte{e_0'}{e_1}{e_2},s')}$ \\[3mm]
+%     \RN{E-CondTrue} & $(\ifte{\true}{e_1}{e_2},s) \to (e_1,s)$ \\[1mm]
+%     \RN{E-CondFalse} & $(\ifte{\false}{e_1}{e_2},s) \to (e_2,s)$ \\[1mm]
+%     \RN{E-Tuple} & $\RULE{(e_i,s) \to (e_i',s')}{(\tuple{v_1,\ldots,v_{i-1},e_i,\ldots,e_n},s) \to (\tuple{v_1,\ldots,v_{i-1},e_i',\ldots,e_n},s')}$
 %   \end{tabular}}
-%   \caption{Evaluation rules}
-%   \label{fig:Evaluation_rules}
+%   \caption{Small step rules}
+%   \label{fig:Small_step_rules}
 % \end{figure}
 
-% \begin{definition}[Evalutation relation]
-%   The {\em evalutation relation} $\Downarrow$ is the smallest binary relation between configurations
-%   satisfying all instances of the rules in figure~\ref{fig:Evaluation_rules}.
+% % \begin{figure}[ht]
+% %   \centering
+% %   {\small\begin{tabular}{rl}
+% %       \RN{E-Val} & $(v,s) \Downarrow (v,s)$ \\[1mm]
+% %       \RN{E-App} & $\RULE{(e_1,s) \Downarrow (v_1,s') \quad (e_2,s') \Downarrow (v_2,s'') \quad (\app{v_1}{v_2},s'') \Downarrow (v,s''')}{(\app{e_1}{e_2},s) \Downarrow (v,s''')}$ \\[3mm]
+% %       \RN{E-Op} & $(\app{\app{\op}{z_1}}{z_2},s) \Downarrow (\op^I(z_1,z_2),s)$ \\[1mm]
+% %       \RN{E-BetaV} & $\RULE{(e[v/x],s) \Downarrow (v',s')}{(\app{(\abstr{x}{e})}{v},s) \Downarrow (v',s')}$ \\[3mm]
+% %       \RN{E-Proj} & $(\app{\proj{n}{i}}{\tuple{v_1,\ldots,v_n}},s) \Downarrow (v_i,s)$ \\[1mm]
+% %       \RN{E-Deref} & $(\app{!}{\ell},s) \Downarrow (s(\ell),s)$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+% %       \RN{E-Assign} & $(\app{\app{\assign}{\ell}}{v},s) \Downarrow (\unit,s[v/\ell])$ $\quad$ where $\ell\in\dom{s}$ \\[1mm]
+% %       \RN{E-Ref} & $(\app{\cref}{v},s) \Downarrow (\ell,s[v/\ell])$ $\quad$ where $\tj{v}{\tau}$ and $\ell\in\Loc^\tau\setminus\dom{s}$ \\[1mm]
+% %       \RN{E-CondTrue} & $\RULE{(e_0,s) \Downarrow (\true,s') \quad (e_1,s') \Downarrow (v',s'')}{(\ifte{e_0}{e_1}{e_2},s) \Downarrow (v',s'')}$ \\[3mm]
+% %       \RN{E-CondFalse} & $\RULE{(e_0,s) \Downarrow (\false,s') \quad (e_2,s') \Downarrow (v',s'')}{(\ifte{e_0}{e_1}{e_2},s) \Downarrow (v',s'')}$ \\[3mm]
+% %       \RN{E-Tuple} & $\RULE{(e_1,s) \Downarrow (v_1,s_1) \quad \ldots \quad (e_n,s_{n-1})\Downarrow (v_n,s_n)}{(\tuple{e_1,\ldots,e_n},s) \Downarrow (\tuple{v_1,\ldots,v_n},s_n)}$
+% %   \end{tabular}}
+% %   \caption{Evaluation rules}
+% %   \label{fig:Evaluation_rules}
+% % \end{figure}
+
+% % \begin{definition}[Evalutation relation]
+% %   The {\em evalutation relation} $\Downarrow$ is the smallest binary relation between configurations
+% %   satisfying all instances of the rules in figure~\ref{fig:Evaluation_rules}.
+% % \end{definition}
+
+% % We write $k \not\Downarrow$ to denote that there is no $k'$ such that $k \Downarrow k'$. Obviously
+% % the evaluation relation is well-defined. Let's say we have $(e,s) \Downarrow (e',s')$, then
+% % \begin{itemize}
+% % \item $e'\in\Val$, and
+% % \item $\tj{e}{\tau}$ implies $\tj{e'}{\tau}$, and
+% % \item $\locns{e} \subseteq \dom{s}$ implies $\locns{e'} \subseteq \dom{s'}$, and
+% % \item $\free{e'} \subseteq \free{e}$.
+% % \end{itemize}
+
+% \begin{definition}[Small step relation]
+%   The {\em small step relation} $\to$ is the smallest binary relation between configurations
+%   satisfying all instances of the rules in figure~\ref{fig:Small_step_rules}. We write $\to^*$ for
+%   the reflexive, transitive closure of $\to$.
 % \end{definition}
 
-% We write $k \not\Downarrow$ to denote that there is no $k'$ such that $k \Downarrow k'$. Obviously
-% the evaluation relation is well-defined. Let's say we have $(e,s) \Downarrow (e',s')$, then
+% We write $k \not\to$ if there exists no $k'$ such that $k \to k'$.
+% Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e',s')$. Then
 % \begin{itemize}
-% \item $e'\in\Val$, and
-% \item $\tj{e}{\tau}$ implies $\tj{e'}{\tau}$, and
-% \item $\locns{e} \subseteq \dom{s}$ implies $\locns{e'} \subseteq \dom{s'}$, and
-% \item $\free{e'} \subseteq \free{e}$.
+% \item if $\tj{e}{\tau}$, then $\tj{e'}{\tau}$, and
+% \item if $\locns{e} \subseteq \dom{s}$ then $\locns{e'} \subseteq \dom{s'}$, and
+% \item if $\free{e'} \subseteq \free{e}$.
 % \end{itemize}
 
-\begin{definition}[Small step relation]
-  The {\em small step relation} $\to$ is the smallest binary relation between configurations
-  satisfying all instances of the rules in figure~\ref{fig:Small_step_rules}. We write $\to^*$ for
-  the reflexive, transitive closure of $\to$.
-\end{definition}
+% A {\em finite computation} for $k$ is a finite sequence of configurations $k_1,\ldots,k_n$
+% such that $k = k_1$, $k_n \not\to$ and $k_i \to k_{i+1}$ for every $i=1,\ldots,n-1$. Such a
+% finite computation {\em terminates} if $k_n \in \Val\times\Store$.
+% % Otherwise we say that the computation {\em got stuck}.
+% An {\em infinite computation} for $k$ is an infinite sequence of configurations $k_1,k_2,\ldots$
+% such that $k=k_1$ and for each $i=1,2,\ldots$ there is some $k_{i+1}$ such that $k_i \to k_{i+1}$.
+% We say that such an infinite computation {\em diverges}.
+% A configuration $k$ {\em must terminate normally} when all possible computations for $k$ terminate.
 
-We write $k \not\to$ if there exists no $k'$ such that $k \to k'$.
-Obviously the small step relation is well-defined. Let's say we have $(e,s)\to(e',s')$. Then
-\begin{itemize}
-\item if $\tj{e}{\tau}$, then $\tj{e'}{\tau}$, and
-\item if $\locns{e} \subseteq \dom{s}$ then $\locns{e'} \subseteq \dom{s'}$, and
-\item if $\free{e'} \subseteq \free{e}$.
-\end{itemize}
+% Similar to O'Hearn ({\em ``A semantic basis for Local Reasoning''}) we state:
 
-A {\em finite computation} for $k$ is a finite sequence of configurations $k_1,\ldots,k_n$
-such that $k = k_1$, $k_n \not\to$ and $k_i \to k_{i+1}$ for every $i=1,\ldots,n-1$. Such a
-finite computation {\em terminates} if $k_n \in \Val\times\Store$.
-% Otherwise we say that the computation {\em got stuck}.
-An {\em infinite computation} for $k$ is an infinite sequence of configurations $k_1,k_2,\ldots$
-such that $k=k_1$ and for each $i=1,2,\ldots$ there is some $k_{i+1}$ such that $k_i \to k_{i+1}$.
-We say that such an infinite computation {\em diverges}.
-A configuration $k$ {\em must terminate normally} when all possible computations for $k$ terminate.
+% \begin{lemma}[Termination Monotonicity] \label{lemma:Termination_Monotonicity}
+%   If $(e,s)$ must terminate normally and $s' = s \oplus s''$, then $(e,s')$ must also terminate normally.
+% \end{lemma}
 
-Similar to O'Hearn ({\em ``A semantic basis for Local Reasoning''}) we state:
+% \begin{proof}
+%   Straightforward induction.
+% \end{proof}
 
-\begin{lemma}[Termination Monotonicity] \label{lemma:Termination_Monotonicity}
-  If $(e,s)$ must terminate normally and $s' = s \oplus s''$, then $(e,s')$ must also terminate normally.
-\end{lemma}
+% \begin{lemma}[Frame Property] \label{lemma:Frame_Property}
+%   Suppose $(e,s_0)$ must terminate normally, and $(e,s_0 \oplus s) \to^* (v,s')$. Then there exists some
+%   $s_0'$ such that $(e,s_0) \to^* (v,s_0')$ and $s' = s_0' \oplus s$.
+% \end{lemma}
 
-\begin{proof}
-  Straightforward induction.
-\end{proof}
-
-\begin{lemma}[Frame Property] \label{lemma:Frame_Property}
-  Suppose $(e,s_0)$ must terminate normally, and $(e,s_0 \oplus s) \to^* (v,s')$. Then there exists some
-  $s_0'$ such that $(e,s_0) \to^* (v,s_0')$ and $s' = s_0' \oplus s$.
-\end{lemma}
-
-\begin{proof}
-  The proof is pretty easy, we just need to prove the frame property for a single small step; the frame property
-  for computations is a trivial consequence. Therefore, given $(e,s_0 \oplus s) \to (e',s')$, there exists some
-  $s_0'$ such that $(e,s_0) \to (e',s_0')$ with $s' = s_0' \oplus s$.
-  \begin{itemize}
-  \item[\RN{E-Ref}]
-  \end{itemize}
-\end{proof}
+% \begin{proof}
+%   The proof is pretty easy, we just need to prove the frame property for a single small step; the frame property
+%   for computations is a trivial consequence. Therefore, given $(e,s_0 \oplus s) \to (e',s')$, there exists some
+%   $s_0'$ such that $(e,s_0) \to (e',s_0')$ with $s' = s_0' \oplus s$.
+%   \begin{itemize}
+%   \item[\RN{E-Ref}]
+%   \end{itemize}
+% \end{proof}
 
 
-\section{Assertions}
+% \section{Assertions}
 
-Let $\mathcal{F}^\sigma$ be some predefined set of {\em $\sigma$-function symbols} $f^\sigma$ and
-$\mathcal{F} = \bigcup_{\sigma\in\TType}\mathcal{F}^\sigma$ be the set of all {\em function symbols} $f$, such that
-\begin{itemize}
-\item $f_\aop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tint}}}$, and
-\item $f_\rop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tbool}}}$.
-\end{itemize}
+% Let $\mathcal{F}^\sigma$ be some predefined set of {\em $\sigma$-function symbols} $f^\sigma$ and
+% $\mathcal{F} = \bigcup_{\sigma\in\TType}\mathcal{F}^\sigma$ be the set of all {\em function symbols} $f$, such that
+% \begin{itemize}
+% \item $f_\aop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tint}}}$, and
+% \item $f_\rop \in \mathcal{F}^{\ttarrow{\tint}{\ttarrow{\tint}{\tbool}}}$.
+% \end{itemize}
 
-\begin{definition}[Assertions]
-  The sets $\Term$ of {\em terms} $t$ and $\Assn$ of {\em assertions} $p,q,r$ are defined by the following grammar:
-  \[\GRbeg
-  t \GRis f \GRmid x \GRmid v \GRmid \app{t_1}{t_2} \GRmid \ttuple{t_1,\ldots,t_n}
-  \\
-  p \GRis t_1 = t_2 \GRmid \app{x}{t} \GRmid \neg p \GRmid p \wedge q \GRmid \exists x.\,p
-  \GRal \emp \GRmid t_1 \mapsto t_2 \GRmid p \sepcon q \GRmid p \sepimp q  \GRmid \triplex{p}{e}{x}{q}
-  \GRend\]
-\end{definition}
+% \begin{definition}[Assertions]
+%   The sets $\Term$ of {\em terms} $t$ and $\Assn$ of {\em assertions} $p,q,r$ are defined by the following grammar:
+%   \[\GRbeg
+%   t \GRis f \GRmid x \GRmid v \GRmid \app{t_1}{t_2} \GRmid \ttuple{t_1,\ldots,t_n}
+%   \\
+%   p \GRis t_1 = t_2 \GRmid \app{x}{t} \GRmid \neg p \GRmid p \wedge q \GRmid \exists x.\,p
+%   \GRal \emp \GRmid t_1 \mapsto t_2 \GRmid p \sepcon q \GRmid p \sepimp q  \GRmid \triplex{p}{e}{x}{q}
+%   \GRend\]
+% \end{definition}
 
-\begin{definition}[Hoare formulae]
-  The set $\Formula \subseteq \Assn$ of {\em hoare formulae} $h$ is defined by the following grammar:
-  \[\GRbeg
-  h \GRis t_1 = t_2 \GRmid \neg h \GRmid h_1 \wedge h_2 \GRmid \exists x.\,h
-  \GRal h_1 \sepcon h_2 \GRmid h_1 \sepimp h_2 \GRmid \triplex{p}{e}{x}{q}
-  \GRend\]
-\end{definition}
+% \begin{definition}[Hoare formulae]
+%   The set $\Formula \subseteq \Assn$ of {\em hoare formulae} $h$ is defined by the following grammar:
+%   \[\GRbeg
+%   h \GRis t_1 = t_2 \GRmid \neg h \GRmid h_1 \wedge h_2 \GRmid \exists x.\,h
+%   \GRal h_1 \sepcon h_2 \GRmid h_1 \sepimp h_2 \GRmid \triplex{p}{e}{x}{q}
+%   \GRend\]
+% \end{definition}
 
-\begin{definition}
-  The {\em typing relation for terms}, written $\tj{t}{\sigma}$, is the smallest relation between terms
-  and term types satisfying all instances of the rules in figure~\ref{fig:Typing_rules_for_constants},
-  figure~\ref{fig:Typing_rules_for_expressions} and figure~\ref{fig:Typing_rules_for_terms}. A term $t$
-  is {\em well typed} if there is some $\sigma\in\TType$ such that $\tj{t}{\sigma}$.
-\end{definition}
+% \begin{definition}
+%   The {\em typing relation for terms}, written $\tj{t}{\sigma}$, is the smallest relation between terms
+%   and term types satisfying all instances of the rules in figure~\ref{fig:Typing_rules_for_constants},
+%   figure~\ref{fig:Typing_rules_for_expressions} and figure~\ref{fig:Typing_rules_for_terms}. A term $t$
+%   is {\em well typed} if there is some $\sigma\in\TType$ such that $\tj{t}{\sigma}$.
+% \end{definition}
 
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{T-Fun} & $\tj{f^\sigma}{\sigma}$ \\[1mm]
-    \RN{T-Var} & $\tj{x^\sigma}{\sigma}$ \\[1mm]
-    \RN{T-App} & $\RULE{\tj{t_1}{\ttarrow{\sigma}{\sigma'}} \quad \tj{t_2}{\sigma}}{\tj{\app{t_1}{t_2}}{\sigma'}}$ \\[3mm]
-    \RN{T-Tuple} & $\RULE{\tj{t_1}{\sigma_1} \quad \ldots \quad \tj{t_n}{\sigma_n}}{\tj{\ttuple{t_1,\ldots,t_n}}{\ttuple{\sigma_1,\ldots,\sigma_n}}}$
-  \end{tabular}
-  \caption{Typing rules for terms}
-  \label{fig:Typing_rules_for_terms}
-\end{figure}
+% \begin{figure}[htb]
+%   \centering
+%   \begin{tabular}{rl}
+%     \RN{T-Fun} & $\tj{f^\sigma}{\sigma}$ \\[1mm]
+%     \RN{T-Var} & $\tj{x^\sigma}{\sigma}$ \\[1mm]
+%     \RN{T-App} & $\RULE{\tj{t_1}{\ttarrow{\sigma}{\sigma'}} \quad \tj{t_2}{\sigma}}{\tj{\app{t_1}{t_2}}{\sigma'}}$ \\[3mm]
+%     \RN{T-Tuple} & $\RULE{\tj{t_1}{\sigma_1} \quad \ldots \quad \tj{t_n}{\sigma_n}}{\tj{\ttuple{t_1,\ldots,t_n}}{\ttuple{\sigma_1,\ldots,\sigma_n}}}$
+%   \end{tabular}
+%   \caption{Typing rules for terms}
+%   \label{fig:Typing_rules_for_terms}
+% \end{figure}
 
-\begin{definition}
-  The set of {\em well typed} assertions is the smallest set of assertions satisfying all instances of the
-  rules in figure~\ref{fig:Typing_rules_for_assertions}. We write $\tj{p}{\tassn}$ to indicate that $p$ is
-  well typed.
-\end{definition}
+% \begin{definition}
+%   The set of {\em well typed} assertions is the smallest set of assertions satisfying all instances of the
+%   rules in figure~\ref{fig:Typing_rules_for_assertions}. We write $\tj{p}{\tassn}$ to indicate that $p$ is
+%   well typed.
+% \end{definition}
 
-\begin{figure}[htb]
-  \centering
-  \begin{tabular}{rl}
-    \RN{T-Eq} & $\RULE{\tj{t_1}{\sigma} \quad \tj{t_2}{\sigma}}{\tj{t_1 = t_2}{\tassn}}$ \\[3mm]
-    \RN{T-Var} & $\RULE{\tj{t}{\sigma}}{\tj{\app{x^{\tassn[\sigma]}}{t}}{\tassn}}$ \\[3mm]
-    \RN{T-Neg} & $\RULE{\tj{p}{\tassn}}{\tj{\neg p}{\tassn}}$ \\[3mm]
-    \RN{T-Conj} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \wedge q}{\tassn}}$ \\[3mm]
-    \RN{T-Exists} & $\RULE{\tj{p}{\tassn}}{\tj{\exists x^\theta.\,p}{\tassn}}$ \\[3mm]
-    \RN{T-Emp} & $\tj{\emp}{\tassn}$ \\[1mm]
-    \RN{T-Cont} & $\RULE{\tj{t_1}{\tref{\tau}} \quad \tj{t_2}{\tau}}{\tj{t_1 \mapsto t_2}{\tassn}}$ \\[3mm]
-    \RN{T-SepConj} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \sepcon q}{\tassn}}$ \\[3mm]
-    \RN{T-SepImpl} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \sepimp q}{\tassn}}$ \\[3mm]
-    \RN{T-Spec} & $\RULE{\tj{p}{\tassn} \quad \tj{e}{\tau} \quad \tj{q}{\tassn}}{\tj{\triplex{p}{e}{x^\tau}{q}}{\tassn}}$
-  \end{tabular}
-  \caption{Typing rules for assertions}
-  \label{fig:Typing_rules_for_assertions}
-\end{figure}
-
-
-\subsection{Meaning of assertions}
-
-For each logical type $\theta\in\LType$ we define a semantic domain $\semantic{\theta}$ by:
-\[\begin{array}{rcl}
-  \semantic{\tau} &=& \{v\in\CVal\,|\,\tj{v}{\tau}\} \\
-  \semantic{\ttarrow{\sigma_1}{\sigma_2}} &=& (\semantic{\sigma_1} \to \semantic{\sigma_2}) \\
-  \semantic{\ttuple{\tau_1,\ldots,\tau_n}} &=& \semantic{\tau_1} \times \ldots \times \semantic{\tau_n} \\
-  \semantic{\tassn[\sigma]} &=& \mathcal{P}(\semantic{\sigma} \times \Store)
-\end{array}\]
-
-For each predefined function symbol $f^\sigma$, let $\semantic{f^\sigma}\in\semantic{\sigma}$ be the meaning of
-$f$, with
-\begin{itemize}
-\item $\semantic{f_\aop} : \semantic{\tint} \to \semantic{\tint} \to \semantic{\tint},
-  z_1 z_2 \mapsto \aop^I(z_1,z_2)$, and
-\item $\semantic{f_\rop} : \semantic{\tint} \to \semantic{\tint} \to \semantic{\tbool},
-  z_1 z_2 \mapsto \rop^I(z_1,z_2)$.
-\end{itemize}
-
-An {\em environment} is a partial finite mapping $\eta:\Var \pto \bigcup_{\theta\in\LType}\semantic{\theta}$ such
-that $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for each $\theta\in\LType$.
-
-\begin{definition}[Meaning of terms]
-  Let $t$ be a term of type $\sigma$ and $\eta$ a suitable environment with $\free{t} \subseteq \dom{\eta}$.
-  The {\em meaning of $t$} wrt. $\eta$, written $\semantic{\tj{t}{\sigma}}\,\eta$, is defined by:
-  \[\begin{array}{rcl}
-    \semantic{\tj{f}{\sigma}}\,\eta
-    &=& \semantic{f^\sigma} \\
-    \semantic{\tj{x}{\sigma}}\,\eta
-    &=& \eta(x) \\
-    \semantic{\tj{v}{\tau}}\,\eta
-    &=& v\,\eta \\
-    \semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta
-    &=& \app{(\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)}{(\semantic{\tj{t_2}{\sigma'}}\,\eta)} \\
-    \semantic{\tj{\ttuple{t_1,\ldots,t_n}}{\ttuple{\sigma_1,\ldots,\sigma_n}}}\,\eta
-    &=& (\semantic{\tj{t_1}{\sigma_1}}\,\eta,\ldots,\semantic{\tj{t_n}{\sigma_n}}\,\eta) 
-  \end{array}\]
-\end{definition}
-
-\begin{lemma}
-  $\free{t} \subseteq \dom{\eta} \Rightarrow (\semantic{\tj{t}{\sigma}}\,\eta)\in\semantic{\sigma}$
-\end{lemma}
-
-\begin{proof}
-  Straightforward induction.
-\end{proof}
-
-We write $\semantic{t}$ instead of $\semantic{\tj{t}{\sigma}}$, since for each well typed term $t$ there is
-exactly one $\sigma$ such that $\tj{t}{\sigma}$.
-
-\begin{definition}[Meaning of assertions]
-  The {\em satisfaction relation}, written $\eta,s \models p$, is the smallest relation between 
-  environments, stores and well typed assertions, satisfying $\free{p} \subseteq \dom{\eta}$ and all of the
-  following properties:
-  \[\begin{array}{lcl}
-    \eta,s \models t_1 = t_2
-    &\text{iff}& \semantic{t_1}\,\eta = \semantic{t_2}\,\eta \\
-    \eta,s \models \app{x^{\tassn[\sigma]}}{t}
-    &\text{iff}& (\semantic{t}\,\eta,s) \in \eta(x) \\
-    \eta,s \models \neg p
-    &\text{iff}& \eta,s \not\models p \\
-    \eta,s \models p \wedge q
-    &\text{iff}& \eta,s \models p \text{ and } \eta,s \models q \\
-    \eta,s \models \exists x^\theta.\,p
-    &\text{iff}& \exists d \in \semantic{\theta}.\,\eta[d/x],s \models p \\
-    \eta,s \models \emp
-    &\text{iff}& \grph{s} = \emptyset \\
-    \eta,s \models t_1 \mapsto t_2
-    &\text{iff}& \grph{s} = \{(\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\} \\
-    \eta,s \models p \sepcon q
-    &\text{iff}& \exists s_1,s_2.\,s=s_1 \oplus s_2 \text{ and } \eta,s_1 \models p \text{ and } \eta,s_2 \models q \\
-    \eta,s \models p \sepimp q
-    &\text{iff}& \forall s_1,s_2.\,(s_2 = s \oplus s_1 \text{ and } \eta,s_1 \models p) \text{ implies } \eta,s_2 \models q \\
-    \eta,s \models \triplex{p}{e}{x}{q}
-    &\text{iff}& \forall s'.\,\eta,s' \models p \text{ implies that all computations for } (e\,\eta,s') \\
-    && \text{terminate with some $(v,s'')$ such that } \eta[v/x],s'' \models q
-  \end{array}\]
-\end{definition}
-
-We write $x^{\tassn}$ instead of $\app{x^{\tassn}}{\unit}$.
-Furtheron we abbreviate:
-\[\begin{array}{rcl}
-  \btrue &=_{def}& \true = \true \\
-  \bfalse &=_{def}& \neg \btrue \\
-  \forall x.\,p &=_{def}& \neg \exists x.\,\neg p \\
-  p \vee q &=_{def}& \neg (\neg p \wedge \neg q) \\
-  p \Rightarrow q &=_{def}& \neg p \vee q \\
-  p \Leftrightarrow q &=_{def}& (p \Rightarrow q) \wedge (q \Rightarrow p)
-\end{array}\]
-It is useful to introduce several more complex forms as abbreviations:
-\[\begin{array}{rcl}
-  t \mapsto - &=_{def}& \exists x.\,t \mapsto x \quad \text{where $x\not\in\free{t}$} \\
-  t_1 \hookrightarrow t_2 &=_{def}& t_1 \mapsto t_2 \sepcon \btrue \\
-  \{p\} &=_{def}& \triplex{\btrue}{\unit}{x}{p} \quad \text{where $x\not\in\free{p}$}
-\end{array}\]
-
-Meaning of abbreviations:
-\[\begin{array}{lcl}
-  \eta,s \models \btrue
-  && \text{always} \\
-  \eta,s \models \bfalse
-  && \text{never} \\
-  \eta,s \models p \vee q
-  &\text{iff}& \eta,s \models p \text{ or } \eta,s \models q \\
-  \eta,s \models p \Rightarrow q
-  &\text{iff}& \eta,s \models p \text{ implies } \eta,s \models q \\
-  \eta,s \models p \Leftrightarrow q
-  &\text{iff}& \eta,s \models p \text{ iff } \eta,s \models q \\
-  \eta,s \models \forall x^\theta.\,p
-  &\text{iff}& \forall d\in \semantic{\theta}.\,\eta[d/x],s \models p \\
-  \eta,s \models t \mapsto -
-  &\text{iff}& \dom{s} = \{\semantic{t}\,\eta\} \\
-  \eta,s \models t_1 \hookrightarrow t_2
-  &\text{iff}& (\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\in\grph{s} \\
-  \eta,s \models \{p\}
-  &\text{iff}& \forall s'.\,\eta,s' \models p
-\end{array}\]
-
-\begin{lemma} \label{lemma:Coincidence} \
-  \begin{enumerate}
-  \item Let $t\in\Term$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{t}} \eta_2$. Then
-    $\semantic{t}\,\eta_1 = \semantic{t}\,\eta_2$.
-  \item Let $p\in\Assn$, $s\in\Store$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{p}} \eta_2$. Then
-    $\eta_1,s \models p$ iff $\eta_2,s\models p$.
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Trivial inductions.
-\end{proof}
-
-\subsubsection{Pure assertions}
-
-\begin{definition}
-  An assertion is said to be {\em pure} if, for any given environment, it is independent of the store.
-  More precisely, an assertion $p$ is {\em pure} iff, for all environments $\eta$ and all stores $s, s'$,
-  \[\begin{array}{rcl}
-    \eta,s \models p &\text{iff}& \eta,s' \models p.
-  \end{array}\]
-\end{definition}
-
-Obviously all hoare formulae $h$ are pure.
+% \begin{figure}[htb]
+%   \centering
+%   \begin{tabular}{rl}
+%     \RN{T-Eq} & $\RULE{\tj{t_1}{\sigma} \quad \tj{t_2}{\sigma}}{\tj{t_1 = t_2}{\tassn}}$ \\[3mm]
+%     \RN{T-Var} & $\RULE{\tj{t}{\sigma}}{\tj{\app{x^{\tassn[\sigma]}}{t}}{\tassn}}$ \\[3mm]
+%     \RN{T-Neg} & $\RULE{\tj{p}{\tassn}}{\tj{\neg p}{\tassn}}$ \\[3mm]
+%     \RN{T-Conj} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \wedge q}{\tassn}}$ \\[3mm]
+%     \RN{T-Exists} & $\RULE{\tj{p}{\tassn}}{\tj{\exists x^\theta.\,p}{\tassn}}$ \\[3mm]
+%     \RN{T-Emp} & $\tj{\emp}{\tassn}$ \\[1mm]
+%     \RN{T-Cont} & $\RULE{\tj{t_1}{\tref{\tau}} \quad \tj{t_2}{\tau}}{\tj{t_1 \mapsto t_2}{\tassn}}$ \\[3mm]
+%     \RN{T-SepConj} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \sepcon q}{\tassn}}$ \\[3mm]
+%     \RN{T-SepImpl} & $\RULE{\tj{p}{\tassn} \quad \tj{q}{\tassn}}{\tj{p \sepimp q}{\tassn}}$ \\[3mm]
+%     \RN{T-Spec} & $\RULE{\tj{p}{\tassn} \quad \tj{e}{\tau} \quad \tj{q}{\tassn}}{\tj{\triplex{p}{e}{x^\tau}{q}}{\tassn}}$
+%   \end{tabular}
+%   \caption{Typing rules for assertions}
+%   \label{fig:Typing_rules_for_assertions}
+% \end{figure}
 
 
-\subsection{The calculus}
+% \subsection{Meaning of assertions}
 
-\subsubsection{The frame axiom}
+% For each logical type $\theta\in\LType$ we define a semantic domain $\semantic{\theta}$ by:
+% \[\begin{array}{rcl}
+%   \semantic{\tau} &=& \{v\in\CVal\,|\,\tj{v}{\tau}\} \\
+%   \semantic{\ttarrow{\sigma_1}{\sigma_2}} &=& (\semantic{\sigma_1} \to \semantic{\sigma_2}) \\
+%   \semantic{\ttuple{\tau_1,\ldots,\tau_n}} &=& \semantic{\tau_1} \times \ldots \times \semantic{\tau_n} \\
+%   \semantic{\tassn[\sigma]} &=& \mathcal{P}(\semantic{\sigma} \times \Store)
+% \end{array}\]
 
-\begin{center}
-\begin{tabular}{rl}
-  \RN{Frame} & $\triplex{p}{e}{x}{q} \Rightarrow \triplex{p \sepcon r}{e}{x}{q \sepcon r}$ \\
-  & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
-\end{tabular}
-\end{center}
+% For each predefined function symbol $f^\sigma$, let $\semantic{f^\sigma}\in\semantic{\sigma}$ be the meaning of
+% $f$, with
+% \begin{itemize}
+% \item $\semantic{f_\aop} : \semantic{\tint} \to \semantic{\tint} \to \semantic{\tint},
+%   z_1 z_2 \mapsto \aop^I(z_1,z_2)$, and
+% \item $\semantic{f_\rop} : \semantic{\tint} \to \semantic{\tint} \to \semantic{\tbool},
+%   z_1 z_2 \mapsto \rop^I(z_1,z_2)$.
+% \end{itemize}
 
-To see that the \RN{Frame} axiom is sound, assume that $\eta\in\Env$ with $\free{p,e,q,r}\subseteq\dom{\eta}$ and
-$s\in\Store$ with $\eta,s \models p \sepcon r$. This implies that there are $s_1,s_2$ such that $s = s_1 \oplus s_2$,
-$\eta,s_1 \models p$ and $\eta,s_2 \models r$. Now by lemma~\ref{lemma:Termination_Monotonicity} we know
-that each computation for $(e\,\eta,s)$ terminates with some $(v,s')$, since $\eta\models\triplex{p}{e}{x}{q}$.
-Now lemma~\ref{lemma:Frame_Property} states that there must be a computation
-$(e\,\eta,s_1) \to^* (v,s_1')$ with $s' = s_1' \oplus s_2$. By lemma~\ref{lemma:Coincidence} we have
-$\eta[v/x],s_2 \models r$ since $x\not\in\free{r}$ and by assumption we already know that
-$\eta[v/x],s_1' \models q$.
+% An {\em environment} is a partial finite mapping $\eta:\Var \pto \bigcup_{\theta\in\LType}\semantic{\theta}$ such
+% that $\eta(\Var^\theta) \subseteq \semantic{\theta}$ for each $\theta\in\LType$.
 
-\subsubsection{Rules for total correctness}
+% \begin{definition}[Meaning of terms]
+%   Let $t$ be a term of type $\sigma$ and $\eta$ a suitable environment with $\free{t} \subseteq \dom{\eta}$.
+%   The {\em meaning of $t$} wrt. $\eta$, written $\semantic{\tj{t}{\sigma}}\,\eta$, is defined by:
+%   \[\begin{array}{rcl}
+%     \semantic{\tj{f}{\sigma}}\,\eta
+%     &=& \semantic{f^\sigma} \\
+%     \semantic{\tj{x}{\sigma}}\,\eta
+%     &=& \eta(x) \\
+%     \semantic{\tj{v}{\tau}}\,\eta
+%     &=& v\,\eta \\
+%     \semantic{\tj{\app{t_1}{t_2}}{\sigma}}\,\eta
+%     &=& \app{(\semantic{\tj{t_1}{\ttarrow{\sigma'}{\sigma}}}\,\eta)}{(\semantic{\tj{t_2}{\sigma'}}\,\eta)} \\
+%     \semantic{\tj{\ttuple{t_1,\ldots,t_n}}{\ttuple{\sigma_1,\ldots,\sigma_n}}}\,\eta
+%     &=& (\semantic{\tj{t_1}{\sigma_1}}\,\eta,\ldots,\semantic{\tj{t_n}{\sigma_n}}\,\eta) 
+%   \end{array}\]
+% \end{definition}
 
-{\small
-\begin{tabular}{rl}
-  \RN{Conseq} & $(\{p \Rightarrow p'\} \wedge \triplex{p'}{e}{x}{q'} \wedge \forall x.\,\{q' \Rightarrow q\}) \Rightarrow \triplex{p}{e}{x}{q}$ \\[1mm]
-\end{tabular}}
+% \begin{lemma}
+%   $\free{t} \subseteq \dom{\eta} \Rightarrow (\semantic{\tj{t}{\sigma}}\,\eta)\in\semantic{\sigma}$
+% \end{lemma}
 
-\subsubsection{Rules for the programming language}
+% \begin{proof}
+%   Straightforward induction.
+% \end{proof}
 
-{\small
-\begin{tabular}{rl}
-  \RN{Val} & $\triple{\emp}{x_{:y}}{y = x \wedge \emp}$ \\[1mm]
-  \RN{App} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\app{x}{y}}{z}{q})$ \\
-  & $\Rightarrow \triplex{p}{\app{e_1}{e_2}}{z}{q}$ \\
-  & {\footnotesize where $x \not\in \free{e_2}$, $x,y \not\in\free{q}$} \\[1mm]
-  \RN{AppOp} & $\triplex{\emp}{\app{\app{\op}{x}}{y}}{z}{z = \app{f_{\op}}{\ttuple{x,y}} \wedge \emp}$ \\[1mm]
-  \RN{AppAbs} & $\forall x.\,\triplex{p}{e}{y}{q} \Rightarrow \triplex{p}{\app{(\abstr{x}{e})}{x}}{y}{q}$ \\[1mm]
-%  \RN{Unfold} & $\triplex{p}{e[\app{\fix}{(\abstr{x}{e})}/x]}{y}{q} \Rightarrow \triplex{p}{\app{\fix}{(\abstr{x}{e})}}{y}{q}$ \\[1mm]
-%  \RN{Fst} & $\forall x,y.\,\triplex{\emp}{\app{\fst}{\pair{x}{y}}}{z}{z = x \wedge \emp}$ \\[1mm]
-%  \RN{Snd} & $\forall x,y.\,\triplex{\emp}{\app{\snd}{\pair{x}{y}}}{z}{z = y \wedge \emp}$ \\[1mm]
-  \RN{AppProj} & $\forall x_1,\ldots,x_n.\,\triplex{\emp}{\app{\proj{n}{i}}{\tuple{x_1,\ldots,x_n}}}{y}{y = x_i \wedge \emp}$ \\[1mm]
-  \RN{AppDeref} & $\forall x,y.\,\triplex{x \mapsto y}{!x}{z}{z = y \wedge x \mapsto y}$ \\[1mm]
-  \RN{AppAssign} & $\forall x,y.\,\triplex{x \mapsto -}{\app{\app{\assign}{x}}{y}}{u}{u = \unit \wedge x \mapsto y}$ \\[1mm]
-  \RN{AppRef} & $\forall x.\,\triplex{\emp}{\cref\,x}{y}{y \mapsto x}$ \\[1mm]
-  \RN{CondTrue} & $\triplex{p}{e_0}{x}{x = \true \wedge r} \wedge \triplex{r}{e_1}{y}{q}$ \\
-  & $\Rightarrow \triplex{p}{\ifte{e_0}{e_1}{e_2}}{y}{q}$ \\
-  & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
-  \RN{CondFalse} & $\triplex{p}{e_0}{x}{x = \false \wedge r} \wedge \triplex{r}{e_2}{y}{q}$ \\
-  & $\Rightarrow \triplex{p}{\ifte{e_0}{e_1}{e_2}}{y}{q}$ \\
-  & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
-%  \RN{Tuple} & $\triplex{p}{e_1}{x_1}{p_1} \wedge \ldots \wedge \triplex{p_n}{e_n}{x_n}{p_n} \wedge (\forall x_1,\ldots,x_n.\,\triplex{
-%  \RN{Pair} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\pair{x}{y}}{z}{q})$ \\
-%  & $\Rightarrow \triplex{p}{\pair{e_1}{e_2}}{z}{q}$ \\
-%  & \footnotesize{where $x \not\in \free{e_2}$, $x,y \not\in \free{q}$}
-\end{tabular}}
+% We write $\semantic{t}$ instead of $\semantic{\tj{t}{\sigma}}$, since for each well typed term $t$ there is
+% exactly one $\sigma$ such that $\tj{t}{\sigma}$.
 
-\subsubsection{Rules for separation}
+% \begin{definition}[Meaning of assertions]
+%   The {\em satisfaction relation}, written $\eta,s \models p$, is the smallest relation between 
+%   environments, stores and well typed assertions, satisfying $\free{p} \subseteq \dom{\eta}$ and all of the
+%   following properties:
+%   \[\begin{array}{lcl}
+%     \eta,s \models t_1 = t_2
+%     &\text{iff}& \semantic{t_1}\,\eta = \semantic{t_2}\,\eta \\
+%     \eta,s \models \app{x^{\tassn[\sigma]}}{t}
+%     &\text{iff}& (\semantic{t}\,\eta,s) \in \eta(x) \\
+%     \eta,s \models \neg p
+%     &\text{iff}& \eta,s \not\models p \\
+%     \eta,s \models p \wedge q
+%     &\text{iff}& \eta,s \models p \text{ and } \eta,s \models q \\
+%     \eta,s \models \exists x^\theta.\,p
+%     &\text{iff}& \exists d \in \semantic{\theta}.\,\eta[d/x],s \models p \\
+%     \eta,s \models \emp
+%     &\text{iff}& \grph{s} = \emptyset \\
+%     \eta,s \models t_1 \mapsto t_2
+%     &\text{iff}& \grph{s} = \{(\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\} \\
+%     \eta,s \models p \sepcon q
+%     &\text{iff}& \exists s_1,s_2.\,s=s_1 \oplus s_2 \text{ and } \eta,s_1 \models p \text{ and } \eta,s_2 \models q \\
+%     \eta,s \models p \sepimp q
+%     &\text{iff}& \forall s_1,s_2.\,(s_2 = s \oplus s_1 \text{ and } \eta,s_1 \models p) \text{ implies } \eta,s_2 \models q \\
+%     \eta,s \models \triplex{p}{e}{x}{q}
+%     &\text{iff}& \forall s'.\,\eta,s' \models p \text{ implies that all computations for } (e\,\eta,s') \\
+%     && \text{terminate with some $(v,s'')$ such that } \eta[v/x],s'' \models q
+%   \end{array}\]
+% \end{definition}
 
-{\small
-\begin{tabular}{rl}
-  \RN{Sep-1} & $p_1 \sepcon p_2 \Leftrightarrow p_2 \sepcon p_1$ \\[1mm]
-  \RN{Sep-2} & $(p_1 \sepcon p_2) \sepcon p_3 \Leftrightarrow p_1 \sepcon (p_2 \sepcon p_3)$ \\[1mm]
-  \RN{Sep-3} & $p \sepcon \emp \Leftrightarrow p$ \\[1mm]
-  \RN{Sep-4} & $(p_1 \vee p_2) \sepcon q \Leftrightarrow (p_1 \vee q) \sepcon (p_2 \vee q)$ \\[1mm]
-  \RN{Sep-5} & $(p_1 \wedge p_2) \sepcon q \Rightarrow (p_1 \wedge q) \sepcon (p_2 \wedge q)$ \\[1mm]
-  \RN{Sep-6} & $(\exists x.\,p) \sepcon q \Leftrightarrow \exists x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
-  \RN{Sep-7} & $(\forall x.\,p) \sepcon q \Rightarrow \forall x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
-  \RN{Sep-8} & $\{p_1 \Rightarrow p_2\} \wedge \{q_1 \Rightarrow q_2\} \Rightarrow \{p_1 \sepcon q_1 \Rightarrow p_2 \sepcon q_2\}$ \\[1mm]
-  \RN{Sep-9} & $\{p_1 \sepcon p_2 \Rightarrow p_3\} \Leftrightarrow \{p_1 \Rightarrow (p_2 \sepimp p_3)\}$ 
-\end{tabular}}
+% We write $x^{\tassn}$ instead of $\app{x^{\tassn}}{\unit}$.
+% Furtheron we abbreviate:
+% \[\begin{array}{rcl}
+%   \btrue &=_{def}& \true = \true \\
+%   \bfalse &=_{def}& \neg \btrue \\
+%   \forall x.\,p &=_{def}& \neg \exists x.\,\neg p \\
+%   p \vee q &=_{def}& \neg (\neg p \wedge \neg q) \\
+%   p \Rightarrow q &=_{def}& \neg p \vee q \\
+%   p \Leftrightarrow q &=_{def}& (p \Rightarrow q) \wedge (q \Rightarrow p)
+% \end{array}\]
+% It is useful to introduce several more complex forms as abbreviations:
+% \[\begin{array}{rcl}
+%   t \mapsto - &=_{def}& \exists x.\,t \mapsto x \quad \text{where $x\not\in\free{t}$} \\
+%   t_1 \hookrightarrow t_2 &=_{def}& t_1 \mapsto t_2 \sepcon \btrue \\
+%   \{p\} &=_{def}& \triplex{\btrue}{\unit}{x}{p} \quad \text{where $x\not\in\free{p}$}
+% \end{array}\]
+
+% Meaning of abbreviations:
+% \[\begin{array}{lcl}
+%   \eta,s \models \btrue
+%   && \text{always} \\
+%   \eta,s \models \bfalse
+%   && \text{never} \\
+%   \eta,s \models p \vee q
+%   &\text{iff}& \eta,s \models p \text{ or } \eta,s \models q \\
+%   \eta,s \models p \Rightarrow q
+%   &\text{iff}& \eta,s \models p \text{ implies } \eta,s \models q \\
+%   \eta,s \models p \Leftrightarrow q
+%   &\text{iff}& \eta,s \models p \text{ iff } \eta,s \models q \\
+%   \eta,s \models \forall x^\theta.\,p
+%   &\text{iff}& \forall d\in \semantic{\theta}.\,\eta[d/x],s \models p \\
+%   \eta,s \models t \mapsto -
+%   &\text{iff}& \dom{s} = \{\semantic{t}\,\eta\} \\
+%   \eta,s \models t_1 \hookrightarrow t_2
+%   &\text{iff}& (\semantic{t_1}\,\eta,\semantic{t_2}\,\eta)\in\grph{s} \\
+%   \eta,s \models \{p\}
+%   &\text{iff}& \forall s'.\,\eta,s' \models p
+% \end{array}\]
+
+% \begin{lemma} \label{lemma:Coincidence} \
+%   \begin{enumerate}
+%   \item Let $t\in\Term$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{t}} \eta_2$. Then
+%     $\semantic{t}\,\eta_1 = \semantic{t}\,\eta_2$.
+%   \item Let $p\in\Assn$, $s\in\Store$, $\eta_1,\eta_2\in\Env$ with $\eta_1 =_{\free{p}} \eta_2$. Then
+%     $\eta_1,s \models p$ iff $\eta_2,s\models p$.
+%   \end{enumerate}
+% \end{lemma}
+
+% \begin{proof}
+%   Trivial inductions.
+% \end{proof}
+
+% \subsubsection{Pure assertions}
+
+% \begin{definition}
+%   An assertion is said to be {\em pure} if, for any given environment, it is independent of the store.
+%   More precisely, an assertion $p$ is {\em pure} iff, for all environments $\eta$ and all stores $s, s'$,
+%   \[\begin{array}{rcl}
+%     \eta,s \models p &\text{iff}& \eta,s' \models p.
+%   \end{array}\]
+% \end{definition}
+
+% Obviously all hoare formulae $h$ are pure.
 
 
-\subsubsection{Structural rules}
+% \subsection{The calculus}
 
-{\small
-\begin{tabular}{rl}
-  \RN{Refl-Term} & $\forall x^\sigma.\,x = x$ \\[1mm]
-  \RN{Subst-Term} & $t_1 = t_2 \Rightarrow (p[t_1/x] \Leftrightarrow p[t_2/x])$ \\
-  & {\footnotesize where $(p[t_1/x]), (p[t_2/x]) \in \Assn$} \\[1mm]
-  \RN{Spec-Term} & $(\forall x.\,p) \Rightarrow p[t/x]$ \\
-  & {\footnotesize where $(p[t/x])\in\Assn$} \\[1mm]
-\end{tabular}}
+% \subsubsection{The frame axiom}
+
+% \begin{center}
+% \begin{tabular}{rl}
+%   \RN{Frame} & $\triplex{p}{e}{x}{q} \Rightarrow \triplex{p \sepcon r}{e}{x}{q \sepcon r}$ \\
+%   & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
+% \end{tabular}
+% \end{center}
+
+% To see that the \RN{Frame} axiom is sound, assume that $\eta\in\Env$ with $\free{p,e,q,r}\subseteq\dom{\eta}$ and
+% $s\in\Store$ with $\eta,s \models p \sepcon r$. This implies that there are $s_1,s_2$ such that $s = s_1 \oplus s_2$,
+% $\eta,s_1 \models p$ and $\eta,s_2 \models r$. Now by lemma~\ref{lemma:Termination_Monotonicity} we know
+% that each computation for $(e\,\eta,s)$ terminates with some $(v,s')$, since $\eta\models\triplex{p}{e}{x}{q}$.
+% Now lemma~\ref{lemma:Frame_Property} states that there must be a computation
+% $(e\,\eta,s_1) \to^* (v,s_1')$ with $s' = s_1' \oplus s_2$. By lemma~\ref{lemma:Coincidence} we have
+% $\eta[v/x],s_2 \models r$ since $x\not\in\free{r}$ and by assumption we already know that
+% $\eta[v/x],s_1' \models q$.
+
+% \subsubsection{Rules for total correctness}
+
+% {\small
+% \begin{tabular}{rl}
+%   \RN{Conseq} & $(\{p \Rightarrow p'\} \wedge \triplex{p'}{e}{x}{q'} \wedge \forall x.\,\{q' \Rightarrow q\}) \Rightarrow \triplex{p}{e}{x}{q}$ \\[1mm]
+% \end{tabular}}
+
+% \subsubsection{Rules for the programming language}
+
+% {\small
+% \begin{tabular}{rl}
+%   \RN{Val} & $\triple{\emp}{x_{:y}}{y = x \wedge \emp}$ \\[1mm]
+%   \RN{App} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\app{x}{y}}{z}{q})$ \\
+%   & $\Rightarrow \triplex{p}{\app{e_1}{e_2}}{z}{q}$ \\
+%   & {\footnotesize where $x \not\in \free{e_2}$, $x,y \not\in\free{q}$} \\[1mm]
+%   \RN{AppOp} & $\triplex{\emp}{\app{\app{\op}{x}}{y}}{z}{z = \app{f_{\op}}{\ttuple{x,y}} \wedge \emp}$ \\[1mm]
+%   \RN{AppAbs} & $\forall x.\,\triplex{p}{e}{y}{q} \Rightarrow \triplex{p}{\app{(\abstr{x}{e})}{x}}{y}{q}$ \\[1mm]
+% %  \RN{Unfold} & $\triplex{p}{e[\app{\fix}{(\abstr{x}{e})}/x]}{y}{q} \Rightarrow \triplex{p}{\app{\fix}{(\abstr{x}{e})}}{y}{q}$ \\[1mm]
+% %  \RN{Fst} & $\forall x,y.\,\triplex{\emp}{\app{\fst}{\pair{x}{y}}}{z}{z = x \wedge \emp}$ \\[1mm]
+% %  \RN{Snd} & $\forall x,y.\,\triplex{\emp}{\app{\snd}{\pair{x}{y}}}{z}{z = y \wedge \emp}$ \\[1mm]
+%   \RN{AppProj} & $\forall x_1,\ldots,x_n.\,\triplex{\emp}{\app{\proj{n}{i}}{\tuple{x_1,\ldots,x_n}}}{y}{y = x_i \wedge \emp}$ \\[1mm]
+%   \RN{AppDeref} & $\forall x,y.\,\triplex{x \mapsto y}{!x}{z}{z = y \wedge x \mapsto y}$ \\[1mm]
+%   \RN{AppAssign} & $\forall x,y.\,\triplex{x \mapsto -}{\app{\app{\assign}{x}}{y}}{u}{u = \unit \wedge x \mapsto y}$ \\[1mm]
+%   \RN{AppRef} & $\forall x.\,\triplex{\emp}{\cref\,x}{y}{y \mapsto x}$ \\[1mm]
+%   \RN{CondTrue} & $\triplex{p}{e_0}{x}{x = \true \wedge r} \wedge \triplex{r}{e_1}{y}{q}$ \\
+%   & $\Rightarrow \triplex{p}{\ifte{e_0}{e_1}{e_2}}{y}{q}$ \\
+%   & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
+%   \RN{CondFalse} & $\triplex{p}{e_0}{x}{x = \false \wedge r} \wedge \triplex{r}{e_2}{y}{q}$ \\
+%   & $\Rightarrow \triplex{p}{\ifte{e_0}{e_1}{e_2}}{y}{q}$ \\
+%   & {\footnotesize where $x \not\in \free{r}$} \\[1mm]
+% %  \RN{Tuple} & $\triplex{p}{e_1}{x_1}{p_1} \wedge \ldots \wedge \triplex{p_n}{e_n}{x_n}{p_n} \wedge (\forall x_1,\ldots,x_n.\,\triplex{
+% %  \RN{Pair} & $\triplex{p}{e_1}{x}{p'} \wedge (\forall x.\,\triplex{p'}{e_2}{y}{q'}) \wedge (\forall x,y.\,\triplex{q'}{\pair{x}{y}}{z}{q})$ \\
+% %  & $\Rightarrow \triplex{p}{\pair{e_1}{e_2}}{z}{q}$ \\
+% %  & \footnotesize{where $x \not\in \free{e_2}$, $x,y \not\in \free{q}$}
+% \end{tabular}}
+
+% \subsubsection{Rules for separation}
+
+% {\small
+% \begin{tabular}{rl}
+%   \RN{Sep-1} & $p_1 \sepcon p_2 \Leftrightarrow p_2 \sepcon p_1$ \\[1mm]
+%   \RN{Sep-2} & $(p_1 \sepcon p_2) \sepcon p_3 \Leftrightarrow p_1 \sepcon (p_2 \sepcon p_3)$ \\[1mm]
+%   \RN{Sep-3} & $p \sepcon \emp \Leftrightarrow p$ \\[1mm]
+%   \RN{Sep-4} & $(p_1 \vee p_2) \sepcon q \Leftrightarrow (p_1 \vee q) \sepcon (p_2 \vee q)$ \\[1mm]
+%   \RN{Sep-5} & $(p_1 \wedge p_2) \sepcon q \Rightarrow (p_1 \wedge q) \sepcon (p_2 \wedge q)$ \\[1mm]
+%   \RN{Sep-6} & $(\exists x.\,p) \sepcon q \Leftrightarrow \exists x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
+%   \RN{Sep-7} & $(\forall x.\,p) \sepcon q \Rightarrow \forall x.\,p \sepcon q$ $\quad$ where $x\not\in\free{q}$ \\[1mm]
+%   \RN{Sep-8} & $\{p_1 \Rightarrow p_2\} \wedge \{q_1 \Rightarrow q_2\} \Rightarrow \{p_1 \sepcon q_1 \Rightarrow p_2 \sepcon q_2\}$ \\[1mm]
+%   \RN{Sep-9} & $\{p_1 \sepcon p_2 \Rightarrow p_3\} \Leftrightarrow \{p_1 \Rightarrow (p_2 \sepimp p_3)\}$ 
+% \end{tabular}}
+
+
+% \subsubsection{Structural rules}
+
+% {\small
+% \begin{tabular}{rl}
+%   \RN{Refl-Term} & $\forall x^\sigma.\,x = x$ \\[1mm]
+%   \RN{Subst-Term} & $t_1 = t_2 \Rightarrow (p[t_1/x] \Leftrightarrow p[t_2/x])$ \\
+%   & {\footnotesize where $(p[t_1/x]), (p[t_2/x]) \in \Assn$} \\[1mm]
+%   \RN{Spec-Term} & $(\forall x.\,p) \Rightarrow p[t/x]$ \\
+%   & {\footnotesize where $(p[t/x])\in\Assn$} \\[1mm]
+% \end{tabular}}
 
 
 \end{document}

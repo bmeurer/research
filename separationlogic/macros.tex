@@ -10,8 +10,8 @@
 %%
 
 \newcommand{\nstyle}[1]{\ensuremath{\mathit{#1}}}
-\newcommand{\pstyle}[1]{\ensuremath{\mathtt{#1}}}
-\newcommand{\sstyle}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\pstyle}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\sstyle}[1]{\ensuremath{\mathrm{#1}}}
 
 
 %%
@@ -21,10 +21,13 @@
 \newcommand{\coloncolon}{\mathrel{::}}
 \newcommand{\pto}{\rightharpoonup} %{\hookrightarrow}
 %\newcommand{\tto}{\dot{\to}} %{\stackrel{_t}{\to}}
-\DeclareMathOperator{\tto}{\dot{\to}}
+%\DeclareMathOperator{\tto}{\dot{\to}}
+\DeclareMathOperator{\tto}{\Rightarrow}
 \DeclareMathOperator{\ttimes}{\dot{\times}}
 \DeclareMathOperator{\sepcon}{\ast}
-\DeclareMathOperator{\sepimp}{-\kern-.05em\ast}
+\DeclareMathOperator{\fold}{fold}
+
+\newcommand{\conf}[2]{\langle{#1},{#2}\rangle}
 
 
 %%
@@ -33,30 +36,14 @@
 
 \newcommand{\N}{\ensuremath{\mathbb N}}
 \newcommand{\Z}{\ensuremath{\mathbb Z}}
-
-\newcommand{\Bool}{\sstyle{Bool}}
-\newcommand{\Const}{\sstyle{Const}}
-\newcommand{\Exp}{\sstyle{Exp}}
-\newcommand{\Member}{\ensuremath{\mathcal{M}}}
-\newcommand{\Var}{\sstyle{Var}}
-\newcommand{\Int}{\Z}
-\newcommand{\Loc}{\sstyle{Loc}}
-\newcommand{\Op}{\sstyle{Op}}
-\newcommand{\Store}{\sstyle{Store}}
-\newcommand{\Type}{\sstyle{Type}}
-\newcommand{\LType}{\sstyle{LType}}
-\newcommand{\TType}{\sstyle{TType}}
-\newcommand{\Val}{\sstyle{Val}}
-
-\newcommand{\Env}{\sstyle{Env}}
-\newcommand{\TEnv}{\sstyle{TEnv}}
-\newcommand{\Model}{\sstyle{Model}}
-
-\newcommand{\Assn}{\sstyle{Assn}}
-\newcommand{\Formula}{\sstyle{Formula}}
-\newcommand{\Term}{\sstyle{Term}}
-
-\newcommand{\Perm}{\sstyle{Perm}}
+\newcommand{\ProgType}{\ensuremath{\textsc{ProgType}}}
+\newcommand{\AssnType}{\ensuremath{\textsc{AssnType}}}
+\newcommand{\Exp}{\ensuremath{\textsc{Exp}}}
+\newcommand{\Val}{\ensuremath{\textsc{Val}}}
+\newcommand{\cVal}{\ensuremath{\textsc{cVal}}}
+\newcommand{\Term}{\ensuremath{\textsc{Term}}}
+\newcommand{\Assn}{\ensuremath{\textsc{Assn}}}
+\newcommand{\Store}{\ensuremath{\textsc{Store}}}
 
 
 %%
@@ -88,62 +75,42 @@
 %% Types
 %%
 
-\newcommand{\tunit}{\pstyle{unit}}
-\newcommand{\tbool}{\pstyle{bool}}
-\newcommand{\tint}{\pstyle{int}}
-\newcommand{\tarrow}[2]{#1\to#2}
-\newcommand{\ttarrow}[2]{#1\tto#2}
-\newcommand{\trecord}[1]{\left\{#1\right\}}
-\newcommand{\tref}[1]{#1\,\pstyle{ref}}
-%\newcommand{\tassn}[1]{#1\,\pstyle{assn}}
-\newcommand{\tassn}[1][]{{\ifthenelse{\equal{#1}{}}{}{#1\,}}\pstyle{assn}}
-
-
-%%
-%% Constants
-%%
-
-\newcommand{\true}{\pstyle{true}}
-\newcommand{\false}{\pstyle{false}}
-\newcommand{\assign}{\pstyle{:=}}
-\newcommand{\fix}{\pstyle{fix}}
-\newcommand{\cref}{\pstyle{ref}}
-%\newcommand{\unit}{\pstyle{()}}
-\newcommand{\unit}{\pstyle{unit}}
-\newcommand{\proj}[2]{\pstyle{proj}^{#1}_{#2}}
-\newcommand{\fst}{\pstyle{fst}}
-\newcommand{\snd}{\pstyle{snd}}
-
-\newcommand{\btrue}{\ensuremath{\mathbf{true}}}
-\newcommand{\bfalse}{\ensuremath{\mathbf{false}}}
+\newcommand{\Unit}{\pstyle{Unit}}
+\newcommand{\Bool}{\pstyle{Bool}}
+\newcommand{\Nat}{\pstyle{Nat}}
+\newcommand{\Ref}[1]{\pstyle{Ref}\,{#1}}
+\newcommand{\Prop}{\pstyle{Prop}}
 
 
 %%
 %% Expressions
 %%
 
-\newcommand{\abstr}[2]{\lambda #1.#2}
-\newcommand{\app}[2]{#1\,#2}
-\newcommand{\ifte}[3]{\pstyle{if}\,#1\,\pstyle{then}\,#2\,\pstyle{else}\,#3}
-\newcommand{\record}[1]{\left\{#1\right\}}
-\newcommand{\tuple}[1]{\langle #1 \rangle}
-\newcommand{\pair}[2]{\tuple{#1,#2}}
-
-%\newcommand{\ttuple}[1]{\langle\kern-0.25em\langle#1\rangle\kern-0.25em\rangle}
-\newcommand{\ttuple}[1]{(#1)}
+\newcommand{\z}{\pstyle{z}}
+\renewcommand{\succ}[1]{\pstyle{succ}\,{#1}}
+\newcommand{\iternat}[4]{\pstyle{iter}_{\Nat}(#1,#2,{#3}.\,{#4})}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\unit}{\pstyle{unit}}
+\newcommand{\fst}[1]{\app{\pstyle{fst}}{#1}}
+\newcommand{\snd}[1]{\app{\pstyle{snd}}{#1}}
+\newcommand{\new}[2]{\app{\pstyle{new}^{#1}}{#2}}
+\newcommand{\deref}[1]{\app{!}{#1}}
+\newcommand{\assign}[2]{{#1}:={#2}}
 
 
 %%
 %% Formulas
 %%
 
+\newcommand{\emp}{\pstyle{emp}}
 \newcommand{\qex}[2]{\exists{#1}.\,{#2}}
 \newcommand{\qall}[2]{\forall{#1}.\,{#2}}
 \newcommand{\qbex}[3]{\exists{#1}\in{[#2]}.\,{#3}}
 \newcommand{\qball}[3]{\forall{#1}\in{[#2]}.\,{#3}}
 
 \newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
-\newcommand{\triplex}[4]{\triple{#1}{{#2}_{:{#3}}}{#4}}
+\newcommand{\triplex}[4]{\triple{#1}{#2}{{#3}.\,{#4}}}
 
 \newcommand{\tabstr}[2]{\pstyle{fn}\,#1.\,#2}
 
