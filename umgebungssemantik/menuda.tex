@@ -1,0 +1,329 @@
+\documentclass[12pt,fleqn,a4paper]{article}
+\usepackage{ngerman}
+\usepackage{hyperref,german,amssymb,amstext,amsmath,amsthm,array,stmaryrd,color,latexsym}
+
+% TP Macros
+\input{TP}
+
+\newcommand{\RN}[1]{\mbox{\textsc{(#1)}}}
+\newcommand{\Cl}{\name{Cl}}
+\newcommand{\cl}{\name{cl}}
+\newcommand{\Req}{\name{Req}}
+
+\begin{document}
+
+\section{Substitutionssemantik}
+
+\begin{definition}[Syntax der Programmiersprache]
+  Vorgegeben seien
+  \begin{itemize}
+  \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
+  \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
+  \item eine (unendliche) Menge $\Id$ von Namen $\id$.
+  \end{itemize}
+  Die Mengen $\Op$ aller {\em Operatoren} $\op$, $\Const$ aller {\em Konstanten} $c$, $\Exp$ aller 
+  {\em Ausdr\"ucke} $e$ und $\Val$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
+  \bgram
+  \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
+  c \is b \mid z \mid \op \mid \proj{i} \\
+  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bli{\id}{e_1}{e_2} \mid \rec{\id}{e}
+  \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
+  v \is c \mid \abstr{\id}{e} \mid (v_1,\ldots,v_n)
+  \egram
+\end{definition}
+
+\begin{definition}[Freie Namen]
+  Die Menge $\free{e} \subseteq \Id$ aller \emph{im Ausdruck $e$ frei vorkommenden Namen}
+  ist induktiv definiert durch:
+  \[\begin{array}{rcl}
+    \free{c} &=& \emptyset \\
+    \free{\id} &=& \{\id\} \\
+    \free{\abstr{\id}{e}} &=& \free{e} \setminus \{\id\} \\
+    \free{\app{e_1}{e_2}} &=& \free{e_1} \cup \free{e_2} \\
+    \free{\bli{\id}{e_1}{e_2}} &=& \free{e_1} \cup (\free{e_2} \setminus \{\id\}) \\
+    \free{\rec{\id}{e}} &=& \free{e} \setminus \{\id\} \\
+    \free{\bifte{e_0}{e_1}{e_2}} &=& \free{e_0} \cup \free{e_1} \cup \free{e_2} \\
+    \free{(e_1,\ldots,e_n)} &=& \bigcup_{i=1 \ldots n} \free{e_i} \\
+  \end{array}\]
+\end{definition}
+
+\begin{definition}[Simultane Substitution]
+  Eine \emph{(simultane) Substitution} ist eine total Funktion $s: \Id \to \Exp$, welche alle, bis auf endlich
+  viele, Namen auf sich selbst abbildet. Diese endliche Menge
+  \[\begin{array}{rcl}
+    \dom{s} &=& \{\id\in\Id \mid s(\id) \ne \id\}
+  \end{array}\]
+  wird als der \emph{Definitionsbereich} von $s$ bezeichnet. Die Menge $\free{s}$ aller
+  \emph{in $s$ frei vorkommenden Namen} ist definiert durch
+  \[\begin{array}{rcl}
+    \free{s} &=& \bigcup_{\id\in\dom{s}}\free{s(\id)}.
+  \end{array}\]
+\end{definition}
+
+\noindent
+Wir schreiben $[e_1/\id_1,\ldots,e_n/\id_n]$ f"ur die Substitution $s$, f"ur die gilt:
+\begin{enumerate}
+\item $s(\id_i) = e_i$ f"ur alle $i = 1,\ldots,n$ und
+\item $s(\id) = \id$ f"ur alle $\id \not \in \{\id_1,\ldots,\id_n\}$.
+\end{enumerate}
+Weiterhin schreiben wir $s \setminus \id$ f"ur die Substitution $s'$, f"ur die gilt:
+\begin{enumerate}
+\item $s'(\id) = \id$ und
+\item $s'(\id') = s(\id')$ f"ur alle $\id' \ne \id$.
+\end{enumerate}
+
+\begin{definition}
+  Der Ausdruck $(e\,s)$, welcher durch \emph{Anwendung der (simultanen) Substitution $s$} auf den Ausdruck $e$
+  entsteht, ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    c\,s &=& c \\
+    \id\,s &=& s(\id) \\
+    (\abstr{\id}{e})\,s &=& \abstr{\id'}{(e[\id'/\id])\,(s \setminus \id)} \\
+    && \text{\footnotesize{mit
+        $\id'\not\in(\free{e}\setminus\{\id\}) \cup \free{s\setminus\id} \cup \dom{s\setminus\id}$}} \\
+    (\app{e_1}{e_2})\,s &=& \app{(e_1\,s)}{(e_2\,s)} \\
+    (\bli{\id}{e_1}{e_2})\,s &=& \bli{\id'}{e_1\,s}{(e_2[\id'/\id])\,(s \setminus\id)} \\
+    && \text{\footnotesize{mit
+        $\id'\not\in(\free{e_2}\setminus\{\id\}) \cup \free{s\setminus\id} \cup \dom{s\setminus\id}$}} \\
+    (\rec{\id}{e})\,s &=& \rec{\id'}{(e[\id'/\id])\,(s\setminus\id)} \\
+    && \text{\footnotesize{mit
+        $\id'\not\in(\free{e}\setminus\{\id\}) \cup \free{s\setminus\id} \cup \dom{s\setminus\id}$}} \\
+    (\bifte{e_0}{e_1}{e_2})\,s &=& \bifte{e_0\,s}{e_1\,s}{e_2\,s} \\
+    (e_1,\ldots,e_n)\,s &=& (e_1\,s,\ldots,e_n\,s) \\
+  \end{array}\]
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Substitutionssemantik ist eine Formel der Gestalt $e \Downarrow v$ mit $e\in\Exp$
+und $v \in \Val$. Ein solcher big step hei"st {\em g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Val}        & $v \Downarrow v$ \\[3mm]
+  \RN{Beta-V}     & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e_2 \Downarrow v \quad e[v/\id] \Downarrow v'}
+                           {\app{e_1}{e_2} \Downarrow v'}$ \\[3mm]
+  \RN{Op}         & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow (z_1,z_2)}
+                           {\app{e_1}{e_2} \Downarrow \op^I(z_1,z_2)}$ \\[3mm]
+  \RN{Proj}       & $\regel{e_1 \Downarrow \proj{i} \quad e_2 \Downarrow (v_1,\ldots,v_n) \quad 1 \le i \le n}
+                           {\app{e_1}{e_2} \Downarrow v_i}$ \\[3mm]
+  \RN{Let}        & $\regel{e_1 \Downarrow v \quad e_2[v/\id] \Downarrow v'}
+                           {\bli{\id}{e_1}{e_2} \Downarrow v'}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{e_0 \Downarrow \true \quad e_1 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Cond-False} & $\regel{e_0 \Downarrow \false \quad e_2 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Tuple}      & $\regel{e_1 \Downarrow v_1 \quad \ldots \quad e_n \Downarrow v_n}
+                           {(e_1,\ldots,e_n) \Downarrow (v_1,\ldots,v_n)}$ \\[3mm]
+  \RN{Unfold}     & $\regel{e[\rec{\id}{e}/\id] \Downarrow v}
+                           {\rec{\id}{e} \Downarrow v}$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+\begin{lemma}[Wohldefiniertheit der Substitutionssemantik] \label{lemma:WD_Substs}
+  Wenn $e \Downarrow v$, dann gilt $\free{v} \subseteq \free{e}$.
+\end{lemma}
+
+\begin{proof}
+  Sollte sich leicht durch Induktion "uber die L"ange der Herleitung des big steps zeigen lassen.
+\end{proof}
+
+\begin{corollary}
+  Wenn $\free{e} = \emptyset$ und  $e \Downarrow v$, dann gilt auch $\free{v} = \emptyset$.
+\end{corollary}
+
+\begin{proof}
+  Folgt unmittelbar aus Lemma~\ref{lemma:WD_Substs}.
+\end{proof}
+
+\section{Umgebungssemantik}
+
+\begin{definition}[Closures und Umgebungen]
+  Die Mengen $\Cl$ aller \emph{Closures} $\cl$ und $\Env$ aller \emph{Umgebungen} $\eta$ sind
+  durch die folgende kontextfreie Grammatik definiert:
+  \bgram
+  \eta \is [\,]
+  \al \id:\cl;\eta
+  \n
+  \cl \is (e,\eta)
+  \al (\cl_1,\ldots,c_n) & \text{mit } n \ge 1
+  \egram
+  Der Definitionsbereich $\dom{\eta}$ einer Umgebung $\eta$ ist induktiv definiert durch:
+  \[\begin{array}{rcl}
+    \dom{[\,]} &=& \emptyset \\
+    \dom{\id:\cl;\eta} &=& \{\id\} \cup \dom{\eta} \\
+  \end{array}\]
+\end{definition}
+
+\noindent
+F"ur $\id_1:\cl_1;\ldots;\id_n:\cl_n;[\,]$ schreiben wir kurz $[\id_1:\cl_1;\ldots;\id_n:\cl_n]$ und
+f"ur $\eta = [\id_1:\cl_1;\ldots;\id_n:\cl_n]$ und $\id \in \dom{\eta}$ sei
+\[\begin{array}{rcl}
+  \eta(\id) &=& \cl_i
+\end{array}\]
+mit $i = \min\{j\in\{1,\ldots,n\}\mid\id = \id_j\}$. Weiterhin schreiben wir $\eta \setminus \id$ f"ur
+diejenige Umgebung $\eta'$, die aus $\eta$ durch Entfernen aller Eintr"age f"ur $\id$ entsteht.
+
+Der Begriff \emph{Closure} ist an dieser Stelle vielleicht etwas irref"uhrend, da eine Closure
+$(e,\eta)$ nicht wirklich abgeschlossen sein muss, denn weder muss $\free{e} \subseteq \dom{\eta}$
+gelten, noch m"ussen alle in $\eta$ vorkommenden Closures abgeschlossen sein. Stattdessen definieren
+wir zus"atzlich den Begriff der \emph{g"ultigen Closures} und \emph{g"ultigen Umgebungen}.
+
+\begin{definition}[Freie Namen in Closures und Umgebungen]
+  Die Mengen $\free{\cl}\subseteq\Id$ und $\free{\eta}\subseteq\Id$ aller
+  \emph{in der Closure $\cl$ bzw. der Umgebung $\eta$ vorkommenden freien Namen} sind wie folgt
+  induktiv definiert:
+  \[\begin{array}{rcl}
+    \free{(e,\eta)} &=& (\free{e} \setminus \dom{\eta}) \cup \free{\eta} \\
+    \free{(\cl_1,\ldots,\cl_n)} &=& \bigcup_{i=1 \ldots n} \free{\cl_i} \\
+    \free{[\,]} &=& \emptyset \\
+    \free{\id:\cl;\eta} &=& \free{\cl} \cup \free{\eta} \\
+  \end{array}\]
+\end{definition}
+
+\begin{definition}[G"ultige Closures und Umgebungen] \
+  \begin{enumerate}
+  \item Eine Closure $\cl$ hei"st \emph{g"ultig}, wenn $\free{\cl} = \emptyset$.
+  \item Eine Umgebung $\eta$ hei"st \emph{g"ultig}, wenn $\free{\eta} = \emptyset$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Werte der Umgebungssemantik]
+  Die Menge $W \subseteq \Cl$ aller \emph{Werte der Umgebungssemantik} $w$ ist definiert durch
+  folgende kontextfreie Grammatik:
+  \bgram
+  w \is (c,[\,])
+  \al (\abstr{\id}{e},\eta)
+  \al (w_1,\ldots,w_n) & \text{mit } n \ge 0
+  \egram
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $\cl \Downarrow w$,
+wobei $\cl\in\Cl$ und $w \in W$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
+folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Const}      & $(c,\eta) \Downarrow (c,[\,])$ \\[1mm]
+  \RN{Closure}    & $(\abstr{\id}{e},\eta) \Downarrow (\abstr{\id}{e},\eta)$ \\[1mm]
+  \RN{Tuple-V}    & $(w_1,\ldots,w_n) \Downarrow (w_1,\ldots,w_n)$ \\[1mm]
+  \RN{Id}         & $\regel{\eta(\id) \Downarrow w}
+                           {(\id,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                            \quad (e_2,\eta) \Downarrow w'
+                            \quad (e',\id':w';\eta') \Downarrow w}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Op}         & $\regel{(e_1,\eta) \Downarrow (\op,[\,]) \quad (e_2,\eta) \Downarrow ((z_1,[\,]),(z_2,[\,]))}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\op^I(z_1,z_2),[\,])}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\cl) \Downarrow w'}
+                           {(\bli{\id}{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,[\,]) \quad (e_1,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,[\,]) \quad (e_2,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Tuple}      & $\regel{(e_1,\eta) \Downarrow w_1 \quad \ldots \quad (e_n,\eta) \Downarrow w_n}
+                           {((e_1,\ldots,e_n),\eta) \Downarrow (w_1,\ldots,w_n)}$ \\[3mm]
+  \RN{Unfold}     & $\regel{(e,\id:(\rec{\id}{e},\eta);\eta) \Downarrow w}
+                           {(\rec{\id}{e},\eta) \Downarrow w}$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+\begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:WD_Umgeb}
+  Wenn $\cl \Downarrow w$, dann gilt $\free{w} \subseteq \free{\cl}$.
+\end{lemma}
+
+\begin{proof}
+  Sollte sich ebenfalls leicht durch Induktion "uber die L"ange der Herleitung des big steps zeigen lassen.
+\end{proof}
+
+\begin{corollary}
+  Wenn $\cl$ g"ultig ist und $\cl \Downarrow w$, dann ist auch $w$ g"ultig.
+\end{corollary}
+
+\begin{proof}
+  Folgt unmittelbar aus Lemma~\ref{lemma:WD_Umgeb}.
+\end{proof}
+
+\section{Zusammenhang}
+
+Eine Closure kann als Darstellung eines Ausdrucks aufgefasst werden, wobei man sich die Umgebungen als
+\emph{aufgesparte Substitutionen} vorstellt. Formal kann man dies durch eine \emph{"Ubersetzungsfunktion}
+vorstellen, die nachfolgend definiert ist.
+
+\begin{definition}["Ubersetzungsfunktion]
+  Die "Ubersetzungsfunktion $\name{tr}:\Cl \to \Exp$ ist wie folgt induktiv "uber die Struktur von Closures
+  definiert:
+  \[\begin{array}{rcl}
+    \tr{e,[\id_1:\cl_1;\ldots;\id_n:\cl_n]} &=& e[\tr{\cl_1}/\id_1,\ldots,\tr{\cl_n}/\id_n] \\
+    \tr{\cl_1,\ldots,\cl_n} &=& (\tr{\cl_1},\ldots,\tr{\cl_n}) \\
+  \end{array}\]
+\end{definition}
+
+\begin{lemma} \
+  \begin{enumerate}
+  \item $\free{\tr{\cl}} \subseteq \free{\cl}$ f"ur alle $\cl \in \Cl$.
+  \item $\tr{w} \in \Val$ f"ur alle $w \in W$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Vermutlich trivial.
+\end{proof}
+
+\begin{lemma}
+  Die "Ubersetzungsfunktion $\name{tr}$ erf"ullt folgende Gleichungen:
+  \[\begin{array}{rcl}
+    \tr{c,\eta} &=& c \\
+    \tr{\id,\eta} &=& \bcase \tr{\eta(\id)}, & \text{falls } \id\in\dom{\eta} \\ \id, & \text{sonst} \ecase \\
+    \tr{\abstr{\id}{e},\eta} &=& \abstr{\id'}{\tr{e[\id'/\id],\eta \setminus \id}} \\
+      && \text{\footnotesize{mit
+          $\id'\not\in(\free{e}\setminus\{\id\}) \cup \free{\eta\setminus\id} \cup \dom{\eta\setminus\id}$}} \\
+    \tr{\app{e_1}{e_2},\eta} &=& \app{(\tr{e_1},\eta)}{(\tr{e_2},\eta)} \\
+    \tr{\bli{\id}{e_1}{e_2},\eta} &=& \bli{\id'}{\tr{e_1,\eta}}{\tr{e_2[\id'/\id],\eta \setminus \id}} \\
+      && \text{\footnotesize{mit
+          $\id'\not\in(\free{e_2}\setminus\{\id\}) \cup \free{\eta\setminus\id} \cup \dom{\eta\setminus\id}$}} \\
+    \tr{\rec{\id}{e},\eta} &=& \rec{\id'}{\tr{e[\id'/\id],\eta \setminus \id}} \\
+      && \text{\footnotesize{mit
+          $\id'\not\in(\free{e}\setminus\{\id\}) \cup \free{\eta\setminus\id} \cup \dom{\eta\setminus\id}$}} \\
+    \tr{\bifte{e_0}{e_1}{e_2},\eta} &=& \bifte{(\tr{e_0},\eta)}{(\tr{e_1},\eta)}{(\tr{e_2},\eta)} \\
+    \tr{(e_1,\ldots,e_n),\eta} &=& (\tr{e_1,\eta},\ldots,\tr{e_n,\eta}) \\
+  \end{array}\]
+\end{lemma}
+
+\begin{proof}
+  Induktion "uber die Struktur von Closures.
+\end{proof}
+
+\begin{theorem}[Korrektheit der Umgebungssemantik] \label{theorem:Korr}
+  Wenn $\cl \Downarrow w$ in der Umgebungssemantik, dann gilt $\tr{\cl} \Downarrow \tr{w}$ in der
+  Substitutionssemantik.
+\end{theorem}
+
+\begin{proof}
+  Induktion "uber die L"ange der Herleitung des big steps $\cl \Downarrow w$.
+\end{proof}
+
+\begin{theorem}[Vollst"andigkeit der Umgebungssemantik] \label{theorem:Voll}
+  Wenn $\tr{\cl} \Downarrow v$ in der Substitutionssemantik, dann existiert ein $w \in W$, so dass
+  \begin{enumerate}
+  \item $\cl \Downarrow w$ in der Umgebungssemantik, und
+  \item $\tr{w} = v$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Induktion "uber die L"ange der Herleitung des big steps $\tr{\cl} \Downarrow v$.
+\end{proof}
+
+\begin{corollary}["Aquivalenz der Modelle]
+  F"ur einen abgeschlossenen Ausdruck $e$ gilt $e \Downarrow v$ genau dann, wenn ein $w \in W$ existiert mit
+  \begin{enumerate}
+  \item $(e,[\,]) \Downarrow w$ und
+  \item $\tr{w} = v$.
+  \end{enumerate}
+\end{corollary}
+
+\begin{proof}
+  Folgt unmittelbar aus Satz~\ref{theorem:Voll} und Satz~\ref{theorem:Korr}.
+\end{proof}
+
+\end{document}
+
+% vi:set ts=2 sw=2 et:

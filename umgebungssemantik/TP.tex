@@ -250,10 +250,11 @@
 
 \newcommand{\blie}[2]{\blet\ #1\ \bin\ #2 \ \bend}
 \newcommand{\vdec}[2]{#1 = #2}
-\newcommand{\rec}[2]{\brec\ #1.\ #2}
+\newcommand{\rec}[2]{\brec\,#1.\,#2}
 \newcommand{\recdots}[2]{\brec\ #1.\ \ldots}
 \newcommand{\abstr}[2]{\lambda #1.\,#2}
 \newcommand{\appl}[2]{#1\,#2}
+\newcommand{\proj}[1]{\#_{#1}}
 
 \newcommand{\Ref}{\name{ref}}
 \newcommand{\Deref}{\,!\,}
@@ -277,6 +278,8 @@
 \newcommand{\Tjl}[3]{#1 \,\triangleright_l\, #2\cc#3}
 \newcommand{\Tjm}[3]{#1 \,\triangleright_m\, #2\cc#3}
 \newcommand{\Tjh}[2]{#1 \triangleright  #2}
+
+\newcommand{\Lj}[3]{#1\,\vdash\,#2\cc#3}
 
 \newcommand{\brule}[1]{\begin{markiere}[#1]}
 \newcommand{\erule}{\end{markiere}}
@@ -324,6 +327,7 @@
 %\newtheorem{example}{Beispiel:}
 %\newtheorem{examples}{Beispiele:}
 \newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
 
 %\renewcommand{\thedefinition}{}
 %\renewcommand{\theexample}{}
@@ -398,6 +402,7 @@
 \newcommand{\infix}[3]{#2\mathbin{#1}#3}
 
 \newcommand{\bli}[3]{\blet\ \vdec{#1}{#2}\ \bin\ #3}
+\newcommand{\blri}[3]{\blet\,\brec\ \vdec{#1}{#2}\ \bin\ #3}
 
 \newcommand{\Bli}[3]{\begin{array}[t]{@{}l}
                      \blet\ \vdec{#1}{#2}\\\bin\ #3

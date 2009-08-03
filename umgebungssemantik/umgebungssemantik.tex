@@ -8,19 +8,12 @@
 \newcommand{\RN}[1]{\mbox{\textsc{(#1)}}}
 \newcommand{\Cl}{\name{Cl}}
 \newcommand{\cl}{\name{cl}}
+\newcommand{\Req}{\name{Req}}
+\newcommand{\Ptr}{\name{Ptr}}
 
 \begin{document}
 
 \section{Substitutionssemantik}
-
-Voraussetzungen:
-\begin{itemize}
-  \item $\Id \cap \Val = \emptyset$
-
-  \item Ausdr"ucke sind gleich modulo Umbenennung gebundener Namen.
-
-        Geht nat"urlich auch ohne diese Konvention, aber macht Definitionen und Beweise h"a"slich.
-\end{itemize}
 
 \begin{definition}[Syntax der Programmiersprache]
   Vorgegeben seien
@@ -33,9 +26,10 @@ Voraussetzungen:
   {\em Ausdr\"ucke} $e$ und $\Val$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
   \bgram
   \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
-  c \is b \mid z \mid \op \mid \bfix \\
-  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2} \\
-  v \is c \mid \app{\op}{z} \mid \abstr{\id}{e}
+  c \is b \mid z \mid \op \mid \proj{i} \\
+  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bli{\id}{e_1}{e_2}
+  \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
+  v \is c \mid \abstr{\id}{e} \mid (v_1,\ldots,v_n)
   \egram
 \end{definition}
 
@@ -45,828 +39,284 @@ und $v \in \Val$. Ein solcher big step hei"st {\em g"ultig}, wenn er sich mit de
 l"asst: \\[5mm]
 \begin{tabular}{ll}
   \RN{Val}        & $v \Downarrow v$ \\[3mm]
-  \RN{Beta}       & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e[e_2/\id] \Downarrow v}
-                           {\app{e_1}{e_2} \Downarrow v}$ \\[3mm]
-  \RN{Op-1}       & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow z}
-                           {\app{e_1}{e_2} \Downarrow \app{\op}{z}}$ \\[3mm]
-  \RN{Op-2}       & $\regel{e_1 \Downarrow \app{\op}{z_1} \quad e_2 \Downarrow z_2 \quad \op^I(z_1,z_2) = z}
-                           {\app{e_1}{e_2} \Downarrow z}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e_2 \Downarrow v \quad e[v/\id] \Downarrow v'}
+                           {\app{e_1}{e_2} \Downarrow v'}$ \\[3mm]
+  \RN{Op}         & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow (z_1,z_2)}
+                           {\app{e_1}{e_2} \Downarrow \op^I(z_1,z_2)}$ \\[3mm]
+  \RN{Proj}       & $\regel{e_1 \Downarrow \proj{i} \quad e_2 \Downarrow (v_1,\ldots,v_n) \quad 1 \le i \le n}
+                           {\app{e_1}{e_2} \Downarrow v_i}$ \\[3mm]
+  \RN{Let}        & $\regel{e_1 \Downarrow v \quad e_2[v/\id] \Downarrow v'}
+                           {\bli{\id}{e_1}{e_2} \Downarrow v'}$ \\[3mm]
   \RN{Cond-True}  & $\regel{e_0 \Downarrow \true \quad e_1 \Downarrow v}
                            {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
   \RN{Cond-False} & $\regel{e_0 \Downarrow \false \quad e_2 \Downarrow v}
                            {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
-  \RN{Unfold}     & $\regel{e_1 \Downarrow \bfix \quad \app{e_2}{(\app{\bfix}{e_2})} \Downarrow v}
-                           {\app{e_1}{e_2} \Downarrow v}$
+  \RN{Tuple}      & $\regel{e_1 \Downarrow v_1 \quad \ldots \quad e_n \Downarrow v_n}
+                           {(e_1,\ldots,e_n) \Downarrow (v_1,\ldots,v_n)}$ \\[3mm]
 \end{tabular}
 \end{definition}
 
 
 \section{Umgebungssemantik}
 
-\begin{definition}[Closures und Umgebungen]
-  Die Mengen $\Env$ aller {\em (Laufzeit-)Umgebungen} $\eta$ und $\Cl$ aller {\em Closures} $\cl$ sind
+\begin{definition}[Umgebungen]
+  Die Mengen $\Env$ aller {\em Umgebungen} $\eta$ und $W$ aller {\em Umgebungswerte} $w$ sind
   durch die folgende kontextfreie Grammatik definiert:
   \bgram
-  \eta \is [\,] \mid \id:\cl;\eta \n
+  \eta \is [\,]
+  \al \id:v;\eta
+  \al \id:w;\eta
+  \n
+  w \is c
+  \al (\abstr{\id}{e},\eta)
+  \al (w_1,\ldots,w_n)
+  \egram
+  Die Menge $\Cl$ aller Closures $\cl$ ist definiert durch:
+  \bgram
   \cl \is (e,\eta)
   \egram
-  Der {\em Definitionsbereich} $\dom{\eta}$ einer Umgebung $\eta$ ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \dom{[\,]} &=& \emptyset \\
-    \dom{\id:\cl;\eta} &=& \{\id\} \cup \dom{\eta}
-  \end{array}\]
-  Eine Closure $\cl = (e,\eta)$ hei"st {\em g\"ultig}, wenn $\free{e} \subseteq \dom{\eta}$ und
-  $\eta$ g\"ultig ist. Eine Umgebung $\eta$ hei"st {\em g\"ultig}, wenn alle eingetragenen
-  Closures g\"ultig sind.
 \end{definition}
 
-\noindent Schreibweisen
-\begin{enumerate}
-\item F\"ur $(\id_1:\cl_1;\ldots;\id_n:\cl_n;[\,])\in\Env$ schreiben wir
-  \[
-  [\id_1:\cl_1;\ldots;\id_n:\cl_n]
-  \]
-\item F\"ur $\eta=(\id_1:\cl_1;\ldots;\id_n:\cl_n;[\,])\in\Env$ und $\id\in\dom{\eta}$ sei
-  \[
-  \eta(\id) = \cl_i, \text{ wobei } i = \min\{j \in \{1,\ldots,n\}\,|\,\id_j=\id\}
-  \]
-\end{enumerate}
+% \begin{definition}[Freie Namen]
+%   Die Mengen $\free{\eta}$, $\free{w}$ und $\free{\cl}$ sind wie folgt induktiv definiert:
+%   \[\begin{array}{rcl}
+%     \free{[\,]} &=& \emptyset \\
+%     \free{\id:w;\eta} &=& \free{w} \cup \free{\eta} \\
+%     \free{c} &=& \emptyset \\
+%     \free{w_1,\ldots,w_n} &=& \bigcup_{i=1 \ldots n} \free{w_i} \\
+%     \free{e,\eta} &=& \bigl( \free{e} \setminus \dom{\eta} \bigr) \cup \free{\eta} \\
+%   \end{array}\]
+%   Eine Umgebung $\eta$ hei"st \emph{abgeschlossen}, wenn $\free{\eta} = \emptyset$. Analog f"ur Werte $w$
+%   und Closures $\cl$.
+% \end{definition}
 
-\begin{definition}[Big step Regeln]
-Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow (e',\eta')$,
-wobei $e,e'\in\Exp$ und $\eta,\eta'\in\Env$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
-folgenden Regeln herleiten l"asst: \\[5mm]
-\begin{tabular}{ll}
-  \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
-  \RN{Id}         & $\regel{\eta(\id) \Downarrow \cl}
-                           {(\id,\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{\id}{e},\eta_1)
-                            \quad (e,\id:(e_2,\eta);\eta_1) \Downarrow \cl}
-                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{z},[])}$ \\[3mm]
-  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{z_1},\eta_1)
-                            \quad (e_2,\eta) \Downarrow (z_2,\eta_2)
-                            \quad \op^I(z_1,z_2) = z}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (z,[])}$ \\[3mm]
-  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,\eta_0) \quad (e_1,\eta) \Downarrow \cl}
-                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,\eta_0) \quad (e_2,\eta) \Downarrow \cl}
-                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Unfold}     & $\regel{(e_1,\eta) \Downarrow (\bfix,\eta_1)
-                            \quad (\app{e_2}{(\app{\bfix}{e_2})},\eta) \Downarrow \cl}
-                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$
-\end{tabular}
-\end{definition}
-
-\begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:Wohldefiniertheit}
-  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\Cl$. Wenn $(e,\eta)$ g\"ultig und
-  $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
-  g\"ultig und es gilt $\hat{e}\in \Val$.
-\end{lemma}
-
-\begin{proof}
-  Vermutlich triviale Induktion.
-\end{proof}
-
-Im Weiteren betrachten wir nur noch g\"ultige Closures und Umgebungen, d.h. wir nehmen an,
-$\Cl$ und $\Env$ enthalten nur noch g\"ultige Elemente.
-
-\begin{definition} \label{definition:Substitution}
-  Sei $(e,\eta) \in \Cl$. Der Ausdruck $e\,\eta$ ist wie folgt
-  induktiv definiert:
-  \[\begin{array}{rcl}
-    c\,\eta &=& c \\
-    \id\,\eta &=& e'\,\eta', \text{ wobei } \eta(\id) = (e',\eta') \\
-    (\app{e_1}{e_2})\,\eta &=& \app{(e_1\,\eta)}{(e_2\,\eta)} \\
-    (\abstr{\id}{e})\,\eta &=& \abstr{\id'}{(e[\id'/\id]\,\eta)}, \text{ wobei } \id'\not\in\dom{\eta} \\
-    (\bifte{e_0}{e_1}{e_2})\,\eta &=& \bifte{(e_0\,\eta)}{(e_1\,\eta)}{(e_2\,\eta)}
-  \end{array}\]
-\end{definition}
-
-\begin{lemma} \label{lemma:Substitution}
-  Seien $(e,\eta), (e',\eta') \in \Cl$. Dann gilt:
-  \begin{enumerate}
-    \item $e\in\Val$ impliziert $(e\,\eta)\in\Val$.
-    \item $(e\,\eta)\in\Val$, dann entweder $e\in\Val$ oder
-          $e=\id\in\Id$ und $\eta(\id) = (e',\eta')$ mit $(e'\,\eta')\in\Val$
-    %\item $(e\,\eta) = (e\,\eta')$ wenn $\eta' =_{\free{e}} \eta$
-    \item $e\,(\id:(e',\eta');\eta]) = (e[\id'/\id]\,\eta)[(e'\,\eta')/\id']$ wenn $\id' \not\in \dom{\eta}$
-  \end{enumerate}
-\end{lemma}
-
-
-\section{"Aquivalenz der Modelle}
-
-\begin{theorem}[Korrektheit der Umgebungssemantik] \label{theorem:Korrektheit}
-  Seien $(e,\eta) \in \Cl$, $v'\in\Val$ und $\eta'\in\Env$. Wenn $(e,\eta) \Downarrow (v',\eta')$, dann
-  $(e\,\eta) \Downarrow (v'\,\eta')$.
-\end{theorem}
-
-\begin{proof}
-  Induktion "uber die L"ange der Herleitung des big steps $(e,\eta) \Downarrow (v',\eta')$ mit Fallunterscheidung
-  nach der zuletzt angewandten big step Regel:
-  \begin{itemize}
-    \item $(v,\eta) \Downarrow (v,\eta)$ mit \RN{Val}, dann ist $(v\,\eta) \in \Val$ und somit folgt
-          $(v\,\eta) \Downarrow (v\,\eta)$ mit \RN{Val}.
-
-    \item $(\id,\eta) \Downarrow (v',\eta')$ mit \RN{Id} bedingt $\eta(\id) = (\hat{e},\hat{\eta})$ und
-          $(\hat{e},\hat{\eta}) \Downarrow (v',\eta')$. Nach IV muss also $(\hat{e}\,\hat{\eta})\Downarrow(v'\,\eta')$
-          gelten, und somit folgt wegen $(\id\,\eta) = (\hat{e}\,\hat{\eta})$ die Behauptung.
-
-    \item $(\app{e_1}{e_2},\eta) \Downarrow (v',\eta')$ mit Regel \RN{Beta} kann nur aus Pr"amissen der Form
-          $(e_1,\eta) \Downarrow (\abstr{\id}{e},\hat{\eta})$ und
-          $(e,\id:(e_2,\eta);\hat{\eta})\Downarrow(v',\eta')$
-          folgen. Mit IV folgt daraus $(e_1\,\eta) \Downarrow (\abstr{\id}{e})\,\hat{\eta}$ und
-          $e\,(\id:(e_2,\eta);\hat{\eta})\Downarrow(v'\,\eta')$. Nach Definition~\ref{definition:Substitution}
-          gilt $(\abstr{\id}{e})\,\hat{\eta} = \abstr{\id'}{(e[\id'/\id]\,\hat{\eta})}$ wobei
-          $\id'\not\in\dom{\hat{\eta}}$. Nach Lemma~\ref{lemma:Substitution} folgt dar"uberhinaus
-          $e\,(\id:(e_2,\eta);\hat{\eta}]) = (e[\id'/\id]\,\hat{\eta})[e_2\,\eta/\id]$, und somit
-          $(\app{e_1}{e_2})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Beta}.
-
-%     \item $(\rec{\id}{e},\eta) \Downarrow (v',\eta')$ kann ausschliesslich mit \RN{Unfold} aus der Pr"amisse
-%           $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$ folgen. Nach IV gilt dann ebenfalls
-%           $e\,(\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v'\,\eta')$ und nach Definition~\ref{definition:Substitution}
-%           gilt $(\rec{\id}{e})\,\eta = \rec{\id'}{(e[\id'/\id]\,\eta)}$ mit $\id'\not\in\dom{\eta}$. Wegen
-%           Lemma~\ref{lemma:Substitution} folgt dann
-%           $e\,(\eta[(\rec{\id}{e},\eta)/\id]) = (e[\id'/\id]\,\eta)[\rec{\id'}{(e[\id'/\id]\,\eta)}/\id]$ und
-%           somit $(\rec{\id}{e})\,\eta \Downarrow (v'\,\eta')$ mit Regel \RN{Unfold}.
-  \end{itemize}
-  Die "ubrigen F"alle folgen analog.
-\end{proof}
-
-\begin{lemma}[Koinzidenz] \label{lemma:Koinzidenz}
-  F"ur alle $\eta,\hat{\eta},\eta'\in\Env$, ...
-  Wenn $(e[(e_2\,\eta)/\id],[\,]) \Downarrow (v',\eta')$, dann ex. $\eta''$, so dass
-  $(e,\id:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$.
-\end{lemma}
-
-\begin{proof}
-  Sollte gelten, m"usste aber allgemeiner formuliert werden, um einfach beweisbar zu sein.
-\end{proof}
-
-\begin{theorem}[Vollst"andigkeit der Umgebungssemantik] \label{theorem:Vollstaendigkeit}
-  Seien $(e,\eta)\in\Cl$ und $v \in \Val$.
-  Wenn $(e\,\eta) \Downarrow v$, dann ex. $(v',\eta')\in\Cl$ mit $(v'\,\eta') = v$, so dass
-  $(e,\eta) \Downarrow (v',\eta')$.
-\end{theorem}
-
-Man k"onnte hier vermutlich auch noch eine konkretere Aussage "uber $v'$ und $\eta'$ machen, so man das will.
-
-\begin{proof}
-  Offensichtlich gilt $\free{v} = \emptyset$. Die Behauptung folgt
-  dann per Induktion "uber die L"ange der Herleitung des big steps $(e\,\eta) \Downarrow v$, wobei jeweils nach der
-  zuletzt angewandten Regel unterschieden wird. Hierbei ist in jedem der F"alle zu unterscheiden, ob $e$ selbst
-  schon von der f"ur die Regel passenden Form ist, oder ob $e$ ein Identifier ist. Ist $e$ ein Identifier, so
-  folgt die Behauptung unmittelbar mit IV und big step Regel \RN{Id}; wir betrachten diesen Fall damit als erledigt
-  und konzentrieren uns im Folgenden auf die F"alle f"ur $e\not\in\Id$.
-  \begin{itemize}
-    \item $v \Downarrow v$ mit $\RN{Val}$, d.h. $(e\,\eta) = v$. Sei o.B.d.A. $e \in \Val$, dann existiert ein
-          big step $(e,\eta) \Downarrow (e,\eta)$ mit $\RN{Val}$.
-          
-%     \item $(\rec{\id}{e})\,\eta \Downarrow v$ mit $\RN{Unfold}$ bedingt o.B.d.A.
-%           $(e[\id'/\id]\,\eta)[(\rec{\id}{e})\,\eta/\id'] \Downarrow v$, wobei $\id' \not\in \dom{\eta}$.
-%           Nach Lemma~\ref{lemma:Substitution} folgt $e\,(\eta[(\rec{\id}{e})\,\eta/\id])\Downarrow v$ und nach IV
-%           existiert dann $(v',\eta') \in \Cl$ mit $(v'\,\eta') = v$, so dass
-%           $(e,\eta[(\rec{\id}{e},\eta)/\id]) \Downarrow (v',\eta')$. Die Behauptung folgt unmittelbar mit
-%           \RN{Unfold}.
-
-    \item $(\app{e_1}{e_2})\,\eta \Downarrow v$ mit \RN{Beta} kann o.B.d.A. nur aus Pr"amissen der Form
-          $(e_1\,\eta) \Downarrow \abstr{\id}{e}$ und $e[(e_2\,\eta)/\id]\Downarrow v$ folgen. Nach IV ex.
-          $(\hat{v},\hat{\eta}),(v',\eta')\in\Cl$, so dass $(e_1,\eta) \Downarrow (\hat{v},\hat{\eta})$
-          und $(e[(e_2\,\eta)/\id],[\,])\Downarrow (v',\eta')$. Nach Lemma~\ref{lemma:Koinzidenz} ex. $\eta''$
-          mit $(e,\id:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$. O.B.d.A. ex. $\hat{\id}\not\in\dom{\hat{\eta}}$,
-          so dass $(e_1,\eta) \Downarrow (\abstr{\hat{\id}}{e[\hat{\id}/\id]},\hat{\eta})$ und
-          $(e[\hat{\id}/\id],\hat{\id}:(e_2,\eta);\hat{\eta}) \Downarrow (v',\eta'')$. Die Behauptung folgt
-          unmittelbar mit \RN{Beta}.
-  \end{itemize}
-  Die restlichen F"alle folgen "ahnlich einfach.
-\end{proof}
-
-\begin{theorem}["Aquivalenzsatz]
-  Sei $e \in \Exp$, $v \in \Val$ mit $\free{e} = \emptyset$. Die folgenden Aussagen sind "aquivalent:
-  \begin{enumerate}
-    \item $e \Downarrow v$
-    \item ex. $(v',\eta')\in\Cl$ mit $v = (v'\,\eta')$, so dass $(e,[\,]) \Downarrow (v',\eta')$
-  \end{enumerate}
-\end{theorem}
-
-\begin{proof}
-  Folgt leicht aus Satz~\ref{theorem:Korrektheit} und Satz~\ref{theorem:Vollstaendigkeit}.
-\end{proof}
-
-\begin{corollary}
-  Sei $e \in \Exp$, $c \in \Const$ mit $\free{e} = \emptyset$. Die folgenden Aussagen sind "aquivalent:
-  \begin{enumerate}
-    \item $e \Downarrow c$
-    \item ex. $\eta\in\Cl$, so dass $(e,[\,]) \Downarrow (c,\eta)$
-  \end{enumerate}
-\end{corollary}
-
-\subsection*{Offene Punkte}
-
-\begin{itemize}
-\item Erweiterung/\"Ubertragung der Ergebnisse auf weitere Sprachkonstrukte wie $\blet$, $\brec$, $\ldots$
-  Dabei ist zu zeigen, dass es sich um abgeleitete Konzepte handelt.
-\item Betrachtung einer alternativen Schreibweise f\"ur Operatoren $e_1\,\op\,e_2$ mit passender Semantik
-  (siehe Abschnitt {\em Erzeugung von Zielcode}). Zeigen, dass Sprache immer noch gleich m\"achtig.
-\item Zeigen, dass $\bfix$ tats\"achlich nur eine Abk. f\"ur $Y$ (mglw. trickreich, wird f\"ur Codegenerierung
-  ben\"otigt, Literatur w\"are u.a. Mitchell).
-\item Call-by-value Semantik \"Anderungen beschreiben und \"Aquivalenz. Hier muss insb. beachtet werden, dass
-  cbv einen anderen Fixpunktoperator bedingt, da die cbn Version in cbv einfach divergieren w\"urde.
-\item Eine \"aquivalente small step Semantik (vermutlich schwierig, erstmal aussen vor lassen).
-\end{itemize}
-
-
-\section{De Bruijn Indizes}
-
-\begin{definition}[Expressions]
-  Vorgeben sei eine (unendliche) Menge $\{\underline{1},\underline{2},\ldots\}$ von {\em De Bruijn-Indizes}
-  $\iota$. Die Mengen $\dbExp$ aller {\em De Bruijn-Ausdr\"ucke} $e$ und $\dbVal$ aller {\em De Bruijn-Werte}
-  sind durch die kontextfreie Grammatik
-  \bgram
-  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \bifte{e_0}{e_1}{e_2} \\
-  v \is c \mid \app{\op}{z} \mid \abstr{}{e}
-  \egram
-  definiert. Der {\em Rang} $\rank{e} \in \setN$ eines De Bruijn-Ausdrucks $e$ ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \rank{c} &=& 0 \\
-    \rank{\iota} &=& \iota \\
-    \rank{\abstr{}{e}} &=& \max(\rank{e},1) - 1 \\
-    \rank{\app{e_1}{e_2}} &=& \max(\rank{e_1},\rank{e_2}) \\
-    \rank{\bifte{e_0}{e_1}{e_2}} &=& \max(\rank{e_0},\rank{e_1},\rank{e_2})
-  \end{array}\]
-\end{definition}
-
-\begin{definition}[Closures und Umgebungen]
-  Die Menge $\dbEnv$ aller {\em De Bruijn-(Laufzeit-)Umgebungen} $\eta$ und die Menge $\dbCl$ aller
-  {\em De Bruijn-Closures} $\cl$ sind durch die folgende kontextfreie Grammatik definiert:
-  \bgram
-  \eta \is [\,] \mid \cl;\eta \n
-  \cl \is (e,\eta)
-  \egram
-  Die {\em L\"ange} $\len{\eta}$ einer De Bruijn-Umgebung $\eta$ ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \len{[\,]} &=& 0 \\
-    \len{\cl;\eta} &=& 1 + \len{\eta}
-  \end{array}\]
-  Eine De Bruijn-Closure $\cl = (e,\eta)$ hei"st {\em g\"ultig}, wenn $\rank{e} \le \len{\eta}$ und
-  $\eta$ g\"ultig ist. Eine De Bruijn-Umgebung $\eta$ hei"st {\em g\"ultig}, wenn alle eingetragenen
-  Closures g\"ultig sind.
+\begin{definition}
+  Ein \emph{expand} ist eine Formel der Gestalt $\Lj{\eta}{v}{w}$, wobei $\eta\in\Env$, $v\in\Val$ und $w\in W$.
+  Ein derartiger expand hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{E-Const}   & $\Lj{\eta}{c}{c}$ \\[1mm]
+    \RN{E-Closure} & $\Lj{\eta}{\abstr{\id}{e}}{(\abstr{\id}{e},\eta)}$ \\[1mm]
+    \RN{E-Tuple}   & $\regel{\Lj{\eta}{v_1}{w_1} \quad\ldots\quad \Lj{\eta}{v_n}{w_n}}
+                            {\Lj{\eta}{(v_1,\ldots,v_n)}{(w_1,\ldots,w_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Ein \emph{lookup} ist eine Formel der Gestalt $\Lj{\eta}{\id}{w}$, wobei $\eta\in\Env$, $\id\in\Id$ und
+  $w \in W$. Ein derartiger lookup hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+  l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{L-Immediate} & $\Lj{\id:w;\eta}{\id}{w}$ \\[1mm]
+    \RN{L-Expand}    & $\regel{\Lj{\id:v;\eta}{v}{w}}
+                              {\Lj{\id:v;\eta}{\id}{w}}$ \\[3mm]
+    \RN{L-Skip}      & $\regel{\id \ne \id' \quad \Lj{\eta}{\id'}{w'}}
+                              {\Lj{\id:\underline{\quad};\eta}{\id'}{w'}}$ \\[3mm]
+  \end{tabular}
 \end{definition}
 
 \begin{definition}[Big step Regeln]
-Ein {\em big step} in der De Bruijn-Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow (e',\eta')$,
-wobei $e,e'\in\dbExp$ und $\eta,\eta'\in\dbEnv$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
+Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow w$,
+wobei $e\in\Exp$, $\eta\in\Env$ und $w \in W$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
 folgenden Regeln herleiten l"asst: \\[5mm]
 \begin{tabular}{ll}
-  \RN{Val}        & $(v,\eta) \Downarrow (v,\eta)$ \\[3mm]
-  \RN{Index}      & $\regel{\eta(\iota) \Downarrow \cl}
-                           {(\iota,\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Beta}       & $\regel{(e_1,\eta) \Downarrow (\abstr{}{e},\eta_1)
-                            \quad (e,(e_2,\eta);\eta_1) \Downarrow \cl}
-                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Op-1}       & $\regel{(e_1,\eta) \Downarrow (\op,\eta_1) \quad (e_2,\eta) \Downarrow (z,\eta_2)}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (\app{\op}{z},[])}$ \\[3mm]
-  \RN{Op-2}       & $\regel{(e_1,\eta) \Downarrow (\app{\op}{z_1},\eta_1)
-                            \quad (e_2,\eta) \Downarrow (z_2,\eta_2)
-                            \quad \op^I(z_1,z_2) = z}
-                           {(\app{e_1}{e_2},\eta) \Downarrow (z,[])}$ \\[3mm]
-  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,\eta_0) \quad (e_1,\eta) \Downarrow \cl}
-                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,\eta_0) \quad (e_2,\eta) \Downarrow \cl}
-                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow \cl}$ \\[3mm]
-  \RN{Unfold}     & $\regel{(e_1,\eta) \Downarrow (\bfix,\eta_1)
-                            \quad (\app{e_2}{(\app{\bfix}{e_2})},\eta) \Downarrow \cl}
-                           {(\app{e_1}{e_2},\eta) \Downarrow \cl}$
+  \RN{Const}      & $(c,\eta) \Downarrow c$ \\[1mm]
+  \RN{Closure}    & $(\abstr{\id}{e},\eta) \Downarrow (\abstr{\id}{e},\eta)$ \\[1mm]
+  \RN{Id}         & $\regel{\Lj{\eta}{id}{w}}
+                           {(\id,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                            \quad (e_2,\eta) \Downarrow w'
+                            \quad (e',\id':w';\eta') \Downarrow w}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Op}         & $\regel{(e_1,\eta) \Downarrow \op \quad (e_2,\eta) \Downarrow (z_1,z_2)}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \op^I(z_1,z_2)}$ \\[3mm]
+  \RN{Proj}       & $\regel{(e_1,\eta) \Downarrow \proj{i} \quad (e_2,\eta) \Downarrow (w_1,\ldots,w_n)
+                            \quad 1 \le i \le n}
+                           {\app{e_1}{e_2} \Downarrow w_i}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\eta) \Downarrow w'}
+                           {(\bli{\id}{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
+  \RN{Let-Rec}    & $\regel{(e,\id:v;\eta) \Downarrow w}
+                           {(\blri{\id}{v}{e},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow \true \quad (e_1,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow \false \quad (e_2,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Tuple}      & $\regel{(e_1,\eta) \Downarrow w_1 \quad \ldots \quad (e_n,\eta) \Downarrow w_n}
+                           {((e_1,\ldots,e_n),\eta) \Downarrow (w_1,\ldots,w_n)}$ \\[3mm]
 \end{tabular}
 \end{definition}
 
-\begin{lemma}[Wohldefiniertheit der De Bruijn-Umgebungssemantik]
-  Seien $(e,\eta),(\hat{e},\hat{\eta})\in\dbCl$. Wenn $(e,\eta)$ g\"ultig und
-  $(e,\eta) \Downarrow (\hat{e},\hat{\eta})$, dann ist auch $(\hat{e},\hat{\eta})$
-  g\"ultig und es gilt $\hat{e}\in\dbVal$.
-\end{lemma}
+% \begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:Wohldefiniertheit}
+%   Wenn $\cl \Downarrow w$, dann gilt $\free{w} \subseteq \free{\cl}$.
+% \end{lemma}
 
-\begin{proof}
-  Vermutlich triviale Induktion.
-\end{proof}
+\begin{definition}
+  Die Relation $\multimap$ ist wie folgt definiert: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{App-Left}   & $(\app{e_1}{e_2},\eta) \multimap (e_1,\eta)$ \\[1mm]
+    \RN{App-Right}  & $(\app{e_1}{e_2},\eta) \multimap (e_2,\eta)$ \\[1mm]
+    \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                              \quad (e_2,\eta) \Downarrow w'}
+                             {(\app{e_1}{e_2},\eta) \multimap (e',\id':w';\eta')}$ \\[3mm]
+    \RN{Let-Eval}   & $(\bli{\id}{e_1}{e_2},\eta) \multimap (e_1,\eta)$ \\[1mm]
+    \RN{Let-Exec}   & $\regel{(e_1,\eta) \Downarrow w}
+                             {(\bli{\id}{e_1}{e_2},\eta) \multimap (e_2,\id:w;\eta)}$ \\[3mm]
+    \RN{Let-Rec}    & $(\blri{\id}{v}{e},\eta) \multimap (e,\id:v;\eta)$ \\[1mm]
+    \RN{Cond-Eval}  & $(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_0,\eta)$ \\[1mm]
+    \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow \true}
+                             {(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_1,\eta)}$ \\[3mm]
+    \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow \false}
+                             {(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_2,\eta)}$ \\[3mm]
+    \RN{Tuple}      & $\regel{1 \le i \le n}
+                             {((e_1,\ldots,e_n),\eta) \multimap (e_i,\eta)}$ \\[3mm]
+  \end{tabular}
+\end{definition}
 
-Wie zuvor betrachten wir nun nur noch g\"ultige De Bruijn-Closures und -Umgebungen, d.h. wir nehmen an,
-$\dbCl$ und $\dbEnv$ enthalten nur noch g\"ultige Elemente.
 
-\begin{definition}[Namenskontext]
-  Die Menge $\Ncx$ aller {\em Namenskontexte} $\Gamma$ ist induktiv definiert durch:
+\section{Typsystem}
+
+\begin{definition}[Typen]
+  Die Menge aller g"ultigen \emph{Typen} $\tau$ und die Menge der \emph{Basistypen} $\beta$ sind durch die folgende
+  kontextfreie Grammatik definiert:
   \bgram
-  \Gamma \is [\,] \mid \id;\Gamma
+  \beta \is \bool \mid \z \mid \unit \mid (\beta_1,\ldots,\beta_n)
+  \n
+  \tau \is \beta \mid \tau_1 \to \tau_2 \mid (\tau_1,\ldots,\tau_n)
   \egram
-  Der {\em Definitionsbereich} $\dom{\Gamma}$ eines Namenskontext $\Gamma$ ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \dom{[\,]} &=& \emptyset \\
-    \dom{\id;\Gamma} &=& \{\id\} \cup \dom{\Gamma}
-  \end{array}\]
 \end{definition}
 
-\noindent Schreibweisen
-\begin{enumerate}
-\item F\"ur $\Gamma=(\id_1;\ldots;\id_n;[\,])\in\Ncx$ schreiben wir $[\id_1;\ldots;\id_n]$.
-\item F\"ur $\Gamma=[\id_1;\ldots;\id_n]$ und $\id\in\dom{\Gamma}$ sei
-  \[ \Gamma(\id) = \min\{j \in \{1,\ldots,n\}\,|\, \id_j = \id\} \]
-\end{enumerate}
-
-\begin{definition}[\"Ubersetzungsfunktion]
-  Gegeben $e \in Exp$, $\Gamma\in\Ncx$ mit $\free{e} \subseteq \dom{\Gamma}$. Der {\em De Bruijn-Ausdruck}
-  $\tr{\Gamma,e}$, welcher durch Entfernen der Bezeichner aus $e$ entsteht, ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \tr{\Gamma,c} &=& c \\
-    \tr{\Gamma,\id} &=& \underline{i} \quad \text{ falls } i = \Gamma(\id) \\
-    \tr{\Gamma,\abstr{\id}{e}} &=& \abstr{}{\tr{\id;\Gamma,e}} \\
-    \tr{\Gamma,\app{e_1}{e_2}} &=& \app{(\tr{\Gamma,e_1})}{(\tr{\Gamma,e_2})} \\
-    \tr{\Gamma,\bifte{e_0}{e_1}{e_2}} &=& \bifte{\tr{\Gamma,e_0}}{\tr{\Gamma,e_1}}{\tr{\Gamma,e_2}}
+\begin{definition}[Typregeln]
+  Ein Typurteil $\Tj{\Gamma}{e}{\tau}$ hei"st g"ultig, wenn es sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{Const}   & $\regel{\tj{c}{\tau}}
+                          {\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
+    \RN{Id}      & $\regel{\Gamma(\id) = \tau}
+                          {\Tj{\Gamma}{\id}{\tau}}$ \\[3mm]
+    \RN{Abstr}   & $\regel{\Tj{(\id:\tau;\Gamma)}{e}{\beta}}
+                          {\Tj{\Gamma}{\abstr{\id}{e}}{\tau \to \beta}}$ \\[3mm]
+    \RN{App}     & $\regel{\Tj{\Gamma}{e_1}{\tau \to \tau'} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+    \RN{Let}     & $\regel{\Tj{\Gamma}{e_1}{\tau} \quad \Tj{(\id:\tau;\Gamma)}{e_2}{\beta}}
+                          {\Tj{\Gamma}{\bli{\id}{e_1}{e_2}}{\beta}}$ \\[3mm]
+    \RN{Let-Rec} & $\regel{\Tj{(\id:\tau;\Gamma)}{v}{\tau} \quad \Tj{\id:\tau;\Gamma}{e}{\beta}}
+                          {\Tj{\Gamma}{\blri{\id}{v}{e}}{\beta}}$ \\[3mm]
+    \RN{Cond}    & $\regel{\Tj{\Gamma}{e_0}{\bool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\bifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+    \RN{Tuple}   & $\regel{\Tj{\Gamma}{e_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{e_n}{\tau_n}}
+                          {\Tj{\Gamma}{(e_1,\ldots,e_n)}{(\tau_1,\ldots,\tau_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Typurteile f"ur Umgebungen sind von der Form $\Tjh{\Gamma_w,\Gamma_\eta}{\eta}$, Typurteile f"ur Closures und
+  Werte sind von der Form $\Tj{\Gamma}{\cl}{\tau}$ bzw. $\Tj{\Gamma}{w}{\tau}$.
+  \[\begin{array}{cc}
+    \Tjh{\Gamma,[\,]}{[\,]}
+    & \regel{\Tj{(\Gamma_\eta;\Gamma)}{e}{\tau} \quad \Tjh{\Gamma,\Gamma_\eta}{\eta}}{\Tj{\Gamma}{(e,\eta)}{\tau}} \\
+    \regel{\Tj{\Gamma_w}{w}{\tau} \quad \Tjh{\Gamma_w,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_w,(\id:\tau;\Gamma_\eta)}{(\id:w;\eta)}}
+    & \regel{\Tj{\Gamma}{w_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{w_n}{\tau_n}}{\Tj{\Gamma}{(w_1,\ldots,w_n)}{(\tau_1,\ldots,\tau_n)}} \\
+    \regel{\Tj{(\id:\tau;\Gamma_\eta;\Gamma_v)}{v}{\tau} \quad \Tjh{\Gamma_v,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_v,(\id:\tau;\Gamma_\eta)}{(\id:v;\eta)}}
   \end{array}\]
-  Sei weiter $\eta=[\id_1:\cl_1;\ldots;\id_n:\cl_n]\in\Env$ mit $\free{e}\subseteq \dom{\eta}$. Die
-  {\em De Bruijn-Closure} $\tr{e,\eta}$, welche durch Entfernen der Bezeichner aus $e$ und $\eta$ entsteht,
-  ist wie folgt induktiv definiert:
-  \[\begin{array}{rcl}
-    \tr{e,\eta} &=& (\tr{[\id_1;\ldots;\id_n],e},[\tr{\cl_1};\ldots;\tr{\cl_n}])
-  \end{array}\]
-\end{definition}
-
-\begin{lemma}[Wohldefiniertheit der \"Ubersetzung] \
-  \begin{enumerate}
-  \item Seien $e \in \Exp$ und $\Gamma\in\Ncx$ mit $\free{e}\subseteq \dom{\Gamma}$, \\
-    dann gilt $(\tr{\Gamma,e})\in\dbExp$.
-  \item Sei $\cl\in\Cl$. Dann gilt $(\tr{\cl})\in\dbCl$.
-  \end{enumerate}
-\end{lemma}
-
-\begin{proof}
-  Straight forward induction.
-\end{proof}
-
-\begin{lemma}
-  Die \"Ubersetzungsfunktion $\name{tr}$ ist {\em strukturerhaltend}.
-\end{lemma}
-
-Insbesondere gilt $(\tr{\Gamma,v})\in\dbVal$ f\"ur alle $v\in\Val$ und $\Gamma\in\Ncx$ mit
-$\free{v}\subseteq\dom{\Gamma}$.
-
-\begin{proof}
-  Klar.
-\end{proof}
-
-\begin{theorem}[\"Aquivalenzsatz]
-  Sei $(e,\eta),(e',\eta')\in\Cl$. Dann gilt $(e,\eta) \Downarrow (e',\eta')$ gdw.
-  $\tr{e,\eta} \Downarrow \tr{e',\eta'}$.
-\end{theorem}
-
-\begin{proof}
-  Es sind zwei Richtungen zu zeigen, jeweils per Induktion \"uber die L\"ange der Herleitung des big steps mit
-  Fallunterscheidung nach der zuletzt angewandten Regel. Dabei muss man sowohl die {\em Strukturerhaltung} der
-  \"Ubersetzung als auch die Tatsache ausnutzen, dass die Closures g\"ultig sind.
-\end{proof}
-
-\subsection*{Offene Punkte}
-
-\begin{itemize}
-\item Vergleich mit der Substitutionssemantik f\"ur De Bruijn wie in {\em ``Types and Programming Languages''}
-  dargestellt.
-\item Erweiterung/\"Ubertragung der Ergebnisse auf weitere Sprachkonstrukte wie $\blet$, $\brec$, $\ldots$
-  Dabei ist zu zeigen, dass es sich um abgeleitete Konzepte handelt.
-\item Betrachtung einer alternativen Schreibweise f\"ur Operatoren $e_1\,\op\,e_2$ mit passender Semantik
-  (siehe Abschnitt {\em Erzeugung von Zielcode}). Kann sich auf Ergebnisse aus dem ersten Kapitel berufen, so dass hier
-  nur die Semantik anzugeben ist, \"Aquivalenzsatzerweiterung ist trivial.
-\item Zeigen, dass $\bfix$ tats\"achlich nur eine Abk. f\"ur $Y$. Hier wieder mit erstem Kapitel abstimmen.
-\item Call-by-value Semantik \"Anderungen beschreiben und \"Aquivalenz. Hier muss insb. beachtet werden, dass
-  cbv einen anderen Fixpunktoperator bedingt, da die cbn Version in cbv einfach divergieren w\"urde.
-\item Eine \"aquivalente small step Semantik (vermutlich schwierig, erstmal aussen vor lassen).
-\end{itemize}
-
-
-\section{Codegenerierung}
-
-F\"ur die im vorangegangenen Abschnitt beschriebene Programmiersprache soll Maschinencode erzeugt werden. Die
-Zielmaschine ist eine abgewandelte Version der {\em CAM (Categorical Abstract Machine)}, welche in {\em ``The
-Categorical Abstrach Machine: Basics and Enhancements''} von Ralf Hinze beschrieben wird.
-
-
-\subsection{Categorical Abstract Machine}
-
-Wir definieren eine abstrakte Maschine in die die Ausdr\"ucke der funktionalen Programmiersprache \"ubersetzt
-werden. Wir nennen die hier beschriebene Maschine {\em LazyCAM}, da es sich um die Zielmaschine f\"ur eine
-Programmiersprache mit {\em lazy evaluation Semantik} handelt.
-
-\begin{definition}[Syntax der Categorical Abstract Machine]
-  Vorgegeben sei eine Menge $\Loc = \setN$ von {\em Programmaddressen} $\ell$. Die Mengen $\Prog$ aller
-  {\em (CAM-)Programme} $P$, $\Instr$ aller {\em (CAM-)Instruktionen} $I$, $\Reg$ aller
-  {\em (CAM-)Registerinhalte} $R$ und $\Stack$ aller {\em (CAM-)Stackinhalte} $S$ sind wie folgt induktiv
-  definiert:
-  \bgram
-  P \is I \mid P_1;P_2 \\
-  I \is \textsc{Fst} \mid \textsc{Snd} \mid \textsc{Push} \mid \textsc{Swap} \mid \textsc{Cons}
-  \mid \textsc{Quote}\,c \mid \textsc{Prim}\,\op
-  \al \textsc{Closure}\,\ell \mid \textsc{App} \mid \textsc{Eval} \mid \textsc{Return}
-  \al \textsc{GotoFalse}\,\ell \mid \textsc{Goto}\,\ell \mid \textsc{Stop} \\
-  R \is c \mid \ell \mid \underbrace{(R_1,R_2)}_{\text{Umgebung}} \mid \underbrace{[R:\ell]}_{\text{Closure}} \\
-  S \is [\,] \mid R;S
-  \egram
-  Die L\"ange $|P| \in \setN$ eines Programms $P$ ist induktiv definiert durch:
-  \[\begin{array}{rcl}
-    |I| &=& 1 \\
-    |P_1;P_2| &=& |P_1| + |P_2|
-  \end{array}\]
-\end{definition}
-
-Jede Instruktion $I$ eines Programms $P$ besitzt eine eindeutige Programmaddresse $\ell$, identifiziert durch die
-Position an der $I$ in $P$ steht, beginnend bei $0$. Die Menge $\dom{P}\subseteq\Loc$ aller g\"ultigen Addressen
-eines Programms $P$ ist definiert durch:
-\[\begin{array}{rcl}
-  \dom{P} &=& \{\ell\in\Loc\,|\,0\le\ell \wedge \ell < |P|\}
-\end{array}\]
-Wir schreiben $P[\ell]$ f\"ur die Instruktion $I$ an der Programmaddresse $\ell\in\dom{P}$ im Programm $P$.
-Weiterhin schreiben wir $\ell:I$ f\"ur die Programmaddresse $\ell\in\dom{P}$ mit $P[\ell]=I$.
-
-\begin{definition}
-  Die Menge $\locns{I,\ell}\subseteq\Loc$ aller relativ zu $\ell$ in $I$ vorkommenden Sprungziele (implizit oder
-  explizit) ist wie folgt definiert:
-  \[\begin{array}{rcl}
-    \locns{\textsc{Closure}\,\ell',\ell} &=& \{\ell',\ell+1\} \\
-    \locns{\textsc{Return},\ell} &=& \emptyset \\
-    \locns{\textsc{Goto}\,\ell',\ell} &=& \{\ell'\} \\
-    \locns{\textsc{GotoFalse}\,\ell',\ell} &=& \{\ell',\ell+1\} \\
-    \locns{\textsc{Stop},\ell} &=& \emptyset \\
-    \locns{I,\ell} &=& \{\ell+1\} \quad \text{f\"ur alle \"ubrigen $I$}
-  \end{array}\]
-  Die Menge $\locns{P,\ell}\subseteq\Loc$ aller relativ zu $\ell$ in $P$ vorkommenden Sprungziele (implizit oder
-  explizit) ist induktiv definiert durch:
-  \[\begin{array}{rcl}
-    \locns{I,\ell} &=& \locns{I,\ell} \\
-    \locns{P_1;P_2,\ell} &=& \locns{P_1,\ell} \cup \locns{P_2,\ell+|P_1|}
-  \end{array}\]
-  Statt $\locns{P,0}$ schreiben wir kurz $\locns{P}$.
-  Ein Programm $P\in\Prog$ hei"st {\em g\"ultig}, wenn $\locns{P} \subseteq \dom{P}$.
-\end{definition}
-
-Intuitiv sollte sofort ersichtlich sein, dass ein g\"ultiges Programm immer entweder mit $\textsc{Stop}$,
-$\textsc{Return}$ oder $\textsc{Goto}$ enden muss, da in der Sprungmenge sonst die Nachfolgeaddresse des
-letzten Befehls enthalten w\"are, die aber nicht mehr zum Programm geh\"ort. Obige Definition ist schon
-teilweise ein Vorgriff auf die Semantik der Maschine.
-
-\begin{definition}
-  Die Menge $\locns{R} \subseteq \Loc$ aller im Register $R$ vorkommenden Sprungziele ist wie folgt induktiv
-  definiert:
-  \[\begin{array}{rcl}
-    \locns{c} &=& \emptyset \\
-    \locns{\ell} &=& \{\ell\} \\
-    \locns{[R:\ell]} &=& \locns{R} \cup \locns{\ell} \\
-    \locns{(R_1,R_2)} &=& \locns{R_1} \cup \locns{R_2}
-  \end{array}\]
-  Ein Registerinhalt $R$ hei"st {\em g\"ultig} f\"ur ein Programm $P$, wenn $\locns{R}\subseteq\dom{P}$. Die Menge
-  aller g\"ultigen Registerinhalte f\"ur $P$ bezeichnen wir mit $\Reg(P)$.
-\end{definition}
-
-\begin{definition}
-  Analog ist die Menge $\locns{S} \subseteq \Loc$ aller auf dem Stack $S$ vorkommenden Sprungziele definiert:
-  \[\begin{array}{rcl}
-    \locns{[\,]} &=& \emptyset \\
-    \locns{R;S} &=& \locns{R} \cup \locns{S}
-  \end{array}\]
-  Ein Stackinhalt $S$ hei"st {\em g\"ultig} f\"ur ein Programm $P$, wenn $\locns{S}\subseteq\dom{P}$. Die Menge
-  aller g\"ultigen Stackinhalte f\"ur $P$ bezeichnen wir mit $\Stack(P)$.
-\end{definition}
-
-Die Semantik der CAM und damit die Bedeutung der einzelnen Instruktionen wird nachfolgend beschrieben.
-
-\begin{definition}[Semantik der Categorical Abstract Machine]
-  Sei $P\in\Prog$ ein g\"ultiges Programm. Ein {\em g\"ultiger (CAM-)Programmzustand} f\"ur $P$ ist ein Tripel der Form
-  $(R,S,\ell) \in \Reg \times \Stack \times \Loc$, mit
-  \[
-  \locns{R}\cup\locns{S}\cup\{\ell\}\subseteq\dom{P}.
-  \]
-  Die Menge aller g\"ultigen Programmzust\"ande f\"ur $P$ bezeichnen wir mit $\State(P)$.
-  Die \"Ubergangsrelation $\to$ der CAM ist in Tabelle~\ref{table:CAM_Transitions} beschrieben.
-\end{definition}
-
-\begin{figure}
-  {\footnotesize
-  \begin{center}
-    \begin{tabular}{|rcl|l|}
-      \hline
-      Zustand \hfill \quad && Nachfolger & Beschreibung \\
-      \hline
-      $((R_1,R_2),S,\ell:\textsc{Fst})$ & $\to$ & $(R_1,S,\ell+1)$ & Erste Projektion \\
-      $((R_1,R_2),S,\ell:\textsc{Snd})$ & $\to$ & $(R_2,S,\ell+1)$ & Zweite Projektion \\
-      \hline
-      $(R,S,\ell:\textsc{Push})$ & $\to$ & $(R,R;S,\ell+1)$ & Registerinhalt auf Stack \\
-      $(R_1,R_2;S,\ell:\textsc{Swap})$ & $\to$ & $(R_2,R_1;S,\ell+1)$ & Registerinhalt und oberstes \\
-      &&& Stackelement vertauschen \\
-      $(R_2,R_1;S,\ell:\textsc{Cons})$ & $\to$ & $((R_1,R_2),S,\ell+1)$ & Paarbildung \\
-      \hline
-      $(R,S,\ell:\textsc{Quote}\,c)$ & $\to$ & $(c,S,\ell+1)$ & $c$ in Register laden \\
-      $(z_2,z_1;S,\ell:\textsc{Prim}\,\op)$ & $\to$ & $(\op^I(z_1,z_2),S,\ell+1)$ & Operation $\op$ ausf\"uhren \\
-      $(R,S,\ell:\textsc{Closure}\,\ell')$ & $\to$ & $([R:\ell'],S,\ell+1)$ & Abschluss bilden \\
-      \hline
-      $([R_1:\ell'],R_2;S,\ell:\textsc{App})$ & $\to$ & $((R_1,R_2),\ell+1;S,\ell')$ & Funktionsaufruf \\
-      $([R:\ell'],S,\ell:\textsc{Eval})$ & $\to$ & $(R,\ell+1;S,\ell')$ & Verz\"ogerte Auswertung \\
-      &&& einer Closure \\
-      $(R,\ell';S,\ell:\textsc{Return})$ & $\to$ & $(R,S,\ell')$ & R\"ucksprung aus Closure \\
-      $(\true,R;S,\ell:\textsc{GotoFalse}\,\ell')$ & $\to$ & $(R,S,\ell+1)$ & Sprung zu $\ell'$ wenn Register \\
-      $(\false,R;S,\ell:\textsc{GotoFalse}\,\ell')$ & $\to$ & $(R,S,\ell')$ & den Wert $\false$ enth\"alt \\
-      $(R,S,\ell:\textsc{Goto}\,\ell')$ & $\to$ & $(R,S,\ell')$ & Unbedingter Sprung zu $\ell'$ \\
-      \hline
-    \end{tabular}
-  \end{center}}
-  \caption{\"Ubergangsrelation}
-  \label{table:CAM_Transitions}
-\end{figure}
-
-\begin{lemma}[Wohldefiniertheit der \"Ubergangsrelation]
-  Sei $P$ ein g\"ultiges Programm. Wenn $(R,S,\ell)\in\State(P)$ und $(R,S,\ell) \to (R',S',\ell')$, dann
-  gilt auch $(R',S',\ell')\in\State(P)$.
-\end{lemma}
-
-\begin{proof}
-  Sollte sich per Fallunterscheidung recht einfach zeigen lassen, wobei man immer wieder auf die Annahme zur\"uckkommen
-  muss, dass der Anfangszustand schon g\"ultig ist, und man muss beachten, dass alle m\"oglichen Folgeaddressen
-  im Programm enthalten sind, da $P$ nach Voraussetzung g\"ultig ist.
-\end{proof}
-
-\begin{lemma}[Eindeutigkeit der \"Ubergangsrelation]
-  Sei $P$ ein g\"ultiges Programm. F\"ur jeden Zustand $s\in\State(P)$ existiert h\"ochstens ein $s'\in\State(P)$, so
-  dass $s \to s'$.
-\end{lemma}
-
-\begin{definition}[Berechnung]
-  Sei $P$ ein g\"ultiges Programm. Eine {\em Berechnung} f\"ur $P$ ist eine (m\"oglicherweise unendliche) Folge von
-  Zust\"anden
-  \[
-  (R_0,S_0,0) \to (R_1,S_1,\ell_1) \to (R_2,S_2,\ell_2) \to \ldots
-  \]
-  Eine Berechnung hei"st
-  \begin{enumerate}
-    \item {\em terminierend}, wenn sie endlich ist und der letzte Zustand die Form
-      $(R_e,S_e,\ell_e:\textsc{Stop})$ hat, oder
-    \item {\em divergierend}, wenn sie unendlich ist, oder
-    \item {\em stecken bleibend}, sonst.
-  \end{enumerate}
-\end{definition}
-
-
-\subsection{Erzeugung von Zielcode}
-
-Zun\"achst \"andern wir die Programmiersprache geringf\"ugig, um die \"Ubersetzung einfacher zu gestalten. Und
-zwar entfernen wir die Operatoren aus der Menge der Konstanten, und nehmen stattdessen einen Ausdruck der
-Form $e_1\,\op\,e_2$ zur Kernsyntax hinzu, mit folgender Semantik: \\[5mm]
-\begin{tabular}{ll}
-  \RN{Op} & $\regel{(e_1,\eta) \Downarrow (z_1,\eta_1) \quad (e_2,\eta) \Downarrow (z_2,\eta_2)
-                    \quad \op^I(z_1,z_2)=c}
-                   {(e_1\,\op\,e_2,\eta) \Downarrow (c,[])}$
-\end{tabular} \\[5mm]
-Weiterhin entfernen wir den Fixpunktoperator und die \RN{Unfold}-Regel. Stattdessen nehmen wir folgende
-Konstrukte als syntaktischen Zucker auf:
-\[\begin{array}{rcl}
-  (\op) &=_{def}& \abstr{}{\abstr{}{\underline{2}\,\op\,\underline{1}}} \\
-  \bfix &=_{def}& \abstr{}{\app{(\abstr{}{\app{\underline{2}}{(\app{\underline{1}}{\underline{1}})}})}
-                              {(\abstr{}{\app{\underline{2}}{(\app{\underline{1}}{\underline{1}})}})}}
-\end{array}\]
-Letztere \"Ubersetzung entspricht dem vom Haskell Curry entdeckten Fixpunkt-Kombinator f\"ur call-by-name:
-\[\begin{array}{rcl}
-  Y &=_{def}& \abstr{f}{\app{(\abstr{x}{\app{f}}{(\app{x}{x})})}{(\abstr{x}{\app{f}}{(\app{x}{x})})}}
-\end{array}\]
-Es ist nun basierend auf der big step Semantik zu zeigen, dass diese \"Ubersetzungen korrekt sind, bzgl. der
-zuvor benutzten Semantik.
-
-Die {\em LazyCAM}-Codegenerierung f\"ur einen Ausdruck $e\in\Exp$ wird durch die folgenden drei Funktionen erledigt:
-\begin{enumerate}
-\item $\mathcal{P}\sem{e}$ erzeugt das Programm f\"ur $e$, d.h. den Code zur Berechnung des Wertes von $e$ und
-  den abschliessenden $\textsc{Stop}$-Befehl.
-\item $\mathcal{C}\sem{e}\ell$ erzeugt Code, beginnend ab Programmaddresse $\ell$, welcher erwartet, dass $R$ die
-  Umgebung enth\"alt, in der $e$ ausgewertet werden soll, und am Ende eine Closure (mit der zuvor in $R$ befindlichen
-  Umgebung) f\"ur $e$ in $R$ ablegt.
-\item $\mathcal{V}\sem{e}\ell$ erzeugt Code, beginnend ab Programmaddresse $\ell$, welcher erwartet, dass $R$ die
-  Umgebung enth\"alt, in der $e$ ausgewertet werden soll, und am Ende den Wert von $e$ in $R$ ablegt.
-\end{enumerate}
-Diese Funktionen sind wie folgt induktiv definiert:
-\[\begin{array}{rcl}
-  \mathcal{P}\sem{e}
-  &=& \mathcal{V}\sem{e}0;\,\textsc{Stop} \\
-  \\
-  \mathcal{C}\sem{e}\ell
-  &=& \textsc{Goto}\,\ell';\,P;\,\textsc{Return};\,\textsc{Closure}\,(\ell+1) \\
-  && \footnotesize{\text{mit $P = \mathcal{V}\sem{e}(\ell+1), \ell' = \ell + |P| + 2$}} \\
-  \\
-  \mathcal{V}\sem{c}\ell
-  &=& \textsc{Quote}\,c \\
-
-  \mathcal{V}\sem{\underline{i}}\ell
-  &=& \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,\textsc{Snd};\,\textsc{Eval} \\
-
-  \mathcal{V}\sem{\abstr{}{e}}\ell
-  &=& \mathcal{C}\sem{e}\ell \\
-
-  \mathcal{V}\sem{\app{e_1}{e_2}}\ell
-  &=& \textsc{Push};\,P_1;\,\textsc{Swap};\,P_2;\,\textsc{Swap};\,\textsc{App} \\
-  && {\footnotesize \text{mit $P_1=\mathcal{V}\sem{e_1}(\ell+1),P_2=\mathcal{C}\sem{e_2}(\ell+|P_1|+2)$}} \\
-
-  \mathcal{V}\sem{e_1\,\op\,e_2}\ell
-  &=& \textsc{Push};\,P_1;\,\textsc{Swap};\,P_2;\,\textsc{Prim}\,\op \\
-  && {\footnotesize \text{mit $P_1=\mathcal{V}\sem{e_1}(\ell+1),P_2=\mathcal{V}\sem{e_2}(\ell+|P_1|+2)$}} \\
-
-  \mathcal{V}\sem{\bifte{e_0}{e_1}{e_2}}\ell
-  &=& \textsc{Push};\,P_0;\,\textsc{GotoFalse}\,\ell';\,P_1;\,\textsc{Goto}\,\ell'';\,P_2 \\
-  && {\footnotesize \text{mit $P_0=\mathcal{V}\sem{e_0}(\ell+1),P_1=\mathcal{V}\sem{e_1}(\ell+|P_0|+2),$}} \\
-  && {\footnotesize \text{$P_2=\mathcal{V}\sem{e_2}\ell',\ell'=\ell+|P_0|+|P_1|+3,\ell''=\ell'+|P_2|$}}
-\end{array}\]
-
-\begin{lemma}[Wohldefiniertheit der \"Ubersetzungsfunktion]
-  Sei $e\in\Exp$. Dann ist $\mathcal{P}\sem{e}$ ein g\"ultiges Programm.
-\end{lemma}
-
-\begin{proof}
-  Hier m\"usste man dann erstmal die Sache passend formulieren f\"ur $\mathcal{C}$ und $\mathcal{V}$. Dann
-  sollte die Sache anschliessend einfach sein.
-\end{proof}
-
-
-\subsubsection{Anmerkungen}
-
-Diese \"Ubersetzung ist herzlich ineffizient, denn z.B. werden f\"ur $\lambda$-Ausdr\"ucke Parameter-Position
-zwei Closures erzeugt, oder f\"ur einfache Konstanten wird auf Parameter-Position ebenfalls immer eine Closure
-erzeugt, obwohl dies nicht notwendig w\"are. Noch sinnloser sind die De Bruijn-Indizes, hier wird dann eine
-Closure erzeugt, die die Closure aus der Umgebung holt und auswertet. Letzteres liesse sich durch geschicke
-\"Anderung der \"Ubersetzungsfunktionen regeln. Das allgemeine Problem unn\"otiger Closures k\"onnte man dadurch
-l\"osen, dass man zwischen Closure und Funktionswert unterscheidet und entsprechend die \textsc{Eval}-Instruktion
-ab\"andert, wie dies im Willhelm/Maurer gemacht wird (allerdings dann ohne Call-by-need).
-
-Zun\"achst sollte man aber diese sehr naive \"Ubersetzung nehmen und beweisen, dass diese semantikerhaltend ist. Dazu
-muss man zun\"achst geeignete Invarianten (wie sie oben schon angedeutet sind) bestimmen. Daraus sollte man dann
-auf eine beweisbare Form kommen. Intuitiv muss folgendes gezeigt werden:
-\begin{quote}
-  Wenn $(e,[\,]) \Downarrow (v,\eta)$, dann existiert f\"ur $P=\mathcal{P}\sem{e}$ eine terminierende Berechnung
-  $(R_0,S_0,0) \xrightarrow* (R,S,\ell:\textsc{Stop})$, so dass $R$ zu $(v\,\eta)$ {\em passt}. Und
-  man m\"usste leicht zeigen k\"onnen, dass die Wahl von $R_0$ und $S_0$ egal ist wenn $e$ abgeschlossen ist
-  (genaugenommen braucht man irgendwie ein Lemma, welches $R_0$ und $S_0$ mit der initialen Umgebung in Verbindung
-  bringt, um die
-  Korrektheit induktiv zu zeigen; dann ist die Invarianz unter der Wahl von $R_0$/$S_0$ eine triviale Folgerung).
-\end{quote}
-
-
-\subsection{Korrektheit der Codegenerierung}
-
-\begin{definition}
-  Die Menge $\Reg(\eta,P)$ der {\em g\"ultigen Register-Repr\"asentationen} der Umgebung $\eta$ im Programm $P$ ist
-  induktiv durch
-  \[\begin{array}{rcl}
-    \Reg([\,],P) &=& \Reg(P) \\
-    \Reg((e,\eta);\eta',P) &=& \{(R',[R:\ell])\,|\,R'\in\Reg(\eta',P) \wedge R\in\Reg(\eta,P) \\
-    && \ \wedge\ P = I_0;\ldots;I_{\ell-1};\mathcal{V}\sem{e}\ell;\textsc{Return};\ldots\}
-  \end{array}\]
-  und die Menge $\Reg(v,\eta,P)$ der {\em g\"ultigen Register-Repr\"asentationen} des Wertes $v$ im Programm
-  $P$ ist induktiv durch
-  \[\begin{array}{rcl}
-    \Reg(c,\eta,P) &=& \{c\} \\
-    \Reg(\abstr{}{e},\eta,P) &=& \{[R:\ell]\,|\,R\in\Reg(\eta,P) \\
-    && \ \wedge\ P = I_0;\ldots;I_{\ell-1};\mathcal{V}\sem{e}\ell;\textsc{Return};\ldots\}
-  \end{array}\]
-  definiert.
 \end{definition}
 
 \begin{lemma}
-  Sei $(e,\eta)\in\dbCl$, $P_e=\mathcal{V}\sem{e}\ell$, $P=I_0;\ldots;I_{\ell-1};P_e;\ldots;\textsc{Stop}$
-  ein g\"ultiges Programm, $R\in\Reg(\eta,P)$ und $S\in\Stack(P)$. Dann gilt:
-  \begin{quote}
-    Wenn $(e,\eta) \Downarrow (v',\eta')$, dann existiert eine Berechnung \\
-    $(R,S,\ell) \xrightarrow* (R',S,\ell+|P_e|)$ mit $R'\in\Reg(v',\eta',P)$.
-  \end{quote}
+  Sei $\Tj{\Gamma}{(e,\eta)}{\tau}$.
+  \begin{enumerate}
+  \item Wenn $(e,\eta) \multimap (e',\eta')$, dann ex. $\Gamma',\tau'$ mit $\Gamma \sqsubseteq \Gamma'$
+    und $\Tj{\Gamma'}{(e',\eta')}{\tau'}$.
+  \item Wenn $(e,\eta) \Downarrow w$, dann $\Tj{\Gamma}{w}{\tau}$.
+  \end{enumerate}
 \end{lemma}
 
-\begin{proof}
-  Induktion \"uber die L\"ange der Herleitung des big steps $(e,\eta) \Downarrow (v',\eta')$ mit Fallunterscheidung
-  nach der zuletzt angewandten big step Regel:
-  \begin{itemize}
-  \item Im Falle von \RN{Val} gilt $\eta=\eta'$ und entweder $e = c$ oder $e = \abstr{}{e'}$.
 
-    F\"ur $e = c$ gilt $P_e = \textsc{Quote}\,c$, also
-    $(R,S,\ell) \to (c,S,\ell+1)$. Weiterhin gilt $v' = c \in \Reg(c,\eta',P)$.
+\section{Stack Disziplin}
 
-    F\"ur $e = \abstr{}{e'}$ gilt $P_e = \textsc{Goto}\,\ell';\,P_{e'};\,\textsc{Return};\,\textsc{Closure}\,(\ell+1)$
-    mit $P_{e'} = \mathcal{V}\sem{e'}(\ell+1)$ und $\ell' = \ell + |P_{e'}| + 2$. Daf\"ur ergibt sich:
-    \[\begin{array}{rcccl}
-      (R,S,\ell) &\to& (R,S,\ell') &\to& ([R:(\ell+1)],S,\ell'+1)
-    \end{array}\]
-    Also gilt $P = I_0;\ldots;I_{\ell-1};\textsc{Goto}\,\ell';P_{e'};\textsc{Return};\ldots$ und somit folgt
-    unmittelbar, dass $[R:(\ell+1)]\in\Reg(\abstr{}{e'},\eta,P)$.
+\begin{definition}
+  Sei $w \in W$ und $\eta \in \Env$. Eine Umgebung $\eta'$ hei"st \emph{Teil von $\eta$ bzw. $w$},
+  geschrieben $\eta' \sqsubseteq \eta$ bzw. $\eta' \sqsubseteq w$, wenn sich dies mit den folgenden
+  Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ccc}
+    $\eta \sqsubseteq \eta$
+    & $\regel{\eta' \sqsubseteq \eta}{\eta' \sqsubseteq (\id:\underline{\quad};\eta)}$
+    & $\regel{\eta' \sqsubseteq w}{\eta' \sqsubseteq (\id:w;\eta)}$ \\[3mm]
+    $\regel{\eta' \sqsubseteq \eta}{\eta' \sqsubseteq (\abstr{\id}{e},\eta)}$
+    & $\regel{\eta \sqsubseteq w_i \quad 1 \le i \le n}{\eta \sqsubseteq (w_1,\ldots,w_n)}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  $\eta'$ hei"st \emph{echter Teil von $\eta$}, wenn $\eta' \sqsubseteq \eta$ und $\eta' \ne \eta$.
+\end{definition}
 
-  \item \RN{Index} als letzte Regel impliziert $e = \underline{i}$ mit
-    $\eta(\underline{i}) = (e_i,\eta_i) \Downarrow (v',\eta')$, und $\eta = [(e_1,\eta_1);\ldots;(e_i,\eta_i);\ldots]$.
-    Weiter gilt
-    \[P_e = \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,\textsc{Snd};\,\textsc{Eval}\]
-    und
-    \[R = ((\ldots(R'',[R_i:\ell_i]),\ldots),[R_1:\ell_1]).\]
-    Daraus ergibt sich:
-    \[\begin{array}{rcl}
-      (R,S,\ell)
-      &\xrightarrow{(i-1)}& ((R'',[R_i:\ell_i]),S,\ell+i-1) \\
-      &\xrightarrow& ([R_i:\ell_i],S,\ell+i) \\
-      &\xrightarrow& (R_i,(\ell+|P_e|);S,\ell_i)
-    \end{array}\]
-    Nach Voraussetzung steht $P_i=\mathcal{V}\sem{e_i}\ell_i;\textsc{Return}$ an Addresse $\ell_i$ in $P$, und
-    es gilt $R_i \in \Reg(\eta_i,P)$. Entsprechend folgt nach Induktionsvoraussetzung
-    \[\begin{array}{rcl}
-      (R_i,(\ell+|P_e|);S,\ell_i)
-      &\xrightarrow*& (R',(\ell+|P_e|);S,\ell_i+|P_i|) \\
-      &\xrightarrow& (R',S,\ell+|P_e|)
-    \end{array}\]
-    wobei $R'\in\Reg(v',\eta',P)$.
+\begin{lemma}
+  Die Relation $\sqsubseteq$ ist eine Halbordnung auf $\Env \times \Env$ mit kleinstem Element $[\,]$.
+\end{lemma}
 
-  \item F\"ur \RN{Op} gilt $e = e_1\,\op\,e_2$, $(e_1,\eta) \Downarrow (z_1,\eta_1)$,
-    $(e_2,\eta) \Downarrow (z_2,\eta_2)$,
-    $v' = \op^I(z_1,z_2)$ und $\eta = [\,]$. Weiterhin gilt
-    $P_e = \textsc{Push};\,P_1;\,\textsc{Swap};\,P_2;\,\textsc{Prim}\,\op$ mit
-    $P_1=\mathcal{V}\sem{e_1}(\ell+1)$ und $P_2=\mathcal{V}\sem{e_2}(\ell+|P_1|+2)$. Daraus folgt unmittelbar
-    \[\begin{array}{rcl}
-      (R,S,\ell)
-      &\xrightarrow& (R,R;S,\ell+1) \\
-      &\xrightarrow*& (z_1,R;S,\ell+|P_1|+1) \quad \text{wg. I.V.} \\
-      &\xrightarrow& (R,z_1;S,\ell+|P_1|+2) \\
-      &\xrightarrow*& (z_2,z_1;S,\ell+|P|-1) \quad \text{wg. I.V.} \\
-      &\xrightarrow& (op^I(z_1,z_2),S,\ell+|P|)
-    \end{array}\]
-    und trivialerweise gilt $\op^I(z_1,z_2) \in \Reg(\op^I(z_1,z_2),[\,],P)$.
+\begin{definition}
+  Eine Umgebung $\eta$ bzw. ein Wert $w$ \emph{zeigt auf} eine Umgebung $\eta'$, geschrieben $\eta \leadsto \eta'$
+  bzw. $w \leadsto \eta'$, wenn sich dies mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{cccc}
+    $(\id:\underline{\quad};\eta) \leadsto \eta$
+    & $\regel{w \leadsto \eta'}{(\id:w;\eta) \leadsto \eta'}$ 
+    & $(\abstr{\id}{e},\eta) \leadsto \eta$
+    & $\regel{w_i \leadsto \eta \quad 1 \le i \le n}{(w_1,\ldots,w_n) \leadsto \eta}$ \\[3mm]
+  \end{tabular}
+\end{definition}
 
-  \item \RN{Beta} {\bf TODO}
+\begin{lemma}
+  Wenn $\eta \leadsto \eta'$, dann $\eta' \sqsubset \eta$.
+\end{lemma}
 
-  \item \RN{Cond-True} {\bf TODO}
-    
-  \item \RN{Cond-False} analog.
-  \end{itemize}
-\end{proof}
+\begin{lemma}
+  Wenn $\tj{w}{\beta}$, dann gilt $\eta \not\sqsubseteq w$ f"ur alle $\eta \in \Env$.
+\end{lemma}
 
-\begin{theorem}[Korrektheit der Codeerzeugung]
-  Sei $e\in\dbExp$ mit $\free{e}=\emptyset$, $v\in\dbVal$, $\eta\in\dbEnv$, $P=\mathcal{P}\sem{e}$, $R\in\Reg(P)$
-  und $S\in\Stack(P)$. Wenn $(e,[\,])\Downarrow(v,\eta)$, dann existiert genau eine (terminierende) Berechnung
-  \[(R,S,0) \xrightarrow* (R_v,S,|P|-1),\]
-  und es gilt $R_v\in\Reg(v,\eta,P)$.
+\begin{proposition} \label{Prop1}
+  Sei $\Tj{\Gamma}{(e_1,\eta_1)}{\tau}$.
+  \begin{enumerate}
+  \item Wenn $(e_1,\eta_1) \multimap (e_2,\eta_2)$ und $\eta \sqsubset \eta_2$, dann $\eta \sqsubseteq \eta_1$.
+  \item Wenn $(e_1,\eta_1) \Downarrow w$ und $\eta \sqsubseteq w$, dann $\eta \sqsubseteq \eta_1$.
+  \end{enumerate}
+\end{proposition}
+
+\begin{theorem}
+  Sei $(e_1,\eta_1) \multimap \ldots \multimap (e_{n+1},\eta_{n+1})$ mit $\tj{(e_1,\eta_1)}{\tau}$
+  und $\eta_1 \not\leadsto$.
+  \begin{enumerate}
+  \item Wenn $\eta_{n+1} \leadsto \eta$, dann $\eta\in\{\eta_1,\ldots,\eta_n\}$.
+  \item Wenn $(e_{n+1},\eta_{n+1}) \Downarrow w$ und $w \leadsto \eta$, dann $\eta\in\{[\,],\eta_1,\ldots,\eta_n\}$.
+  \end{enumerate}
 \end{theorem}
 
-Insbesondere gilt f\"ur $v=c$, dass genau eine Berechnung \[(R,S,0) \xrightarrow* (c,S,|P|-1)\] existiert.
-
-\begin{proof}
-  Folgt unmittelbar aus dem vorangegangenen Lemma und der Eindeutigkeit der CAM Semantik.
+\begin{proof} \
+  \begin{enumerate}
+  \item Wegen Proposition~\ref{Prop1} gilt
+    \[ \eta \sqsubset \eta_{i+1} \ \Rightarrow \ \eta \sqsubset \eta_i \vee \eta = \eta_i \]
+    f"ur alle $i=1,\ldots,n$. Also folgt ingesamt
+    \[ \eta \sqsubset \eta_{n+1} \ \Rightarrow \ \eta \in \{\eta_1,\ldots\eta_n\}, \]
+    da nach Voraussetzung $\eta_1 \not\leadsto$ und somit $\eta_1$ keine echten Teile besitzt.
+    Somit folgt unmittelbar
+    \[ \eta_{n+1} \leadsto \eta
+    \ \Rightarrow \ \eta \sqsubset \eta_{n+1}
+    \ \Rightarrow \ \eta\in\{\eta_1,\ldots,\eta_n\}. \]
+  \end{enumerate}
 \end{proof}
 
+% \begin{lemma}
+%   Wenn $\tj{w}{\beta}$, dann ex. $c$ so dass $w = c$ oder ex. $w_1,\ldots,w_n$ so dass $w = (w_1,\ldots,w_n)$.
+% \end{lemma}
 
-\subsection{Verbesserungen}
+% \begin{lemma}
+%   Wenn $\Tj{\Gamma}{(e,\eta)}{\tau}$, dann gilt:
+%   \begin{enumerate}
+%   \item Wenn $(e,\eta) \Downarrow w$, dann $\Tj{\Gamma}{w}{\tau}$.
+%   \item Wenn $(e,\eta) \multimap (e',\eta')$, dann ex. $\tau'$ mit $\Tj{\Gamma}{(e',\eta')}{\tau'}$.
+%   \end{enumerate}
+% \end{lemma}
 
-\subsubsection{Closurebildung minimieren}
+% \begin{lemma}
+%   Wenn $\tj{(e,\eta)}{\tau}$, $\eta\not\leadsto$ und $(e,\eta) \Downarrow w$, dann $w \not\leadsto$.
+% \end{lemma}
 
-Die naive \"Ubersetzung von Ausdr\"ucken f\"uhrt zu einem einfachen Korrektbeweis, hat allerdings den nicht
-unerheblichen Nachteil, dass der generierte Code sehr ineffizient ist. Dies wird vorallem dadurch bedingt, dass
-zuviele unn\"otige Closures erzeugt werden.
-
-Der erste Ansatzpunkt ist die Umsetzung der \RN{Index}-Regel. Steht ein De Bruijn-Index auf Closure-Position,
-so wird Closure-Code erzeugt, der zun\"achst die f\"ur den Index eingetragene Closure aus der Umgebung holt und
-anschliessend auswertet. Stattdessen k\"onnte man einfach die existerende Closure aus der Umgebung nehmen. Dazu
-werden $\mathcal{C}$ und $\mathcal{V}$ wie folgt ge\"andert:
-\[\begin{array}{rcl}
-  \mathcal{C}\sem{\underline{i}}\ell
-  &=& \underbrace{\textsc{Fst};\ldots;\,\textsc{Fst}}_{\text{$(i-1)$-mal}};\,\textsc{Snd} \\
-  \\
-  \mathcal{V}\sem{\underline{i}}\ell
-  &=& \mathcal{C}\sem{\underline{i}}\ell;\,\textsc{Eval}
-\end{array}\]
-Nun wird f\"ur einen De Bruijn-Index auf Closure-Position nur noch der Zugriff auf die Umgebung erzeugt,
-f\"ur einen Index auf Value-Position \"andert sich nichts. Es ist offensichtlich, dass die \"Ubersetzung
-immer noch korrekt ist.
-
-
-\subsubsection{Rekursion}
-
-Statt dem Fixpunktoperator, welcher zugegebenerma"sen sehr ineffizient \"ubersetzt wird, k\"onnte man stattdessen
-einen speziellen Ausdruck f\"ur Rekursion einbauen, wie in {\em Pierce} beschrieben, d.h.
-\bgram
-e \is \brec.\,e
-\egram
-mit folgender Semantik: \\[5mm]
-\begin{tabular}{ll}
-  \RN{Unfold} & $\regel{(e,(\brec.\,e,\eta);\eta) \Downarrow \cl}
-                       {(\brec.\,e,\eta) \Downarrow \cl}$
-\end{tabular} \\[3mm]
-Die \"Ubersetzungsfunktionen werden dann wie folgt erweitert:
-\[\begin{array}{rcl}
-  \mathcal{C}\sem{\brec.\,e}\ell
-  &=& \textsc{Goto}\,\ell';\,\textsc{Push};\,\textsc{Closure}\,(\ell+1);\,\textsc{Cons}; \\
-  && P;\,\textsc{Return};\,\textsc{Closure}\,(\ell+1) \\
-  && \footnotesize{\text{mit $P=\mathcal{V}\sem{e}(\ell+4), \ell'=\ell+|P|+5$}} \\
-  \\
-  \mathcal{V}\sem{\brec.\,e}\ell
-  &=& \mathcal{C}\sem{\brec.\,e}\ell;\,\textsc{Eval}
-\end{array}\]
-Diese \"Ubersetzung ist weitaus effizienter als die naive \"Ubersetzung des Fixpunktoperators. Sie wirkt
-zun\"achst wenig intuitiv, die Bedeutung erschlie"st bei n\"aherer Betrachtung sich aber schnell. Die
-erzeugte Closure enth\"alt als Umgebung das urspr\"ungliche $\eta$, welches dann bei Auswertung der
-Closure um den Eintrag f\"ur $(\brec.\,e,\eta)$ erweitert wird (die ersten drei Instruktionen des
-Closure-Codes), und anschlie"send wird der Wert f\"ur $e$ in der erweiterten Umgebung berechnet.
+% \begin{theorem}
+%   Gelte $(e_1,\eta_1) \multimap \ldots \multimap (e_{n+1},\eta_{n+1})$ mit $\tj{(e_1,\eta_1)}{\tau}$
+%   und $\eta_1 \not\leadsto$.
+%   \begin{enumerate}
+%   \item Wenn $\eta_{n+1} \leadsto \eta$, dann ex. $i \in \{1,\ldots,n\}$ so dass $\eta = \eta_i$.
+%   \item Wenn $(e_{n+1},\eta_{n+1}) \Downarrow w$ und $w \leadsto \eta$, dann ex. $i \in \{1,\ldots,n\}$ so dass
+%     $\eta = \eta_i$.
+%   \end{enumerate}
+% \end{theorem}
 
 \end{document}
 
