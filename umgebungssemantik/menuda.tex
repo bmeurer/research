@@ -9,6 +9,7 @@
 \newcommand{\Cl}{\name{Cl}}
 \newcommand{\cl}{\name{cl}}
 \newcommand{\Req}{\name{Req}}
+\newcommand{\Ind}{\name{Index}}
 
 \begin{document}
 
@@ -48,8 +49,8 @@
 \end{definition}
 
 \begin{definition}[Simultane Substitution]
-  Eine \emph{(simultane) Substitution} ist eine total Funktion $s: \Id \to \Exp$, welche alle, bis auf endlich
-  viele, Namen auf sich selbst abbildet. Diese endliche Menge
+  Eine \emph{(simultane) Substitution} ist eine totale Funktion $s: \Id \to \Exp$, welche alle, bis auf endlich
+  viele, Namen auf sich selbst abbildet. Diese endliche Menge von Namen
   \[\begin{array}{rcl}
     \dom{s} &=& \{\id\in\Id \mid s(\id) \ne \id\}
   \end{array}\]
@@ -98,7 +99,8 @@ Ein {\em big step} in der Substitutionssemantik ist eine Formel der Gestalt $e \
 und $v \in \Val$. Ein solcher big step hei"st {\em g"ultig}, wenn er sich mit den folgenden Regeln herleiten
 l"asst: \\[5mm]
 \begin{tabular}{ll}
-  \RN{Val}        & $v \Downarrow v$ \\[3mm]
+  \RN{Const}      & $c \Downarrow c$ \\[1mm]
+  \RN{Closure}    & $\abstr{\id}{e} \Downarrow \abstr{\id}{e}$ \\[1mm]
   \RN{Beta-V}     & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e_2 \Downarrow v \quad e[v/\id] \Downarrow v'}
                            {\app{e_1}{e_2} \Downarrow v'}$ \\[3mm]
   \RN{Op}         & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow (z_1,z_2)}
@@ -144,7 +146,7 @@ l"asst: \\[5mm]
   \al \id:\cl;\eta
   \n
   \cl \is (e,\eta)
-  \al (\cl_1,\ldots,c_n) & \text{mit } n \ge 1
+  \al (\cl_1,\ldots,\cl_n) & \text{mit } n \ge 2
   \egram
   Der Definitionsbereich $\dom{\eta}$ einer Umgebung $\eta$ ist induktiv definiert durch:
   \[\begin{array}{rcl}
@@ -192,7 +194,7 @@ wir zus"atzlich den Begriff der \emph{g"ultigen Closures} und \emph{g"ultigen Um
   \bgram
   w \is (c,[\,])
   \al (\abstr{\id}{e},\eta)
-  \al (w_1,\ldots,w_n) & \text{mit } n \ge 0
+  \al (w_1,\ldots,w_n) & \text{mit } n \ge 2
   \egram
 \end{definition}
 
@@ -212,7 +214,11 @@ folgenden Regeln herleiten l"asst: \\[5mm]
                            {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
   \RN{Op}         & $\regel{(e_1,\eta) \Downarrow (\op,[\,]) \quad (e_2,\eta) \Downarrow ((z_1,[\,]),(z_2,[\,]))}
                            {(\app{e_1}{e_2},\eta) \Downarrow (\op^I(z_1,z_2),[\,])}$ \\[3mm]
-  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\cl) \Downarrow w'}
+  \RN{Proj}       & $\regel{(e_1,\eta) \Downarrow \proj{i}
+                            \quad (e_2,\eta) \Downarrow (w_1,\ldots,w_n)
+                            \quad 1 \le i \le n}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w_i}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\eta) \Downarrow w'}
                            {(\bli{\id}{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
   \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,[\,]) \quad (e_1,\eta) \Downarrow w}
                            {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
@@ -251,7 +257,9 @@ vorstellen, die nachfolgend definiert ist.
   Die "Ubersetzungsfunktion $\name{tr}:\Cl \to \Exp$ ist wie folgt induktiv "uber die Struktur von Closures
   definiert:
   \[\begin{array}{rcl}
-    \tr{e,[\id_1:\cl_1;\ldots;\id_n:\cl_n]} &=& e[\tr{\cl_1}/\id_1,\ldots,\tr{\cl_n}/\id_n] \\
+%    \tr{e,[\id_1:\cl_1;\ldots;\id_n:\cl_n]} &=& e[\tr{\cl_1}/\id_1,\ldots,\tr{\cl_n}/\id_n] \\
+    \tr{e,\eta} &=& e[\tr{\eta(\id_1)}/\id_1,\ldots,\tr{\eta(\id_n)}/\id_n] \\
+    && \text{mit } \dom{\eta} = \{\id_1,\ldots,\id_n\} \\
     \tr{\cl_1,\ldots,\cl_n} &=& (\tr{\cl_1},\ldots,\tr{\cl_n}) \\
   \end{array}\]
 \end{definition}
@@ -268,7 +276,7 @@ vorstellen, die nachfolgend definiert ist.
 \end{proof}
 
 \begin{lemma}
-  Die "Ubersetzungsfunktion $\name{tr}$ erf"ullt folgende Gleichungen:
+  Die "Ubersetzungsfunktion $\name{tr}$ gen"ugt folgenden Gleichungen:
   \[\begin{array}{rcl}
     \tr{c,\eta} &=& c \\
     \tr{\id,\eta} &=& \bcase \tr{\eta(\id)}, & \text{falls } \id\in\dom{\eta} \\ \id, & \text{sonst} \ecase \\
@@ -284,11 +292,14 @@ vorstellen, die nachfolgend definiert ist.
           $\id'\not\in(\free{e}\setminus\{\id\}) \cup \free{\eta\setminus\id} \cup \dom{\eta\setminus\id}$}} \\
     \tr{\bifte{e_0}{e_1}{e_2},\eta} &=& \bifte{(\tr{e_0},\eta)}{(\tr{e_1},\eta)}{(\tr{e_2},\eta)} \\
     \tr{(e_1,\ldots,e_n),\eta} &=& (\tr{e_1,\eta},\ldots,\tr{e_n,\eta}) \\
+    \\
+    \tr{e,[\,]} &=& e \\
+    \tr{e,\id:\cl;\eta} &=& \tr{e,\id:\cl;(\eta \setminus \id)} \\
   \end{array}\]
 \end{lemma}
 
 \begin{proof}
-  Induktion "uber die Struktur von Closures.
+  Induktion "uber die Struktur von Closures und Umgebungen.
 \end{proof}
 
 \begin{theorem}[Korrektheit der Umgebungssemantik] \label{theorem:Korr}
@@ -323,6 +334,89 @@ vorstellen, die nachfolgend definiert ist.
 \begin{proof}
   Folgt unmittelbar aus Satz~\ref{theorem:Voll} und Satz~\ref{theorem:Korr}.
 \end{proof}
+
+\section{De Bruijn Semantik}
+
+\begin{definition}[Syntax der De Bruijn-Programmiersprache]
+  Vorgegeben seien
+  \begin{itemize}
+  \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
+  \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
+  \item eine (unendliche) Menge $\Ind$ von Indizes $\iota$.
+  \end{itemize}
+  Die Mengen $\Op_{dB}$ aller {\em Operatoren} $\op$, $\Const_{dB}$ aller {\em Konstanten} $c$, $\Exp_{dB}$ aller 
+  {\em Ausdr\"ucke} $e$ und $\Val_{dB}$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
+  \bgram
+  \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
+  c \is b \mid z \mid \op \mid \proj{i} \\
+  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \blidb{e_1}{e_2} \mid \rec{}{e}
+  \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
+  v \is c \mid \abstr{}{e} \mid (v_1,\ldots,v_n)
+  \egram
+\end{definition}
+
+\begin{definition}[De Bruijn-Closures und -Umgebungen]
+  Die Mengen $\Cl_{dB}$ aller \emph{Closures} $\cl$, $\Env_{dB}$ aller \emph{Umgebungen} $\eta$ und
+  $W_{dB} \subseteq \Cl_{dB}$ aller \emph{Umgebungswerte} $w$ sind durch die folgende kontextfreie
+  Grammatik definiert:
+  \bgram
+  \eta \is [\,]
+  \al \cl;\eta
+  \n
+  \cl \is (e,\eta)
+  \al (\cl_1,\ldots,\cl_n) & \text{mit } n \ge 2
+  \n
+  w \is (c,[\,])
+  \al (\abstr{}{e},\eta)
+  \al (w_1,\ldots,w_n) & \text{mit } n \ge 2
+  \egram
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der De Bruijn-Semantik ist eine Formel der Gestalt $\cl \Downarrow w$,
+wobei $\cl\in\Cl_{dB}$ und $w \in W_{dB}$. Ein derartiger big step hei"st {\em g"ultig}, wenn er
+sich mit den folgenden Regeln l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Const}      & $(c,\eta) \Downarrow (c,[\,])$ \\[1mm]
+  \RN{Closure}    & $(\abstr{}{e},\eta) \Downarrow (\abstr{}{e},\eta)$ \\[1mm]
+  \RN{Tuple-V}    & $(w_1,\ldots,w_n) \Downarrow (w_1,\ldots,w_n)$ \\[1mm]
+  \RN{Index}      & $\regel{\eta(\iota) \Downarrow w}
+                           {(\iota,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{}{e'},\eta')
+                            \quad (e_2,\eta) \Downarrow w'
+                            \quad (e',w';\eta') \Downarrow w}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Op}         & $\regel{(e_1,\eta) \Downarrow (\op,[\,]) \quad (e_2,\eta) \Downarrow ((z_1,[\,]),(z_2,[\,]))}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\op^I(z_1,z_2),[\,])}$ \\[3mm]
+  \RN{Proj}       & $\regel{(e_1,\eta) \Downarrow \proj{i}
+                            \quad (e_2,\eta) \Downarrow (w_1,\ldots,w_n)
+                            \quad 1 \le i \le n}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w_i}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,w;\eta) \Downarrow w'}
+                           {(\blidb{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,[\,]) \quad (e_1,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,[\,]) \quad (e_2,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Tuple}      & $\regel{(e_1,\eta) \Downarrow w_1 \quad \ldots \quad (e_n,\eta) \Downarrow w_n}
+                           {((e_1,\ldots,e_n),\eta) \Downarrow (w_1,\ldots,w_n)}$ \\[3mm]
+  \RN{Unfold}     & $\regel{(e,(\rec{}{e},\eta);\eta) \Downarrow w}
+                           {(\rec{}{e},\eta) \Downarrow w}$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+\section{Zusammenhang}
+
+\begin{theorem}[Korrektheit der De Bruijn-Semantik]
+  Wenn $\free{e,\eta} \subseteq \dom{\Gamma}$ und $\trdB{\Gamma,(e,\eta)} \Downarrow w$ in der
+  De Bruijn-Semantik, dann existiert ein $w'$, so dass $\trdB{\Gamma,w'} = w$ und
+  $(e,\eta) \Downarrow w'$ in der Umgebungssemantik.
+\end{theorem}
+
+\begin{theorem}[Vollst"andigkeit der De Bruijn-Semantik]
+  Wenn $\free{e,\eta} \subseteq \dom{\Gamma}$ und $(e,\eta) \Downarrow w$ in der Umgebungssemantik,
+  dann gilt $\trdB{\Gamma,(e,\eta)} \Downarrow \trdB{\Gamma,w}$ in der De Bruijn-Semantik.
+\end{theorem}
 
 \end{document}
 
