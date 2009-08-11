@@ -33,7 +33,7 @@
   \egram
 \end{definition}
 
-\begin{definition}[Freie Namen]
+\begin{definition}[Freie Namen] \label{definition:free}
   Die Menge $\free{e} \subseteq \Id$ aller \emph{im Ausdruck $e$ frei vorkommenden Namen}
   ist induktiv definiert durch:
   \[\begin{array}{rcl}
@@ -198,7 +198,7 @@ wir zus"atzlich den Begriff der \emph{g"ultigen Closures} und \emph{g"ultigen Um
   \egram
 \end{definition}
 
-\begin{definition}[Big step Regeln]
+\begin{definition}[Big step Regeln der Umgebungssemantik]
 Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $\cl \Downarrow w$,
 wobei $\cl\in\Cl$ und $w \in W$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
 folgenden Regeln herleiten l"asst: \\[5mm]
@@ -247,7 +247,7 @@ folgenden Regeln herleiten l"asst: \\[5mm]
   Folgt unmittelbar aus Lemma~\ref{lemma:WD_Umgeb}.
 \end{proof}
 
-\section{Zusammenhang}
+\subsection{Zusammenhang}
 
 Eine Closure kann als Darstellung eines Ausdrucks aufgefasst werden, wobei man sich die Umgebungen als
 \emph{aufgesparte Substitutionen} vorstellt. Formal kann man dies durch eine \emph{"Ubersetzungsfunktion}
@@ -335,7 +335,7 @@ vorstellen, die nachfolgend definiert ist.
   Folgt unmittelbar aus Satz~\ref{theorem:Voll} und Satz~\ref{theorem:Korr}.
 \end{proof}
 
-\section{De Bruijn Semantik}
+\section{De Bruijn-Semantik}
 
 \begin{definition}[Syntax der De Bruijn-Programmiersprache]
   Vorgegeben seien
@@ -405,7 +405,7 @@ sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
 \end{tabular}
 \end{definition}
 
-\section{Zusammenhang}
+\subsection{Zusammenhang}
 
 \begin{definition}[Namenskontext]
   Die Menge $\Ncx$ aller \emph{Namenskontexte} $\Gamma$ ist definiert durch folgende kontextfreie Grammatik:
@@ -462,6 +462,160 @@ d.h. $\Gamma(\id)$ ist der kleinste Index f"ur $\id$ in $\Gamma$.
 \begin{theorem}[Vollst"andigkeit der De Bruijn-Semantik]
   Wenn $\free{e,\eta} \subseteq \dom{\Gamma}$ und $(e,\eta) \Downarrow w$ in der Umgebungssemantik,
   dann gilt $\trdB{\Gamma,(e,\eta)} \Downarrow \trdB{\Gamma,w}$ in der De Bruijn-Semantik.
+\end{theorem}
+
+\section{Pointersemantik}
+
+\begin{definition}[Syntax der Pointer-Programmiersprache]
+  Vorgegeben seien
+  \begin{itemize}
+  \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
+  \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
+  \item eine (unendliche) Menge $\Id$ von Namen $\id$.
+  \end{itemize}
+  Die Mengen $\Op$ aller {\em Operatoren} $\op$, $\Const$ aller {\em Konstanten} $c$ und $\Exp_{Ptr}$ aller 
+  {\em Ausdr\"ucke} $e$ sind durch folgende kontextfreie Grammatik definiert:
+  \bgram
+  \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
+  c \is b \mid z \mid \op \mid \proj{i} \\
+  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bli{\id}{e_1}{e_2} \mid \rec{\id}{v}
+  \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
+  v \is c \mid \abstr{\id}{e} \mid (v_1,\ldots,v_n)
+  \egram
+\end{definition}
+
+\begin{definition}[Umgebungen und Umgebungswerte der Pointersemantik]
+  Die Mengen $\Env_{Ptr}$ aller \emph{Umgebungen} $\eta$ und $W_{Ptr}$ aller \emph{Umgebungswerte} $w$ der
+  Pointersemantik sind durch die folgende kontextfreie Grammatik definiert:
+  \bgram
+  \eta \is [\,]
+  \al \id:(v,\uparrow);\eta
+  \al \id:w;\eta
+  \n
+  w \is (c,[\,])
+  \al (\abstr{\id}{e},\eta)
+  \al (w_1,\ldots,w_n)
+  \egram
+\end{definition}
+
+\begin{definition}
+  Ein \emph{expand} ist eine Formel der Gestalt $\Lj{\eta}{v}{w}$, wobei $\eta\in\Env_{Ptr}$, $v\in\Val$ und
+  $w\in W_{Ptr}$. Ein derartiger expand hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+  l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{E-Const}   & $\Lj{\eta}{c}{(c,[\,])}$ \\[1mm]
+    \RN{E-Closure} & $\Lj{\eta}{\abstr{\id}{e}}{(\abstr{\id}{e},\eta)}$ \\[1mm]
+    \RN{E-Tuple}   & $\regel{\Lj{\eta}{v_1}{w_1} \quad\ldots\quad \Lj{\eta}{v_n}{w_n}}
+                            {\Lj{\eta}{(v_1,\ldots,v_n)}{(w_1,\ldots,w_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Ein \emph{lookup} ist eine Formel der Gestalt $\Lj{\eta}{\id}{w}$, wobei $\eta\in\Env_{Ptr}$, $\id\in\Id$ und
+  $w \in W_{Ptr}$. Ein derartiger lookup hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+  l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{L-Immediate} & $\Lj{\id:w;\eta}{\id}{w}$ \\[1mm]
+    \RN{L-Expand}    & $\regel{\Lj{\id:(v,\uparrow);\eta}{v}{w}}
+                              {\Lj{\id:(v,\uparrow);\eta}{\id}{w}}$ \\[3mm]
+    \RN{L-Skip}      & $\regel{\id \ne \id' \quad \Lj{\eta}{\id}{w}}
+                              {\Lj{\id':\underline{\quad};\eta}{\id}{w}}$ \\[3mm]
+  \end{tabular}
+\end{definition}
+
+\begin{definition}[Big step Regeln der Pointersemantik]
+Ein {\em big step} in der Pointersemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow w$,
+wobei $e\in\Exp_{Ptr}$, $\eta \in \Env_{Ptr}$ und $w \in W_{Ptr}$. Ein derartiger big step hei"st
+{\em g"ultig}, wenn er sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Const}      & $(c,\eta) \Downarrow (c,[\,])$ \\[1mm]
+  \RN{Closure}    & $(\abstr{\id}{e},\eta) \Downarrow (\abstr{\id}{e},\eta)$ \\[1mm]
+  \RN{Id}         & $\regel{\Lj{\eta}{\id}{w}}
+                           {(\id,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                            \quad (e_2,\eta) \Downarrow w'
+                            \quad (e',\id':w';\eta') \Downarrow w}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Op}         & $\regel{(e_1,\eta) \Downarrow (\op,[\,]) \quad (e_2,\eta) \Downarrow ((z_1,[\,]),(z_2,[\,]))}
+                           {(\app{e_1}{e_2},\eta) \Downarrow (\op^I(z_1,z_2),[\,])}$ \\[3mm]
+  \RN{Proj}       & $\regel{(e_1,\eta) \Downarrow \proj{i}
+                            \quad (e_2,\eta) \Downarrow (w_1,\ldots,w_n)
+                            \quad 1 \le i \le n}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w_i}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\eta) \Downarrow w'}
+                           {(\bli{\id}{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow (\true,[\,]) \quad (e_1,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow (\false,[\,]) \quad (e_2,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Tuple}      & $\regel{(e_1,\eta) \Downarrow w_1 \quad \ldots \quad (e_n,\eta) \Downarrow w_n}
+                           {((e_1,\ldots,e_n),\eta) \Downarrow (w_1,\ldots,w_n)}$ \\[3mm]
+  \RN{Unfold}     & $(\rec{\id}{v},\eta) \Downarrow (v,\id:(v,\uparrow);\eta)$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+% Betrachtet man den wesentlichen Unterschied zwischen Pointer- und Umgebungssemantik, so wird die Idee, die
+% hinter der Pointersemantik steckt schnell ersichtlich. Zun"achst mal existiert in der Pointersemantik kein
+% allgemeiner $\brec$-Ausdruck mehr. Stattdessen hat man eingeschr"ankte $\blet\,\brec$-Ausdr"ucke, die sich
+% als syntaktischer Zucker f"ur $\blet$- und $\brec$ auffassen lassen:
+% \[\blri{\id}{v}{e}\]
+% kann man als syntaktischen Zucker f"ur
+% \[\bli{\id}{\rec{\id}{v}}{e}\]
+% verstehen. In der Umgebungssemantik w"urde f"ur $(\bli{\id}{\rec{\id}{v}}{e},\eta)$ nun zun"achst ein
+% \RN{Unfold} der Form
+% \[(v,\id:(\rec{\id}{v},\eta);\eta)\]
+% durchgef"uhrt, und das Ergebnis davon w"urde f"ur $e$ in $\eta$ eingetragen. D.h. es ergibt
+% sich folgende Closure, wenn man mal annimmt, dass $v$ ein $\lambda$-Ausdruck ist:
+% \[(e,\id:(v,\id:(\rec{\id}{v},\eta);\eta)\]
+% Wird nun in der Berechnung von $e$ auf $\id$ Bezug genommen, ergibt sich wiederum die Closure
+% \[(v,\id:(\rec{\id}{v},\eta);\eta)\]
+% und wird nun $v$ (von dem wir angenommen haben, dass es ein $\lambda$-Ausdruck ist) auf ein
+% Argument angewandt und w"ahrend der sich dann ergebenden Berechnung wiederum auf $\id$ Bezug
+% genommen, so landen wir wieder bei
+% \[(\rec{\id}{v},\eta)\]
+% und m"ussen wieder direkt mit \RN{Unfold} auffalten zu:
+% \[(v,\id:(\rec{\id}{v},\eta);\eta)\]
+% Diese \RN{Unfold}-Schritte sind also stets gleich und eigentlich unn"otig, da $\brec$-Ausdr"ucke nur
+% noch Werte als Teilausdr"ucke enthalten d"urfen, k"onnten wir das Auffalten auch direkt beim Lookup
+% erledigen. D.h. man k"onnte die \RN{Id} und \RN{Unfold}-Regeln durch \\[5mm]
+% \begin{tabular}{ll}
+%   \RN{Id-Unfold} & $(\id,\id:(\rec{\id}{v},\eta);\eta) \Downarrow (v,\id:(\rec{\id}{v},\eta);\eta)$ \\[1mm]
+% \end{tabular} \\[2mm]
+% ersetzen.
+
+\subsection{Zusammenhang}
+
+\begin{definition}["Ubersetzungsfunktion]
+  Seien $w \in W_{Ptr}$ und $\eta \in \Env_{Ptr}$. Der Umgebungswert $\trPtr{w}$, welcher durch "Ubersetzung
+  aus $w$ entsteht, und die Umgebung $\trPtr{\eta}$, die durch "Ubersetzung aus $\eta$ entsteht, sind wie folgt
+  induktiv definiert:
+  \[\begin{array}{rcl}
+    \trPtr{(c,[\,])} &=& (c,\trPtr{[\,]}) \\
+    \trPtr{(\abstr{\id}{e},\eta)} &=& (\abstr{\id}{e},\trPtr{\eta}) \\
+    \trPtr{(w_1,\ldots,w_n)} &=& (\trPtr{w_1},\ldots,\trPtr{w_n}) \\
+    \\
+    \trPtr{[\,]} &=& [\,] \\
+    \trPtr{\id:(v,\uparrow);\eta} &=& \id:(\rec{\id}{v},\trPtr{\eta});(\trPtr{\eta}) \\
+    \trPtr{\id:w;\eta} &=& \id:(\trPtr{w});(\trPtr{\eta}) \\
+  \end{array}\]
+\end{definition}
+
+\noindent
+Die "Ubersetzungsfunktion erweitert sich trivialerweise auf Closures durch:
+\[\trPtr{e,\eta} = (e,\trPtr{\eta})\]
+
+\begin{corollary} \
+  \begin{enumerate}
+  \item F"ur alle $w \in W_{Ptr}$ gilt: $\trPtr{e}\in W$.
+  \item F"ur alle $\eta \in \Env_{Ptr}$ gilt: $\trPtr{\eta} \in \Env$.
+  \end{enumerate}
+\end{corollary}
+
+\begin{theorem}[Korrektheit der Pointersemantik]
+  Wenn $(e,\eta) \Downarrow w$ in der Pointersemantik, dann gilt
+  $\trPtr{e,\eta} \Downarrow \trPtr{w}$ in der Umgebungssemantik.
+\end{theorem}
+
+\begin{theorem}[Vollst"andigkeit der Pointersemantik]
+  Wenn $\trPtr{e,\eta} \Downarrow \trPtr{w}$ in der Umgebungssemantik,
+  dann gilt $(e,\eta) \Downarrow w$ in der Pointersemantik.
 \end{theorem}
 
 \end{document}
