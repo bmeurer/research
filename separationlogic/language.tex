@@ -22,8 +22,8 @@
 \usepackage{makeidx}
 \usepackage[standard,thmmarks]{ntheorem}
 \usepackage{stmaryrd}
-\usepackage{url}
-\usepackage[arrow, matrix, curve]{xy}
+%\usepackage{url}
+%\usepackage[arrow, matrix, curve]{xy}
 
 %% LaTeX macros
 \include{macros}
@@ -33,16 +33,19 @@
 
 \section{The Programming Language}
 
-\begin{definition}
+\begin{definition}[Syntax]
   \[\begin{grammar}
-  e \in \Exp \is 0 \mid \succ \mid \pred \mid \iszero
+  e \in \Exp \is \z \mid \succ \mid \pred \mid \iszero
   \al \true \mid \false \mid \ifte{e_0}{e_1}{e_2}
   \al x \mid \abstr{x}{e} \mid \app{e_1}{e_2}
+  \al (e_1,e_2) \mid \fst \mid \snd
   \al \ell \mid \assign \mid \deref \mid \new
   \nl
-  v \in \Val \is 0 \mid \succ \mid \app{\succ}{v} \mid \pred \mid \iszero
-  \al \true \mid \false \mid \abstr{x}{e}
-  \al \ell \mid \assign \mid \app{\assign}{v} \mid \deref \mid \new
+  v \in \Val \is \z \mid \succ \mid \app{\succ}{v} \mid \pred \mid \iszero
+  \al \true \mid \false
+  \al \abstr{x}{e}
+  \al (v_1,v_2) \mid \fst \mid \snd
+  \al \ell \mid \assign \mid \deref \mid \new
   \nl
   s \in \Store \is \cdot \mid s,\ell:v
   \end{grammar}\]
@@ -54,120 +57,132 @@
     $\RULE{\conf{e_1}{s} \step \conf{e_1'}{s'}}{\conf{\app{e_1}{e_2}}{s} \step \conf{\app{e_1'}{e_2}}{s'}}$
     & $\RULE{\conf{e}{s} \step \conf{e'}{s'}}{\conf{\app{v}{e}}{s} \step \conf{\app{v}{e'}}{s'}}$ \\[3mm]
     $\conf{\app{\pred}{(\app{\succ}{v})}}{s} \step \conf{v}{s}$
-    & $\conf{\app{\pred}{0}}{s} \step \conf{0}{s}$ \\[1mm]
+    & $\conf{\app{\pred}{\z}}{s} \step \conf{\z}{s}$ \\[1mm]
     $\conf{\app{\iszero}{(\app{\succ}{v})}}{s} \step \conf{\false}{s}$
-    & $\conf{\app{\iszero}{0}}{s} \step \conf{\true}{s}$ \\[1mm]
+    & $\conf{\app{\iszero}{\z}}{s} \step \conf{\true}{s}$ \\[1mm]
     $\conf{\app{(\abstr{x}{e})}{v}}{s} \step \conf{e[v/x]}{s}$
     & $\RULE{s' = s * (\cdot,\ell:v)}{\conf{\app{\new}{v}}{s} \step \conf{\ell}{s'}}$ \\[3mm]
     $\RULE{s = s' * (\cdot,\ell:v)}{\conf{\app{\deref}{\ell}}{s} \step \conf{v}{s}}$
-    & $\RULE{s = s' * (\cdot,\ell:v')}{\conf{\app{(\app{\assign}{\ell})}{v}}{s} \step \conf{\ell}{s',\ell:v}}$ \\[3mm]
+    & $\RULE{s = s' * (\cdot,\ell:v')}{\conf{\app{\assign}{(\ell,v)}}{s} \step \conf{\ell}{s',\ell:v}}$ \\[3mm]
+    $\RULE{\conf{e_1}{s} \step \conf{e_1'}{s'}}{\conf{(e_1,e_2)}{s} \step \conf{(e_1',e_2)}{s'}}$
+    & $\RULE{\conf{e}{s} \step \conf{e'}{s'}}{\conf{(v,e)}{s} \step \conf{(v,e')}{s'}}$ \\[3mm]
+    $\conf{\app{\fst}{(v_1,v_2)}}{s} \step \conf{v_1}{s}$
+    & $\conf{\app{\snd}{(v_1,v_2)}}{s} \step \conf{v_2}{s}$ \\[1mm]
     \multicolumn{2}{c}{$\RULE{\conf{e_0}{s} \step \conf{e_0'}{s'}}{\conf{\ifte{e_0}{e_1}{e_2}}{s} \step \conf{\ifte{e_0'}{e_1}{e_2}}{s'}}$} \\[3mm]
     $\conf{\ifte{\true}{e_1}{e_2}}{s} \step \conf{e_1}{s}$
-    & $\conf{\ifte{\false}{e_1}{e_2}}{s} \step \conf{e_2}{s}$ \\[3mm]
-  \end{tabular}
+    & $\conf{\ifte{\false}{e_1}{e_2}}{s} \step \conf{e_2}{s}$ \\[1mm]
+  \end{tabular} \\[5mm]
 }
 
 A \emph{computation} for $\conf{e}{s}$ is a maximal sequence of small steps
 \[\conf{e}{s} \step \conf{e_1}{s_1} \step \conf{e_2}{s_2} \ldots\]
 A computation \emph{diverges} if the sequence is infinite, or \emph{terminates} if the sequence is
 finite, where the last configuration is $\conf{e_n}{s_n}$ and $e_n$ is a value $v$. Otherwise we
-say that the computation \emph{got stuck}. A configuration $\conf{e}{s}$ \emph{must terminate normally}
-if all computations for $\conf{e}{s}$ terminate.
+say that the computation \emph{got stuck}. A configuration $\conf{e}{s}$
+\begin{enumerate}
+\item is \emph{safe} if no computation for $\conf{e}{s}$ gets stuck, and
+\item \emph{must terminate normally} if all computations for $\conf{e}{s}$ terminate.
+\end{enumerate}
+Obviously each configuration which must terminate normally is also safe. More interestingly, due to
+[O'Hearn, ``A Semantic Basis for Local Reasoning''], we have:
 
-\begin{theorem}[Termination Monotonicity]
-  If $\conf{e}{s}$ must terminate normally and $s' = s * s''$, then $\conf{e}{s'}$ must also terminate normally.
+\begin{theorem}[Safety and Termination Monotonicity] \
+  \begin{enumerate}
+  \item If $\conf{e}{s}$ is safe and $s' = s * s''$, then $\conf{e}{s'}$ is also safe.
+  \item If $\conf{e}{s}$ must terminate normally and $s' = s * s''$, then $\conf{e}{s'}$ must also
+    terminate normally.
+  \end{enumerate}
 \end{theorem}
 
 \begin{theorem}[Frame Property]
-  Suppose $\conf{e}{s_0}$ must terminate normally, and $\conf{e}{s_0 * s} \step^* \conf{v'}{s'}$. Then
+  Suppose the configuration $\conf{e}{s_0}$ is safe, and $\conf{e}{s_0 * s} \step^* \conf{v'}{s'}$. Then
   there exists some $s_0'$ such that $s' = s_0' * s$ and $\conf{e}{s_0} \step^* \conf{v'}{s_0'}$.
 \end{theorem}
 
-\section{The Assertion Language}
+% \section{The Assertion Language}
 
-\begin{definition}
-  \[\begin{grammar}
-    \tau \in \TermType \is \Bool \mid \Data \mid \Nat \mid \tau_1 \to \tau_2
-    \nl
-    \omega \in \AssnType \is \tau \mid \Prop \mid \tau \to \omega
-    \nl
-    t \in \Term \is \true \mid \false \mid n \mid t_1 + t_2 \mid t_1 - t_2 \mid \ldots
-    \al x \mid \abstr{x:\tau}{t} \mid \app{t_1}{t_2}
-    \nl
-    \varrho \in \textsc{Rel} \is \bot \mid \top \mid \,=^\tau\, \mid \rep{\Bool} \mid \rep{\Nat} \mid \,\mapsto\, \mid \emp
-    \nl
-    p,q \in \Assn \is \varrho \mid p \wedge q \mid p \vee q \mid \neg p \mid p \supset q
-    \al x \mid \abstr{x:\tau}{p} \mid \app{p}{t} \mid \qall{x:\omega}{p} \mid \qex{x:\omega}{p}
-    \al p * q \mid \tc{p}{e}{x}{q} \mid \{p\}
-    \nl
-    \Gamma \in \Context \is \cdot \mid \Gamma,x:\omega
-  \end{grammar}\]
-\end{definition}
+% Given a family $\mathcal{F} = (F_\tau)$ of function symbols $f$ and
+% a family $\mathcal{R} = (R_\omega)$ of relation symbols $\varrho$.
+% \begin{definition}
+%   \[\begin{grammar}
+%     \tau \in \TermType \is \Bool \mid \Data \mid \Nat \mid \tau_1 \to \tau_2
+%     \nl
+%     \omega \in \AssnType \is \tau \mid \Prop \mid \tau \to \omega
+%     \nl
+%     t \in \Term \is f \mid x \mid \abstr{x:\tau}{t} \mid \app{t_1}{t_2}
+%     \nl
+%     p,q \in \Assn \is P \mid p \wedge q \mid p \vee q \mid \neg p \mid p \supset q
+%     \al x \mid \abstr{x:\tau}{p} \mid \app{p}{t} \mid \qall{x:\omega}{p} \mid \qex{x:\omega}{p}
+%     \al p * q \mid \tc{p}{e}{x}{q} \mid \{p\}
+%     \nl
+%     \Gamma \in \Context \is \cdot \mid \Gamma,x:\omega
+%   \end{grammar}\]
+% \end{definition}
 
-{\footnotesize
-  \begin{tabular}{ccc}
-    \multicolumn{3}{c}{\framebox[20mm][c]{$\Tj{\Gamma}{t}{\tau}$}} \\[3mm]
-    $\RULE{\mathbf{c}\in\{\true,\false\}}{\Tj{\Gamma}{\mathbf{c}}{\Bool}}$
-    & $\Tj{\Gamma}{n}{\Nat}$
-    & $\RULE{\Tj{\Gamma}{t_1}{\Nat} \quad \Tj{\Gamma}{t_2}{\Nat} \quad \Box \in \{+,-,\ldots\}}{\Tj{\Gamma}{t_1 \Box t_2}{{\Nat}}}$ \\[3mm]
-    $\RULE{x:\tau \in\Gamma}{\Tj{\Gamma}{x}{\tau}}$
-    & $\RULE{\Tj{\Gamma,x:\tau}{t}{\tau'}}{\Tj{\Gamma}{\abstr{x:\tau}{t}}{\tau \to \tau'}}$
-    & $\RULE{\Tj{\Gamma}{t_1}{\tau \to \tau'} \quad \Tj{\Gamma}{t_2}{\tau}}{\Tj{\Gamma}{\app{t_1}{t_2}}{\tau'}}$ \\[3mm]
-  \end{tabular}
+% {\footnotesize
+%   \begin{tabular}{ccc}
+%     \multicolumn{3}{c}{\framebox[20mm][c]{$\Tj{\Gamma}{t}{\tau}$}} \\[3mm]
+%     $\RULE{\mathbf{c}\in\{\true,\false\}}{\Tj{\Gamma}{\mathbf{c}}{\Bool}}$
+%     & $\Tj{\Gamma}{n}{\Nat}$
+%     & $\RULE{\Tj{\Gamma}{t_1}{\Nat} \quad \Tj{\Gamma}{t_2}{\Nat} \quad \Box \in \{+,-,\ldots\}}{\Tj{\Gamma}{t_1 \Box t_2}{{\Nat}}}$ \\[3mm]
+%     $\RULE{x:\tau \in\Gamma}{\Tj{\Gamma}{x}{\tau}}$
+%     & $\RULE{\Tj{\Gamma,x:\tau}{t}{\tau'}}{\Tj{\Gamma}{\abstr{x:\tau}{t}}{\tau \to \tau'}}$
+%     & $\RULE{\Tj{\Gamma}{t_1}{\tau \to \tau'} \quad \Tj{\Gamma}{t_2}{\tau}}{\Tj{\Gamma}{\app{t_1}{t_2}}{\tau'}}$ \\[3mm]
+%   \end{tabular}
 
-  \begin{tabular}{ccc}
-    \multicolumn{3}{c}{\framebox[20mm][c]{$\Tj{\Gamma}{p}{\omega}$}} \\[3mm]
-    $\RULE{\mathbf{c} \in \{\top,\bot,\emp\}}{\Tj{\Gamma}{\mathbf{c}}{\Prop}}$
-    & $\Tj{\Gamma}{=^\tau}{\tau \to \tau \to \Prop}$
-    & $\Tj{\Gamma}{\mapsto}{\Data \to \Data \to \Prop}$ \\[3mm]
-    \multicolumn{2}{c}{$\Tj{\Gamma}{\rep{\Nat}}{\Data \to \Nat \to \Prop}$}
-    & $\Tj{\Gamma}{\rep{\Bool}}{\Data \to \Bool \to \Prop}$ \\[3mm]
-    \multicolumn{2}{c}{$\RULE{\Tj{\Gamma}{p}{\Prop} \quad \Tj{\Gamma}{q}{\Prop} \quad \Box \in\{\wedge,\vee,\supset,*\}}{\Tj{\Gamma}{p \Box q}{\Prop}}$}
-    & $\RULE{\Tj{\Gamma}{p}{\Prop}}{\Tj{\Gamma}{\neg p}{\Prop}}$ \\[3mm]
-    $\RULE{x:\omega \in \Gamma}{\Tj{\Gamma}{x}{\omega}}$
-    & $\RULE{\Tj{\Gamma,x:\tau}{p}{\omega}}{\Tj{\Gamma}{\abstr{x:\tau}{p}}{\tau \to \omega}}$
-    & $\RULE{\Tj{\Gamma}{p}{\tau \to \omega} \quad \Tj{\Gamma}{t}{\tau}}{\Tj{\Gamma}{\app{p}{t}}{\omega}}$ \\[3mm]
-    \multicolumn{2}{c}{$\RULE{\Tj{\Gamma,x:\omega}{p}{\Prop} \quad Q\in\{\forall,\exists\}}{\Tj{\Gamma}{Q x:\omega.\,p}{\Prop}}$}
-    & $\RULE{\Tj{\Gamma}{p}{\Prop}}{\Tj{\Gamma}{\{p\}}{\Prop}}$ \\[3mm]
-    \multicolumn{3}{c}{$\RULE{\Tj{\Gamma}{p}{\Prop} \quad \tj{\Gamma}{e} \quad \Tj{\Gamma,x:\Data}{q}{\Prop}}{\Tj{\Gamma}{\tc{p}{e}{x}{q}}{\Prop}}$} \\[3mm]
-  \end{tabular}
-}
+%   \begin{tabular}{ccc}
+%     \multicolumn{3}{c}{\framebox[20mm][c]{$\Tj{\Gamma}{p}{\omega}$}} \\[3mm]
+%     $\RULE{\mathbf{c} \in \{\top,\bot,\emp\}}{\Tj{\Gamma}{\mathbf{c}}{\Prop}}$
+%     & $\Tj{\Gamma}{=^\tau}{\tau \to \tau \to \Prop}$
+%     & $\Tj{\Gamma}{\mapsto}{\Data \to \Data \to \Prop}$ \\[3mm]
+%     \multicolumn{2}{c}{$\Tj{\Gamma}{\rep{\Nat}}{\Data \to \Nat \to \Prop}$}
+%     & $\Tj{\Gamma}{\rep{\Bool}}{\Data \to \Bool \to \Prop}$ \\[3mm]
+%     \multicolumn{2}{c}{$\RULE{\Tj{\Gamma}{p}{\Prop} \quad \Tj{\Gamma}{q}{\Prop} \quad \Box \in\{\wedge,\vee,\supset,*\}}{\Tj{\Gamma}{p \Box q}{\Prop}}$}
+%     & $\RULE{\Tj{\Gamma}{p}{\Prop}}{\Tj{\Gamma}{\neg p}{\Prop}}$ \\[3mm]
+%     $\RULE{x:\omega \in \Gamma}{\Tj{\Gamma}{x}{\omega}}$
+%     & $\RULE{\Tj{\Gamma,x:\tau}{p}{\omega}}{\Tj{\Gamma}{\abstr{x:\tau}{p}}{\tau \to \omega}}$
+%     & $\RULE{\Tj{\Gamma}{p}{\tau \to \omega} \quad \Tj{\Gamma}{t}{\tau}}{\Tj{\Gamma}{\app{p}{t}}{\omega}}$ \\[3mm]
+%     \multicolumn{2}{c}{$\RULE{\Tj{\Gamma,x:\omega}{p}{\Prop} \quad Q\in\{\forall,\exists\}}{\Tj{\Gamma}{Q x:\omega.\,p}{\Prop}}$}
+%     & $\RULE{\Tj{\Gamma}{p}{\Prop}}{\Tj{\Gamma}{\{p\}}{\Prop}}$ \\[3mm]
+%     \multicolumn{3}{c}{$\RULE{\Tj{\Gamma}{p}{\Prop} \quad \tj{\Gamma}{e} \quad \Tj{\Gamma,x:\Data}{q}{\Prop}}{\Tj{\Gamma}{\tc{p}{e}{x}{q}}{\Prop}}$} \\[3mm]
+%   \end{tabular}
+% }
 
-\subsection{The Semantic of Assertions}
+% \subsection{The Semantic of Assertions}
 
-Let $\mathcal{S} = \{s\,|\,\tj{\cdot}{s}\}$ be the set of all semi-closed stores.
-\begin{definition}[Semantic Domains]
-  \[\begin{array}{rcl}
-    \semantic{\Nat} &=& \N \\
-    \semantic{\Bool} &=& \{\true,\false\} \\
-    \semantic{\Data} &=& \{v \mid \tj{\cdot}{v}\} \\
-    \semantic{\Prop} &=& \{S \mid S \subseteq \mathcal{S}\} \\
-    \semantic{\tau \to \omega} &=& \semantic{\omega}^{\semantic{\tau}} \\
-  \end{array}\]
-\end{definition}
+% Let $\mathcal{S} = \{s\,|\,\tj{\cdot}{s}\}$ be the set of all semi-closed stores.
+% \begin{definition}[Semantic Domains]
+%   \[\begin{array}{rcl}
+%     \semantic{\Nat} &=& \N \\
+%     \semantic{\Bool} &=& \{\true,\false\} \\
+%     \semantic{\Data} &=& \{v \mid \tj{\cdot}{v}\} \\
+%     \semantic{\Prop} &=& \{S \mid S \subseteq \mathcal{S}\} \\
+%     \semantic{\tau \to \omega} &=& \semantic{\omega}^{\semantic{\tau}} \\
+%   \end{array}\]
+% \end{definition}
 
-{\footnotesize
-  \[\begin{array}{rcl}
-    \semantic{\Tj{\Gamma}{\true}{\Bool}}\,\eta &=& \true \\
-    \semantic{\Tj{\Gamma}{\false}{\Bool}}\,\eta &=& \false \\
-    \semantic{\Tj{\Gamma}{n}{\Nat}}\,\eta &=& n \\
-    \semantic{\Tj{\Gamma}{t_1 \Box t_2}{\Nat}}\,\eta &=& (\semantic{\Tj{\Gamma}{t_1}{\Nat}}\,\eta) \Box (\semantic{\Tj{\Gamma}{t_2}{\Nat}}\,\eta) \quad \Box\in\{+,-,\ldots\} \\
-    \semantic{\Tj{\Gamma}{x}{\tau}}\,\eta &=& \eta(x) \\
-    \semantic{\Tj{\Gamma}{\abstr{x:\tau}{t}}{\tau \to \tau'}}\,\eta &=& \abstr{d\in\semantic{\tau}}{\semantic{\Tj{\Gamma,x:\tau}{t}{\tau'}}\,(\eta[d/x])} \\
-    \semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\tau}}\,\eta &=& \app{(\semantic{\Tj{\Gamma}{t_1}{\tau' \to \tau}}\,\eta)}{(\semantic{\Tj{\Gamma}{t_2}{\tau'}}\,\eta)} \\
-  \end{array}\]
+% {\footnotesize
+%   \[\begin{array}{rcl}
+%     \semantic{\Tj{\Gamma}{\true}{\Bool}}\,\eta &=& \true \\
+%     \semantic{\Tj{\Gamma}{\false}{\Bool}}\,\eta &=& \false \\
+%     \semantic{\Tj{\Gamma}{n}{\Nat}}\,\eta &=& n \\
+%     \semantic{\Tj{\Gamma}{t_1 \Box t_2}{\Nat}}\,\eta &=& (\semantic{\Tj{\Gamma}{t_1}{\Nat}}\,\eta) \Box (\semantic{\Tj{\Gamma}{t_2}{\Nat}}\,\eta) \quad \Box\in\{+,-,\ldots\} \\
+%     \semantic{\Tj{\Gamma}{x}{\tau}}\,\eta &=& \eta(x) \\
+%     \semantic{\Tj{\Gamma}{\abstr{x:\tau}{t}}{\tau \to \tau'}}\,\eta &=& \abstr{d\in\semantic{\tau}}{\semantic{\Tj{\Gamma,x:\tau}{t}{\tau'}}\,(\eta[d/x])} \\
+%     \semantic{\Tj{\Gamma}{\app{t_1}{t_2}}{\tau}}\,\eta &=& \app{(\semantic{\Tj{\Gamma}{t_1}{\tau' \to \tau}}\,\eta)}{(\semantic{\Tj{\Gamma}{t_2}{\tau'}}\,\eta)} \\
+%   \end{array}\]
   
-  \[\begin{array}{rcl}
-    \semantic{\Tjr{\bot}{\Prop}} &=& \emptyset \\
-    \semantic{\Tjr{\top}{\Prop}} &=& \mathcal{S} \\
-    \semantic{\Tjr{\emp}{\Prop}} &=& \{s \mid s = \cdot\} \\
-    \semantic{\Tjr{=^\tau}{\tau \to \tau \to \Prop}} &=& \phi:\semantic{\tau} \to \semantic{\tau}\to\semantic{\Prop} \\
-    && \phi\,d_1\,d_2 = \{s \mid d_1 = d_2\} \\
-    \semantic{\Tjr{\mapsto}{\Data \to \Data \to \Prop}} &=& \phi:\semantic{\Data}\to\semantic{\Data}\to\semantic{\Prop} \\
-    && \phi\,d_1\,d_2 = \{s \mid s = \cdot,d_1:d_2\} \\
-    \semantic{\Tjr{\rep{\Bool}}{\Data \to \Bool \to \Prop}} &=& \phi:\semantic{\Data}\to\semantic{\Bool}\to\semantic{\Prop} \\
-    && \phi\,d_1\,d_2 = \{s \mid (d_1 = \true \wedge d_2 = \true) \vee (d_1 = \false \wedge d_2 = \false) \} \\
-  \end{array}\]
+%   \[\begin{array}{rcl}
+%     \semantic{\Tjr{\bot}{\Prop}} &=& \emptyset \\
+%     \semantic{\Tjr{\top}{\Prop}} &=& \mathcal{S} \\
+%     \semantic{\Tjr{\emp}{\Prop}} &=& \{s \mid s = \cdot\} \\
+%     \semantic{\Tjr{=^\tau}{\tau \to \tau \to \Prop}} &=& \phi:\semantic{\tau} \to \semantic{\tau}\to\semantic{\Prop} \\
+%     && \phi\,d_1\,d_2 = \{s \mid d_1 = d_2\} \\
+%     \semantic{\Tjr{\mapsto}{\Data \to \Data \to \Prop}} &=& \phi:\semantic{\Data}\to\semantic{\Data}\to\semantic{\Prop} \\
+%     && \phi\,d_1\,d_2 = \{s \mid s = \cdot,d_1:d_2\} \\
+%     \semantic{\Tjr{\rep{\Bool}}{\Data \to \Bool \to \Prop}} &=& \phi:\semantic{\Data}\to\semantic{\Bool}\to\semantic{\Prop} \\
+%     && \phi\,d_1\,d_2 = \{s \mid (d_1 = \true \wedge d_2 = \true) \vee (d_1 = \false \wedge d_2 = \false) \} \\
+%   \end{array}\]
   
 %   \[\begin{array}{rcl}
 %     \semantic{\Tj{\Gamma}{x}{\omega}}\,\eta &=& \eta(x) \\
@@ -189,7 +204,7 @@ Let $\mathcal{S} = \{s\,|\,\tj{\cdot}{s}\}$ be the set of all semi-closed stores
 %     && \quad \quad \text{and } \semantic{\Tj{\Gamma}{\abstr{x:\tau}{q}}{\tau \tto \Prop}}\,\eta \} \\
 %     \semantic{\Tj{\Gamma}{\{p\}}{\Prop}}\,\eta &=& \{s \mid \semantic{\Tj{\Gamma}{p}{\Prop}}\,\eta = \mathcal{S} \} \\
 %   \end{array}\]
-}
+% }
 
 
 % \section{The programming language}
