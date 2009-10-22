@@ -34,44 +34,33 @@
 \section{The Programming Language}
 
 \begin{definition}[Syntax]
+  Let $x\in\Var$ range over some infinite set of variables and $\ell\in\Loc$ range over some infinite set of
+  store locations.
   \[\begin{grammar}
-  e \in \Exp \is \z \mid \succ \mid \pred \mid \iszero
-  \al \true \mid \false \mid \ifte{e_0}{e_1}{e_2}
-  \al x \mid \abstr{x}{e} \mid \app{e_1}{e_2}
-  \al (e_1,e_2) \mid \fst \mid \snd
-  \al \ell \mid \assign \mid \deref \mid \new
+  e \in \Exp \is x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \ell \mid \assign \mid \deref \mid \new
   \nl
-  v \in \Val \is \z \mid \succ \mid \app{\succ}{v} \mid \pred \mid \iszero
-  \al \true \mid \false
-  \al \abstr{x}{e}
-  \al (v_1,v_2) \mid \fst \mid \snd
-  \al \ell \mid \assign \mid \deref \mid \new
-  \nl
-  s \in \Store \is \cdot \mid s,\ell:v
+  v \in \Val \is \abstr{x}{e} \mid \ell \mid \assign \mid \app{\assign}{\ell} \mid \deref \mid \new
+%   \nl
+%   s \in \Store \is \cdot \mid s,\ell:v
   \end{grammar}\]
 \end{definition}
 
+A store $s\in\Store$ is a finite, partial mapping from locations to values. We write $s \disjoint s'$ to indicate
+that the domains $\dom{s}$ and $\dom{s'}$ are disjoint. When $s \disjoint s'$ holds, $s * s'$ is the store obtained
+by taking the union of disjoint partial functions. When $s \disjoint s'$ does not hold, $s * s'$ is undefined.
+
 {\footnotesize
-  \begin{tabular}{cc}
-    \multicolumn{2}{c}{\framebox[30mm][c]{$\conf{e}{s} \step \conf{e'}{s'}$}} \\[3mm]
-    $\RULE{\conf{e_1}{s} \step \conf{e_1'}{s'}}{\conf{\app{e_1}{e_2}}{s} \step \conf{\app{e_1'}{e_2}}{s'}}$
-    & $\RULE{\conf{e}{s} \step \conf{e'}{s'}}{\conf{\app{v}{e}}{s} \step \conf{\app{v}{e'}}{s'}}$ \\[3mm]
-    $\conf{\app{\pred}{(\app{\succ}{v})}}{s} \step \conf{v}{s}$
-    & $\conf{\app{\pred}{\z}}{s} \step \conf{\z}{s}$ \\[1mm]
-    $\conf{\app{\iszero}{(\app{\succ}{v})}}{s} \step \conf{\false}{s}$
-    & $\conf{\app{\iszero}{\z}}{s} \step \conf{\true}{s}$ \\[1mm]
-    $\conf{\app{(\abstr{x}{e})}{v}}{s} \step \conf{e[v/x]}{s}$
-    & $\RULE{s' = s * (\cdot,\ell:v)}{\conf{\app{\new}{v}}{s} \step \conf{\ell}{s'}}$ \\[3mm]
-    $\RULE{s = s' * (\cdot,\ell:v)}{\conf{\app{\deref}{\ell}}{s} \step \conf{v}{s}}$
-    & $\RULE{s = s' * (\cdot,\ell:v')}{\conf{\app{\assign}{(\ell,v)}}{s} \step \conf{\ell}{s',\ell:v}}$ \\[3mm]
-    $\RULE{\conf{e_1}{s} \step \conf{e_1'}{s'}}{\conf{(e_1,e_2)}{s} \step \conf{(e_1',e_2)}{s'}}$
-    & $\RULE{\conf{e}{s} \step \conf{e'}{s'}}{\conf{(v,e)}{s} \step \conf{(v,e')}{s'}}$ \\[3mm]
-    $\conf{\app{\fst}{(v_1,v_2)}}{s} \step \conf{v_1}{s}$
-    & $\conf{\app{\snd}{(v_1,v_2)}}{s} \step \conf{v_2}{s}$ \\[1mm]
-    \multicolumn{2}{c}{$\RULE{\conf{e_0}{s} \step \conf{e_0'}{s'}}{\conf{\ifte{e_0}{e_1}{e_2}}{s} \step \conf{\ifte{e_0'}{e_1}{e_2}}{s'}}$} \\[3mm]
-    $\conf{\ifte{\true}{e_1}{e_2}}{s} \step \conf{e_1}{s}$
-    & $\conf{\ifte{\false}{e_1}{e_2}}{s} \step \conf{e_2}{s}$ \\[1mm]
-  \end{tabular} \\[5mm]
+  \begin{center}
+    \begin{tabular}{ccc}
+      \multicolumn{3}{c}{\framebox[30mm][c]{$\conf{e}{s} \step \conf{e'}{s'}$}} \\[3mm]
+      $\RULE{\conf{e_1}{s} \step \conf{e_1'}{s'}}{\conf{\app{e_1}{e_2}}{s} \step \conf{\app{e_1'}{e_2}}{s'}}$
+      & $\RULE{\conf{e}{s} \step \conf{e'}{s'}}{\conf{\app{v}{e}}{s} \step \conf{\app{v}{e'}}{s'}}$
+      & $\conf{\app{(\abstr{x}{e})}{v}}{s} \step \conf{e[v/x]}{s}$ \\[3mm]
+      $\RULE{\ell \not\in \dom{s}}{\conf{\app{\new}{v}}{s} \step \conf{\ell}{s[v/\ell]}}$
+      & $\RULE{s(\ell) = v}{\conf{\app{\deref}{\ell}}{s} \step \conf{v}{s}}$
+      & $\RULE{\ell\in\dom{s}}{\conf{\app{\app{\assign}{\ell}}{v}}{s} \step \conf{\ell}{s[v/\ell]}}$ \\[3mm]
+    \end{tabular} \\[5mm]
+  \end{center}
 }
 
 A \emph{computation} for $\conf{e}{s}$ is a maximal sequence of small steps
@@ -98,6 +87,38 @@ Obviously each configuration which must terminate normally is also safe. More in
   Suppose the configuration $\conf{e}{s_0}$ is safe, and $\conf{e}{s_0 * s} \step^* \conf{v'}{s'}$. Then
   there exists some $s_0'$ such that $s' = s_0' * s$ and $\conf{e}{s_0} \step^* \conf{v'}{s_0'}$.
 \end{theorem}
+
+
+\section{The Assertion Language}
+
+Given a signature $\Sigma$ and a first order logic $L_\Sigma$, we extend this logic to an assertion
+language by adding the following productions to the abstract syntax of the logic:
+\[\begin{grammar}
+  t \in \Term \is v
+  \nl
+  p,q \in \Assn \is t_1 \mapsto t_2 \mid p * q \mid \tc{p}{e}{x}{q}
+\end{grammar}\]
+
+
+\section{The calculus}
+
+{\footnotesize
+  \begin{center}
+    \begin{tabular}{rl}
+      \RN{Val}    & $\qall{x}{\tc{\emp}{x}{y}{y = x \wedge \emp}}$ \\[1mm]
+      \RN{App}    & $\tc{p}{e_1}{x}{p'}
+                    \wedge (\qall{x}{\tc{p'}{e_2}{y}{q'}})
+                    \wedge (\qall{x,y}{\tc{q'}{\app{x}{y}}{y}{q}})
+                    \Rightarrow \tc{p}{\app{e_1}{e_2}}{y}{q}$ \\[1mm]
+                  & where $x \not\in \FV{e_2} \cup \FV{q}$ \\[1mm]
+      \RN{Beta-V} & $\qall{x}{\tc{p}{e}{y}{q} \Rightarrow \tc{p}{\app{(\abstr{x}{e})}{x}}{y}{q}}$ \\[1mm]
+      \RN{New}    & $\qall{x}{\tc{\emp}{\app{\new}{x}}{y}{y \mapsto x}}$ \\[1mm]
+      \RN{Deref}  & $\qall{x,y}{\tc{y \mapsto x}{\app{\deref}{y}}{z}{z = x \wedge y \mapsto x}}$ \\[1mm]
+      \RN{Assign} & $\qall{x,y}{\tc{\qex{z}{y \mapsto z}}{\app{\app{\assign}{y}}{x}}{z}{z = y \wedge y \mapsto x}}$ \\[1mm]
+    \end{tabular}
+  \end{center}
+}
+
 
 % \section{The Assertion Language}
 

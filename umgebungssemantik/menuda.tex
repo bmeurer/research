@@ -342,22 +342,22 @@ vorstellen, die nachfolgend definiert ist.
   \begin{itemize}
   \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
   \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
-  \item eine (unendliche) Menge $\Ind = \{\underline{1},\underline{2},\ldots\}$ von Indizes $\iota$.
+  \item eine (unendliche) Menge $\Ind = \{\underline{1},\underline{2},\ldots\}$ von Indizes $\underline{i}$.
   \end{itemize}
   Die Mengen $\Op$ aller {\em Operatoren} $\op$, $\Const$ aller {\em Konstanten} $c$, $\Exp_{dB}$ aller 
   {\em Ausdr\"ucke} $e$ und $\Val_{dB}$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
   \bgram
   \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
   c \is b \mid z \mid \op \mid \proj{i} \\
-  e \is c \mid \iota \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \blidB{e_1}{e_2} \mid \rec{}{e}
+  e \is c \mid \underline{i} \mid \abstr{}{e} \mid \app{e_1}{e_2} \mid \blidB{e_1}{e_2} \mid \rec{}{e}
   \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
   v \is c \mid \abstr{}{e} \mid (v_1,\ldots,v_n)
   \egram
 \end{definition}
 
 \begin{definition}[De Bruijn-Closures und -Umgebungen]
-  Die Mengen $\Cl_{dB}$ aller \emph{Closures} $\cl$, $\Env_{dB}$ aller \emph{Umgebungen} $\eta$ und
-  $W_{dB} \subseteq \Cl_{dB}$ aller \emph{Umgebungswerte} $w$ sind durch die folgende kontextfreie
+  Die Mengen $\Cl_{dB}$ aller \emph{De Bruijn-Closures} $\cl$, $\Env_{dB}$ aller \emph{De Bruijn-Umgebungen} $\eta$ und
+  $W_{dB} \subseteq \Cl_{dB}$ aller \emph{De Bruijn-Umgebungswerte} $w$ sind durch die folgende kontextfreie
   Grammatik definiert:
   \bgram
   \eta \is [\,]
@@ -370,7 +370,19 @@ vorstellen, die nachfolgend definiert ist.
   \al (\abstr{}{e},\eta)
   \al (w_1,\ldots,w_n) & \text{mit } n \ge 2
   \egram
+  Die \emph{L"ange} $|\eta|$ einer De Bruijn-Umgebung $\eta$ ist wie folgt induktiv definiert:
+  \[\begin{array}{rcl}
+    |[\,]| &=& 0 \\
+    |\cl;\eta| &=& 1 + |\eta| \\
+  \end{array}\]
 \end{definition}
+
+\noindent
+Wie "ublich, schreiben wir kurz $[\cl_1;\ldots;\cl_n]$ statt $\cl_1;\ldots;\cl_n;[\,]$ und f"ur
+eine Umgebung $\eta = [\cl_1;\ldots;\cl_n]$ und einen g"ultigen Index $i \in \{1,\ldots,|\eta|\}$ sei
+\[\begin{array}{rcl}
+  \eta(i) &=& \cl_i.
+\end{array}\]
 
 \begin{definition}[Big step Regeln]
 Ein {\em big step} in der De Bruijn-Semantik ist eine Formel der Gestalt $\cl \Downarrow w$,
@@ -380,8 +392,8 @@ sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
   \RN{Const}      & $(c,\eta) \Downarrow (c,[\,])$ \\[1mm]
   \RN{Closure}    & $(\abstr{}{e},\eta) \Downarrow (\abstr{}{e},\eta)$ \\[1mm]
   \RN{Tuple-V}    & $(w_1,\ldots,w_n) \Downarrow (w_1,\ldots,w_n)$ \\[1mm]
-  \RN{Index}      & $\regel{\eta(\iota) \Downarrow w}
-                           {(\iota,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Index}      & $\regel{\eta(i) \Downarrow w}
+                           {(\underline{i},\eta) \Downarrow w}$ \\[3mm]
   \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{}{e'},\eta')
                             \quad (e_2,\eta) \Downarrow w'
                             \quad (e',w';\eta') \Downarrow w}
@@ -431,7 +443,7 @@ d.h. $\Gamma(\id)$ ist der kleinste Index f"ur $\id$ in $\Gamma$.
 \begin{definition}["Ubersetzungsfunktion] \
   \begin{enumerate}
   \item Sei $e \in \Exp$ und $\Gamma\in\Ncx$ mit $\free{e} \subseteq \dom{\Gamma}$.
-    Der de Bruijn-Ausdruck $\trdB{\Gamma,e}$, der durch "Ubersetzung aus $e$ entsteht,
+    Der De Bruijn-Ausdruck $\trdB{\Gamma,e}$, der durch "Ubersetzung aus $e$ entsteht,
     ist wie folgt induktiv "uber die Struktur von $e$ definiert:
     \[\begin{array}{rcl}
       \trdB{\Gamma,c} &=& c \\
@@ -443,25 +455,34 @@ d.h. $\Gamma(\id)$ ist der kleinste Index f"ur $\id$ in $\Gamma$.
       \trdB{\Gamma,\bifte{e_0}{e_1}{e_2}} &=& \bifte{\trdB{\Gamma,e_0}}{\trdB{\Gamma,e_1}}{\trdB{\Gamma,e_2}} \\
       \trdB{\Gamma,(e_1,\ldots,e_n)} &=& (\trdB{\Gamma,e_1},\ldots,\trdB{\Gamma,e_n}) \\
     \end{array}\]
-  \item Sei $\cl \in \Cl$ und $\Gamma \in \Ncx$ mit $\free{\cl} \subseteq \dom{\Gamma}$.
-    Die de Bruijn-Closure $\trdB{\Gamma,\cl}$, die durch "Ubersetzung aus $\cl$ entsteht,
-    ist wie folgt induktiv "uber die Struktur von $\cl$ definiert:
+  \item Sei $\cl \in \Cl$, $\eta \in \Env$ und $\Gamma \in \Ncx$ mit
+    $\free{\cl} \cup \free{\eta} \subseteq \dom{\Gamma}$. Die De Bruijn-Closure $\trdB{\Gamma,\cl}$,
+    die durch "Ubersetzung aus $\cl$ entsteht, und die De Bruijn-Umgebung $\trdB{\Gamma,\eta}$, die
+    durch "Ubersetzung aus $\eta$ entsteht, sind wie folgt induktiv definiert:
     \[\begin{array}{rcl}
-      \trdB{\Gamma,(e,[\id_1:\cl_1;\ldots;\id_n:\cl_n])} &=& (\trdB{\id_1;\ldots;\id_n;\Gamma,e},[\trdB{\Gamma,\cl_1};\ldots;\trdB{\Gamma,\cl_n}]) \\
+      \trdB{\Gamma,[\,]} &=& [\,] \\
+      \trdB{\Gamma,\id:\cl;\eta} &=& (\trdB{\Gamma,\cl});(\trdB{\Gamma,\eta}) \\
+      \trdB{\Gamma,(e,\underbrace{[\id_1:\cl_1;\ldots;\id_n:\cl_n]}_{\eta})} &=& (\trdB{\id_1;\ldots;\id_n;\Gamma,e},\trdB{\Gamma,\eta}) \\
       \trdB{\Gamma,(\cl_1,\ldots,\cl_n)} &=& (\trdB{\Gamma,\cl_1},\ldots,\trdB{\Gamma,\cl_n}) \\
     \end{array}\]
   \end{enumerate}
 \end{definition}
 
+\noindent
+Offensichtlich gilt:
+\[\begin{array}{rcl}
+  \trdB{\Gamma,[\id_1:\cl_1;\ldots;\id_n:\cl_n]} &=& [\trdB{\Gamma,\cl_1};\ldots;\trdB{\Gamma,\cl_n}] \\
+\end{array}\]
+
 \begin{theorem}[Korrektheit der De Bruijn-Semantik]
-  Wenn $\free{e,\eta} \subseteq \dom{\Gamma}$ und $\trdB{\Gamma,(e,\eta)} \Downarrow w$ in der
+  Wenn $\free{\cl} \subseteq \dom{\Gamma}$ und $\trdB{\Gamma,\cl} \Downarrow w$ in der
   De Bruijn-Semantik, dann existiert ein $w'$, so dass $\trdB{\Gamma,w'} = w$ und
-  $(e,\eta) \Downarrow w'$ in der Umgebungssemantik.
+  $\cl \Downarrow w'$ in der Umgebungssemantik.
 \end{theorem}
 
 \begin{theorem}[Vollst"andigkeit der De Bruijn-Semantik]
-  Wenn $\free{e,\eta} \subseteq \dom{\Gamma}$ und $(e,\eta) \Downarrow w$ in der Umgebungssemantik,
-  dann gilt $\trdB{\Gamma,(e,\eta)} \Downarrow \trdB{\Gamma,w}$ in der De Bruijn-Semantik.
+  Wenn $\free{\cl} \subseteq \dom{\Gamma}$ und $\cl \Downarrow w$ in der Umgebungssemantik,
+  dann gilt $\trdB{\Gamma,\cl} \Downarrow \trdB{\Gamma,w}$ in der De Bruijn-Semantik.
 \end{theorem}
 
 \section{Pointersemantik}
@@ -603,7 +624,7 @@ Die "Ubersetzungsfunktion erweitert sich trivialerweise auf Closures durch:
 
 \begin{corollary} \
   \begin{enumerate}
-  \item F"ur alle $w \in W_{Ptr}$ gilt: $\trPtr{e}\in W$.
+  \item F"ur alle $w \in W_{Ptr}$ gilt: $\trPtr{w}\in W$.
   \item F"ur alle $\eta \in \Env_{Ptr}$ gilt: $\trPtr{\eta} \in \Env$.
   \end{enumerate}
 \end{corollary}

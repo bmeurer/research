@@ -11,7 +11,7 @@
 
 \newcommand{\nstyle}[1]{\ensuremath{\mathit{#1}}}
 \newcommand{\pstyle}[1]{\ensuremath{\mathsf{#1}}}
-\newcommand{\sstyle}[1]{\ensuremath{\mathrm{#1}}}
+\newcommand{\sstyle}[1]{\ensuremath{\mathsf{#1}}}
 
 
 %%
@@ -25,6 +25,7 @@
 \DeclareMathOperator{\tto}{\Rightarrow}
 \DeclareMathOperator{\ttimes}{\dot{\times}}
 \DeclareMathOperator{\fold}{fold}
+\DeclareMathOperator{\disjoint}{\#}
 
 \newcommand{\abort}{\ensuremath{\mathbf{abort}}}
 \newcommand{\conf}[2]{\langle{#1};\,{#2}\rangle}
@@ -42,7 +43,8 @@
 \newcommand{\Exp}{\ensuremath{\textsc{Exp}}}
 \newcommand{\cExp}{\ensuremath{\textsc{cExp}}}
 \newcommand{\Val}{\ensuremath{\textsc{Val}}}
-\newcommand{\cVal}{\ensuremath{\textsc{cVal}}}
+\newcommand{\Var}{\ensuremath{\textsc{Var}}}
+\newcommand{\Loc}{\ensuremath{\textsc{Loc}}}
 \newcommand{\Term}{\ensuremath{\textsc{Term}}}
 \newcommand{\Assn}{\ensuremath{\textsc{Assn}}}
 \newcommand{\Store}{\ensuremath{\textsc{Store}}}
@@ -153,3 +155,8 @@
 
 \newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "language"
+%%% End: 

@@ -169,6 +169,58 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 \end{definition}
 
 
+\section{Ein allgemeines Typsystem}
+
+\begin{definition}[Typen]
+  Die Menge aller g"ultigen \emph{Typen} $\tau$ ist durch die folgende
+  kontextfreie Grammatik definiert:
+  \bgram
+  \tau \is \bool \mid \z \mid \unit
+  \al \tau_1 \to \tau_2 \mid (\tau_1,\ldots,\tau_n)
+  \egram
+\end{definition}
+
+\begin{definition}[Typregeln]
+  Ein Typurteil $\Tj{\Gamma}{e}{\tau}$ hei"st g"ultig, wenn es sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{Const}   & $\regel{\tj{c}{\tau}}
+                          {\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
+    \RN{Id}      & $\regel{\Gamma(\id) = \tau}
+                          {\Tj{\Gamma}{\id}{\tau}}$ \\[3mm]
+    \RN{Abstr}   & $\regel{\Tj{(\id:\tau;\Gamma)}{e}{\beta}}
+                          {\Tj{\Gamma}{\abstr{\id}{e}}{\tau \to \beta}}$ \\[3mm]
+    \RN{App}     & $\regel{\Tj{\Gamma}{e_1}{\tau \to \tau'} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+    \RN{Let}     & $\regel{\Tj{\Gamma}{e_1}{\tau} \quad \Tj{(\id:\tau;\Gamma)}{e_2}{\beta}}
+                          {\Tj{\Gamma}{\bli{\id}{e_1}{e_2}}{\beta}}$ \\[3mm]
+    \RN{Let-Rec} & $\regel{\Tj{(\id:\tau;\Gamma)}{v}{\tau} \quad \Tj{\id:\tau;\Gamma}{e}{\beta}}
+                          {\Tj{\Gamma}{\blri{\id}{v}{e}}{\beta}}$ \\[3mm]
+    \RN{Cond}    & $\regel{\Tj{\Gamma}{e_0}{\bool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\bifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+    \RN{Tuple}   & $\regel{\Tj{\Gamma}{e_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{e_n}{\tau_n}}
+                          {\Tj{\Gamma}{(e_1,\ldots,e_n)}{(\tau_1,\ldots,\tau_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Typurteile f"ur Umgebungen sind von der Form $\Tjh{\Gamma_w,\Gamma_\eta}{\eta}$, Typurteile f"ur Closures und
+  Werte sind von der Form $\Tj{\Gamma}{\cl}{\tau}$ bzw. $\Tj{\Gamma}{w}{\tau}$.
+  \[\begin{array}{cc}
+    \Tjh{\Gamma,[\,]}{[\,]}
+    & \regel{\Tj{(\Gamma_\eta;\Gamma)}{e}{\tau} \quad \Tjh{\Gamma,\Gamma_\eta}{\eta}}{\Tj{\Gamma}{(e,\eta)}{\tau}} \\
+    \regel{\Tj{\Gamma_w}{w}{\tau} \quad \Tjh{\Gamma_w,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_w,(\id:\tau;\Gamma_\eta)}{(\id:w;\eta)}}
+    & \regel{\Tj{\Gamma}{w_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{w_n}{\tau_n}}{\Tj{\Gamma}{(w_1,\ldots,w_n)}{(\tau_1,\ldots,\tau_n)}} \\
+    \regel{\Tj{(\id:\tau;\Gamma_\eta;\Gamma_v)}{v}{\tau} \quad \Tjh{\Gamma_v,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_v,(\id:\tau;\Gamma_\eta)}{(\id:v;\eta)}}
+  \end{array}\]
+\end{definition}
+
+% \begin{lemma}
+%   Sei $\Tj{\Gamma}{(e,\eta)}{\tau}$.
+%   \begin{enumerate}
+%   \item Wenn $(e,\eta) \multimap (e',\eta')$, dann ex. $\Gamma',\tau'$ mit $\Gamma \sqsubseteq \Gamma'$
+%     und $\Tj{\Gamma'}{(e',\eta')}{\tau'}$.
+%   \item Wenn $(e,\eta) \Downarrow w$, dann $\Tj{\Gamma}{w}{\tau}$.
+%   \end{enumerate}
+% \end{lemma}
+
+
 \section{Stack Disziplin}
 
 \begin{definition}
@@ -251,7 +303,12 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 
     \item $n > 0$
 
-      \textbf{TODO}
+      Nach I.V. ergibt sich f"ur $(e_n,\eta_n) \multimap \ldots \multimap (e_1,\eta_1)$, dass wenn
+      $\eta \sqsubset \eta_1$, dann gilt $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder $\eta \sqsubset \eta_n$.
+      Jetzt ist \RN{Sd-1'} anwendbar, und es ergibt sich $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder
+      $\eta \sqsubseteq \eta_{n+1}$. Letzteres wiederum bedeutet $\eta \sqsubset \eta_{n+1}$ oder
+      $\eta = \eta_{n+1}$. D.h. insgesamt erhalten wir $\eta \in \{\eta_2,\ldots,\eta_{n+1}\}$ oder
+      $\eta \sqsubset \eta_{n+1}$, was zu zeigen war.
     \end{itemize}
 
   \item \RN{Sd-2}
@@ -266,63 +323,14 @@ folgenden Regeln herleiten l"asst: \\[5mm]
 
     \item $n > 1$
 
-      \textbf{TODO}
+      Nach I.V. erhalten wir f"ur $(e_n,\eta_n) \multimap \ldots \multimap (e_1,\eta_1)$, dass wenn
+      $\eta \sqsubseteq w$, dann $\eta \in \{\eta_2,\ldots,\eta_{n-1}\}$ oder $\eta \sqsubseteq \eta_n$.
+      Daraus folgt unmittelbar, dass auch $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder $\eta \sqsubset \eta_n$
+      gilt, denn $n \ge 2$. Mit \RN{Sd-1'} folgt daraus unmittelbar, dass auch $\eta \in \{\eta_2,\ldots,\eta_n\}$
+      oder $\eta \sqsubseteq \eta_{n+1}$ gilt, was zu zeigen war.
     \end{itemize}
   \end{itemize}
 \end{proof}
-
-\section{Pascal-artiges Typsystem}
-
-\begin{definition}[Typen]
-  Die Menge aller g"ultigen \emph{Typen} $\tau$ und die Menge der \emph{Basistypen} $\beta$ sind durch die folgende
-  kontextfreie Grammatik definiert:
-  \bgram
-  \beta \is \bool \mid \z \mid \unit \mid (\beta_1,\ldots,\beta_n)
-  \n
-  \tau \is \beta \mid \tau_1 \to \tau_2 \mid (\tau_1,\ldots,\tau_n)
-  \egram
-\end{definition}
-
-\begin{definition}[Typregeln]
-  Ein Typurteil $\Tj{\Gamma}{e}{\tau}$ hei"st g"ultig, wenn es sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
-  \begin{tabular}{ll}
-    \RN{Const}   & $\regel{\tj{c}{\tau}}
-                          {\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
-    \RN{Id}      & $\regel{\Gamma(\id) = \tau}
-                          {\Tj{\Gamma}{\id}{\tau}}$ \\[3mm]
-    \RN{Abstr}   & $\regel{\Tj{(\id:\tau;\Gamma)}{e}{\beta}}
-                          {\Tj{\Gamma}{\abstr{\id}{e}}{\tau \to \beta}}$ \\[3mm]
-    \RN{App}     & $\regel{\Tj{\Gamma}{e_1}{\tau \to \tau'} \quad \Tj{\Gamma}{e_2}{\tau}}
-                          {\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
-    \RN{Let}     & $\regel{\Tj{\Gamma}{e_1}{\tau} \quad \Tj{(\id:\tau;\Gamma)}{e_2}{\beta}}
-                          {\Tj{\Gamma}{\bli{\id}{e_1}{e_2}}{\beta}}$ \\[3mm]
-    \RN{Let-Rec} & $\regel{\Tj{(\id:\tau;\Gamma)}{v}{\tau} \quad \Tj{\id:\tau;\Gamma}{e}{\beta}}
-                          {\Tj{\Gamma}{\blri{\id}{v}{e}}{\beta}}$ \\[3mm]
-    \RN{Cond}    & $\regel{\Tj{\Gamma}{e_0}{\bool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}
-                          {\Tj{\Gamma}{\bifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
-    \RN{Tuple}   & $\regel{\Tj{\Gamma}{e_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{e_n}{\tau_n}}
-                          {\Tj{\Gamma}{(e_1,\ldots,e_n)}{(\tau_1,\ldots,\tau_n)}}$ \\[3mm]
-  \end{tabular} \\[2mm]
-  Typurteile f"ur Umgebungen sind von der Form $\Tjh{\Gamma_w,\Gamma_\eta}{\eta}$, Typurteile f"ur Closures und
-  Werte sind von der Form $\Tj{\Gamma}{\cl}{\tau}$ bzw. $\Tj{\Gamma}{w}{\tau}$.
-  \[\begin{array}{cc}
-    \Tjh{\Gamma,[\,]}{[\,]}
-    & \regel{\Tj{(\Gamma_\eta;\Gamma)}{e}{\tau} \quad \Tjh{\Gamma,\Gamma_\eta}{\eta}}{\Tj{\Gamma}{(e,\eta)}{\tau}} \\
-    \regel{\Tj{\Gamma_w}{w}{\tau} \quad \Tjh{\Gamma_w,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_w,(\id:\tau;\Gamma_\eta)}{(\id:w;\eta)}}
-    & \regel{\Tj{\Gamma}{w_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{w_n}{\tau_n}}{\Tj{\Gamma}{(w_1,\ldots,w_n)}{(\tau_1,\ldots,\tau_n)}} \\
-    \regel{\Tj{(\id:\tau;\Gamma_\eta;\Gamma_v)}{v}{\tau} \quad \Tjh{\Gamma_v,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_v,(\id:\tau;\Gamma_\eta)}{(\id:v;\eta)}}
-  \end{array}\]
-\end{definition}
-
-% \begin{lemma}
-%   Sei $\Tj{\Gamma}{(e,\eta)}{\tau}$.
-%   \begin{enumerate}
-%   \item Wenn $(e,\eta) \multimap (e',\eta')$, dann ex. $\Gamma',\tau'$ mit $\Gamma \sqsubseteq \Gamma'$
-%     und $\Tj{\Gamma'}{(e',\eta')}{\tau'}$.
-%   \item Wenn $(e,\eta) \Downarrow w$, dann $\Tj{\Gamma}{w}{\tau}$.
-%   \end{enumerate}
-% \end{lemma}
-
 
 \section{Zusammenhang}
 
