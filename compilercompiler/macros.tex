@@ -1,0 +1,163 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2009 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%%
+
+
+%%
+%% Generic style macros
+%%
+
+\newcommand{\nstyle}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\pstyle}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\sstyle}[1]{\ensuremath{\mathsf{#1}}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\coloncolon}{\mathrel{::}}
+\newcommand{\pto}{\rightharpoonup} %{\hookrightarrow}
+%\newcommand{\tto}{\dot{\to}} %{\stackrel{_t}{\to}}
+%\DeclareMathOperator{\tto}{\dot{\to}}
+\DeclareMathOperator{\tto}{\Rightarrow}
+\DeclareMathOperator{\ttimes}{\dot{\times}}
+\DeclareMathOperator{\fold}{fold}
+\DeclareMathOperator{\disjoint}{\#}
+
+\newcommand{\abort}{\ensuremath{\mathbf{abort}}}
+\newcommand{\conf}[2]{\langle{#1};\,{#2}\rangle}
+\newcommand{\step}{\ensuremath{\rightsquigarrow}}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\AssnType}{\ensuremath{\textsc{AssnType}}}
+\newcommand{\TermType}{\ensuremath{\textsc{TermType}}}
+\newcommand{\Exp}{\ensuremath{\textsc{Exp}}}
+\newcommand{\Env}{\ensuremath{\textsc{Env}}}
+\newcommand{\cExp}{\ensuremath{\textsc{cExp}}}
+\newcommand{\Val}{\ensuremath{\textsc{Val}}}
+\newcommand{\Var}{\ensuremath{\textsc{Var}}}
+\newcommand{\Loc}{\ensuremath{\textsc{Loc}}}
+\newcommand{\Term}{\ensuremath{\textsc{Term}}}
+\newcommand{\Assn}{\ensuremath{\textsc{Assn}}}
+\newcommand{\Store}{\ensuremath{\textsc{Store}}}
+\newcommand{\Context}{\ensuremath{\textsc{Context}}}
+\newcommand{\Const}{\ensuremath{\textsc{Const}}}
+
+
+%%
+%% Functions (TODO - DeclareMathOperator)
+%%
+
+\newcommand{\dom}[1]{\ensuremath{\sstyle{dom}(#1)}}
+\newcommand{\cod}[1]{\ensuremath{\sstyle{cod}(#1)}}
+\newcommand{\FV}[1]{\ensuremath{\sstyle{FV}(#1)}}
+\newcommand{\locns}[1]{\ensuremath{\sstyle{locns}(#1)}}
+\newcommand{\grph}[1]{\ensuremath{\sstyle{graph}(#1)}}
+\newcommand{\supp}[1]{\ensuremath{\sstyle{supp}(#1)}}
+\newcommand{\reach}[2]{\ensuremath{\sstyle{reach}(#1,#2)}}
+\newcommand{\reachn}[3]{\ensuremath{\sstyle{reach}_{#1}(#2,#3)}}
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+
+\newcommand{\powerset}[1]{\ensuremath{\mathcal{P}\,(#1)}}
+\newcommand{\powersetfin}[1]{\ensuremath{\mathcal{P}_{fin}\,(#1)}}
+
+
+%%
+%% Names
+%%
+
+\newcommand{\op}{\nstyle{op}}
+
+
+%%
+%% Types
+%%
+
+\newcommand{\Nat}{\pstyle{Nat}}
+\newcommand{\Prop}{\pstyle{Prop}}
+\newcommand{\Data}{\pstyle{Data}}
+\newcommand{\Bool}{\pstyle{Bool}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\z}{\pstyle{z}}
+%\newcommand{\iternat}[4]{\pstyle{iter}_{\Nat}(#1,#2,{#3}.\,{#4})}
+%\newcommand{\letv}[3]{\pstyle{letv}\,{#1}={#2}\,\pstyle{in}\,{#3}}
+\renewcommand{\succ}{\pstyle{succ}}
+\newcommand{\pred}{\pstyle{pred}}
+\newcommand{\iszero}{\pstyle{iszero}}
+\newcommand{\true}{\pstyle{true}}
+\newcommand{\false}{\pstyle{false}}
+\newcommand{\ifte}[3]{\pstyle{if}\,{#1}\,\pstyle{then}\,{#2}\,\pstyle{else}\,{#3}}
+%\newcommand{\fn}[2]{\pstyle{fn}\,{#1}.\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\new}{\pstyle{new}}
+\newcommand{\fst}{\pstyle{fst}}
+\newcommand{\snd}{\pstyle{snd}}
+\DeclareMathOperator{\deref}{!}
+\DeclareMathOperator{\assign}{:=}
+
+
+%%
+%% Formulas
+%%
+
+\newcommand{\emp}{\pstyle{emp}}
+\newcommand{\qex}[2]{\exists{#1}.\,{#2}}
+\newcommand{\qall}[2]{\forall{#1}.\,{#2}}
+\newcommand{\rep}[1]{\pstyle{rep}_{#1}}
+
+\newcommand{\tc}[4]{\{#1\}\,{#2}\,\{{#3}.\,{#4}\}}
+
+
+%%
+%% Grammars
+%%
+
+\newenvironment{grammar}{\begin{array}{rrlll}}{\end{array}}
+
+\newcommand{\is}{& ::= &}
+\newcommand{\al}{\\ & \mid &}
+\newcommand{\nl}{\vspace{2mm}\\}
+%\newcommand{\GRmid}{\,\mid\,}
+%\newcommand{\GRtext}[1]{\hfill & \text{#1}}
+
+
+%%
+%% Rules
+%%
+
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+
+\newcommand{\RULE}[2]{\begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}}
+
+\newcommand{\tj}[2]{{#1}\vdash{#2}}
+\newcommand{\Tj}[3]{{#1}\vdash{#2}:{#3}}
+\newcommand{\Tjr}[2]{{#1}:{#2}}
+\newcommand{\Tjc}[3]{{#1}\vdash{#2}\div{#3}}
+
+
+%%
+%% Other environments
+%%
+
+\newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "language"
+%%% End: 
