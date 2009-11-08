@@ -6,9 +6,18 @@
 
 
 %%
+%% Styles
+%%
+
+\newcommand{\sstyle}[1]{\ensuremath{\mathit{#1}}}
+
+
+%%
 %% Misc
 %%
 
+\newcommand{\abort}{\ensuremath{\mathbf{abort}}}
+\newcommand{\pto}{\rightharpoonup}
 \newcommand{\step}{\ensuremath{\rightsquigarrow}}
 
 
@@ -18,6 +27,27 @@
 
 \newcommand{\N}{\ensuremath{\mathbb N}}
 \newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\Env}{\sstyle{Env}}
+\newcommand{\Exp}{\sstyle{Exp}}
+\newcommand{\Val}{\sstyle{Val}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+
+
+%%
+%% Values
+%%
+
+\newcommand{\clov}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\false}{\mathbf{false}}
+\newcommand{\true}{\mathbf{true}}
 
 
 %%

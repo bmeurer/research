@@ -20,16 +20,242 @@
 \usepackage{latexsym}
 \usepackage[final]{listings}
 \usepackage{makeidx}
+\usepackage{ngerman}
 \usepackage[standard,thmmarks]{ntheorem}
 \usepackage{stmaryrd}
-
 
 %% LaTeX macros
 \include{macros}
 
-
 \begin{document}
 
-test
+
+\section{Rekursion und Iteration}
+
+Seien $A,B$ disjunkte Mengen und sei $g: A \times B^* \pto A \uplus B$. Dann definieren wir
+drei bin"are Relationen
+\[\begin{array}{rcl}
+  \Downarrow & \subseteq & A \times B \\
+  \multimap  & \subseteq & A \times A \\
+  \step      & \subseteq & (A \uplus B)^* \times (A \uplus B)^*
+\end{array}\]
+induktiv durch folgende Regeln (f"ur alle $n \ge 0$):
+\begin{enumerate}
+\item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_{i-1}) = a_i$ f"ur $i = 1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_n) = b$ \\
+  dann gilt $a \Downarrow b$.
+\item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$ \\
+  dann gilt $a \multimap a_n$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  dann gilt $w\,a\,b_1\,\ldots\,b_n \step w\,a\,b_1\,\ldots\,b_n\,a'$.
+\item Wenn $g(a,b_1 \ldots b_n) = b$ \\
+  dann gilt $w\,a\,b_1\,\ldots\,b_n \step w\,b$.
+\end{enumerate}
+Um im Folgenden ausschlie"slich \emph{sinnvolle} Semantiken zu erhalten, fordern wir, dass $g$
+keine \emph{L"ucken} aufwei"st.
+\begin{definition}
+  $g: A \times B^* \pto A \uplus B$ hei"st \emph{vollst"andig}, wenn f"ur alle $n \in \N$, $a,a'\in A$
+  und $b,b_1,\ldots,b_{n+1} \in B$ gilt: 
+  Wenn $g(a,b_1 \ldots b_{n+1}) = a'$ oder $g(a,b_1 \ldots b_{n+1}) = b$ dann
+  existieren $a_1',\ldots,a_n' \in A$ so dass $g(a,b_1 \ldots b_i) = a_i'$ f"ur alle $i = 1,\ldots,n$.
+\end{definition}
+
+
+\section{Anwendung auf eine Programmiersprache}
+
+Sei $A = \Exp \times \Env$, $B = \Val$ und $g$ wie folgt definiert:
+\[\begin{array}{lcl}
+  g(c,\eta) &=& c \\
+  g(\abstr{x}{e},\eta) &=& \clov{\abstr{x}{e}}{\eta} \\
+  g(\app{e_1}{e_2},\eta) &=& (e_1,\eta) \\
+  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}) &=& (e_2,\eta) \\
+  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v') &=& (e',x':v';\eta') \\
+  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v) &=& v \\
+  g(\ifte{e_0}{e_1}{e_2},\eta) &=& (e_0,\eta) \\
+  g(\ifte{e_0}{e_1}{e_2},\eta,\true) &=& (e_1,\eta) \\
+  g(\ifte{e_0}{e_1}{e_2},\eta,\true\,v) &=& v \\
+  g(\ifte{e_0}{e_1}{e_2},\eta,\false) &=& (e_2,\eta) \\
+  g(\ifte{e_0}{e_1}{e_2},\eta,\false\,v) &=& v \\
+  \vdots \\
+\end{array}\]
+Daraus ergibt sich unmittelbar nach obigem Schema eine operationelle Semantik, und zwar
+sowohl in rekursiver als auch in iterativer Form.
+
+Die rekursive Form, also die Relation $\Downarrow$ eignet sich hervorragend als Grundlage
+f"ur die Implementation eines Interpreters f"ur die Programmiersprache. Wir interessieren
+uns an dieser allerdings mehr f"ur die iterative Form und die Anwendung letzterer f"ur
+die automatische Erzeugung eines Compilers f"ur die Programmiersprache.
+
+Aus dem oben definierten $g$ ergeben sich unter anderem folgende Regeln f"ur Reduktionen:
+\[\begin{array}{lcl}
+  w\,(\app{e_1}{e_2},\eta)
+  &\step& w\,(\app{e_1}{e_2},\eta)\,(e_1,\eta) \\
+  w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}
+  &\step& w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,(e_2,\eta) \\
+  w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,v'
+  &\step& w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,(e',x':v';\eta') \\
+\end{array}\]
+Diese Umsetzung einer operationellen Programmiersprachensemantik in Konfigurations"uberg"ange einer Stackmaschine
+ist zwar sehr universell und beeindruckend einfach, jedoch gleichzeitig auch sehr naiv und ineffizient.
+
+Die gemeinsame Verwaltung von Ausdruck und Umgebung macht es schwierig bis unm"oglich, sinnvolle Optimierungen,
+die sich aus bestimmten Eigenschaften von $g$ ergeben (wie zum Beispiel, dass $e_1$ und $e_2$ mit demselben
+$\eta$ ausgewertet werden), anzuwenden. Der erste logische Schritt w"are dementsprechend, Ausdr"ucke und
+Umgebungen getrennt voneinander zu verwalten.
+
+Eine einleuchtende L"osung w"are es beispielsweise die Ausdr"ucke, Umgebungen und Werte jeweils auf einem
+eigenen Stack zu verwalten, allerdings funktioniert dies nicht so einfach, da man f"ur den Resultatstack eine
+Art \emph{Framing}-Mechanismus braucht, um zu wissen, wieviele Werte bereits als Zwischenresultate zum
+aktuellen Ausdruck geh"oren. Entsprechend werden wir zun"achst Ausdr"ucke und Resultate auf einem gemeinsamen
+Stack verwalten. Wir definieren die Reduktionsrelation
+\[\begin{array}{rcl}
+  \step & \subseteq & ((\Exp \uplus \Val)^* \times \Env^*) \times ((\Exp \uplus \Val)^* \times \Env^*)
+\end{array}\]
+als die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 0$):
+\begin{enumerate}
+\item Wenn $g(e,\eta,v_1 \ldots v_n) = (e',\eta')$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta) \step (R\,e\,v_1\,\ldots\,v_n\,e',E\,\eta\,\eta')$.
+\item Wenn $g(e,\eta,v_1 \ldots v_n) = v$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta) \step (R\,v,E)$.
+\end{enumerate}
+Betrachtet man nun die Regeln f"ur die Applikation
+\[\begin{array}{rcl}
+  (R\,(\app{e_1}{e_2}),E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
+\end{array}\]
+so wird schnell offensichtlich, dass die Verwaltung der Umgebungen $\eta$ keinesfalls optimal ist,
+da sowohl f"ur $e_1$ als auch f"ur $e_2$ stets die letzte Umgebung auf dem Umgebungsstack dupliziert
+werden muss ("ahnliches zeigt sich bei anderen Programmkonstrukten).
+
+Selbst wenn man davon ausgeht, dass die Verwaltung der Umgebungen auf einem Heap mit geschickter \emph{Garbage
+Collection} erfolgt, und somit das Duplizieren von $\eta$ im obigen Beispiel lediglich einem Kopieren eines
+Pointers entspricht, so ist der Overhead trotzdem nicht unbedeutend, da in einer realistischen
+Programmiersprachensemantik jede zweite Regel ein $\eta$ dupliziert.
+
+Der bisherige Ansatz erlaubt es nicht, das Duplizieren von Umgebungen durch geschickte Optimierung zu
+verhindern, da die Invariante f"ur die Auswertung eines Ausdrucks $e$ in einer Umgebung $\eta$ wie
+folgt lautet:
+\[\begin{array}{rcl}
+  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E)
+\end{array}\]
+Das hei"st eine Konfigurationsfolge f"ur die Berechnung von $e$ in $\eta$ terminiert mit einem Wert $v$
+und entfernt die urspr"ungliche Umgebung $\eta$ vom Stack. Unabh"angig davon, ob $\eta$ schon das letzte
+Element in $E$ ist, muss $\eta$ trotzalledem auf den Stack, da sonst die Invariante verletzt w"urde.
+
+Will man also das unn"otige Duplizieren von Umgebungen verhindern, muss man eine andere Invariante formulieren.
+Statt einem Ausdruck $e$ das \emph{Aufr"aumen} seiner Umgebung $\eta$ zu "uberlassen, verschiebt man diese
+Aufgabe stattdessen in den Ausdruck, der die Auswertung von $e$ angestossen hat. Die Berechnung eines Ausdrucks
+$e$ in $\eta$ soll lediglich $e$ durch das Resultat ersetzen, aber den Umgebungsstack in seinem urspr"unglichen
+Zustand hinterlassen. Es sollte sich folgende Invariante ergeben:
+\[\begin{array}{rcl}
+  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E\,\eta)
+\end{array}\]
+Eine Relation $\step$, welche diese Invariante erf"ullt, zu definieren, gestaltet sich etwas trickreicher,
+da nun zusammengesetzte Ausdr"ucke, wie zum Beispiel Applikationen $\app{e_1}{e_2}$, selbst daf"ur Sorge
+tragen m"ussen, dass Umgebungen zur Auswertung der Teilausdr"ucke wieder vom Stack verschwinden (was zuvor
+die Berechnung der Teilausdr"ucke erledigt hatte). Wir definieren die neue Reduktionsrelation
+\[\begin{array}{rcl}
+  \step & \subseteq & ((\Exp \uplus \Val)^* \times \Env^*) \times ((\Exp \uplus \Val)^* \times \Env^*)
+\end{array}\]
+als die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 1$):
+\begin{enumerate}
+\item Wenn $g(e,\eta) = v$ \\
+  dann gilt $(R\,e,E\,\eta) \step (R\,v,E\,\eta)$.
+\item Wenn $g(e,\eta) = (e',\eta')$ \\
+  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta\,\eta')$.
+\item Wenn $g(e,\eta,v_1 \ldots v_n) = v$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
+\item Wenn $g(e,\eta,v_1 \ldots v_n) = (e',\eta')$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_n\,e',E\,\eta\,\eta')$.
+\end{enumerate}
+Die erste Regel ist klar und entspricht trivialerweise der Invariante. Die zweite Regel sorgt daf"ur, dass
+bei zusammengesetzten Ausdr"ucken die Umgebung f"ur den ersten Teilausdruck auf dem Stack landet, die vierte
+Regel tut dies f"ur die weiteren Teilausdr"ucke, indem zun"achst die Umgebung des vorangegangenen Teilausdrucks
+entfernt wird und anschliessend die f"ur den n"achsten Teilausdruck auf den Stack gelegt wird. Die dritte
+Regel entfernt nach der Berechnung des letzten Teilausdrucks die zugeh"orige Umgebung und liefert das
+Ergebnis, so dass am Ende das Ergebnis von $e$ und die urspr"ungliche Umgebung von $e$ oben liegen.
+
+Basierend auf dieser Semantik kann man nun daran gehen, "Uberlegungen anzustellen, wie es anhand 
+bestimmter Eigenschaften von $g$ m"oglich sein k"onnte, unn"otiges Duplizieren von Umgebungen zu
+vermeiden.
+
+Betrachtet man nun noch einmal beispielhaft die Regeln f"ur die Applikation so ergibt sich folgendes
+Bild:
+\[\begin{array}{rcl}
+  (R\,(\app{e_1}{e_2}),E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta\,\eta'')
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta\,\eta'')
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
+\end{array}\]
+Zun"achst erscheint es, als h"atten wir keinen Blumentopf gewonnen. Ruft man sich aber die Invariante
+\[\begin{array}{rcl}
+  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E\,\eta)
+\end{array}\]
+wieder in Erinnerung, so wird sofort ersichtlich, dass in der zweiten und dritten Regel $\eta'' = \eta$
+gelten muss, da die erste das urspr"ungliche $\eta$ dupliziert hat, und die Berechnungen f"ur $e_1$ und
+$e_2$ den Umgebungsstack im urspr"unglichen Zustand hinterlassen. Das bedeutet, die ersten beiden
+Teilberechnungen jeder Applikation erfolgen mit einem Stack, der $\eta$ unn"otigerweise zumindest
+doppelt enth"alt. Erst die dritte Teilberechnung erfolgt dann wirklich mit einer neuen Umgebung.
+Diese Beobachtung l"asst sich zur"uckverfolgen zur Definition von $g$ f"ur die Applikation. Hier gilt
+n"amlich:
+\[\begin{array}{lcl}
+  g(\app{e_1}{e_2},\eta) &=& (e_1,\eta) \\
+  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}) &=& (e_2,\eta) \\
+  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v') &=& (e',x':v';\eta') \\
+\end{array}\]
+$g$ ist also -- Applikationen $\app{e_1}{e_2}$ betreffend -- f"ur $0$ bis $1$ Resultate in gewissem Sinne
+\emph{invariant} bzgl. $\eta$. In diesen F"allen wird stets das urspr"ungliche $\eta$ f"ur den n"achsten
+auszuwertenden Teilausdruck geliefert. Dies l"asst sich leicht auf beliebige Ausdr"ucke verallgemeinern:
+\begin{definition}[Umgebungsinvarianz]
+  Zu jedem $g$ und jedem $n$ ist die Menge $\Delta^n(g)$ aller \emph{umgebungsinvarianten Ausdr"ucke $n$-ter Stufe}
+  wie folgt definiert:
+  \[\begin{array}{c}
+    \Delta^n(g) = \{e \mid \forall \eta,\eta',e',v_1,\ldots,v_n.\,g(e,\eta,v_1 \ldots v_n)=(e',\eta') \Rightarrow \eta = \eta'\}
+  \end{array}\]
+\end{definition}
+Ist das $g$ klar aus dem Zusammenhang, so schreiben wir kurz $\Delta^n$ statt $\Delta^n(g)$.
+Formal ausgedr"uckt gilt f"ur Applikationen $\app{e_1}{e_2}$ also $(\app{e_1}{e_2}) \in (\Delta^0 \cap \Delta^1)$.
+
+Wie aber k"onnen wir nun die Umgebungsinvarianz ausnutzen, um das Duplizieren von Umgebungen zu vermeiden?
+Die Idee hierbei ist im Grunde recht simpel:
+\begin{itemize}
+\item Liegt ein Ausdruck $e$ nicht in $\Delta^n$, so wird f"ur die $n$-te Teilberechnung wie bisher
+  vorgegangen.
+\item Liegt ein Ausdruck $e$ in $\Delta^n$, so k"onnen wir f"ur die $n$-te Teilberechnung das urspr"ungliche
+  $\eta$ verwenden, welche sich bereits auf dem Stack befindet. Allerdings muss hier beachtet werden, dass
+  $e$ nicht zwangsl"aufig in $\Delta^{n-1}$ liegen muss und somit noch die Umgebung der vorherigen
+  Teilberechnung auf dem Stack liegen k"onnte, welche dann zun"achst entfernt werden m"usste.
+\end{itemize}
+Unter Beachtung dieser beiden Punkte l"asst sich die Optimierung wie folgt in der Relation $\step$ umsetzen
+(f"ur alle $n \ge 0$):
+\begin{enumerate}
+\item Wenn $g(e,\eta) = v$ \\
+  dann gilt $(R\,e,E\,\eta) \step (R\,v,E\,\eta)$.
+\item Wenn $g(e,\eta) = (e',\eta)$ und $e\in\Delta^0$ \\
+  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta)$.
+\item Wenn $g(e,\eta) = (e',\eta')$ und $e\not\in\Delta^0$ \\
+  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta\,\eta')$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = v$ und $e\in\Delta^n$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,v,E\,\eta)$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = v$ und $e\not\in\Delta^n$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta)$ und $e\in\Delta^n$, $e\in\Delta^{n+1}$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta)$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta')$ und $e\in\Delta^n$, $e\not\in\Delta^{n+1}$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta\,\eta')$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta)$ und $e\not\in\Delta^n$, $e\in\Delta^{n+1}$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta)$.
+\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta')$ und $e\not\in\Delta^n$, $e\not\in\Delta^{n+1}$ \\
+  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta\,\eta')$.
+\end{enumerate}
+
 
 \end{document}
