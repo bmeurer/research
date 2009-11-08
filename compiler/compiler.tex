@@ -105,6 +105,9 @@ die sich aus bestimmten Eigenschaften von $g$ ergeben (wie zum Beispiel, dass $e
 $\eta$ ausgewertet werden), anzuwenden. Der erste logische Schritt w"are dementsprechend, Ausdr"ucke und
 Umgebungen getrennt voneinander zu verwalten.
 
+
+\subsection{Umgebungsinvarianz}
+
 Eine einleuchtende L"osung w"are es beispielsweise die Ausdr"ucke, Umgebungen und Werte jeweils auf einem
 eigenen Stack zu verwalten, allerdings funktioniert dies nicht so einfach, da man f"ur den Resultatstack eine
 Art \emph{Framing}-Mechanismus braucht, um zu wissen, wieviele Werte bereits als Zwischenresultate zum
@@ -256,6 +259,33 @@ Unter Beachtung dieser beiden Punkte l"asst sich die Optimierung wie folgt in de
 \item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta')$ und $e\not\in\Delta^n$, $e\not\in\Delta^{n+1}$ \\
   dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta\,\eta')$.
 \end{enumerate}
-
+Betrachten wir wiederum die Regeln f"ur die Applikation, so erhalten wir nun folgendes Regelwerk:
+\[\begin{array}{rcl}
+  (R\,(\app{e_1}{e_2}),E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta)
+  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v,E\,\eta\,\eta'')
+  &\step& (R\,v,E\,\eta)
+\end{array}\]
+Wie sofort zu ersehend ist, findet nun keine Duplikation von Umgebungen mehr statt\footnote{Tats"achlich
+k"onnte dies nach wie vor der Fall sein, denn es k"onnte $\eta = (x':v';\eta')$ gelten, aber dies kann
+nicht allgemein verhindert werden, denn es l"asst sich nicht unbedingt voraussagen.}. Noch deutlicher
+wird dies im Fall von bedingten Ausdr"ucken $\ifte{e_0}{e_1}{e_2}$. Hier ergeben sich folgende Regeln:
+\[\begin{array}{rcl}
+  (R\,(\ifte{e_0}{e_1}{e_2}),E\,\eta)
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,e_0,E\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta)
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,e_1,E\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,v,E\,\eta)
+  &\step& (R\,v,E\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta)
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,e_2,E\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,v,E\,\eta)
+  &\step& (R\,v,E\,\eta) \\
+\end{array}\]
+Es wird ausschliesslich mit der bereits auf dem Stack befindlichen Umgebung $\eta$ gearbeitet.
 
 \end{document}
