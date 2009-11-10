@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper,draft]{article}
+\documentclass[12pt,a4paper]{article}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -197,6 +197,8 @@ Bild:
   &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta\,\eta) \\
   (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta\,\eta'')
   &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
+  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v,E\,\eta\,\eta'')
+  &\step& (R\,v,E\,\eta) \\
 \end{array}\]
 Zun"achst erscheint es, als h"atten wir keinen Blumentopf gewonnen. Ruft man sich aber die Invariante
 \[\begin{array}{rcl}
@@ -295,6 +297,143 @@ Die "Uberlegungen in diesem Abschnitt betreffen nicht nur die Anwendung auf Prog
 Umgebungssemantik, sondern sind allgemein anwendbar f"ur beliebige $g$, sofern die Argumente Paare aus
 $A \times C$ sind, und sich im Fall von $g(a,c,b_1 \ldots b_n) = (a',c')$ die zweite Komponente des
 Arguments nur selten "andert.
+
+
+\subsection{Baummethode}
+
+Wie zuvor beschrieben, lassen sich die Ausdr"ucke $e$ und die Resultate $v$ nicht auf getrennten Stacks
+verwalten, da man f"ur den Resultatstack eine Art \emph{Framing}-Mechanismus ben"otigt, um zu wissen,
+wieviele Werte bereits als Zwischenresultate zum aktuellen Ausdruck geh"oren. Diese Abh"angigkeit
+verhindert aber einige interessante Optimierungen. Abhilfe w"urde es schaffen, wenn anhand des aktuellen
+Teilausdrucks bestimmt werden k"onnte, wieviele Werte des Resultatstacks bereits als Zwischenergebnisse
+zum "ubergeordneten Ausdruck geh"oren.
+
+Betrachten wir dies einmal am Beispiel von bedingten Ausdr"ucken. Wir lassen dabei die Umgebungsinvarianz
+zun"achst beiseite um uns auf diesen neuen Sachverhalt konzentrieren zu k"onnen. Hier hatten wir folgende
+Regeln:
+\[\begin{array}{rcl}
+  (R\,(\ifte{e_0}{e_1}{e_2}),E\,\eta)
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,e_0,E\,\eta\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta\,\eta')
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,e_1,E\,\eta\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,v,E\,\eta\,\eta')
+  &\step& (R\,v,E\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta\,\eta')
+  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,e_2,E\,\eta\,\eta) \\
+  (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,v,E\,\eta\,\eta')
+  &\step& (R\,v,E\,\eta) \\
+\end{array}\]
+Intuitiv ergibt sich folgender Zusammenhang zwischen dem aktuellen Ausdruck und den Zwischenergebnissen
+f"ur bedingte Ausdr"ucke: Steht man vor der Auswertung eines $\ifte{e_0}{e_1}{e_2}$, so beginnt man mit
+der Auswertung von $e_0$ und weiss, dass noch kein Zwischenergebnis f"ur den bedingten Ausdruck
+vorliegt. Endet nun die Auswertung von $e_0$, d.h. steht man hinter $e_0$, so weiss man, dass nun das
+erste Zwischenergebnis vorliegt. Ist dieses $\true$, so beginnt man mit der Auswertung von $e_1$ und
+weiss nach wie vor, dass nun ein Zwischenergebnis vorliegt. Sobald $e_1$ ausgewertet ist, man also
+hinter $e_1$ steht, weiss man, dass die obersten beiden Zwischenergebnisse zum bedingten Ausdruck
+geh"oren. Dann wird das oberste dieser Zwischenergebnisse als Endergebnis geliefert und man steht
+effektiv hinter dem bedingten Ausdruck. Sollte $e_0$ mit $\false$ enden, verl"auft es analog.
+
+An dieser Stelle versagt allerdings die abstrakte Syntax. Angenommen $e_0$ und $e_1$ sind beide $\true$,
+dann ist es unm"oglich zu sagen, ob man nun hinter $e_0$ oder $e_1$ steht, und somit ist unbestimmt,
+ob nun das oberste Resultat bereits ein Zwischenergebnis f"ur den bedingten Ausdruck ist, oder nicht.
+Dahinter verbirgt sich das Problem, dass einzelne Knoten im Syntaxbaum durch die abstrakte Syntax
+ausschliesslich durch den Ausdruck, den sie repr"asentieren identifizierbar sind, nicht aber durch
+die Position, an der sie im Programm stehen. Abhilfe l"asst sich nur dadurch schaffen, dass man
+statt mit abstrakter Syntax direkt mit dem Syntaxbaum arbeitet.
+
+\begin{definition}[Markierter Wurzelbaum]
+  Ein \emph{markierter Wurzelbaum} \linebreak
+  $\mathcal{T} = (\mathcal{K}, \mathcal{E}, \omega, \ell)$ ist ein gerichteter
+  Graph $(\mathcal{K}, \mathcal{E})$ mit einem ausgezeichneten Knoten $\omega \in \mathcal{K}$, der
+  sogenannten \emph{Wurzel}, f"ur den gilt, dass jeder Knoten durch genau einen gerichteten Pfad von
+  $\omega$ aus erreichbar ist. Die Funktion $\ell: \mathcal{K} \to \mathcal{M}$ ordnet dabei jedem
+  Knoten eine \emph{Markierung} aus $\mathcal{M}$ zu.
+\end{definition}
+
+Ein \emph{Syntaxbaum} $T_e = (\Node,\to,\omega,\ell)$ ist ein spezieller markierter Wurzelbaum, der
+eindeutig ein Programm $e$, welches
+der abstrakten Syntax gen"ugt, darstellt. Ohne hier auf die konkrete Darstellung einzugehen, nehmen
+wir an, dass zu jedem Programmkonstrukt eine eigene Markierung existiert, also z.B. $\textsc{App}$
+f"ur Applikationen, $\textsc{Abstr}$ f"ur Abstraktionen, usw. Im Folgenden gehen wir immer von einem
+konkreten Syntaxbaum f"ur einen gegebenen Ausdruck $e$ aus, und nehmen an, dass $g$ in geeigneter
+Weise auf Knoten des Syntaxbaums definiert ist. Insbesondere nehmen wir an, dass wann immer $g$
+ein Paar $(k,\eta)$ liefert, dieses $k$ Bestandteil des Syntaxbaums ist. Wenden wir die naive
+Methode an, so erhalten wir dann
+\[\begin{array}{rcl}
+  \step &\subseteq& ((\Node \uplus \Val)^* \times \Env^*) \times ((\Node \uplus \Val)^* \times \Env^*)
+\end{array}\]
+als kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 1$):
+\begin{enumerate}
+\item Wenn $g(k,\eta) = v$ \\
+  dann gilt $(R\,k,E\,\eta) \step (R\,v,E\,\eta)$.
+\item Wenn $g(k,\eta) = (k',\eta')$ \\
+  dann gilt $(R\,k,E\,\eta) \step (R\,k\,k',E\,\eta\,\eta')$.
+\item Wenn $g(k,\eta,v_1 \ldots v_n) = v$ \\
+  dann gilt $(R\,k\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
+\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
+  dann gilt $(R\,k\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,k\,v_1\,\ldots\,v_n\,k',E\,\eta\,\eta')$.
+\end{enumerate}
+Die Umsetzung entspricht der naiven Umsetzung mittels abstrakter Syntax, insofern haben wir noch keinen
+Blumentopf gewonnen. Kommen wir also zur"uck auf die zuvor formulierte Idee, welche uns als Motivation
+f"ur die \emph{Baummethode} dient. Statt Knoten (oder Ausdr"ucke) zum Framing im Resultatstack einzusetzen,
+sollte es m"oglich sein, anhand der Position des aktuellen Knotens im Syntaxbaum bestimmen zu k"onnen,
+wieviel Zwischenergebnisse f"ur den \emph{"ubergeordneten} Knoten bereits zur Verf"ugung stehen. Obwohl
+dies im obigen Beispiel von bedingten Ausdr"ucken trivial erscheint, ist dies tats"achlich nicht f"ur alle
+denkbaren Semantiken der Fall, wie wir im Folgenden sehen werden.
+
+Nimmt man beispielsweise an, dass ein bestimmter Knoten $k$ im Syntaxbaum einmal zur Auswertung des ersten
+Zwischenresultats eines anderen Knotens $k'$ und einmal zur Auswertung des vierten Zwischenresultats von
+besagtem Knoten $k'$ verwendet wird, so ist f"ur diesen Knoten $k$ nicht klar, wieviele Zwischenresultate
+sich bereits f"ur $k'$ auf dem Resultatstack befinden. Nimmt man aber an, dass dies nicht der Fall ist, und
+$g$ dahingehend eindeutig ist, dass f"ur jedes $k$ nur h"ochstens ein $n$ ex., so dass
+$g(k,\eta,v_1 \ldots v_n) = (k',\eta')$, so ist anhand des aktuellen Knotens $k$ immer genau zu bestimmen,
+wieviele Zwischenergebnisse bereits f"ur $k'$ auf dem Resultatstack liegen.
+
+\begin{definition}
+  $g: \Node \times \Env \times \Val^* \pto (\Node \times \Env) \uplus \Val$ hei"st
+  \emph{deterministisch}, wenn f"ur alle $n,m,k,k_0,\eta,\eta_0,\eta',\eta_0',v_1,\ldots,v_n,v_1',\ldots,v_m'$
+  gilt: \\
+  \[g(k,\eta,v_1 \ldots v_n) = (k_0,\eta_0)\]
+  und
+  \[g(k,\eta',v_1' \ldots v_m') = (k_0,\eta_0')\]
+  impliziert $n = m$.
+\end{definition}
+
+F"ur ein solch deterministisches $g$ l"asst sich sogar noch mehr sagen. Und zwar ist die maximale Anzahl
+von Zwischenresultaten f"ur jeden Knoten beschr"ankt durch die Anzahl der Knoten im Syntaxbaum, welche
+wiederum endlich ist.
+
+Im Folgenden gehen wir immer von einem $g$ aus, welches deterministisch ist.\footnote{Man kann sich leicht
+"uberlegen, dass das $g$ f"ur die bisher betrachtete Programmiersprachensemantik offensichtlich deterministisch
+ist.}. F"ur ein solches $g$ l"asst sich nun leicht die oben beschriebene Idee umsetzen, indem nun Resultate und
+Knoten auf zwei unterschiedlichen Stacks verwaltet werden. Hierzu m"ussen wir allerdings zun"achst formalisieren,
+was es bedeutet \emph{vor} oder \emph{hinter} einem Knoten $k$ zu sein. Sei dazu
+\[\begin{array}{rcl}
+  \Node_p &=& \{\cdot k \mid k \in \Node\} \cup \{k \cdot \mid k \in \Node\}
+\end{array}\]
+eine Menge von \emph{punktierten Knoten} "uber $\Node$. $\cdot k$ gibt hierbei an, dass sich die Maschine
+\emph{vor} $k$, und $k \cdot$, dass sie sich \emph{hinter} $k$ befindet. Eine Konfiguration besteht nun
+aus einem \emph{Programcounter}, der stets eine punktierten Knoten enth"alt, einem Umgebungsstack,
+einem Resultatstack und einem R"ucksprungstack mit Knoten. Die Relation
+\[\begin{array}{rcl}
+  \step &\subseteq& (\Node_p \times \Env^* \times \Val^* \times \Node^*) \times (\Node_p \times \Env^* \times \Val^* \times \Node^*)
+\end{array}\]
+ist die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 0$):
+\begin{itemize}
+\item Wenn $g(k,\eta) = (k',\eta')$ \\
+  dann gilt $(\cdot k,E\,\eta,R,K) \step (\cdot k',E\,\eta\,\eta',R,K\,k)$.
+\item Wenn $g(k,\eta) = v$ \\
+  dann gilt $(\cdot k,E\,\eta,R,K) \step (k\cdot,E\,\eta,R\,v,K)$.
+\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
+  und $g(k,\eta,v_1 \ldots v_{n+1}) = (k'',\eta'')$ \\
+  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (\cdot k'',E\,\eta\,\eta'',R\,v_1\,\ldots\,v_{n+1},K\,k)$.
+\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
+  und $g(k,\eta,v_1 \ldots v_{n+1}) = v$ \\
+  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (k\cdot,E\,\eta,R\,v,K)$.
+\end{itemize}
+Wie man leicht sieht, sind f"ur deterministische $g$ nun keinerlei Markierung im Resultatstack mehr erforderlich.
+Die Anzahl der Zwischenergebnisse zu einem bestimmten $k$ ist eindeutig f"ur jedes $k'$, welches als Teilberechnung
+von $k$ auftritt.
 
 
 \end{document}
