@@ -419,18 +419,18 @@ einem Resultatstack und einem R"ucksprungstack mit Knoten. Die Relation
   \step &\subseteq& (\Node_p \times \Env^* \times \Val^* \times \Node^*) \times (\Node_p \times \Env^* \times \Val^* \times \Node^*)
 \end{array}\]
 ist die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 0$):
-\begin{itemize}
-\item Wenn $g(k,\eta) = (k',\eta')$ \\
-  dann gilt $(\cdot k,E\,\eta,R,K) \step (\cdot k',E\,\eta\,\eta',R,K\,k)$.
+\begin{enumerate}
 \item Wenn $g(k,\eta) = v$ \\
   dann gilt $(\cdot k,E\,\eta,R,K) \step (k\cdot,E\,\eta,R\,v,K)$.
-\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
-  und $g(k,\eta,v_1 \ldots v_{n+1}) = (k'',\eta'')$ \\
-  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (\cdot k'',E\,\eta\,\eta'',R\,v_1\,\ldots\,v_{n+1},K\,k)$.
+\item Wenn $g(k,\eta) = (k',\eta')$ \\
+  dann gilt $(\cdot k,E\,\eta,R,K) \step (\cdot k',E\,\eta\,\eta',R,K\,k)$.
 \item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
   und $g(k,\eta,v_1 \ldots v_{n+1}) = v$ \\
   dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (k\cdot,E\,\eta,R\,v,K)$.
-\end{itemize}
+\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
+  und $g(k,\eta,v_1 \ldots v_{n+1}) = (k'',\eta'')$ \\
+  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (\cdot k'',E\,\eta\,\eta'',R\,v_1\,\ldots\,v_{n+1},K\,k)$.
+\end{enumerate}
 Wie man leicht sieht, sind f"ur deterministische $g$ nun keinerlei Markierung im Resultatstack mehr erforderlich.
 Die Anzahl der Zwischenergebnisse zu einem bestimmten $k$ ist eindeutig f"ur jedes $k'$, welches als Teilberechnung
 von $k$ auftritt.
