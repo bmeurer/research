@@ -216,6 +216,21 @@ $\zeta'$ existiert, so dass $\zeta \step \zeta'$ gilt. Weiterhin gilt folgende B
 
 \section{Vorg"anger-eindeutigkeit}
 
+Die zuvor beschriebene iterative Umsetzung f"ur offset-eindeutige Funktionen $g$ trennt die Argumente
+und Resultate, so dass diese weitgehend unabh"angig von einander verwaltet werden k"onnen. Dies schafft
+Raum f"ur weitere Optimierungen. Betrachten wir dazu n"amlich noch einmal die Beispielfunktion $g$ aus
+dem vorangegangenen Kapitel
+\[\begin{array}{lclclclclcllclc}
+  a &\mapsto& a_1 &\quad& a,b &\mapsto& a_2 &\quad& && &\quad& \\
+  a_1 &\mapsto& b \\
+  a_2 &\mapsto& a_3 && a_2,b &\mapsto& b_1 && a_2,b_2 &\mapsto& a_4 && a_2,b\,b_2 &\mapsto& a_5 \\
+  a_3 &\mapsto& b_2 \\
+  &\vdots&
+\end{array}\]
+so stellen wir fest, dass zu jedem Nachfolger $a'$ nur h"ochstens ein $a$ existiert, f"ur welches
+$a'$ als Ergebnis von $g(a,b_1 \ldots b_n)$ auftreten kann. Dieses $a$ nennen wir dann den
+\emph{Vorg"anger} von $a'$. Allgemein definieren wir dazu:
+
 \begin{definition}[Vorg"anger]
   Sei $g: A \times B^* \pto A \uplus B$ und sei $a'\in A$. Die Menge aller \emph{Vorg"anger} von
   $a'$ ist definiert durch
@@ -225,9 +240,48 @@ $\zeta'$ existiert, so dass $\zeta \step \zeta'$ gilt. Weiterhin gilt folgende B
   $g$ hei"st \emph{vorg"anger-eindeutig} falls $|\parents_g(a')| \le 1$ f.a. $a' \in A$.
 \end{definition}
 
-Zwischen Vorg"anger-eindeutigkeit und Offset-eindeutigkeit besteht folgender Zusammenhang: Ist
-eine Funktion $g$ relativ offset-eindeutig und vorg"anger-eindeutig, so ist $g$ auch absolut
-offset-eindeutig.
+Im obigen Beispiel existiert -- wie beschrieben -- zu jedem $a'$ h"ochstens ein Vorg"anger $a$.
+Die Beispielfunktion ist also offensichtlich vorg"anger-eindeutig (zumindest soweit sie angegeben
+ist). Rufen wir uns nun noch einmal die Umsetzung einer offset-eindeutigen Funktion $g$ in eine
+Konfigurations"ubergangsrelation $\step$ ins Ged"achtnis, so zeigt sich, dass die Buchf"uhrung
+"uber die Vorg"angerargumente f"ur \emph{vorg"anger-eindeutige Funktionen} unn"otig wird, da
+die Vorg"anger f"ur alle Argumente eindeutig bestimmt sind.
+
+Dementsprechend kann zu jeder relativ offset-eindeutigen und vorg"anger-eindeutigen Funktion
+$g$ eine bin"are Relation $\step$ als die kleinste bin"are Relation "uber
+$(\dot{A} \times B^*) \times (\dot{A} \times B^*)$ definiert werden, f"ur die gilt:
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,w) \step (a \cdot,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  dann $(\cdot a,w) \step (\cdot a',w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  dann $(a' \cdot,w\,b_1 \ldots b_{n+1}) \step (a \cdot,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  dann $(a' \cdot,w\,b_1 \ldots b_{n+1}) \step (\cdot a'',w\,b_1 \ldots b_{n+1})$.
+\end{enumerate}
+Hierf"ur gen"ugt es tats"achlich zu fordern, dass die Funktion $g$ relativ offset-eindeutig ist, denn
+zwischen Vorg"anger- und Offset-eindeutigkeit besteht folgender Zusammenhang:
+
+\begin{lemma}
+  Ist eine Funktion $g$ \emph{relativ offset-eindeutig} und \emph{vorg"anger-eindeutig},
+  so ist $g$ auch \emph{absolut offset-eindeutig}.
+\end{lemma}
+
+Betrachtet man die so definierte Konfigurations"ubergangsrelation $\step$, so ist diese Umsetzung
+-- bezogen auf die Verwaltung der Argumente -- optimal. Es wird keinerlei Buchf"uhrung f"ur die
+vorangegangenen Argumente ben"otigt, da f"ur jedes Argument $a'$,
+\begin{itemize}
+\item durch die Vorg"anger-eindeutigkeit von $g$, h"ochstens ein eindeutiger Vorg"anger $a$ existiert, und
+\item durch die Offset-eindeutigkeit von $g$, eindeutig bestimmt ist, wieviele Zwischenresultate des
+  (eindeutigen) Vorg"angers $a$ bereits auf dem Resultatstack liegen.
+\end{itemize}
+Insgesamt gen"ugt diese Umsetzung der folgenden Berechnungsinvariante:
+\begin{lemma}
+  Sei $a \in A$ und $b \in B$. Dann gilt
+  $(\cdot a,\varepsilon) \step^* (a \cdot, b)$
+  genau dann wenn $a \Downarrow b$.
+\end{lemma}
 
 
 \end{document}
