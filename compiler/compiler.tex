@@ -44,14 +44,14 @@ induktiv durch folgende Regeln (f"ur alle $n \ge 0$):
 \item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
   und $g(a,b_1 \ldots b_{i-1}) = a_i$ f"ur $i = 1,\ldots,n$ \\
   und $g(a,b_1 \ldots b_n) = b$ \\
-  dann gilt $a \Downarrow b$.
+  dann $a \Downarrow b$.
 \item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
   und $g(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$ \\
-  dann gilt $a \multimap a_n$.
+  dann $a \multimap a_n$.
 \item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
-  dann gilt $w\,a\,b_1\,\ldots\,b_n \step w\,a\,b_1\,\ldots\,b_n\,a'$.
+  dann $w\,a\,b_1 \ldots b_n \step w\,a\,b_1 \ldots b_n\,a'$.
 \item Wenn $g(a,b_1 \ldots b_n) = b$ \\
-  dann gilt $w\,a\,b_1\,\ldots\,b_n \step w\,b$.
+  dann $w\,a\,b_1 \ldots b_n \step w\,b$.
 \end{enumerate}
 Um im Folgenden ausschlie"slich \emph{sinnvolle} Semantiken zu erhalten, fordern wir, dass $g$
 keine \emph{L"ucken} aufwei"st.
@@ -63,383 +63,171 @@ keine \emph{L"ucken} aufwei"st.
 \end{definition}
 
 
-\section{Anwendung auf eine Programmiersprache}
+\section{Offset-eindeutigkeit}
 
-Sei $A = \Exp \times \Env$, $B = \Val$ und $g$ wie folgt definiert:
-\[\begin{array}{lcl}
-  g(c,\eta) &=& c \\
-  g(\abstr{x}{e},\eta) &=& \clov{\abstr{x}{e}}{\eta} \\
-  g(\app{e_1}{e_2},\eta) &=& (e_1,\eta) \\
-  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}) &=& (e_2,\eta) \\
-  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v') &=& (e',x':v';\eta') \\
-  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v) &=& v \\
-  g(\ifte{e_0}{e_1}{e_2},\eta) &=& (e_0,\eta) \\
-  g(\ifte{e_0}{e_1}{e_2},\eta,\true) &=& (e_1,\eta) \\
-  g(\ifte{e_0}{e_1}{e_2},\eta,\true\,v) &=& v \\
-  g(\ifte{e_0}{e_1}{e_2},\eta,\false) &=& (e_2,\eta) \\
-  g(\ifte{e_0}{e_1}{e_2},\eta,\false\,v) &=& v \\
-  \vdots \\
+Die naive iterative Umsetzung, die anfangs beschrieben wurde, verwaltet Argumente und Resultate auf einem einzigen
+Stack. Grund hierf"ur ist unter anderem das die Argumente f"ur das sogenannte \emph{Framing} ben"otigt werden.
+Hinter jedem Argument $a$ findet sich jeweils eine Liste von Resultaten $b_1 \ldots b_n$ bevor sich das n"achste
+Argument $a'$ anschlie"st (oder das Ende des Stacks erreicht ist). Diese Resultate $b_1 \ldots b_n$ bilden die
+bereits berechneten Zwischenresultate von $a$. Der Teilabschnitt $a\,b_1 \ldots b_n$ des Stacks wird dann als
+\emph{Frame von $a$} bezeichnet.
+
+Mittels dieses Mechanismus ist stets eindeutig zu erkennen, wieviele Zwischenresultate von $a$ bereichts
+berechnet wurden, und wie anhand dieser weiter vorzugehen ist. W"urde man die Argumente auf einem separaten
+Stack verwalten, ohne weitere Markierungen f"ur den Resultatstack, die das Erkennen von Frames erm"oglichen,
+einzuf"uhren, so w"are im Allgemeinen eine Zuordnung der Zwischenresultate unm"oglich. Aber erst durch eine
+(weitgehend) getrennte Verwaltung von Argumenten und Resultaten werden interessante Optimierungen, wie z.B.
+das Weglassen von "uberfl"ussigen Argumenten oder Resultaten, m"oglich.
+
+Betrachten wir dazu zun"achst ein einfaches Beispiel. Sei $g$ wie folgt definiert:
+\[\begin{array}{lclclclclcllclc}
+  a &\mapsto& a_1 &\quad& a,b &\mapsto& a_2 &\quad& && &\quad& \\
+  a_1 &\mapsto& b \\
+  a_2 &\mapsto& a_3 && a_2,b &\mapsto& b_1 && a_2,b_2 &\mapsto& a_4 && a_2,b\,b_2 &\mapsto& a_5 \\
+  a_3 &\mapsto& b_2 \\
+  &\vdots&
 \end{array}\]
-Daraus ergibt sich unmittelbar nach obigem Schema eine operationelle Semantik, und zwar
-sowohl in rekursiver als auch in iterativer Form.
-
-Die rekursive Form, also die Relation $\Downarrow$ eignet sich hervorragend als Grundlage
-f"ur die Implementation eines Interpreters f"ur die Programmiersprache. Wir interessieren
-uns an dieser allerdings mehr f"ur die iterative Form und die Anwendung letzterer f"ur
-die automatische Erzeugung eines Compilers f"ur die Programmiersprache.
-
-Aus dem oben definierten $g$ ergeben sich unter anderem folgende Regeln f"ur Reduktionen:
-\[\begin{array}{lcl}
-  w\,(\app{e_1}{e_2},\eta)
-  &\step& w\,(\app{e_1}{e_2},\eta)\,(e_1,\eta) \\
-  w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}
-  &\step& w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,(e_2,\eta) \\
-  w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,v'
-  &\step& w\,(\app{e_1}{e_2},\eta)\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,(e',x':v';\eta') \\
+Die Berechnung von $a$ in der naiven iterativen Umsetzung sieht dann wie folgt aus:
+\[\begin{array}{c}
+a \step a\,a_1 \step a\,b \step a\,b\,a_2 \step a\,b\,a_2\,a_3 \step a\,b\,a_2\,b_2 \step a\,b\,a_2\,a_4 \step \ldots
 \end{array}\]
-Diese Umsetzung einer operationellen Programmiersprachensemantik in Konfigurations"uberg"ange einer Stackmaschine
-ist zwar sehr universell und beeindruckend einfach, jedoch gleichzeitig auch sehr naiv und ineffizient.
-
-Die gemeinsame Verwaltung von Ausdruck und Umgebung macht es schwierig bis unm"oglich, sinnvolle Optimierungen,
-die sich aus bestimmten Eigenschaften von $g$ ergeben (wie zum Beispiel, dass $e_1$ und $e_2$ mit demselben
-$\eta$ ausgewertet werden), anzuwenden. Der erste logische Schritt w"are dementsprechend, Ausdr"ucke und
-Umgebungen getrennt voneinander zu verwalten.
-
-
-\subsection{Umgebungsinvarianz}
-
-Eine einleuchtende L"osung w"are es beispielsweise die Ausdr"ucke, Umgebungen und Werte jeweils auf einem
-eigenen Stack zu verwalten, allerdings funktioniert dies nicht so einfach, da man f"ur den Resultatstack eine
-Art \emph{Framing}-Mechanismus braucht, um zu wissen, wieviele Werte bereits als Zwischenresultate zum
-aktuellen Ausdruck geh"oren. Entsprechend werden wir zun"achst Ausdr"ucke und Resultate auf einem gemeinsamen
-Stack verwalten. Wir definieren die Reduktionsrelation
-\[\begin{array}{rcl}
-  \step & \subseteq & ((\Exp \uplus \Val)^* \times \Env^*) \times ((\Exp \uplus \Val)^* \times \Env^*)
+W"urde man nun Argumente und Resultate auf zwei unabh"angigen Stacks verwalten, so w"urde die
+Berechnung f"ur $a$ wie zuvor mit
+\[\begin{array}{c}
+(a) \step (a\,a_1) \step (a,b) \step (a\,a_2,b)
 \end{array}\]
-als die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 0$):
-\begin{enumerate}
-\item Wenn $g(e,\eta,v_1 \ldots v_n) = (e',\eta')$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta) \step (R\,e\,v_1\,\ldots\,v_n\,e',E\,\eta\,\eta')$.
-\item Wenn $g(e,\eta,v_1 \ldots v_n) = v$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta) \step (R\,v,E)$.
-\end{enumerate}
-Betrachtet man nun die Regeln f"ur die Applikation
-\[\begin{array}{rcl}
-  (R\,(\app{e_1}{e_2}),E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
+beginnen, aber ab hier w"are es nicht mehr eindeutig, wie weiter zu verfahren ist. Denn f"ur $b$ ist
+unklar ob es ein Zwischenresultat von $a$ oder $a_2$ ist. Ersteres w"urde bedeuten, dass
+\[\begin{array}{c}
+(a\,a_2,b) \step (a\,a_2\,a_3,b)
 \end{array}\]
-so wird schnell offensichtlich, dass die Verwaltung der Umgebungen $\eta$ keinesfalls optimal ist,
-da sowohl f"ur $e_1$ als auch f"ur $e_2$ stets die letzte Umgebung auf dem Umgebungsstack dupliziert
-werden muss ("ahnliches zeigt sich bei anderen Programmkonstrukten).
+der n"achste Schritt w"are, denn $g(a_2)=a_3$, w"ahrend letzteres bedeuten w"urde, dass mit
+\[\begin{array}{c}
+(a\,a_2,b) \step (a,b_1)
+\end{array}\]
+fortgefahren werden m"usste, denn $g(a_2,b)=b_1$. Ausgehend von der Annahme, dass die Berechnung den \emph{richtigen}
+Weg -- also den ersten -- nehmen w"urde, erg"abe sich dann nach
+\[\begin{array}{c}
+(a\,a_2,b) \step (a\,a_2\,a_3,b) \step (a\,a_2,b\,b_2)
+\end{array}\]
+das n"achste Problem. Hier existieren sogar drei verschiedene M"oglichkeiten fortzufahren, abh"angig
+davon, ob man animmt, dass f"ur $a_2$ noch keine Zwischenresultat, ein Zwischenresultat $b_2$ oder zwei
+Zwischenresultate $b\,b_2$ vorliegen.
 
-Selbst wenn man davon ausgeht, dass die Verwaltung der Umgebungen auf einem Heap mit geschickter \emph{Garbage
-Collection} erfolgt, und somit das Duplizieren von $\eta$ im obigen Beispiel lediglich einem Kopieren eines
-Pointers entspricht, so ist der Overhead trotzdem nicht unbedeutend, da in einer realistischen
-Programmiersprachensemantik jede zweite Regel ein $\eta$ dupliziert.
+Intuitiv ist jedoch stets klar, wie weiter vorgegangen werden m"usste. F"ur das erste Problem wissen wir,
+dass wir in der Berechnung \emph{vor} $a_3$ stehen, d.h. es k"onnen noch keine Zwischenergebnisse f"ur $a_3$
+vorliegen. Beim zweiten Problem ist klar, dass sich die Berechnung nun \emph{hinter} $a_3$ befindet und das
+Ergebnis ist $b_2$. Da $a_3$ nur dann als Nachfolger von $a_2$ auftreten kann, wenn vorher keine
+Zwischenresultate f"ur $a_2$ vorlagen, ergibt sich daraus sofort, dass genau ein Zwischenresultat f"ur $a_2$
+vorliegen muss, wenn man \emph{hinter} $a_3$ steht. Formalisieren wir zun"achst, was wir unter Nachfolgern
+eines Arguments verstehen:
 
-Der bisherige Ansatz erlaubt es nicht, das Duplizieren von Umgebungen durch geschickte Optimierung zu
-verhindern, da die Invariante f"ur die Auswertung eines Ausdrucks $e$ in einer Umgebung $\eta$ wie
-folgt lautet:
-\[\begin{array}{rcl}
-  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E)
-\end{array}\]
-Das hei"st eine Konfigurationsfolge f"ur die Berechnung von $e$ in $\eta$ terminiert mit einem Wert $v$
-und entfernt die urspr"ungliche Umgebung $\eta$ vom Stack. Unabh"angig davon, ob $\eta$ schon das letzte
-Element in $E$ ist, muss $\eta$ trotzalledem auf den Stack, da sonst die Invariante verletzt w"urde.
-
-Will man also das unn"otige Duplizieren von Umgebungen verhindern, muss man eine andere Invariante formulieren.
-Statt einem Ausdruck $e$ das \emph{Aufr"aumen} seiner Umgebung $\eta$ zu "uberlassen, verschiebt man diese
-Aufgabe stattdessen in den Ausdruck, der die Auswertung von $e$ angestossen hat. Die Berechnung eines Ausdrucks
-$e$ in $\eta$ soll lediglich $e$ durch das Resultat ersetzen, aber den Umgebungsstack in seinem urspr"unglichen
-Zustand hinterlassen. Es sollte sich folgende Invariante ergeben:
-\[\begin{array}{rcl}
-  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E\,\eta)
-\end{array}\]
-Eine Relation $\step$, welche diese Invariante erf"ullt, zu definieren, gestaltet sich etwas trickreicher,
-da nun zusammengesetzte Ausdr"ucke, wie zum Beispiel Applikationen $\app{e_1}{e_2}$, selbst daf"ur Sorge
-tragen m"ussen, dass Umgebungen zur Auswertung der Teilausdr"ucke wieder vom Stack verschwinden (was zuvor
-die Berechnung der Teilausdr"ucke erledigt hatte). Wir definieren die neue Reduktionsrelation
-\[\begin{array}{rcl}
-  \step & \subseteq & ((\Exp \uplus \Val)^* \times \Env^*) \times ((\Exp \uplus \Val)^* \times \Env^*)
-\end{array}\]
-als die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 1$):
-\begin{enumerate}
-\item Wenn $g(e,\eta) = v$ \\
-  dann gilt $(R\,e,E\,\eta) \step (R\,v,E\,\eta)$.
-\item Wenn $g(e,\eta) = (e',\eta')$ \\
-  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta\,\eta')$.
-\item Wenn $g(e,\eta,v_1 \ldots v_n) = v$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
-\item Wenn $g(e,\eta,v_1 \ldots v_n) = (e',\eta')$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_n\,e',E\,\eta\,\eta')$.
-\end{enumerate}
-Die erste Regel ist klar und entspricht trivialerweise der Invariante. Die zweite Regel sorgt daf"ur, dass
-bei zusammengesetzten Ausdr"ucken die Umgebung f"ur den ersten Teilausdruck auf dem Stack landet, die vierte
-Regel tut dies f"ur die weiteren Teilausdr"ucke, indem zun"achst die Umgebung des vorangegangenen Teilausdrucks
-entfernt wird und anschliessend die f"ur den n"achsten Teilausdruck auf den Stack gelegt wird. Die dritte
-Regel entfernt nach der Berechnung des letzten Teilausdrucks die zugeh"orige Umgebung und liefert das
-Ergebnis, so dass am Ende das Ergebnis von $e$ und die urspr"ungliche Umgebung von $e$ oben liegen.
-
-Basierend auf dieser Semantik kann man nun daran gehen, "Uberlegungen anzustellen, wie es anhand 
-bestimmter Eigenschaften von $g$ m"oglich sein k"onnte, unn"otiges Duplizieren von Umgebungen zu
-vermeiden.
-
-Betrachtet man nun noch einmal beispielhaft die Regeln f"ur die Applikation so ergibt sich folgendes
-Bild:
-\[\begin{array}{rcl}
-  (R\,(\app{e_1}{e_2}),E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta\,\eta'')
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta\,\eta'')
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v,E\,\eta\,\eta'')
-  &\step& (R\,v,E\,\eta) \\
-\end{array}\]
-Zun"achst erscheint es, als h"atten wir keinen Blumentopf gewonnen. Ruft man sich aber die Invariante
-\[\begin{array}{rcl}
-  (e,\eta) \Downarrow v & \text{gdw.} & (R\,e,E\,\eta) \step^* (R\,v,E\,\eta)
-\end{array}\]
-wieder in Erinnerung, so wird sofort ersichtlich, dass in der zweiten und dritten Regel $\eta'' = \eta$
-gelten muss, da die erste das urspr"ungliche $\eta$ dupliziert hat, und die Berechnungen f"ur $e_1$ und
-$e_2$ den Umgebungsstack im urspr"unglichen Zustand hinterlassen. Das bedeutet, die ersten beiden
-Teilberechnungen jeder Applikation erfolgen mit einem Stack, der $\eta$ unn"otigerweise zumindest
-doppelt enth"alt. Erst die dritte Teilberechnung erfolgt dann wirklich mit einer neuen Umgebung.
-Diese Beobachtung l"asst sich zur"uckverfolgen zur Definition von $g$ f"ur die Applikation. Hier gilt
-n"amlich:
-\[\begin{array}{lcl}
-  g(\app{e_1}{e_2},\eta) &=& (e_1,\eta) \\
-  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}) &=& (e_2,\eta) \\
-  g(\app{e_1}{e_2},\eta,\clov{\abstr{x'}{e'}}{\eta'}\,v') &=& (e',x':v';\eta') \\
-\end{array}\]
-$g$ ist also -- Applikationen $\app{e_1}{e_2}$ betreffend -- f"ur $0$ bis $1$ Resultate in gewissem Sinne
-\emph{invariant} bzgl. $\eta$. In diesen F"allen wird stets das urspr"ungliche $\eta$ f"ur den n"achsten
-auszuwertenden Teilausdruck geliefert. Dies l"asst sich leicht auf beliebige Ausdr"ucke verallgemeinern:
-\begin{definition}[Umgebungsinvarianz]
-  Zu jedem $g$ und jedem $n$ ist die Menge $\Delta^n(g)$ aller \emph{umgebungsinvarianten Ausdr"ucke $n$-ter Stufe}
-  wie folgt definiert:
-  \[\begin{array}{c}
-    \Delta^n(g) = \{e \mid \forall \eta,\eta',e',v_1,\ldots,v_n.\,g(e,\eta,v_1 \ldots v_n)=(e',\eta') \Rightarrow \eta = \eta'\}
+\begin{definition}[Nachfolger]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $a \in A$. Die Menge aller \emph{Nachfolger} von $a$ ist
+  definiert durch
+  \[\begin{array}{rcl}
+    \children_g(a) = \{a' \in A \mid \exists n \in \N,b_1,\ldots,b_n \in B.\,g(a,b_1 \ldots b_n) = a'\}.
   \end{array}\]
 \end{definition}
-Ist das $g$ klar aus dem Zusammenhang, so schreiben wir kurz $\Delta^n$ statt $\Delta^n(g)$.
-Formal ausgedr"uckt gilt f"ur Applikationen $\app{e_1}{e_2}$ also $(\app{e_1}{e_2}) \in (\Delta^0 \cap \Delta^1)$.
 
-Wie aber k"onnen wir nun die Umgebungsinvarianz ausnutzen, um das Duplizieren von Umgebungen zu vermeiden?
-Die Idee hierbei ist im Grunde recht simpel:
-\begin{itemize}
-\item Liegt ein Ausdruck $e$ nicht in $\Delta^n$, so wird f"ur die $n$-te Teilberechnung wie bisher
-  vorgegangen.
-\item Liegt ein Ausdruck $e$ in $\Delta^n$, so k"onnen wir f"ur die $n$-te Teilberechnung das urspr"ungliche
-  $\eta$ verwenden, welche sich bereits auf dem Stack befindet. Allerdings muss hier beachtet werden, dass
-  $e$ nicht zwangsl"aufig in $\Delta^{n-1}$ liegen muss und somit noch die Umgebung der vorherigen
-  Teilberechnung auf dem Stack liegen k"onnte, welche dann zun"achst entfernt werden m"usste.
-\end{itemize}
-Unter Beachtung dieser beiden Punkte l"asst sich die Optimierung wie folgt in der Relation $\step$ umsetzen
-(f"ur alle $n \ge 0$):
-\begin{enumerate}
-\item Wenn $g(e,\eta) = v$ \\
-  dann gilt $(R\,e,E\,\eta) \step (R\,v,E\,\eta)$.
-\item Wenn $g(e,\eta) = (e',\eta)$ und $e\in\Delta^0$ \\
-  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta)$.
-\item Wenn $g(e,\eta) = (e',\eta')$ und $e\not\in\Delta^0$ \\
-  dann gilt $(R\,e,E\,\eta) \step (R\,e\,e',E\,\eta\,\eta')$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = v$ und $e\in\Delta^n$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,v,E\,\eta)$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = v$ und $e\not\in\Delta^n$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta)$ und $e\in\Delta^n$, $e\in\Delta^{n+1}$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta)$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta')$ und $e\in\Delta^n$, $e\not\in\Delta^{n+1}$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta) \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta\,\eta')$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta)$ und $e\not\in\Delta^n$, $e\in\Delta^{n+1}$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta)$.
-\item Wenn $g(e,\eta,v_1 \ldots v_{n+1}) = (e',\eta')$ und $e\not\in\Delta^n$, $e\not\in\Delta^{n+1}$ \\
-  dann gilt $(R\,e\,v_1\,\ldots\,v_{n+1},E\,\eta\,\eta'') \step (R\,e\,v_1\,\ldots\,v_{n+1}\,e',E\,\eta\,\eta')$.
-\end{enumerate}
-Betrachten wir wiederum die Regeln f"ur die Applikation, so erhalten wir nun folgendes Regelwerk:
-\[\begin{array}{rcl}
-  (R\,(\app{e_1}{e_2}),E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,e_1,E\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'},E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,e_2,E\,\eta) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v',E\,\eta)
-  &\step& (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,e',E\,\eta\,(x':v';\eta')) \\
-  (R\,(\app{e_1}{e_2})\,\clov{\abstr{x'}{e'}}{\eta'}\,v'\,v,E\,\eta\,\eta'')
-  &\step& (R\,v,E\,\eta)
-\end{array}\]
-Wie sofort zu ersehend ist, findet nun keine Duplikation von Umgebungen mehr statt\footnote{Tats"achlich
-k"onnte dies nach wie vor der Fall sein, denn es k"onnte $\eta = (x':v';\eta')$ gelten, aber dies kann
-nicht allgemein verhindert werden, denn es l"asst sich nicht unbedingt voraussagen.}. Noch deutlicher
-wird dies im Fall von bedingten Ausdr"ucken $\ifte{e_0}{e_1}{e_2}$. Hier ergeben sich folgende Regeln:
-\[\begin{array}{rcl}
-  (R\,(\ifte{e_0}{e_1}{e_2}),E\,\eta)
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,e_0,E\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta)
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,e_1,E\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,v,E\,\eta)
-  &\step& (R\,v,E\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta)
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,e_2,E\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,v,E\,\eta)
-  &\step& (R\,v,E\,\eta) \\
-\end{array}\]
-Es wird ausschliesslich mit der bereits auf dem Stack befindlichen Umgebung $\eta$ gearbeitet.
+F"ur jeden Nachfolger $a'$ eines Arguments $a$ existiert also mindestens ein $n \in N$, welches die Anzahl
+der zuvor bestimmten Zwischenergebnisse angibt. Diese $n$ bezeichnen wir als die \emph{relativen Offsets}
+von $a'$ bzgl. $a$.
 
-
-\subsubsection{Anmerkungen}
-
-Die "Uberlegungen in diesem Abschnitt betreffen nicht nur die Anwendung auf Programmiersprachen mit einer
-Umgebungssemantik, sondern sind allgemein anwendbar f"ur beliebige $g$, sofern die Argumente Paare aus
-$A \times C$ sind, und sich im Fall von $g(a,c,b_1 \ldots b_n) = (a',c')$ die zweite Komponente des
-Arguments nur selten "andert.
-
-
-\subsection{Baummethode}
-
-Wie zuvor beschrieben, lassen sich die Ausdr"ucke $e$ und die Resultate $v$ nicht auf getrennten Stacks
-verwalten, da man f"ur den Resultatstack eine Art \emph{Framing}-Mechanismus ben"otigt, um zu wissen,
-wieviele Werte bereits als Zwischenresultate zum aktuellen Ausdruck geh"oren. Diese Abh"angigkeit
-verhindert aber einige interessante Optimierungen. Abhilfe w"urde es schaffen, wenn anhand des aktuellen
-Teilausdrucks bestimmt werden k"onnte, wieviele Werte des Resultatstacks bereits als Zwischenergebnisse
-zum "ubergeordneten Ausdruck geh"oren.
-
-Betrachten wir dies einmal am Beispiel von bedingten Ausdr"ucken. Wir lassen dabei die Umgebungsinvarianz
-zun"achst beiseite um uns auf diesen neuen Sachverhalt konzentrieren zu k"onnen. Hier hatten wir folgende
-Regeln:
-\[\begin{array}{rcl}
-  (R\,(\ifte{e_0}{e_1}{e_2}),E\,\eta)
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,e_0,E\,\eta\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta\,\eta')
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,e_1,E\,\eta\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true\,v,E\,\eta\,\eta')
-  &\step& (R\,v,E\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\true,E\,\eta\,\eta')
-  &\step& (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,e_2,E\,\eta\,\eta) \\
-  (R\,(\ifte{e_0}{e_1}{e_2})\,\false\,v,E\,\eta\,\eta')
-  &\step& (R\,v,E\,\eta) \\
-\end{array}\]
-Intuitiv ergibt sich folgender Zusammenhang zwischen dem aktuellen Ausdruck und den Zwischenergebnissen
-f"ur bedingte Ausdr"ucke: Steht man vor der Auswertung eines $\ifte{e_0}{e_1}{e_2}$, so beginnt man mit
-der Auswertung von $e_0$ und weiss, dass noch kein Zwischenergebnis f"ur den bedingten Ausdruck
-vorliegt. Endet nun die Auswertung von $e_0$, d.h. steht man hinter $e_0$, so weiss man, dass nun das
-erste Zwischenergebnis vorliegt. Ist dieses $\true$, so beginnt man mit der Auswertung von $e_1$ und
-weiss nach wie vor, dass nun ein Zwischenergebnis vorliegt. Sobald $e_1$ ausgewertet ist, man also
-hinter $e_1$ steht, weiss man, dass die obersten beiden Zwischenergebnisse zum bedingten Ausdruck
-geh"oren. Dann wird das oberste dieser Zwischenergebnisse als Endergebnis geliefert und man steht
-effektiv hinter dem bedingten Ausdruck. Sollte $e_0$ mit $\false$ enden, verl"auft es analog.
-
-An dieser Stelle versagt allerdings die abstrakte Syntax. Angenommen $e_0$ und $e_1$ sind beide $\true$,
-dann ist es unm"oglich zu sagen, ob man nun hinter $e_0$ oder $e_1$ steht, und somit ist unbestimmt,
-ob nun das oberste Resultat bereits ein Zwischenergebnis f"ur den bedingten Ausdruck ist, oder nicht.
-Dahinter verbirgt sich das Problem, dass einzelne Knoten im Syntaxbaum durch die abstrakte Syntax
-ausschliesslich durch den Ausdruck, den sie repr"asentieren identifizierbar sind, nicht aber durch
-die Position, an der sie im Programm stehen. Abhilfe l"asst sich nur dadurch schaffen, dass man
-statt mit abstrakter Syntax direkt mit dem Syntaxbaum arbeitet.
-
-\begin{definition}[Markierter Wurzelbaum]
-  Ein \emph{markierter Wurzelbaum} \linebreak
-  $\mathcal{T} = (\mathcal{K}, \mathcal{E}, \omega, \ell)$ ist ein gerichteter
-  Graph $(\mathcal{K}, \mathcal{E})$ mit einem ausgezeichneten Knoten $\omega \in \mathcal{K}$, der
-  sogenannten \emph{Wurzel}, f"ur den gilt, dass jeder Knoten durch genau einen gerichteten Pfad von
-  $\omega$ aus erreichbar ist. Die Funktion $\ell: \mathcal{K} \to \mathcal{M}$ ordnet dabei jedem
-  Knoten eine \emph{Markierung} aus $\mathcal{M}$ zu.
+\begin{definition}[Relative und absolute Offsets]
+  Sei $g: A \times B^* \pto A \uplus B$ und seien $a,a' \in A$. Die Menge aller \emph{relativen Offsets}
+  von $a'$ bzgl. $a$ ist definiert durch
+  \[\begin{array}{rcl}
+    \offsets_g(a,a') &=& \{n \in \N \mid \exists b_1,\ldots,b_n \in B.\, g(a,b_1 \ldots b_n) = a'\},
+  \end{array}\]
+  und die Menge aller \emph{absoluten Offsets} von $a'$ ist definiert durch
+  \[\begin{array}{rcl}
+    \offsets_g(a') &=& \bigcup_{a \in A} \offsets_g(a,a').
+  \end{array}\]
+  Die Funktion $g$ hei"st
+  \begin{enumerate}
+  \item \emph{relativ offset-eindeutig} falls $|\offsets_g(a,a')| \le 1$ f.a. $a,a' \in A$, bzw.
+  \item \emph{(absolut) offset-eindeutig} falls $|\offsets_g(a')| \le 1$ f.a. $a' \in A$.
+  \end{enumerate}
 \end{definition}
 
-Ein \emph{Syntaxbaum} $T_e = (\Node,\to,\omega,\ell)$ ist ein spezieller markierter Wurzelbaum, der
-eindeutig ein Programm $e$, welches
-der abstrakten Syntax gen"ugt, darstellt. Ohne hier auf die konkrete Darstellung einzugehen, nehmen
-wir an, dass zu jedem Programmkonstrukt eine eigene Markierung existiert, also z.B. $\textsc{App}$
-f"ur Applikationen, $\textsc{Abstr}$ f"ur Abstraktionen, usw. Im Folgenden gehen wir immer von einem
-konkreten Syntaxbaum f"ur einen gegebenen Ausdruck $e$ aus, und nehmen an, dass $g$ in geeigneter
-Weise auf Knoten des Syntaxbaums definiert ist. Insbesondere nehmen wir an, dass wann immer $g$
-ein Paar $(k,\eta)$ liefert, dieses $k$ Bestandteil des Syntaxbaums ist. Wenden wir die naive
-Methode an, so erhalten wir dann
-\[\begin{array}{rcl}
-  \step &\subseteq& ((\Node \uplus \Val)^* \times \Env^*) \times ((\Node \uplus \Val)^* \times \Env^*)
-\end{array}\]
-als kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 1$):
-\begin{enumerate}
-\item Wenn $g(k,\eta) = v$ \\
-  dann gilt $(R\,k,E\,\eta) \step (R\,v,E\,\eta)$.
-\item Wenn $g(k,\eta) = (k',\eta')$ \\
-  dann gilt $(R\,k,E\,\eta) \step (R\,k\,k',E\,\eta\,\eta')$.
-\item Wenn $g(k,\eta,v_1 \ldots v_n) = v$ \\
-  dann gilt $(R\,k\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,v,E\,\eta)$.
-\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
-  dann gilt $(R\,k\,v_1\,\ldots\,v_n,E\,\eta\,\eta'') \step (R\,k\,v_1\,\ldots\,v_n\,k',E\,\eta\,\eta')$.
-\end{enumerate}
-Die Umsetzung entspricht der naiven Umsetzung mittels abstrakter Syntax, insofern haben wir noch keinen
-Blumentopf gewonnen. Kommen wir also zur"uck auf die zuvor formulierte Idee, welche uns als Motivation
-f"ur die \emph{Baummethode} dient. Statt Knoten (oder Ausdr"ucke) zum Framing im Resultatstack einzusetzen,
-sollte es m"oglich sein, anhand der Position des aktuellen Knotens im Syntaxbaum bestimmen zu k"onnen,
-wieviel Zwischenergebnisse f"ur den \emph{"ubergeordneten} Knoten bereits zur Verf"ugung stehen. Obwohl
-dies im obigen Beispiel von bedingten Ausdr"ucken trivial erscheint, ist dies tats"achlich nicht f"ur alle
-denkbaren Semantiken der Fall, wie wir im Folgenden sehen werden.
+Im obigen Beispiel wissen wir, dass $0$ das einzige relative Offset f"ur $a_3$ bzgl. $a_2$ ist. Dies
+erlaubt uns den R"uckschluss, dass nach der Berechnung f"ur $a_3$ exakt ein Zwischenresultat f"ur
+$a_2$ vorliegt. Genaugenommen wissen wir sogar, dass die Funktion $g$ aus dem Beispiel -- zumindest
+soweit sie angegeben ist -- absolut offset-eindeutig ist, denn f"ur jedes Argument existiert
+nur h"ochstens ein absolutes Offset.
 
-Nimmt man beispielsweise an, dass ein bestimmter Knoten $k$ im Syntaxbaum einmal zur Auswertung des ersten
-Zwischenresultats eines anderen Knotens $k'$ und einmal zur Auswertung des vierten Zwischenresultats von
-besagtem Knoten $k'$ verwendet wird, so ist f"ur diesen Knoten $k$ nicht klar, wieviele Zwischenresultate
-sich bereits f"ur $k'$ auf dem Resultatstack befinden. Nimmt man aber an, dass dies nicht der Fall ist, und
-$g$ dahingehend eindeutig ist, dass f"ur jedes $k$ nur h"ochstens ein $n$ ex., so dass
-$g(k,\eta,v_1 \ldots v_n) = (k',\eta')$, so ist anhand des aktuellen Knotens $k$ immer genau zu bestimmen,
-wieviele Zwischenergebnisse bereits f"ur $k'$ auf dem Resultatstack liegen.
+Weiterhin m"ussen wir nun noch formalisieren, was es bedeutet, in der Berechnung \emph{vor} oder
+\emph{hinter} einem Argument zu stehen. Intuitiv haben wir diese Information aus den vorangegangenen
+Konfigurationen abgeleitet. Es ist jedoch im Allgemeinen nicht m"oglich diese Information -- d.h.
+ob man \emph{vor} oder \emph{hinter} einem Argument steht -- aus einer einzigen Konfiguration zu
+gewinnen. Dementsprechend muss diese Information in Konfigurationen explizit gemacht werden. Dazu
+markieren wir jeweils das aktuelle Argument mit einem Punkt vor dem Argument, um deutlich zu machen,
+dass die Berechnung \emph{vor} selbigem steht, bzw. hinter dem Argument, um deutlich zu machen, dass
+die Berechnung \emph{hinter} dem Argument steht.
 
-\begin{definition}
-  $g: \Node \times \Env \times \Val^* \pto (\Node \times \Env) \uplus \Val$ hei"st
-  \emph{deterministisch}, wenn f"ur alle $n,m,k,k_0,\eta,\eta_0,\eta',\eta_0',v_1,\ldots,v_n,v_1',\ldots,v_m'$
-  gilt: \\
-  \[g(k,\eta,v_1 \ldots v_n) = (k_0,\eta_0)\]
-  und
-  \[g(k,\eta',v_1' \ldots v_m') = (k_0,\eta_0')\]
-  impliziert $n = m$.
+\begin{definition}[Punktierte Mengen]
+  Sei $M$ eine beliebige Menge. Die Menge $\dot{M}$ aller \emph{punktierten Elemente} aus
+  $M$ ist definiert durch
+  \[\begin{array}{rcl}
+    \dot{M} &=& \{\cdot m \mid m \in M\} \cup \{m \cdot \mid m \in M\}.
+  \end{array}\]
 \end{definition}
 
-F"ur ein solch deterministisches $g$ l"asst sich sogar noch mehr sagen. Und zwar ist die maximale Anzahl
-von Zwischenresultaten f"ur jeden Knoten beschr"ankt durch die Anzahl der Knoten im Syntaxbaum, welche
-wiederum endlich ist.
-
-Im Folgenden gehen wir immer von einem $g$ aus, welches deterministisch ist.\footnote{Man kann sich leicht
-"uberlegen, dass das $g$ f"ur die bisher betrachtete Programmiersprachensemantik offensichtlich deterministisch
-ist.}. F"ur ein solches $g$ l"asst sich nun leicht die oben beschriebene Idee umsetzen, indem nun Resultate und
-Knoten auf zwei unterschiedlichen Stacks verwaltet werden. Hierzu m"ussen wir allerdings zun"achst formalisieren,
-was es bedeutet \emph{vor} oder \emph{hinter} einem Knoten $k$ zu sein. Sei dazu
-\[\begin{array}{rcl}
-  \Node_p &=& \{\cdot k \mid k \in \Node\} \cup \{k \cdot \mid k \in \Node\}
-\end{array}\]
-eine Menge von \emph{punktierten Knoten} "uber $\Node$. $\cdot k$ gibt hierbei an, dass sich die Maschine
-\emph{vor} $k$, und $k \cdot$, dass sie sich \emph{hinter} $k$ befindet. Eine Konfiguration besteht nun
-aus einem \emph{Programcounter}, der stets eine punktierten Knoten enth"alt, einem Umgebungsstack,
-einem Resultatstack und einem R"ucksprungstack mit Knoten. Die Relation
-\[\begin{array}{rcl}
-  \step &\subseteq& (\Node_p \times \Env^* \times \Val^* \times \Node^*) \times (\Node_p \times \Env^* \times \Val^* \times \Node^*)
-\end{array}\]
-ist die kleinste solche Relation f"ur die gilt (f"ur alle $n \ge 0$):
+Als Konfigurationen w"ahlen wir Tripel, wobei das erste Element das punktierte aktuelle Argument
+enth"alt, das zweite Element den Stack der vorangegangenen Argumente und das dritte Element den
+Resultatstack. D.h. $\dot{A} \times A^* \times B^*$ ist die Menge aller m"oglichen Konfigurationen.
+Auf dieser Menge definieren wir nun zu jedem relativ offset-eindeutigen $g$ eine bin"are Relation
+$\step$ als die kleinste Relation, f"ur die gilt:
 \begin{enumerate}
-\item Wenn $g(k,\eta) = v$ \\
-  dann gilt $(\cdot k,E\,\eta,R,K) \step (k\cdot,E\,\eta,R\,v,K)$.
-\item Wenn $g(k,\eta) = (k',\eta')$ \\
-  dann gilt $(\cdot k,E\,\eta,R,K) \step (\cdot k',E\,\eta\,\eta',R,K\,k)$.
-\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
-  und $g(k,\eta,v_1 \ldots v_{n+1}) = v$ \\
-  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (k\cdot,E\,\eta,R\,v,K)$.
-\item Wenn $g(k,\eta,v_1 \ldots v_n) = (k',\eta')$ \\
-  und $g(k,\eta,v_1 \ldots v_{n+1}) = (k'',\eta'')$ \\
-  dann gilt $(k'\cdot,E\,\eta\,\eta',R\,v_1\,\ldots\,v_{n+1},K\,k) \step (\cdot k'',E\,\eta\,\eta'',R\,v_1\,\ldots\,v_{n+1},K\,k)$.
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1}) = b$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (\cdot a'',v\,a,w\,b_1 \ldots b_{n+1})$.
 \end{enumerate}
-Wie man leicht sieht, sind f"ur deterministische $g$ nun keinerlei Markierung im Resultatstack mehr erforderlich.
-Die Anzahl der Zwischenergebnisse zu einem bestimmten $k$ ist eindeutig f"ur jedes $k'$, welches als Teilberechnung
-von $k$ auftritt.
+
+Die ersten beiden Regeln beschreiben die m"oglichen Konfigurations"uberg"ange, wenn sich die Berechnung
+\emph{vor} einem Argument $a$ befindet. Hier existieren zwei M"oglichkeiten: Entweder liefert $g$ sofort
+ein Resultat $b$, dann wird der Punkt hinter das $a$ gesetzt und das Resultat auf den Stack gelegt. Oder
+$g$ liefert einen Nachfolger $a'$ f"ur $a$, dann wird $a$ auf den Vorg"angerstack gelegt und die Berechnung
+f"ahrt mit $\cdot a'$ fort.
+
+Steht nun die Berechnung hinter $a'$ und ist $a$ der $n$-te Vorg"anger von $a'$, so m"ussen $n+1$
+Zwischenresultate f"ur $a$ auf dem Resultatstack liegen, denn $g$ ist nach Voraussetzung relativ
+offset-eindeutig. Liefert nun $g(a,b_1 \ldots b_{n+1})$ ein Resultat $b$, so greift die dritte
+Regel: Hier werden die Zwischenresultate f"ur $a$ auf dem Resultatstack durch $b$ ersetzt, das
+Argument $a$ vom Vorg"angerstack entfernt und anschlie"send die Berechnung hinter $a$ fortgesetzt.
+Liefert andererseits $g(a,b_1 \ldots b_{n+1})$ einen weiteren Nachfolger $a''$, so wird die Berechnung
+vor $a''$ fortgesetzt.
+
+Anhand dieser Erl"auterungen ist unmittelbar ersichtlich, dass die so definierte "Ubergangsrelation
+\emph{deterministisch} ist, d.h. dass zu jeder Konfiguration $\zeta$ nur h"ochstens eine Konfiguration
+$\zeta'$ existiert, so dass $\zeta \step \zeta'$ gilt. Weiterhin gilt folgende Berechnungsinvariante:
+\begin{lemma}
+  Sei $a \in A$ und $b \in B$. Dann gilt
+  $(\cdot a,\varepsilon,\varepsilon) \step^* (a \cdot, b, \varepsilon)$
+  genau dann wenn $a \Downarrow b$.
+\end{lemma}
 
 
-\subsubsection{Anmerkungen}
+\section{Vorg"anger-eindeutigkeit}
 
-Tats"achlich l"asst sich diese Optimierung auf beliebige $g$ anwenden, die \emph{deterministisch} sind und f"ur
-die die Argumente aufgeteilt sind in zwei Teile, wie zuvor bei der Umgebungsinvarianz beschrieben.
+\begin{definition}[Vorg"anger]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $a'\in A$. Die Menge aller \emph{Vorg"anger} von
+  $a'$ ist definiert durch
+  \[\begin{array}{rcl}
+    \parents_g(a') &=& \{a \in A \mid \offsets_g(a,a') \ne \emptyset \}.
+  \end{array}\]
+  $g$ hei"st \emph{vorg"anger-eindeutig} falls $|\parents_g(a')| \le 1$ f.a. $a' \in A$.
+\end{definition}
+
+Zwischen Vorg"anger-eindeutigkeit und Offset-eindeutigkeit besteht folgender Zusammenhang: Ist
+eine Funktion $g$ relativ offset-eindeutig und vorg"anger-eindeutig, so ist $g$ auch absolut
+offset-eindeutig.
 
 
 \end{document}
