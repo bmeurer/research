@@ -248,7 +248,7 @@ Konfigurations"ubergangsrelation $\step$ ins Ged"achtnis, so zeigt sich, dass di
 die Vorg"anger f"ur alle Argumente eindeutig bestimmt sind.
 
 Dementsprechend kann zu jeder relativ offset-eindeutigen und vorg"anger-eindeutigen Funktion
-$g$ eine bin"are Relation $\step$ als die kleinste bin"are Relation "uber
+$g$ eine bin"are Relation $\step$ als die kleinste Relation "uber
 $(\dot{A} \times B^*) \times (\dot{A} \times B^*)$ definiert werden, f"ur die gilt:
 \begin{enumerate}
 \item Wenn $g(a) = b$ \\
@@ -283,5 +283,63 @@ Insgesamt gen"ugt diese Umsetzung der folgenden Berechnungsinvariante:
   genau dann wenn $a \Downarrow b$.
 \end{lemma}
 
+So verlockend diese optimale Umsetzung aussehen mag, sie kommt f"ur die praktische Anwendung, z.B. auf die
+Semantik einer Programmiersprache, nicht in Frage, denn die interessanten Funktionen $g$ sind allesamt
+nicht vorg"anger-eindeutig. Im Falle der Semantik einer Programmiersprache, scheitert dies schon alleine
+an Funktions- bzw. Unterprogrammaufrufen. Dies sind Spr"unge zu einem Programmteil (in der allgemeinen
+Terminilogie, zu einem Argument), die von verschiedenen anderen Stellen im Programm erfolgen k"onnen.
+F"ur Funktionen und Unterprogramme kann demzufolge im Allgemeinen kein eindeutiger Vorg"anger existieren.
+
+Ein vollst"andiger Verzicht auf Vorg"angerverwaltung ist dementsprechend nicht praktikabel. Allerdings
+hat man es in der Semantik von Programmiersprachen trotzdem h"aufig mit Programmteilen zu tun, deren
+Vorg"anger eindeutig ist. Dementsprechend w"are eine Hybridl"osung angebracht, die nur diejenigen
+Vorg"anger auf einem Argumentstack verwaltet, die nicht eindeutig sind. F"ur die "ubrigen Argumente,
+deren Vorg"anger eindeutig ist, also die Menge
+\[\begin{array}{c}
+  \{a' \in A \mid \exists a \in A.\,\{a\} = \parents_g(a')\}
+\end{array}\]
+kann die zuvor beschriebene Umsetzung verwendet werden.
+
+Zu jeder absolut offset-eindeutige Funktion $g$ wird eine bin"are Relation $\step$ als kleinste
+"uber $(\dot{A} \times A^* \times B^*) \times (\dot{A} \times A^* \times B^*)$ definiert, f"ur
+die gilt:
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v,w)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = b$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v\,a,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v\,a,w\,b_1 \ldots b_{n+1})$.
+\end{enumerate}
 
 \end{document}
