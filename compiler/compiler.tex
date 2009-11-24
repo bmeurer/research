@@ -345,7 +345,7 @@ die gilt:
 
 \section{Zusammengesetzte Argumente}
 
-In den bisherigen Betrachtungen haben wir Argument stets als \emph{atomar} betrachtet. In der praktischen
+In den bisherigen Betrachtungen haben wir Argumente stets als \emph{atomar} betrachtet. In der praktischen
 Anwendung hat man es aber h"aufig mit komplexen, \emph{zusammengesetzten} Argumenten zu tun, die aus mehreren
 Komponenten bestehen. Hier verhindert die atomare Behandlung interessante Optimierungen f"ur Argumente. Im
 Folgenden betrachten wir einige Beispiele, wie durch Auftrennung der Argumentkomponenten die iterative
@@ -393,6 +393,81 @@ Offensichtlich gilt f"ur diese Umsetzung nachfolgende Berechnungsinvariante.
   Sei $a \in A$, $b' \in B$ und $c,c' \in C$. Dann gilt $(a,c) \step^* (b',c')$
   genau dann wenn $(a,c) \Downarrow (b',c')$.
 \end{lemma}
+
+
+\section{Zwischenresultatoptimierung}
+
+In den vorangegangenen Abschnitten haben wir unterschiedliche M"oglichkeiten zur effizienten Verwaltung
+von Argumenten dargestellt. Dabei haben wir aber die Betrachtung der Zwischenresultate weitgehend ausseracht
+gelassen. Dies wollen wir nun in diesem Abschnitt nachholen.
+
+Zun"achst stellen wir dabei fest, dass bisher f"ur jedes Argument $a$ stets alle Zwischenresultate
+$b_1,\ldots,b_n$ aufgesammelt werden, bis schliesslich $g(a,b_1 \ldots b_n)$ ein Resultat $b$ liefert.
+Dies ungeachtet der Tatsache, ob $b$ nun tats"achlich von allen $b_1,\ldots,b_n$ abh"angt. Ebensowenig
+wird ber"ucksichtigt, ob die Nachfolger $a_{i+1}$ von $a$ tats"achlich von allen bis dahin bekannten
+Zwischenresultaten $b_1,\ldots,b_i$ abh"angen.
+
+Ist dies nicht der Fall, so k"onnte man Speicherplatz sparen, indem man Zwischenresultate nur solange
+aufhebt, wie diese f"ur die weitere Berechnung von Belang sind. Angenommen $b_1$ wird nur ben"otigt,
+um zu entscheiden, dass $g(a,b_1)=a_1$ liefert, dann k"onnte man in der iterativen Umsetzung, $b_1$
+nach diesem Schritt vom Zwischenresultatstack entfernen. Dies darf nat"urlich nur dann geschehen,
+wenn alle folgenden Entscheidungen invariant unter der Wahl von $b_1$ sind, d.h. wenn
+$g(a,b_1 b_2\ldots b_k) = g(a,b_1' b_2 \ldots b_k)$ f"ur alle $k \ge 2$. In diesem Fall wissen wir,
+dass das erste Zwischenresultat f"ur $a$ nur im ersten Entscheidungsschritt f"ur $a$ ben"otigt
+wird\footnote{Die Sprechweise \emph{$n$-ter Entscheidungsschritt f"ur $a$} bezieht sich auf das
+Ergebnis von $g(a,b_1 \ldots b_n)$.}.
+
+Formal l"asst sich dieser Sachverhalt durch eine Funktion $\gamma$ beschreiben, die zu jedem Argument $a$
+und jedem Zwischenresultatindex $i$ den Index $j$ eines Entscheidungsschrittes f"ur $a$ liefert,
+bis zu dem das $i$-te Zwischenresultat (m"oglicherweise) noch ben"otigt wird. Eine solche Funktion
+$\gamma$ nennen wir dann \emph{(Zwischenresultat-)Absch"atzung f"ur g}.
+
+\begin{definition}[Zwischenresultatabsch"atzung]
+  Sei $g: A \times B^* \pto A \uplus B$. $\gamma: A \times \N \to \N$ hei"st
+  \emph{(Zwischenresultat-)Absch"atzung f"ur $g$}, wenn f"ur alle $a \in A$ und $i \ge 1$ gilt:
+  \begin{enumerate}
+  \item Wenn $\gamma(a,i) = 0$, dann gilt
+    \[\begin{array}{rcl}
+      g(a,b_1 \ldots b_n) &=& g(a,b_1' \ldots b_n')
+    \end{array}\]
+    f"ur alle $n \ge i$, $b_1,\ldots,b_n,b_1',\ldots,b_n' \in B$, wobei $b_k = b_k'$ wenn $k \ne i$.
+  \item Wenn $\gamma(a,i) = j$, dann gilt $j \ge i$ und
+    \[\begin{array}{rcl}
+      g(a,b_1 \ldots b_n) &=& g(a,b_1' \ldots b_n')
+    \end{array}\]
+    f"ur alle $n > j$, $b_1,\ldots,b_n,b_1',\ldots,b_n' \in B$, wobei $b_k = b_k'$ wenn $k \ne i$.
+  \end{enumerate}
+\end{definition}
+
+Der erste Fall beschreibt dabei Zwischenresultate, die f"ur die weitere Berechnung vollst"andig
+irrelevant sind, w"ahrend der zweite Fall Zwischenresultate $b_i$ beschreibt, die nur bis zum
+$j$-ten Entscheidungsschritt ben"otigt werden. Vollst"andig irrelevante Zwischenresultate deuten
+auf Fehler in $g$ hin und treten bei einer \emph{sinnvoll} formulierten Funktion $g$ nicht auf.
+Wir werden diesen deshalb im Folgende keine weitere Beachtung schenken.
+
+Anhand einer Absch"atzung $\gamma$ erh"alt man f"ur jedes Zwischenresultat eine Art \emph{Lebenszeit}.
+Diese entspricht dem Entscheidungsschritt, bis zu dem das jeweilige Zwischenresultat laut $\gamma$
+mindestens vorzuhalten ist. Umgekehrt lassen sich daraus f"ur jeden Entscheidungsschritt $i$ eines
+Arguments $a$ die Indizes derjenigen Zwischenresultate angeben, die einerseits f"ur $i$ vorliegen
+m"ussen und andererseits f"ur $i+1$ beibehalten werden m"ussen. Die ersteren nennen wir dabei
+die \emph{Eingabe f"ur $(a,i)$} w"ahrend wir die letzteren als \emph{Ausgabe von $(a,i)$} bezeichnen.
+Trivialerweise muss die Ausgabe von $(a,i)$ der Eingabe von $(a,i+1)$ entsprechen. Formal l"asst sich
+dies wie folgt beschreiben.
+
+\begin{definition}[Ein- und Ausgabe]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei weiter $\gamma: A \times \N \to \N$ eine Absch"atzung
+  f"ur $g$. Dann sind f"ur alle $a \in A$ und $i \ge 0$ die Mengen $\inp_{g,\gamma}(a,i) \subseteq \N$ der
+  \emph{Eingaben von $(a,i)$} und $\out_{g,\gamma}(a,i) \subseteq \N$ der \emph{Ausgaben von $(a,i)$} wie folgt
+  induktiv definiert:
+  \[\begin{array}{lcl}
+    \inp_{g,\gamma}(a,0)
+    &=& \emptyset \\
+    \inp_{g,\gamma}(a,i+1)
+    &=& \out_{g,\gamma}(a,i) \\
+    \out_{g,\gamma}(a,i)
+    &=& \{j\in(\inp_{g,\gamma}(a,i)\cup\{i+1\}) \mid \gamma(a,j) > i \} \\
+  \end{array}\]
+\end{definition}
 
 
 \end{document}
