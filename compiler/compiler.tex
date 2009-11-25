@@ -456,17 +456,33 @@ dies wie folgt beschreiben.
 
 \begin{definition}[Ein- und Ausgabe]
   Sei $g: A \times B^* \pto A \uplus B$ und sei weiter $\gamma: A \times \N \to \N$ eine Absch"atzung
-  f"ur $g$. Dann sind f"ur alle $a \in A$ und $i \ge 0$ die Mengen $\inp_{g,\gamma}(a,i) \subseteq \N$ der
-  \emph{Eingaben von $(a,i)$} und $\out_{g,\gamma}(a,i) \subseteq \N$ der \emph{Ausgaben von $(a,i)$} wie folgt
+  f"ur $g$. Dann sind f"ur alle $a \in A$ und $i \ge 0$ die Mengen $\I_{g,\gamma}(a,i) \subseteq \N$ der
+  \emph{Eingaben von $(a,i)$} und $\O_{g,\gamma}(a,i) \subseteq \N$ der \emph{Ausgaben von $(a,i)$} wie folgt
   induktiv definiert:
   \[\begin{array}{lcl}
-    \inp_{g,\gamma}(a,0)
+    \I_{g,\gamma}(a,0)
     &=& \emptyset \\
-    \inp_{g,\gamma}(a,i+1)
-    &=& \out_{g,\gamma}(a,i) \\
-    \out_{g,\gamma}(a,i)
-    &=& \{j\in(\inp_{g,\gamma}(a,i)\cup\{i+1\}) \mid \gamma(a,j) > i \} \\
+    \I_{g,\gamma}(a,i+1)
+    &=& \O_{g,\gamma}(a,i) \\
+    \O_{g,\gamma}(a,i)
+    &=& \{j\in(\I_{g,\gamma}(a,i)\cup\{i+1\}) \mid \gamma(a,j) > i \} \\
   \end{array}\]
+\end{definition}
+
+\begin{definition}[Ein-/Ausgabe-Relation]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $\gamma: A \times \N \to \N$ eine Absch"atzung f"ur $g$.
+  Dann ist f"ur alle $a,a' \in A$ mit $a \in \parents_g(a')$ die \emph{Ein-/Ausgabe-Relation f"ur $(a,a')$}
+  definiert als die kleinste Relation $\IO_{g,\gamma}(a,a') \subseteq B^* \times (B \uplus (A \times B^*))$
+  f"ur die gilt:
+  \begin{enumerate}
+  \item Wenn $k \in \offsets_g(a,a')$, $g(a,b_1 \ldots b_{k+1}) = b$ und $\I_{g,\gamma}(a,k+1) = \{i_1,\ldots,i_n\}$ mit
+    $i_1 < \ldots < i_n$, dann gilt
+    \[(b_{i_1} \ldots b_{i_n},b) \in \IO_{g,\gamma}(a,a').\]
+  \item Wenn $k \in \offsets_g(a,a')$, $g(a,b_1 \ldots b_{k+1}) = a''$, $\I_{g,\gamma}(a,k) = \{i_1,\ldots,i_n\}$ mit
+    $i_1 < \ldots < i_n$, und $\O_{g,\gamma}(a,k+1) = \{j_1,\ldots,j_m\}$ mit
+    $j_1 < \ldots < j_m$, dann gilt
+    \[(b_{i_1} \ldots b_{i_n},(a'',b_{j_1} \ldots b_{j_m})) \in \IO_{g,\gamma}(a,a').\]
+  \end{enumerate}
 \end{definition}
 
 
