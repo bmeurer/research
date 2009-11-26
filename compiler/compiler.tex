@@ -469,6 +469,10 @@ dies wie folgt beschreiben.
   \end{array}\]
 \end{definition}
 
+Basierend hierauf l"asst sich nun eine \emph{Ein-/Ausgabe-Relation} definieren, die zu jedem Paar $(a,a')$
+Eingaben in Form einer Liste von Zwischenresultaten f"ur $a$ auf Ausgaben in Form eines Resultats $b$ oder
+eines Nachfolgers $a''$ und einer Liste von Zwischenresultaten, die beizubehalten sind, abbildet.
+
 \begin{definition}[Ein-/Ausgabe-Relation]
   Sei $g: A \times B^* \pto A \uplus B$ und sei $\gamma: A \times \N \to \N$ eine Absch"atzung f"ur $g$.
   Dann ist f"ur alle $a,a' \in A$ mit $a \in \parents_g(a')$ die \emph{Ein-/Ausgabe-Relation f"ur $(a,a')$}
@@ -484,6 +488,43 @@ dies wie folgt beschreiben.
     \[(b_{i_1} \ldots b_{i_n},(a'',b_{j_1} \ldots b_{j_m})) \in \IO_{g,\gamma}(a,a').\]
   \end{enumerate}
 \end{definition}
+
+Zu jeder relativ offset-eindeutigen Funktion $g$ und jeder Absch"atzung $\gamma$ f"ur $g$ wird dann eine
+bin"are Relation $\step$ als kleinste solche Relation "uber
+$(\dot{A} \times A^* \times B^*) \times (\dot{A} \times A^* \times B^*)$ definiert, f"ur die gilt
+(mit $n \ge 1, m \ge 0$):
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v,w)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $(b_1 \ldots b_n,b) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a \cdot,v,w\,b)$.
+\item Wenn $(b_1 \ldots b_n,b) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a \cdot,v,w\,b)$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a'' \cdot,v,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a'' \cdot,v,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a'' \cdot,v\,a,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a'' \cdot,v\,a,w\,b_1' \ldots b_m')$.
+\end{enumerate}
 
 
 \end{document}
