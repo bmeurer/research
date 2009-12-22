@@ -1,0 +1,117 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+\section{B"aume}
+
+Die folgenden Definitionen enstammen \emph{``Grundlagen der Programmiersprachen''} von Loeckx, Mehlhorn
+und Willhelm.
+\begin{definition}[Baumbereiche und B"aume] \
+  \begin{enumerate}
+  \item Die partiellen Funktionen $\mathit{parent}$ und $\mathit{brother}$ sind definiert durch
+    \[\begin{array}{rl}
+      \mathit{parent}: & \N^* \pto \N^*, \\
+      & w \cdot n \mapsto w \\
+      \\
+      \mathit{brother}: & \N^* \pto \N^*, \\
+      & w \cdot (n+1) \mapsto w \cdot n \\
+    \end{array}\]
+    Die reflexive, transitive H"ulle von $\mathit{parent}$ hei"st $\mathit{ancestor}$.
+  \item Ein \emph{Baumbereich} $K$ ist eine endliche Teilmenge von $\N^*$, die abgeschlossen
+    ist unter der Funktion $\mathit{parent}$, d.h. $\parent{K} \subseteq K$. Die Elemente des
+    Baumbereichs hei"sen \emph{Knoten}.
+  \item Sei $S$ eine Menge. Ein \emph{$S$-Baum} (oder auch kurz \emph{Baum}) ist ein Paar
+    $(K,\ell)$, wobei $K$ ein Baumbereich ist, und $\ell$ eine Abbildung $\ell:K \to S$. Die
+    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Definitionsbereich}.
+    Die Menge aller $S$-B"aume bezeichnen wir mit $T_S$.
+  \item Ein Baumbereich $K$ hei"st \emph{vollst"andig}, wenn $K$ abgeschlossen ist unter der
+    Funktion $\mathit{brother}$, d.h. $\brother{K} \subseteq K$. Ein Baum $(K,\ell)$ hei"st
+    \emph{vollst"andig}, wenn sein Baumbereich $K$ vollst"andig ist.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}
+  Sei $S$ eine Menge. Die Funktionen $\mathit{leaves}$ und $\mathit{leafword}$ sind definiert durch
+  \[\begin{array}{rll}
+    \mathit{leaves}: & \powersetfin{\N^*} \to \powersetfin{\N^*}, \\
+    & \multicolumn{2}{l}{W \mapsto \{w \in W \mid \forall v \in \N^+.\,(w \cdot v) \not\in W\}.} \\
+    \\
+    \mathit{leafword}: & T_S \pto S^*, \\
+    & (K,\ell) \mapsto \ell(w_1)\ldots\ell(w_k) & \text{wenn $\{w_1,\ldots,w_k\}=\leaves{K}$} \\
+    && \text{mit $k \ge 1$ und $w_1 <_{\text{lex}} \ldots <_{\text{lex}} w_k$.} \\
+    \end{array}\]
+\end{definition}
+
+
+\section{Kontextfreie Grammatiken}
+
+Eine \emph{kontextfreie Grammatik} $G$ ist ein Quadrupel $(N,\Sigma,\to,S)$ mit
+\begin{enumerate}
+\item $\Sigma$ ist eine endliche, nicht-leere Menge von \emph{Terminalzeichen},
+\item $N$ ist eine endliche zu $\Sigma$ disjunkte Menge von \emph{Nichtterminalzeichen},
+\item $\to\ \subseteq N \times (N \uplus \Sigma)^*$ ist eine Relation von Produktionen, wobei ein $w$ existieren
+  muss, so dass $S \to w$, und
+\item $S \in N$ ist das sogenannte \emph{Startsymbol}.
+\end{enumerate}
+Die Worte aus $\Sigma^*$ hei"sen \emph{Terminalworte}, die aus $(N \uplus \Sigma)^*$ \emph{Satzformen}. Eine
+kontextfreie Grammatik hei"st \emph{$\varepsilon$-frei}, wenn sie keine Produktion der Form
+$A \to \varepsilon$ enth"alt.
+
+\begin{definition}[Ableitungen]
+  Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik. Wir definieren die bin"aren Relationen $\Rightarrow$
+  und $\Rightarrow^*$ auf der Menge der Satzformen $(\Sigma \uplus T)^*$ durch
+  \begin{enumerate}
+  \item $\alpha \Rightarrow \beta$ gdw. es ex. $\alpha_1,\alpha_2,\alpha_3\in (\Sigma \uplus T)^*$ und
+    $A \to \alpha_3$, so dass $\alpha = \alpha_1 A \alpha_2$ und $\beta = \alpha_1\alpha_2\alpha_3$.
+  \item $\Rightarrow^*$ ist die reflexive transitive H"ulle von $\Rightarrow$.
+  \end{enumerate}
+  Eine Folge $\alpha_0,\ldots,\alpha_n$ mit $\alpha_i \Rightarrow \alpha_{i+1}$ f"ur $0 \le i < n$ hei"st
+  \emph{Ableitung} von $\alpha_0$ nach $\alpha_n$, und $n$ hei"st die \emph{L"ange} der Ableitung.
+\end{definition}
+
+\begin{definition}[Ableitungsbaum]
+  Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik, $A \in N$ ein Nichtterminalzeichen und
+  $\alpha \in (N \uplus \Sigma)^*$ eine Satzform. Ein vollst"andiger Baum
+  $(K,\ell) \in T_{N \uplus \Sigma \uplus \{\varepsilon\}}$ hei"st
+  \emph{Ableitungsbaum von $A \Rightarrow \alpha$}, wenn gilt:
+  \begin{enumerate}
+  \item Die Beschriftung der Wurzel ist $A$, d.h. $\ell(\varepsilon)=A$.
+  \item F"ur jeden Knoten $w \in K$ mit Kindern $w1,\ldots,wn$, wobei $n \ge 1$, gilt
+    $\ell(w) \to \ell(w1)\ldots\ell(wn)$ und entweder
+    \begin{enumerate}
+    \item $\ell(wi)\ne\varepsilon$ f"ur alle $i=1,\ldots,n$, oder
+    \item $n = 1$ und $\ell(w1)=\varepsilon$.
+    \end{enumerate}
+  \item $\leafword{(K,\ell)} = \alpha$.
+  \end{enumerate}
+\end{definition}
+
+
+\end{document}
