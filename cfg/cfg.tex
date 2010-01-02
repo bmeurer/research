@@ -135,7 +135,7 @@ $A \to \varepsilon$ enth"alt.
 \begin{definition}[Patterns]
   Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und sei
   $V = (V_X)_{X\in N \uplus \Sigma}$ eine Familie von \emph{$G$-Variablenmengen}. F"ur
-  jedes $X \in N \uplus \Sigma$ ist die Menge $P(X)$ aller \emph{Pattern} f"ur $X$
+  jedes $X \in N \uplus \Sigma$ ist die Menge $P(X)$ aller \emph{$X$-Pattern}
   definiert als die kleinste Menge f"ur die gilt:
   \begin{enumerate}
   \item $X \in P(X)$ f"ur alle $X \in N \uplus \Sigma$.
@@ -148,8 +148,7 @@ $A \to \varepsilon$ enth"alt.
 
 \begin{definition}[Patternmatching]
   Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik,
-  $A \in N$, $p \in P(A)$ und $(K,\ell)$ ein
-  Ableitungsbaum f"ur $A$ nach $\alpha$. 
+  $A \in N$, $p \in P(A)$ und $(K,\ell)$ ein Ableitungsbaum f"ur $A$ nach $\alpha$. 
   \begin{enumerate}
   \item $w \vdash \any \to [\,]$.
   \item $w \vdash \ell(w) \to [\,]$.
@@ -158,6 +157,54 @@ $A \to \varepsilon$ enth"alt.
     $i=1,\ldots,n$ und $s = s_1 \circ \ldots \circ s_n$, dann gilt $w \vdash (p_1 \ldots p_n) \to s$.
   \end{enumerate}
 \end{definition}
+
+
+\section{Konstruktoren}
+
+\begin{definition}[Konstruktoren]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und sei
+  $V = (V_X)_{X \in N \uplus \Sigma}$ eine Familie von \emph{$G$-Variablenmengen}. F"ur
+  jedes $X \in N \uplus \Sigma$ ist die Menge $\zeta(X)$ aller \emph{$X$-Konstruktoren}
+  definiert als die kleinste Menge f"ur die gilt:
+  \begin{enumerate}
+  \item $a \in \zeta(a)$ f"ur alle $a \in \Sigma$.
+  \item $x^X \in \zeta(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item Wenn $A \to X_1 \ldots X_n$ mit $n \ge 1$ und $c_i \in \zeta(X_i)$ f"ur alle
+    $i=1,\ldots,n$, dann gilt $(c_1 \ldots c_n) \in \zeta(A)$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Konstruktion]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $X \in N \uplus \Sigma$,
+  $c \in \zeta(X)$ und $s$ eine $G$-Substitution. Die
+  \emph{$(c,s)$-Konstruktion} $(K,\ell)$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $c = a \in \Sigma$, dann
+    \[\begin{array}{rcl}
+      K &=& \{\varepsilon\} \\
+      \ell: & \multicolumn{2}{l}{K \to N \uplus \Sigma,} \\
+      & \multicolumn{2}{l}{\varepsilon \mapsto a.} \\
+    \end{array}\]
+  \item Wenn $c = x \in \dom{s}$, dann $(K,\ell) = s(x)$.
+  \item Wenn $c = (c_1 \ldots c_n)$ und existieren $(c_i,s)$-Konstruktionen $(K_i,\ell_i)$ f"ur alle
+    $i=1,\ldots,n$, dann
+    \[\begin{array}{rcl}
+      K &=& \{\varepsilon\} \cup \bigcup_{i=1,\ldots,n} \{i \cdot w \mid w \in K_i\} \\
+      \ell: & \multicolumn{2}{l}{K \to N \uplus \Sigma,} \\
+      & \multicolumn{2}{l}{\varepsilon \mapsto X,} \\
+      & \multicolumn{2}{l}{(i \cdot w) \mapsto \ell_i(w) \text{ f"ur alle $i=1,\ldots,n$ und $w \in K_i$.}}
+    \end{array}\]
+  \end{enumerate}
+\end{definition}
+
+\begin{lemma}
+  Sei $G$ eine $\varepsilon$-freie kontextfreie Grammatik, $c$ ein $G$-Konstruktor und
+  $s$ eine $G$-Substitution mit $\free{c} \subseteq \dom{s}$.
+  \begin{enumerate}
+  \item Es existiert genau eine $(c,s)$-Konstruktion.
+  \item Die $(c,s)$-Konstruktion ist ein $G$-Ableitungsbaum.
+  \end{enumerate}
+\end{lemma}
 
 
 \end{document}
