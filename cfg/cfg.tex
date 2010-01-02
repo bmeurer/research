@@ -69,6 +69,22 @@ und Willhelm.
     \end{array}\]
 \end{definition}
 
+\begin{definition}[Teilbaum]
+  Sei $S$ eine Menge, $(K,\ell) \in T_S$ ein $S$-Baum und $w \in K$ ein Knoten des Baums.
+  Der \emph{$w$-Teilbaum} $(K',\ell') = \subtree{(K,\ell)}{w}$ von $(K,\ell)$ ist definiert
+  durch
+  \[\begin{array}{rcl}
+    K' &=& \{v \in \N^* \mid w \cdot v \in K\} \\
+    \ell': & \multicolumn{2}{l}{K '\to S,} \\
+    & \multicolumn{2}{l}{v \mapsto \ell(w \cdot v) \text{ f"ur alle $v \in K'$.}}
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}
+  Sei $S$ eine Menge, $(K,\ell) \in T_S$ ein $S$-Baum und $w \in K$ ein Knoten des Baums.
+  Wenn $(K,\ell)$ vollst"andig ist, so ist auch $\subtree{(K,\ell)}{w}$ vollst"andig.
+\end{lemma}
+
 
 \section{Kontextfreie Grammatiken}
 
@@ -100,7 +116,7 @@ $A \to \varepsilon$ enth"alt.
   Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik, $A \in N$ ein Nichtterminalzeichen und
   $\alpha \in (N \uplus \Sigma)^*$ eine Satzform. Ein vollst"andiger Baum
   $(K,\ell) \in T_{N \uplus \Sigma \uplus \{\varepsilon\}}$ hei"st
-  \emph{Ableitungsbaum von $A \Rightarrow \alpha$}, wenn gilt:
+  \emph{Ableitungsbaum von $A$ nach $\alpha$}, wenn gilt:
   \begin{enumerate}
   \item Die Beschriftung der Wurzel ist $A$, d.h. $\ell(\varepsilon)=A$.
   \item F"ur jeden Knoten $w \in K$ mit Kindern $w1,\ldots,wn$, wobei $n \ge 1$, gilt
@@ -110,6 +126,36 @@ $A \to \varepsilon$ enth"alt.
     \item $n = 1$ und $\ell(w1)=\varepsilon$.
     \end{enumerate}
   \item $\leafword{(K,\ell)} = \alpha$.
+  \end{enumerate}
+\end{definition}
+
+
+\section{Patterns}
+
+\begin{definition}[Patterns]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und sei
+  $V = (V_X)_{X\in N \uplus \Sigma}$ eine Familie von \emph{$G$-Variablenmengen}. F"ur
+  jedes $X \in N \uplus \Sigma$ ist die Menge $P(X)$ aller \emph{Pattern} f"ur $X$
+  definiert als die kleinste Menge f"ur die gilt:
+  \begin{enumerate}
+  \item $X \in P(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item $\any \in P(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item $x^X \in P(X)$ f"ur alle $X \in N \uplus \Sigma$ und $x^X \in V_X$.
+  \item Wenn $A \to X_1 \ldots X_n$ mit $n \ge 1$ und $p_i \in P(X_i)$ f"ur alle $i=1,\ldots,n$,
+    dann gilt $(p_1 \ldots p_n) \in P(A)$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Patternmatching]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik,
+  $A \in N$, $p \in P(A)$ und $(K,\ell)$ ein
+  Ableitungsbaum f"ur $A$ nach $\alpha$. 
+  \begin{enumerate}
+  \item $w \vdash \any \to [\,]$.
+  \item $w \vdash \ell(w) \to [\,]$.
+  \item Wenn $x \in V_{\ell(w)}$, dann $w \vdash x \to [\subtree{(K,\ell)}{w}/x]$.
+  \item Wenn $w1,\ldots,wn$ die Kinder von $w$ sind, mit $n \ge 1$, $p_i \vdash wi \to s_i$ f"ur alle
+    $i=1,\ldots,n$ und $s = s_1 \circ \ldots \circ s_n$, dann gilt $w \vdash (p_1 \ldots p_n) \to s$.
   \end{enumerate}
 \end{definition}
 
