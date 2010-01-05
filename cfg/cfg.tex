@@ -31,8 +31,8 @@
 
 \section{B"aume}
 
-Die folgenden Definitionen enstammen \emph{``Grundlagen der Programmiersprachen''} von Loeckx, Mehlhorn
-und Willhelm.
+Die folgenden Definitionen basieren auf \emph{``Grundlagen der Programmiersprachen''} von Loeckx,
+Mehlhorn und Willhelm.
 \begin{definition}[Baumbereiche und B"aume] \
   \begin{enumerate}
   \item Die partiellen Funktionen $\mathit{parent}$ und $\mathit{brother}$ sind definiert durch
@@ -47,10 +47,10 @@ und Willhelm.
   \item Ein \emph{Baumbereich} $K$ ist eine endliche Teilmenge von $\N^*$, die abgeschlossen
     ist unter der Funktion $\mathit{parent}$, d.h. $\parent{K} \subseteq K$. Die Elemente des
     Baumbereichs hei"sen \emph{Knoten}.
-  \item Sei $S$ eine Menge. Ein \emph{$S$-Baum} (oder auch kurz \emph{Baum}) ist ein Paar
-    $(K,\ell)$, wobei $K$ ein Baumbereich ist, und $\ell$ eine Abbildung $\ell:K \to S$. Die
-    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Definitionsbereich}.
-    Die Menge aller $S$-B"aume bezeichnen wir mit $T_S$.
+  \item Sei $D$ eine Menge. Ein \emph{$D$-Baum} (kurz \emph{Baum}) ist ein Paar $(K,\ell)$,
+    wobei $K$ ein Baumbereich ist, und $\ell$ eine totale Abbildung von $K$ nach $D$. Die
+    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Bereich}.
+    Die Menge aller $D$-B"aume bezeichnen wir mit $T_D$.
   \item Ein Baumbereich $K$ hei"st \emph{vollst"andig}, wenn $K$ abgeschlossen ist unter der
     Funktion $\mathit{brother}$, d.h. $\brother{K} \subseteq K$. Ein Baum $(K,\ell)$ hei"st
     \emph{vollst"andig}, wenn sein Baumbereich $K$ vollst"andig ist.
@@ -58,31 +58,34 @@ und Willhelm.
 \end{definition}
 
 \begin{definition}
-  Sei $S$ eine Menge. Die Funktionen $\mathit{leaves}$ und $\mathit{leafword}$ sind definiert durch
+  Sei $D$ eine Menge. Die Funktionen $\mathit{leaves}$ und $\mathit{leafword}$ sind definiert durch
   \[\begin{array}{rll}
     \mathit{leaves}: & \powersetfin{\N^*} \to \powersetfin{\N^*}, \\
     & \multicolumn{2}{l}{W \mapsto \{w \in W \mid \forall v \in \N^+.\,(w \cdot v) \not\in W\}.} \\
     \\
-    \mathit{leafword}: & T_S \pto S^*, \\
+    \mathit{leafword}: & T_D \pto D^*, \\
     & (K,\ell) \mapsto \ell(w_1)\ldots\ell(w_k) & \text{wenn $\{w_1,\ldots,w_k\}=\leaves{K}$} \\
     && \text{mit $k \ge 1$ und $w_1 <_{\text{lex}} \ldots <_{\text{lex}} w_k$.} \\
     \end{array}\]
 \end{definition}
 
 \begin{definition}[Teilbaum]
-  Sei $S$ eine Menge, $(K,\ell) \in T_S$ ein $S$-Baum und $w \in K$ ein Knoten des Baums.
+  Sei $D$ eine Menge, $(K,\ell)$ ein $D$-Baum und $w \in K$ ein Knoten des Baums.
   Der \emph{$w$-Teilbaum} $(K',\ell') = \subtree{(K,\ell)}{w}$ von $(K,\ell)$ ist definiert
   durch
-  \[\begin{array}{rcl}
-    K' &=& \{v \in \N^* \mid w \cdot v \in K\} \\
-    \ell': & \multicolumn{2}{l}{K '\to S,} \\
-    & \multicolumn{2}{l}{v \mapsto \ell(w \cdot v) \text{ f"ur alle $v \in K'$.}}
+  \[\begin{array}{rl}
+    \multicolumn{2}{l}{K' = \{v \in \N^* \mid w \cdot v \in K\}} \\
+    \ell': & K '\to D, \\
+    & v \mapsto \ell(w \cdot v).
   \end{array}\]
 \end{definition}
 
 \begin{lemma}
-  Sei $S$ eine Menge, $(K,\ell) \in T_S$ ein $S$-Baum und $w \in K$ ein Knoten des Baums.
-  Wenn $(K,\ell)$ vollst"andig ist, so ist auch $\subtree{(K,\ell)}{w}$ vollst"andig.
+  Sei $D$ eine Menge, $(K,\ell)$ ein $D$-Baum und $w \in K$ ein Knoten des Baums. Dann gilt:
+  \begin{enumerate}
+  \item $\subtree{(K,\ell)}{w}$ ist ebenfalls ein $D$-Baum.
+  \item Wenn $(K,\ell)$ vollst"andig ist, so ist auch $\subtree{(K,\ell)}{w}$ vollst"andig.
+  \end{enumerate}
 \end{lemma}
 
 
@@ -92,9 +95,9 @@ Eine \emph{kontextfreie Grammatik} $G$ ist ein Quadrupel $(N,\Sigma,\to,S)$ mit
 \begin{enumerate}
 \item $\Sigma$ ist eine endliche, nicht-leere Menge von \emph{Terminalzeichen},
 \item $N$ ist eine endliche zu $\Sigma$ disjunkte Menge von \emph{Nichtterminalzeichen},
-\item $\to\ \subseteq N \times (N \uplus \Sigma)^*$ ist eine Relation von Produktionen, wobei ein $w$ existieren
-  muss, so dass $S \to w$, und
-\item $S \in N$ ist das sogenannte \emph{Startsymbol}.
+\item $\to\ \subseteq N \times (N \uplus \Sigma)^*$ ist eine Relation von Produktionen,
+  wobei zu jedem $A \in S$ ein $w$ existieren muss, so dass $A \to w$, und
+\item $S \subseteq N$ ist eine nichtleere Menge von sogenannten \emph{Startsymbolen}.
 \end{enumerate}
 Die Worte aus $\Sigma^*$ hei"sen \emph{Terminalworte}, die aus $(N \uplus \Sigma)^*$ \emph{Satzformen}. Eine
 kontextfreie Grammatik hei"st \emph{$\varepsilon$-frei}, wenn sie keine Produktion der Form
@@ -154,7 +157,7 @@ $A \to \varepsilon$ enth"alt.
   \item $w \vdash \ell(w) \to [\,]$.
   \item Wenn $x \in V_{\ell(w)}$, dann $w \vdash x \to [\subtree{(K,\ell)}{w}/x]$.
   \item Wenn $w1,\ldots,wn$ die Kinder von $w$ sind, mit $n \ge 1$, $p_i \vdash wi \to s_i$ f"ur alle
-    $i=1,\ldots,n$ und $s = s_1 \circ \ldots \circ s_n$, dann gilt $w \vdash (p_1 \ldots p_n) \to s$.
+    $i=1,\ldots,n$ und $s = s_1 \oplus \ldots \oplus s_n$, dann gilt $w \vdash (p_1 \ldots p_n) \to s$.
   \end{enumerate}
 \end{definition}
 
@@ -205,6 +208,18 @@ $A \to \varepsilon$ enth"alt.
   \item Die $(c,s)$-Konstruktion ist ein $G$-Ableitungsbaum.
   \end{enumerate}
 \end{lemma}
+
+
+\section{Spezifikationen}
+
+\begin{definition}[Regeln]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$. Eine
+  \emph{$(A,B)$-Regel} ist ein Paar $(p,c)$ mit $p \in P(A)$ und $c \in \zeta(B)$. 
+\end{definition}
+
+\begin{definition}[Spezifikation]
+  
+\end{definition}
 
 
 \end{document}
