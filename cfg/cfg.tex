@@ -280,5 +280,27 @@ aus $A$ ableitbaren (Terminal-)W"orter.
   $(A,B,\Pi)$-Semantik eine Funktion.
 \end{lemma}
 
+\begin{definition}[Interpreter]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$,
+  $\Pi$ eine $(A,B)$-Spezifikation und $g \subseteq T_A \times T_B^* \times (T_A \uplus T_B)$ eine
+  $(A,B,\Pi)$-Semantik. Eine Relation $\Downarrow\ \subseteq T_A \times T_B$ hei"st
+  \emph{$(A,B,\Pi)$-Interpreter}, wenn sie die kleinste Relation ist, f"ur die gilt
+  (f"ur alle $n \ge 0$):
+  \begin{quote}
+    Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$
+    und $(a,b_1 \ldots b_{i-1},a_i) \in g$ f"ur \\
+    $i=1,\ldots,n$ und $(a,b_1 \ldots b_n,b) \in g$
+    dann $a \Downarrow b$.
+  \end{quote}
+\end{definition}
+
+Offensichtlich existiert zu jedem $\Pi$ nur h"ochstens ein einziger Interpreter.
+
+\begin{lemma}
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Wenn $\Pi$ eindeutig ist, dann ist der 
+  \emph{$(A,B,\Pi)$-Interpreter} eine Funktion. Diese wird dann \emph{eval} genannt.
+\end{lemma}
+
 
 \end{document}
