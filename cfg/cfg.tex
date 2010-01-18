@@ -155,14 +155,17 @@ aus $A$ ableitbaren (Terminal-)W"orter.
 \end{definition}
 
 \begin{definition}[Patternmatching]
-  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik,
-  $A \in N$, $p \in P(A)$ und $(K,\ell)$ ein Ableitungsbaum f"ur $A$ nach $\alpha$. 
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und
+  $A \in N$. Ein \emph{Patternmatching} ist eine Formel der Gestalt $(t,w) \vdash p \to s$,
+  wobei $p \in P(A)$, $t = T_A$ und $s$ eine Substitution. Ein solches
+  Patternmatching hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten
+  l"asst.
   \begin{enumerate}
-  \item $w \vdash \any \to [\,]$.
-  \item $w \vdash \ell(w) \to [\,]$.
-  \item Wenn $x \in V_{\ell(w)}$, dann $w \vdash x \to [\subtree{(K,\ell)}{w}/x]$.
-  \item Wenn $w1,\ldots,wn$ die Kinder von $w$ sind, mit $n \ge 1$, $p_i \vdash wi \to s_i$ f"ur alle
-    $i=1,\ldots,n$ und $s = s_1 \oplus \ldots \oplus s_n$, dann gilt $w \vdash (p_1 \ldots p_n) \to s$.
+  \item $((K,\ell),w) \vdash \any \to [\,]$.
+  \item $((K,\ell),w) \vdash \ell(w) \to [\,]$.
+  \item Wenn $x \in V_{\ell(w)}$, dann $((K,\ell),w) \vdash x \to [\subtree{(K,\ell)}{w}/x]$.
+  \item Wenn $w1,\ldots,wn$ die Kindknoten von $w$ sind, mit $n \ge 1$, $((K,\ell),wi) \vdash p_i \to s_i$ f"ur alle
+    $i=1,\ldots,n$ und $s = s_1 \oplus \ldots \oplus s_n$, dann gilt $((K,\ell),w) \vdash (p_1 \ldots p_n) \to s$.
   \end{enumerate}
 \end{definition}
 
@@ -252,7 +255,7 @@ aus $A$ ableitbaren (Terminal-)W"orter.
   $\Pi$ eine $(A,B)$-Spezifikation.
   \begin{enumerate}
   \item Sei $(p_0,p_1 \ldots p_n) \Uparrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
-    mit $(t_i,\epsilon_i) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
+    mit $(t_i,\varepsilon) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
     Dann ist $(t_0,t_1 \ldots t_n) \Uparrow (c,s)$ eine \emph{$(T_A,T_B^n,T_A)_\Pi$-Transformation}. Die Menge aller
     solchen $\Pi$-Transformationen f"ur gegebenes $n \ge 0$ und $\Pi$ bezeichnen wir mit $(T_A,T_B^n,T_A)_\Pi$.
   \item Sei $(p_0,p_1 \ldots p_n) \Downarrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
