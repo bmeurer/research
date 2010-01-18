@@ -115,6 +115,9 @@ $A \to \varepsilon$ enth"alt.
   \emph{Ableitung} von $\alpha_0$ nach $\alpha_n$, und $n$ hei"st die \emph{L"ange} der Ableitung.
 \end{definition}
 
+$L(A) = \{\alpha \in \Sigma^* \mid A \Rightarrow^* \alpha\}$ bezeichnet die Menge aller
+aus $A$ ableitbaren (Terminal-)W"orter.
+
 \begin{definition}[Ableitungsbaum]
   Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik, $A \in N$ ein Nichtterminalzeichen und
   $\alpha \in (N \uplus \Sigma)^*$ eine Satzform. Ein vollst"andiger Baum
@@ -130,6 +133,8 @@ $A \to \varepsilon$ enth"alt.
     \end{enumerate}
   \item $\leafword{(K,\ell)} = \alpha$.
   \end{enumerate}
+  Mit $T_A$ bezeichnen wir die Menge aller Ableitungsb"aume f"ur $A \Rightarrow^* \alpha$ mit
+  $\alpha \in \Sigma^*$.
 \end{definition}
 
 
@@ -202,7 +207,7 @@ $A \to \varepsilon$ enth"alt.
 
 \begin{lemma}
   Sei $G$ eine $\varepsilon$-freie kontextfreie Grammatik, $c$ ein $G$-Konstruktor und
-  $s$ eine $G$-Substitution mit $\free{c} \subseteq \dom{s}$.
+  $s$ eine $G$-Substitution mit $\var{c} \subseteq \dom{s}$.
   \begin{enumerate}
   \item Es existiert genau eine $(c,s)$-Konstruktion.
   \item Die $(c,s)$-Konstruktion ist ein $G$-Ableitungsbaum.
@@ -213,13 +218,64 @@ $A \to \varepsilon$ enth"alt.
 \section{Spezifikationen}
 
 \begin{definition}[Regeln]
-  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$. Eine
-  \emph{$(A,B)$-Regel} ist ein Paar $(p,c)$ mit $p \in P(A)$ und $c \in \zeta(B)$. 
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$.
+  \begin{enumerate}
+  \item Eine \emph{$(A,B^n,A)$-Regel} ist eine Formel der Gestalt $(p_0,p_1 \ldots p_n) \Uparrow c$ mit
+    $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$, $c \in \zeta(A)$ und $\var{c} \subseteq \bigcup_{i=0,\ldots,n} \var{p_i}$.
+    Die Menge aller solchen Regeln f"ur gegebenes $n \ge 0$ bezeichnen wir mit $(A,B^n,A)$.
+  \item Eine \emph{$(A,B^n,B)$-Regel} ist eine Formel der Gestaltl $(p_0,p_1 \ldots p_n) \Downarrow c$ mit
+    $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$, $c \in \zeta(B)$ und $\var{c} \subseteq \bigcup_{i=0,\ldots,n} \var{p_i}$.
+    Die Menge aller solchen Regeln f"ur gegebenes $n \ge 0$ bezeichnen wir mit $(A,B^n,B)$.
+  \end{enumerate}
+  Sei nun $(A,B^*,A)=\bigcup_{n \ge 0}(A,B^n,A)$ und $(A,B^*,B)=\bigcup_{n \ge 0}(A,B^n,B)$.
 \end{definition}
 
 \begin{definition}[Spezifikation]
-  
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$.
+  Eine \emph{$(A,B)$-Spezifikation} $\Pi$ ist eine nicht-leere Menge von $(A,B^*,A) \cup (A,B^*,B)$.
+  Eine Spezifikation hei"st \emph{eindeutig}, wenn f"ur alle $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$
+  h"ochstens ein $c \in \zeta(A) \cup \zeta(B)$ existiert, so dass entweder
+  \begin{enumerate}
+  \item $(p_0,p_1 \ldots p_n) \Uparrow c$ und $c \in \zeta(A)$, oder
+  \item $(p_0,p_1 \ldots p_n) \Downarrow c$ und $c \in \zeta(B)$.
+  \end{enumerate}
 \end{definition}
+
+
+\pagebreak
+
+
+\section{Semantik}
+
+\begin{definition}[Transformationen]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$ und
+  $\Pi$ eine $(A,B)$-Spezifikation.
+  \begin{enumerate}
+  \item Sei $(p_0,p_1 \ldots p_n) \Uparrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
+    mit $(t_i,\epsilon_i) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
+    Dann ist $(t_0,t_1 \ldots t_n) \Uparrow (c,s)$ eine \emph{$(T_A,T_B^n,T_A)_\Pi$-Transformation}. Die Menge aller
+    solchen $\Pi$-Transformationen f"ur gegebenes $n \ge 0$ und $\Pi$ bezeichnen wir mit $(T_A,T_B^n,T_A)_\Pi$.
+  \item Sei $(p_0,p_1 \ldots p_n) \Downarrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
+    mit $(t_i,\epsilon_i) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
+    Dann ist $(t_0,t_1 \ldots t_n) \Downarrow (c,s)$ eine \emph{$(T_A,T_B^n,T_B)_\Pi$-Transformation}. Die Menge aller
+    solchen $\Pi$-Transformationen f"ur gegebenes $n \ge 0$ und $\Pi$ bezeichnen wir mit $(T_A,T_B^n,T_B)_\Pi$.
+  \end{enumerate}
+  Wir definieren weiter $(T_A,T_B^*,T_A)_\Pi=\bigcup_{n \ge 0}(T_A,T_B^n,T_A)_\Pi$ und \\
+  $(T_A,T_B^*,T_B)_\Pi=\bigcup_{n \ge 0}(T_A,T_B^n,T_B)_\Pi$.
+\end{definition}
+
+\begin{definition}[Semantik]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Die \emph{$(A,B,\Pi)$-Semantik} ist die kleinste
+  Menge $g \subseteq T_A \times T_B^* \times (T_A \uplus T_B)$, die alle $(T_A,T_B^*,T_A)_\Pi$- und
+  $(T_a,T_B^*,T_B)_\Pi$-Transformationen enth"alt.
+\end{definition}
+
+\begin{lemma}
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Wenn $\Pi$ eindeutig ist, dann ist die
+  $(A,B,\Pi)$-Semantik eine Funktion.
+\end{lemma}
 
 
 \end{document}
