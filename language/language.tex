@@ -1,0 +1,83 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Semantik von Programmiersprachen}
+
+\begin{definition}[Programmiersprache]
+  Eine \emph{Programmiersprache} ist ein Tupel $\L = (\Prog,\Obs,\beh)$. Hierbei ist
+  \begin{enumerate}
+  \item $\Prog$ die Menge der syntaktisch korrekten \emph{Programme} von $\L$,
+  \item $\Obs$ eine Menge von \emph{beobachtbaren Verhalten} f"ur $\L$, und
+  \item $\beh: \Prog \to \powerset{\Obs}$ eine Funktion, die jedem $\L$-Programm sein
+    beobachtbares Verhalten zuordnet.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Semantik]
+  Sei $\Obs$ eine beliebige Menge von beobachtbaren Verhalten. Eine \emph{$\Obs$-Semantik} ist
+  ein Tupel $S = (\Exp,D,\semantic{\cdot},\obs)$, bestehend aus
+  \begin{enumerate}
+  \item der Menge $\Exp$ von \emph{Ausdr"ucken},
+  \item dem \emph{semantischen Bereich} $D$,
+  \item der \emph{Semantikfunktion} $\semantic{\cdot}:\Exp \to D$, welche jedem Ausdruck
+    ein Element des semantischen Bereichs zuordnet, und
+  \item der \emph{Beobachtungsfunktion} $\obs:D \to \powerset{\Obs}$, welche jedem Element
+    des semantischen Bereichs sein beobachtbares Verhalten zuordnet.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}
+  Sei $\L=(\Prog,\Obs,\beh)$ eine beliebige Programmiersprache und $S=(\Exp,D,\semantic{\cdot},\obs)$
+  eine $\Obs$-Semantik mit $\Prog \subseteq \Exp$. $S$ hei"st \emph{Semantik f"ur $\L$}, wenn 
+  $\obs(\semantic{e}) = \beh(e)$ f"ur alle $e \in \Prog$.
+  Die Menge aller Semantiken einer Programmiersprache $\L$ bezeichnen wir mit $\Sem(\L)$.
+\end{definition}
+
+\begin{definition}
+  Zwei Semantiken $S_1$ und $S_2$ hei"sen \emph{"aquivalent}, geschrieben $S_1 \sim S_2$, wenn
+  f"ur alle Programmiersprachen $\L$ gilt: $S_1 \in \Sem(\L)$ genau dann wenn $S_2 \in \Sem(\L)$.
+\end{definition}
+
+\begin{definition}[Kompositionalit"at]
+  Eine Semantik $S=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{kompositional}, wenn es eine
+  Familie $C = (C_n)_{n\in\N}$ von \emph{Konstruktoren}
+  $\zeta_n:\Exp^n \to \Exp$ gibt und f"ur jedes $\zeta_n \in C_n$ eine
+  Funktion $\semantic{\zeta_n}: D^n \to D$ existiert, so dass gilt:
+  \begin{enumerate}
+  \item $\Exp$ ist der induktive Abschluss von $C$.
+  \item Wenn $e = \zeta_n (e_1 \ldots e_n)$, dann gilt
+    $\semantic{e} = \semantic{\zeta_n}(\semantic{e_1} \ldots \semantic{e_n})$.
+  \end{enumerate}
+\end{definition}
+
+
+\end{document}
