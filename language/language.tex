@@ -67,17 +67,36 @@
   f"ur alle Programmiersprachen $\L$ gilt: $S_1 \in \Sem(\L)$ genau dann wenn $S_2 \in \Sem(\L)$.
 \end{definition}
 
-\begin{definition}[Kompositionalit"at]
-  Eine Semantik $S=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{kompositional}, wenn es eine
-  Familie $C = (C_n)_{n\in\N}$ von \emph{Konstruktoren}
-  $\zeta_n:\Exp^n \to \Exp$ gibt und f"ur jedes $\zeta_n \in C_n$ eine
-  Funktion $\semantic{\zeta_n}: D^n \to D$ existiert, so dass gilt:
-  \begin{enumerate}
-  \item $\Exp$ ist der induktive Abschluss von $C$.
-  \item Wenn $e = \zeta_n (e_1 \ldots e_n)$, dann gilt
-    $\semantic{e} = \semantic{\zeta_n}(\semantic{e_1} \ldots \semantic{e_n})$.
-  \end{enumerate}
+\begin{lemma}
+  Zwei Semantiken $S_1=(\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und $S_2=(\Exp,D_2,\semantic{\cdot}_2,\obs_2)$,
+  welche die gleiche Menge von Ausdr"ucken beschreiben, sind offensichtlich genau dann "aquivalent, wenn
+  $\obs_1(\semantic{e}_1)=\obs_2(\semantic{e}_2)$ f"ur alle $e \in \Exp$.
+\end{lemma}
+
+\begin{definition}
+  Eine Menge $A$ hei"st \emph{induktiv definiert} durch eine Familie $C = (C_n)_{n\in\N}$ von
+  \emph{Konstruktoren} $\zeta_n$, wenn $A$ der induktive Abschliss von $C$ ist.
 \end{definition}
 
+\begin{definition}[Kompositionalit"at]
+  Sei $\Exp$ induktiv definiert durch $C=(C_n)_{n\in\N}$.
+  Eine Semantik $S=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{$C$-kompositional},
+  wenn zu jedem $\zeta_n \in C_n$ eine Funktion $\semantic{\zeta_n}: D^n \to D$ existiert, so dass gilt:
+  Wenn $e = \zeta_n (e_1 \ldots e_n)$, dann 
+  $\semantic{e} = \semantic{\zeta_n}(\semantic{e_1} \ldots \semantic{e_n})$.
+\end{definition}
+
+\begin{theorem}
+  Sei $\Exp$ induktiv definiert durch $C=(C_n)_{n\in\N}$, und seien \linebreak
+  $S_1 = (\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und $S_2 = (\Exp,D_2,\semantic{\cdot}_2,\obs_2)$
+  $C$-kompositionale Semantiken. $S_1$ und $S_2$ sind "aquivalent, wenn eine Relation
+  $\sim\ \subseteq D_1 \times D_2$ existiert, so dass gilt:
+  \begin{enumerate}
+  \item Wenn $d_{1,i} \sim d_{2,i}$ f"ur $i=1,\ldots,n$, dann gilt
+    \[\semantic{\zeta_n}_1 (d_{1,1} \ldots d_{1,n}) \sim \semantic{\zeta_n}_2 (d_{2,1} \ldots d_{2,n})\]
+    f"ur alle $n \ge 0$ und $\zeta_n \in C_n$.
+  \item Wenn $d_1 \sim d_2$, dann gilt $\obs(d_1) = \obs(d_2)$ f"ur alle $d_1 \in D_1, d_2 \in D_2$.
+  \end{enumerate}
+\end{theorem}
 
 \end{document}
