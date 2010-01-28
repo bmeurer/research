@@ -62,7 +62,7 @@
   wenn $\obs(\semantic{e}) = \beh(e)$ f"ur alle $e \in \L$ gilt.
 \end{definition}
 
-\begin{lemma}
+\begin{lemma} \label{lemma1}
   Sei $(\L,S)$ eine Programmiersprache mit $S = (\Obs,\beh)$ und $M_1 = (\Exp,D_1,\semantic{\cdot}_1,\obs_1)$
   eine ad"aquate $(\L,\Obs)$-Implementierung f"ur $S$.
   Eine weitere $(\L,\Obs)$-Implementierung $M_2=(\Exp,D_2,\semantic{\cdot}_2,\obs_2)$
@@ -95,5 +95,19 @@
   \item Wenn $d_1 \sim d_2$, dann gilt $\obs_1(d_1) = \obs_2(d_2)$.
   \end{enumerate}
 \end{theorem}
+
+\begin{proof}
+  Wir zeigen zun"achst, dass $\semantic{e}_1 \sim \semantic{e}_2$ f"ur alle $e\in\Exp$. Da $M_1$ und $M_2$
+  nach Voraussetzung $C$-kompositional sind, l"a"st sich dies leicht durch Induktion "uber die Struktur
+  von $e$ zeigen:
+  \begin{itemize}
+  \item F"ur $e = \zeta_0$ folgt nach Voraussetzung unmittelbar $\semantic{\zeta_0}_1 \sim \semantic{\zeta_0}_2$.
+  \item F"ur $e = \zeta_n(e_1 \ldots e_n)$ folgt zun"achst nach Induktionsvoraussetzung, dass
+    $\semantic{e_i}_1 \sim \semantic{e_i}_2$ f"ur alle $i=1,\ldots,n$ gilt. Daraus folgt dann unmittelbar,
+    dass auch $\semantic{\zeta_n(e_1 \ldots e_n)}_1 \sim \semantic{\zeta_n(e_1 \ldots e_n)}_2$ gilt.
+  \end{itemize}
+  $\semantic{e}_1 \sim \semantic{e}_2$ wiederum impliziert $\obs_1(\semantic{e}_1)=\obs_2(\semantic{e}_2)$,
+  also ist nach Lemma~\ref{lemma1} $M_2$ ebenfalls ad"aquat.
+\end{proof}
 
 \end{document}
