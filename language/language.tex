@@ -32,45 +32,41 @@
 
 \section{Semantik von Programmiersprachen}
 
-\begin{definition}[Programmiersprache]
-  Eine \emph{Programmiersprache} ist ein Tupel $\L = (\Prog,\Obs,\beh)$. Hierbei ist
+\begin{definition}[Syntax]
+  Eine \emph{Syntax} ist eine Menge $\L$ von syntaktisch korrekten Programmen.
+\end{definition}
+
+\begin{definition}[Semantik]
+  Sei $\L$ eine Syntax. Eine \emph{$\L$-Semantik} ist ein Paar $S = (\Obs,\beh)$.
+  Hierbei ist
   \begin{enumerate}
-  \item $\Prog$ die Menge der syntaktisch korrekten \emph{Programme} von $\L$,
-  \item $\Obs$ eine Menge von \emph{beobachtbaren Verhalten} f"ur $\L$, und
-  \item $\beh: \Prog \to \powerset{\Obs}$ eine Funktion, die jedem $\L$-Programm sein
+  \item $\Obs$ eine Menge von \emph{beobachtbaren Verhalten}, und
+  \item $\beh: \L \to \powerset{\Obs}$ eine \emph{Beobachtungsfunktion}, die jedem $\L$-Programm
     beobachtbares Verhalten zuordnet.
   \end{enumerate}
 \end{definition}
 
-\begin{definition}[Semantik]
-  Sei $\Obs$ eine beliebige Menge von beobachtbaren Verhalten. Eine \emph{$\Obs$-Semantik} ist
-  ein Tupel $S = (\Exp,D,\semantic{\cdot},\obs)$, bestehend aus
+\begin{definition}[Implementierung]
+  Sei $\L$ eine Syntax und sei $\Obs$ eine Menge von beobachtbaren Verhalten.
+  Eine \emph{$(\L,\Obs)$-Implementierung} ist ein Tupel $M = (\Exp,D,\semantic{\cdot},\obs)$,
+  bestehend aus
   \begin{enumerate}
-  \item der Menge $\Exp$ von \emph{Ausdr"ucken},
+  \item der Menge $\Exp \supseteq \L$ von \emph{Ausdr"ucken},
   \item dem \emph{semantischen Bereich} $D$,
   \item der \emph{Semantikfunktion} $\semantic{\cdot}:\Exp \to D$, welche jedem Ausdruck
     ein Element des semantischen Bereichs zuordnet, und
-  \item der \emph{Beobachtungsfunktion} $\obs:D \to \powerset{\Obs}$, welche jedem Element
-    des semantischen Bereichs sein beobachtbares Verhalten zuordnet.
+  \item der \emph{Bewertungsfunktion} $\obs:D \to \powerset{\Obs}$, welche jedes Element
+    des semantischen Bereichs als beobachtbares Verhalten bewertet.
   \end{enumerate}
-\end{definition}
-
-\begin{definition}
-  Sei $\L=(\Prog,\Obs,\beh)$ eine beliebige Programmiersprache und $S=(\Exp,D,\semantic{\cdot},\obs)$
-  eine $\Obs$-Semantik mit $\Prog \subseteq \Exp$. $S$ hei"st \emph{Semantik f"ur $\L$}, wenn 
-  $\obs(\semantic{e}) = \beh(e)$ f"ur alle $e \in \Prog$.
-  Die Menge aller Semantiken einer Programmiersprache $\L$ bezeichnen wir mit $\Sem(\L)$.
-\end{definition}
-
-\begin{definition}
-  Zwei Semantiken $S_1$ und $S_2$ hei"sen \emph{"aquivalent}, geschrieben $S_1 \sim S_2$, wenn
-  f"ur alle Programmiersprachen $\L$ gilt: $S_1 \in \Sem(\L)$ genau dann wenn $S_2 \in \Sem(\L)$.
+  Eine Implementierung hei"st \emph{ad"aquat} f"ur eine $\L$-Semantik $S=(\Obs,\beh)$,
+  wenn $\obs(\semantic{e}) = \beh(e)$ f"ur alle $e \in \L$ gilt.
 \end{definition}
 
 \begin{lemma}
-  Zwei Semantiken $S_1=(\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und $S_2=(\Exp,D_2,\semantic{\cdot}_2,\obs_2)$,
-  welche die gleiche Menge von Ausdr"ucken beschreiben, sind offensichtlich genau dann "aquivalent, wenn
-  $\obs_1(\semantic{e}_1)=\obs_2(\semantic{e}_2)$ f"ur alle $e \in \Exp$.
+  Sei $(\L,S)$ eine Programmiersprache mit $S = (\Obs,\beh)$ und $M_1 = (\Exp,D_1,\semantic{\cdot}_1,\obs_1)$
+  eine ad"aquate $(\L,\Obs)$-Implementierung f"ur $S$.
+  Eine weitere $(\L,\Obs)$-Implementierung $M_2=(\Exp,D_2,\semantic{\cdot}_2,\obs_2)$
+  ist ad"aquat f"ur $S$, wenn $\obs_1(\semantic{e}_1) = \obs_2(\semantic{e}_2)$ f"ur alle $e \in \Exp$.
 \end{lemma}
 
 \begin{definition}
@@ -79,23 +75,24 @@
 \end{definition}
 
 \begin{definition}[Kompositionalit"at]
-  Sei $\Exp$ induktiv definiert durch $C=(C_n)_{n\in\N}$.
-  Eine Semantik $S=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{$C$-kompositional},
+  Sei $\Exp$ induktiv definiert durch die Familie $C=(C_n)_{n\in\N}$.
+  Eine Implementierung $M=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{$C$-kompositional},
   wenn zu jedem $\zeta_n \in C_n$ eine Funktion $\semantic{\zeta_n}: D^n \to D$ existiert, so dass gilt:
   Wenn $e = \zeta_n (e_1 \ldots e_n)$, dann 
   $\semantic{e} = \semantic{\zeta_n}(\semantic{e_1} \ldots \semantic{e_n})$.
 \end{definition}
 
 \begin{theorem}
-  Sei $\Exp$ induktiv definiert durch $C=(C_n)_{n\in\N}$, und seien \linebreak
-  $S_1 = (\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und $S_2 = (\Exp,D_2,\semantic{\cdot}_2,\obs_2)$
-  $C$-kompositionale Semantiken. $S_1$ und $S_2$ sind "aquivalent, wenn eine Relation
-  $\sim\ \subseteq D_1 \times D_2$ existiert, so dass gilt:
+  Sei $(\L,S)$ eine Programmiersprache mit $S=(\Obs,\beh)$, $\Exp$ induktiv definiert durch
+  $C=(C_n)_{n\in\N}$, und seien $M_1=(\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und
+  $M_2 = (\Exp,D_2,\semantic{\cdot}_2,\obs_2)$ $C$-kompositionale $(\L,\Obs)$-Implementierungen.
+  $M_2$ ist ad"aquat f"ur $S$, wenn $M_1$ ad"aquat f"ur $S$ und eine Relation $\sim\ \subseteq D_1 \times D_2$
+  existiert, so dass gilt:
   \begin{enumerate}
   \item Wenn $d_{1,i} \sim d_{2,i}$ f"ur $i=1,\ldots,n$, dann gilt
     \[\semantic{\zeta_n}_1 (d_{1,1} \ldots d_{1,n}) \sim \semantic{\zeta_n}_2 (d_{2,1} \ldots d_{2,n})\]
     f"ur alle $n \ge 0$ und $\zeta_n \in C_n$.
-  \item Wenn $d_1 \sim d_2$, dann gilt $\obs(d_1) = \obs(d_2)$ f"ur alle $d_1 \in D_1, d_2 \in D_2$.
+  \item Wenn $d_1 \sim d_2$, dann gilt $\obs_1(d_1) = \obs_2(d_2)$.
   \end{enumerate}
 \end{theorem}
 
