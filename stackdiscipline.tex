@@ -327,4 +327,47 @@ notwendige Erweiterung des Beweises f"ur Theorem~\ref{theorem1}.
 \end{proof}
 
 
+\subsection{Simultane Rekursion}
+
+Simultane Rekursion erfordert eine etwas subtilere Vorgehensweise. Hierbei ist entscheidend, dass
+mehrere Funktionen auf die gleiche (rekursive) Umgebung Bezug nehmen. Zun"achst wird die Syntax
+verallgemeinert:
+\[\begin{grammar}
+  e \is \letrec{f_1,\ldots,f_n}{e}
+\end{grammar}\]
+In den Umgebungen muss jetzt festgehalten werden, dass diese $f_1,\ldots,f_n$ auf ``gleicher Ebene''
+stehen. Entsprechend sehen die verallgemeinerten Eintr"age
+\[\begin{grammar}
+  \eta \is \eta;(f_1,\ldots,f_n)
+\end{grammar}\]
+und die verallgemeinerten Regeln aus: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $\RULE{0 \le i \le n}{(\underline{i},\eta;(f_n,\ldots,f_0)) \Downarrow (f_i,\eta;(f_n,\ldots,f_0))}$ \\[3mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\eta) \Downarrow v \quad i \ge 1}{(\underline{i+n},\eta;(f_1,\ldots,f_n)) \Downarrow v}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\eta;(f_1,\ldots,f_n)) \Downarrow c}{(\letrec{f_1,\ldots,f_n}{e},\eta) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+Der Trick besteht -- wie unschwer zu erkennen -- darin, alle simultan rekursiv definierten Funktionen
+bzgl. der Umgebung als Einheit zu betrachten.
+
+Auf analoge Weise l"asst sich jetzt die Stacksemantik verallgemeinern, durch neue Eintr"age
+\[\begin{grammar}
+  d \is (f_1,\ldots,f_n)
+\end{grammar}\]
+und neue Regeln: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $\RULE{0 \le i \le n}{(\underline{i},\sigma;(f_n,\ldots,f_0)) \Downarrow (f_i,|\sigma|+1)}$ \\[3mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\sigma) \Downarrow w \quad i \ge 1}{(\underline{i+n},\sigma;(f_1,\ldots,f_n)) \Downarrow w}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\sigma;(f_1,\ldots,f_n)) \Downarrow c}{(\letrec{f_1,\ldots,f_n}{e},\sigma) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+
+\subsubsection{Zusammenhang}
+
+Der Beweis l"auft analog zur einfachen Rekursion. Die Relation $\sigma \sim \eta$ muss erweitert werden
+durch folgende Regel: \\[5mm]
+\begin{tabular}{c}
+  $\RULE{\sigma \sim \eta}{\sigma;(f_1,\ldots,f_n) \sim \eta;(f_1,\ldots,f_n)}$ \\[3mm]
+\end{tabular} \\[5mm]
+Der Beweis von Theorem~\ref{theorem1} f"ur simultane Rekursion bleibt dem Leser "uberlassen.
+
+
 \end{document}
