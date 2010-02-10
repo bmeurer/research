@@ -1,0 +1,121 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2010 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% 
+
+
+%%
+%% Styles
+%%
+
+\newcommand{\sstyle}[1]{\ensuremath{\mathit{#1}}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\any}{\ensuremath{\mathbf{any}}}
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\step}{\ensuremath{\rightsquigarrow}}
+
+\newcommand{\lookup}{\ensuremath{\mathit{lookup}}}
+\newcommand{\update}{\ensuremath{\mathit{update}}}
+
+\newcommand{\dlookup}{\mbox{$\mathit{d}$-\lookup}}
+\newcommand{\dupdate}{\mbox{$\mathit{d}$-\update}}
+\newcommand{\slookup}{\mbox{$\mathit{s}$-\lookup}}
+\newcommand{\supdate}{\mbox{$\mathit{s}$-\update}}
+
+
+%%
+%% Functions
+%%
+
+\newcommand{\brother}[1]{\ensuremath{\mathit{brother}\,(#1)}}
+\newcommand{\dom}[1]{\ensuremath{\mathit{dom}\,(#1)}}
+\newcommand{\free}[1]{\ensuremath{\mathit{free}\,(#1)}}
+\newcommand{\height}[1]{\ensuremath{\mathit{height}\,(#1)}}
+\newcommand{\parent}[1]{\ensuremath{\mathit{parent}\,(#1)}}
+\newcommand{\powerset}[1]{\ensuremath{\mathcal{P}\,(#1)}}
+\newcommand{\powersetfin}[1]{\ensuremath{\mathcal{P}_{fin}\,(#1)}}
+\newcommand{\subtree}[2]{\ensuremath{\mathit{subtree}\,(#1,#2)}}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\N}{\ensuremath{\mathbb N}}
+
+\newcommand{\Const}{\ensuremath{\textsc{Const}}}
+\newcommand{\Env}{\ensuremath{\textsc{Env}}}
+\newcommand{\Exp}{\ensuremath{\textsc{Exp}}}
+\newcommand{\Ide}{\ensuremath{\textsc{Ide}}}
+\newcommand{\Val}{\ensuremath{\textsc{Val}}}
+\newcommand{\Var}{\ensuremath{\textsc{Var}}}
+
+\newcommand{\dEnv}{\mbox{d-\Env}}
+\newcommand{\dVal}{\mbox{d-\Val}}
+\newcommand{\sEnv}{\mbox{s-\Env}}
+\newcommand{\sVal}{\mbox{s-\Val}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\ide}{\ensuremath{\mathit{ide}}}
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+\newcommand{\letin}[3]{\mathbf{let}\,{#1}={#2}\,\mathbf{in}\,{#3}}
+
+
+%%
+%% Values
+%%
+
+\newcommand{\clov}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\false}{\mathbf{false}}
+\newcommand{\true}{\mathbf{true}}
+
+
+%%
+%% Grammars
+%%
+
+\newenvironment{grammar}{\begin{array}{rrlll}}{\end{array}}
+
+\newcommand{\is}{& ::= &}
+\newcommand{\al}{\\ & \mid &}
+\newcommand{\nl}{\vspace{2mm}\\}
+
+
+%%
+%% Rules
+%%
+
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+
+\newcommand{\RULE}[2]{\begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}}
+
+\newcommand{\da}[3]{{#1}\vdash{#2}\div{#3}}
+\newcommand{\ej}[3]{{#1}\vdash{#2}:{#3}}
+\newcommand{\match}[3]{{#1}\vdash{#2}\to{#3}}
+\newcommand{\Tjr}[2]{{#1}:{#2}}
+\newcommand{\Tjc}[3]{{#1}\vdash{#2}\div{#3}}
+
+
+%%
+%% Other environments
+%%
+
+\newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "nameless"
+%%% End: 
