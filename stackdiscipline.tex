@@ -54,10 +54,11 @@ Ein \emph{big step} ist eine Formel der Gestalt $(e,\eta) \Downarrow v$ und hei"
 wenn er sich mit den folgenden Regeln sowie den nicht angegebenen Regeln f"ur Konstanten herleiten
 l"asst: \\[5mm]
 \begin{tabular}{rl}
-  \RN{Beta-V} & $\RULE{(e_1,\eta) \Downarrow (\abstr{}{e'},\eta') \quad (e_2,\eta) \Downarrow v' \quad (e',\eta';v') \Downarrow c}{(\app{e_1}{e_2},\eta) \Downarrow c}$ \\[3mm]
+  \RN{Const} & $(c,\eta) \Downarrow c$ \\[1mm]
   \RN{Closure} & $(f,\eta) \Downarrow (f,\eta)$ \\[1mm]
   \RN{Var} & $(\underline{0},\eta;v) \Downarrow v$ \\[1mm]
   \RN{Skip} & $\RULE{(\underline{i},\eta) \Downarrow v'}{(\underline{i+1},\eta;v) \Downarrow v'}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\eta) \Downarrow (\abstr{}{e'},\eta') \quad (e_2,\eta) \Downarrow v' \quad (e',\eta';v') \Downarrow c}{(\app{e_1}{e_2},\eta) \Downarrow c}$ \\[3mm]
 \end{tabular} \\[5mm]
 Wie man sieht, handelt es sich um eine eingeschr"ankte Semantik f"ur Stackdisziplin, da Funktionen
 niemals als Ergebnis anderer Funktionen auftreten k"onnen und somit Bindungen niemals "uber ihren
@@ -83,10 +84,11 @@ Ein \emph{big step} ist eine Formel der Gestalt $(e,\sigma) \Downarrow w$ und he
 wenn er sich mit den folgenden Regeln sowie den wiederum nicht angegebenen Regeln f"ur Konstanten
 herleiten l"asst: \\[5mm]
 \begin{tabular}{rl}
-  \RN{Beta-V} & $\RULE{(e_1,\sigma) \Downarrow (\abstr{}{e'},n') \quad (e_2,\sigma) \Downarrow w' \quad (e',\sigma;[w',n']) \Downarrow c}{(\app{e_1}{e_2},\sigma) \Downarrow c}$ \\[3mm]
+  \RN{Const} & $(c,\sigma) \Downarrow c$ \\[1mm]
   \RN{Closure} & $(f,\sigma) \Downarrow (f,|\sigma|)$ \\[1mm]
   \RN{Var} & $(\underline{0},\sigma;[w,n]) \Downarrow w$ \\[1mm]
   \RN{Skip} & $\RULE{(\underline{i},\sigma^n) \Downarrow w'}{(\underline{i+1},\sigma;[w,n]) \Downarrow w'}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\sigma) \Downarrow (\abstr{}{e'},n') \quad (e_2,\sigma) \Downarrow w' \quad (e',\sigma;[w',n']) \Downarrow c}{(\app{e_1}{e_2},\sigma) \Downarrow c}$ \\[3mm]
 \end{tabular} \\[5mm]
 
 
@@ -127,15 +129,17 @@ Insgesamt gilt folgender Zusammenhang zwischen den beiden Semantiken:
   \item Induktion "uber die L"ange der Herleitung von $(e,\sigma) \Downarrow w$ mit Fallunterscheidung
     "uber die zuletzt angewandten Regel:
     \begin{itemize}
-    \item[\RN{Var}] Dann gilt $(\underline{0},\sigma;[w,n]) \Downarrow w$. Weiterhin m"ussen $v$ und $\eta$
-      existieren mit $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$. Nach Lemma~\ref{lemma1}
-      folgt $\sigma;[w,n] \models w \sim v$. Trivialerweise existiert auch ein big step
-      $(\underline{0},\eta;v) \Downarrow v$ mit \RN{Var} in der Umgebungssemantik.
+    \item[\RN{Const}] Trivial.
 
     \item[\RN{Closure}] Dann gilt $(f,\sigma) \Downarrow (f,|\sigma|)$. Andererseits
       existiert auch ein big step $(f,\eta) \Downarrow (f,\eta)$ mit \RN{Closure} in
       der Umgebungssemantik. Da $\sigma^{|\sigma|} = \sigma$ und nach Voraussetzung $\sigma \sim \eta$
       gilt, folgt unmittelbar $\sigma \models (f,|\sigma|) \sim (f,\eta)$.
+
+    \item[\RN{Var}] Dann gilt $(\underline{0},\sigma;[w,n]) \Downarrow w$. Weiterhin m"ussen $v$ und $\eta$
+      existieren mit $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$. Nach Lemma~\ref{lemma1}
+      folgt $\sigma;[w,n] \models w \sim v$. Trivialerweise existiert auch ein big step
+      $(\underline{0},\eta;v) \Downarrow v$ mit \RN{Var} in der Umgebungssemantik.
 
     \item[\RN{Skip}] Dann gilt $(\underline{i+1},\sigma;[w,n]) \Downarrow w'$, was nur aus
       $(\underline{i},\sigma^n) \Downarrow w'$ folgen kann. Weiterhin m"ussen $v$ und $\eta$ existieren
@@ -170,15 +174,17 @@ Insgesamt gilt folgender Zusammenhang zwischen den beiden Semantiken:
   \item Induktion "uber die L"ange der Herleitung von $(e,\eta) \Downarrow v$ und Fallunterscheidung
     nach der zuletzt angewandten Regel:
     \begin{itemize}
-    \item[\RN{Var}] Dann gilt $(\underline{0},\eta;v) \Downarrow v$. Weiterhin m"ussen $w$, $\sigma$
-      und $n$ existieren, so dass $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$ gilt.
-      Nach Lemma~\ref{lemma1} gilt ebenfalls $\sigma;[w,n] \models w \sim v$ und der big step
-      $(\underline{0},\sigma;[w,n]) \Downarrow w$ existiert in der Stacksemantik wegen Regel \RN{Var}.
+    \item[\RN{Const}] Trivial.
 
     \item[\RN{Closure}] Dann gilt $(f,\eta) \Downarrow (f,\eta)$. Andererseits
       existiert auch ein big step $(f,\sigma) \Downarrow (f,|\sigma|)$ mit
       \RN{Closure} in der Stacksemantik. Da $\sigma^{|\sigma|} = \sigma$ und nach Voraussetzung
       $\sigma \sim \eta$ gilt, folgt $\sigma \models (f,|\sigma|) \sim (f,\eta)$.
+
+    \item[\RN{Var}] Dann gilt $(\underline{0},\eta;v) \Downarrow v$. Weiterhin m"ussen $w$, $\sigma$
+      und $n$ existieren, so dass $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$ gilt.
+      Nach Lemma~\ref{lemma1} gilt ebenfalls $\sigma;[w,n] \models w \sim v$ und der big step
+      $(\underline{0},\sigma;[w,n]) \Downarrow w$ existiert in der Stacksemantik wegen Regel \RN{Var}.
 
     \item[\RN{Skip}] Dann gilt $(\underline{i+1},\eta;v) \Downarrow v'$, was nur aus
       $(\underline{i},\eta) \Downarrow v'$ folgen kann. Weiterhin m"ussen $\sigma$, $w$ und $n$ existieren,
@@ -218,6 +224,42 @@ Insgesamt gilt folgender Zusammenhang zwischen den beiden Semantiken:
 
 
 \section{Erweiterungen}
+
+
+\subsection{Paare}
+
+Die Syntax der Programmiersprache wird um Paare und Projektionen erweitert:
+\[\begin{grammar}
+  c \is (c_1,c_2) \mid \fst \mid \snd
+  \nl
+  e \is (e_1,e_2)
+\end{grammar}\]
+Die Werte m"ussen um Paarwerte erweitert werden
+\[\begin{grammar}
+  v \is (v_1,v_2)
+\end{grammar}\]
+und folgende neue Regeln m"ussen zur Umgebungssemantik hinzugenommen werden: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Fst} & $\RULE{(e_1,\eta) \Downarrow \fst \quad (e_2,\eta) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\eta) \Downarrow v_1}$ \\[3mm]
+  \RN{Snd} & $\RULE{(e_1,\eta) \Downarrow \snd \quad (e_2,\eta) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\eta) \Downarrow v_2}$ \\[3mm]
+  \RN{Pair} & $\RULE{(e_1,\eta) \Downarrow v_1 \quad (e_2,\eta) \Downarrow v_2}{((e_1,e_2),\eta) \Downarrow (v_1,v_2)}$ \\[3mm]
+\end{tabular} \\[5mm]
+In der Stacksemantik kommen ebenfalls neue Werte
+\[\begin{grammar}
+  w \is (w_1,w_2)
+\end{grammar}\]
+und neue Regeln hinzu: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Fst} & $\RULE{(e_1,\sigma) \Downarrow \fst \quad (e_2,\sigma) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\sigma) \Downarrow v_1}$ \\[3mm]
+  \RN{Snd} & $\RULE{(e_1,\sigma) \Downarrow \snd \quad (e_2,\sigma) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\sigma) \Downarrow v_2}$ \\[3mm]
+  \RN{Pair} & $\RULE{(e_1,\sigma) \Downarrow v_1 \quad (e_2,\sigma) \Downarrow v_2}{((e_1,e_2),\sigma) \Downarrow (v_1,v_2)}$ \\[3mm]
+\end{tabular}
+
+\subsubsection{Zusammenhang}
+
+Es ist trivial einzusehen, dass die Zusammenh"ange in Theorem~\ref{theorem1} nach wie vor gelten, da die
+neuen Regeln das $\sigma$ bzw. $\eta$ unver"andert durchreichen.
+
 
 \subsection{Rekursion}
 
@@ -283,5 +325,6 @@ notwendige Erweiterung des Beweises f"ur Theorem~\ref{theorem1}.
   \item Diese Richtung verl"auft analog. Sie bleibt dem geneigten Leser als "Ubung "uberlassen.
   \end{enumerate}
 \end{proof}
+
 
 \end{document}
