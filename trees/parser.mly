@@ -29,7 +29,7 @@
 %type <Ast.expression> expr
 %type <Ast.expression list> expr_comma_list
 %type <Ast.expression> simple_expr
-%type <Ast.expression list> simple_expr_list
+%type <Ast.expression> simple_app_expr
 %type <Ast.expression> main
 
 %%
@@ -65,12 +65,11 @@ value_comma_list:
 ;
 
 expr:
-  simple_expr                  { $1 }
-| simple_expr simple_expr_list { mkapp $1 $2 }
-| LAMBDA ID DOT expr           { Ast.Exp_abstr ($2, $4) }
-| IF expr THEN expr ELSE expr  { Ast.Exp_if ($2, $4, $6) }
-| LET ID EQ expr IN expr       { Ast.Exp_let ($2, $4, $6) }
-| LET REC ID EQ value IN expr  { Ast.Exp_letrec ($3, $5, $7) }
+  simple_app_expr             { $1 }
+| LAMBDA ID DOT expr          { Ast.Exp_abstr ($2, $4) }
+| IF expr THEN expr ELSE expr { Ast.Exp_if ($2, $4, $6) }
+| LET ID EQ expr IN expr      { Ast.Exp_let ($2, $4, $6) }
+| LET REC ID EQ value IN expr { Ast.Exp_letrec ($3, $5, $7) }
 ;
 
 expr_comma_list:
@@ -85,9 +84,9 @@ simple_expr:
 | LPAREN expr COMMA expr_comma_list RPAREN { Ast.Exp_tuple ($2 :: $4) }
 ;
 
-simple_expr_list:
-  simple_expr                  { [$1] }
-| simple_expr_list simple_expr { $2 :: $1 }
+simple_app_expr:
+  simple_expr                 { $1 }
+| simple_app_expr simple_expr { Ast.Exp_app($1, $2) }
 ;
 
 main:

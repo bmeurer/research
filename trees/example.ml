@@ -10,3 +10,4 @@ let fact_source = "let rec fact = lambda x.if =(x,0) then 1 else *(x,fact (-(x,1
 let fact_expr = Syntax.expression_from_string fact_source;;
 
 let fact_tree = Syntax.tree_from_expression fact_expr;;
+
