@@ -24,6 +24,8 @@
 %start main
 %type <Ast.operator> op
 %type <Ast.constant> const
+%type <Ast.expression> value
+%type <Ast.expression list> value_comma_list
 %type <Ast.expression> expr
 %type <Ast.expression list> expr_comma_list
 %type <Ast.expression> simple_expr
@@ -50,13 +52,25 @@ const:
 | PROJ { Ast.Const_proj $1 }
 ;
 
+value:
+  const                                      { Ast.Exp_const $1 }
+| LAMBDA ID DOT expr                         { Ast.Exp_abstr ($2, $4) }
+| LPAREN value COMMA value_comma_list RPAREN { Ast.Exp_tuple ($2 :: $4) }
+| LPAREN value RPAREN                        { $2 }
+;
+
+value_comma_list:
+  value                        { [$1] }
+| value COMMA value_comma_list { $1 :: $3 }
+;
+
 expr:
   simple_expr                  { $1 }
 | simple_expr simple_expr_list { mkapp $1 $2 }
 | LAMBDA ID DOT expr           { Ast.Exp_abstr ($2, $4) }
 | IF expr THEN expr ELSE expr  { Ast.Exp_if ($2, $4, $6) }
 | LET ID EQ expr IN expr       { Ast.Exp_let ($2, $4, $6) }
-| LET REC ID EQ expr IN expr   { Ast.Exp_letrec ($3, $5, $7) }
+| LET REC ID EQ value IN expr  { Ast.Exp_letrec ($3, $5, $7) }
 ;
 
 expr_comma_list:
