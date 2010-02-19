@@ -1,14 +1,5 @@
 /*** parser.mly - ocamlyacc parser for Ast ***/
 
-%{
-  let mkapp (e:Ast.expression) (el:Ast.expression list): Ast.expression =
-    let rec mkapp_helper el =
-      match el with
-          [] -> e
-        | e :: el -> Ast.Exp_app(mkapp_helper el, e)
-    in mkapp_helper el
-%}
-
 %token <int> INT
 %token <bool> BOOL
 %token <Ast.identifier> ID
