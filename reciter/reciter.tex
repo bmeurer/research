@@ -180,8 +180,20 @@ Implementierung $\gamma_\sigma = (\id_A,\sigma,\id_B)$.
 \subsection{"Aquivalenz}
 
 \begin{definition}
+  Seien $f:A \pto B$ und $f':A' \pto B'$ rekursiv definierbare Funktionen und
+  sei $\sim\ \subseteq (A \times A') \uplus (B \times B')$. $f$ und $f'$ hei"sen
+  \emph{"aquivalent bzgl. $\sim$}, geschrieben $f \sim f'$, wenn f"ur
+  alle $a \sim a'$ entweder
+  \begin{enumerate}
+  \item $f(a)$ und $f'(a')$ sind undefiniert, oder
+  \item $f(a) \sim f'(a')$
+  \end{enumerate}
+  gilt.
+\end{definition}
+
+\begin{definition}
   Seien $\sigma:A \Rightarrow B$, $\sigma': A' \Rightarrow B'$ und $\sim\ \subseteq (A \times A') \uplus (B \times B')$.
-  $\sigma$ und $\sigma'$ hei"sen \emph{strikt "aquivalent bzgl. $\sim$}, geschrieben $\sigma \sim \sigma'$,
+  $\sigma$ und $\sigma'$ hei"sen \emph{"aquivalent bzgl. $\sim$}, geschrieben $\sigma \sim \sigma'$,
   wenn f"ur alle $n \in \N$ gilt:
   \begin{quote}
     Wenn $a \sim a'$ und $b_i \sim b_i'$ f"ur $i=1,\ldots,n$, dann gilt entweder
@@ -190,22 +202,14 @@ Implementierung $\gamma_\sigma = (\id_A,\sigma,\id_B)$.
     \item $\sigma(a,b_1 \ldots b_n) \sim \sigma'(a',b_1' \ldots b_n')$.
     \end{enumerate}
   \end{quote}
-  Zwei (rekursiv definierbare) Funktionen $f:A \pto B$ und $f':A' \pto B$ hei"sen
-  \emph{strikt "aquivalent bzgl. $\sim$}, geschrieben $f \sim f'$, wenn zwei Rekursionsschemata
-  $\sigma:A \Rightarrow B$ und $\sigma':A' \Rightarrow B'$ existieren, so dass $f = \Lambda \sigma$,
-  $f' = \Lambda \sigma'$ und $\sigma \sim \sigma'$ gilt.
 \end{definition}
 
 \begin{corollary}
-  Wenn $f \sim f'$ und $a \sim a'$, dann gilt entweder
-  \begin{enumerate}
-  \item $f(a)$ und $f'(a')$ sind undefiniert, oder
-  \item $f(a) \sim f'(a')$.
-  \end{enumerate}
+  Wenn $\sigma \sim \sigma'$, dann $\Can(\sigma) \sim \Can(\sigma')$.
 \end{corollary}
 
 \begin{corollary}
-  Wenn $\sigma \sim \sigma'$, dann $\Can(\sigma) \sim \Can(\sigma')$.
+  Wenn $\sigma \sim \sigma'$, dann $\Lambda \sigma \sim \Lambda \sigma'$.
 \end{corollary}
 
 \end{document}
