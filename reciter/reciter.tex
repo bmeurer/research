@@ -153,12 +153,12 @@ Isomorphie.
 \subsection{Implementierung}
 
 \begin{definition}[Implementierung]
-  Seien $A,B$ und $A',B'$ disjunkte Mengen. Eine \emph{$(A,B)$-Implementierung} ist ein Tripel
-  $\gamma = (\phi,\psi,\sigma)$ mit
+  Seien $A',B'$ disjunkte Mengen. Eine \emph{$(A,B)$-Implementierung} ist ein Tripel
+  $\gamma = (\phi,\sigma,\psi)$ mit
   \begin{enumerate}
   \item $\phi:A \pto A'$,
-  \item $\psi:B' \pto B$, und
-  \item $\sigma: A' \Rightarrow B'$.
+  \item $\sigma: A' \Rightarrow B'$, und
+  \item $\psi:B' \pto B$.
   \end{enumerate}
   Die durch $\gamma$ \emph{implementierte Funktion $\Lambda\gamma: A \pto B$} ist definiert
   durch\footnote{Hierbei ist $\circ$ die auf partielle Funktionen verallgemeinerte Komposition.}
@@ -168,7 +168,7 @@ Isomorphie.
 \end{definition}
 Sei $f: A \pto B$. $\gamma$ hei"st \emph{Implementierung von $f$}, wenn $f = \Lambda \gamma$.
 Offensichtlich definiert jedes Rekursionsschema $\sigma:A \Rightarrow B$ eine triviale
-Implementierung $\gamma_\sigma = (\id_A,\id_B,\sigma)$.
+Implementierung $\gamma_\sigma = (\id_A,\sigma,\id_B)$.
 
 \begin{definition}
   Zwei $(A,B)$-Implementierungen $\gamma$ und $\gamma'$ hei"sen \emph{isomorph}, geschrieben
