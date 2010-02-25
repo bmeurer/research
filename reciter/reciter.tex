@@ -208,8 +208,39 @@ Implementierung $\gamma_\sigma = (\id_A,\sigma,\id_B)$.
   Wenn $\sigma \sim \sigma'$, dann $\Can(\sigma) \sim \Can(\sigma')$.
 \end{corollary}
 
-\begin{corollary}
+\begin{corollary} \label{corollary:Equiv}
   Wenn $\sigma \sim \sigma'$, dann $\Lambda \sigma \sim \Lambda \sigma'$.
 \end{corollary}
+
+
+\section{Anwendungen}
+
+\subsection{"Aquivalenz zwischen Substitutions- und Umgebungssemantik}
+
+Sei $S: \Exp \Rightarrow \Val$ das Rekursionsschema der Substitutionssemantik und
+$U: \Exp \times \Env \Rightarrow \Val \times \Env$ das Rekursionsschema der Umgebungssemantik,
+wobei $\Val \subseteq \Exp$.
+Der intuitive Zusammenhang ist, dass jedes Paar $(e,\eta)$ Darstellung eines
+(abgeschlossenen) Ausdrucks ist. Sei dazu
+\[\begin{array}{rcl}
+  \tr(e,\eta) &=& e[\tr(e_1,\eta_1),\ldots,\tr(e_n,\eta_n)]
+\end{array}\]
+f"ur $\eta = [(e_1,\eta_1);\ldots;(e_n,\eta_n)]$. Dann definieren wir die "Aquivalenzrelation
+durch
+\[\begin{array}{rcl}
+  e_0 \sim (e,\eta) &\text{gdw.}& e_0 = \tr(e,\eta).
+\end{array}\]
+Nach Korollar~\ref{corollary:Equiv} gilt $\Lambda S \sim \Lambda U$, wenn $S \sim U$. Auf diese
+Weise bleibt uns die Induktion erspart und wir m"ussen lediglich zeigen, dass 
+\[\begin{array}{rcl}
+  S(\tr(e,\eta)) = \tr(U(e,eta))
+\end{array}\]
+f"ur alle $e,\eta$ gilt. Dann n"amlich folgt
+\[\begin{array}{rcl}
+  \Lambda S \circ \tr = \tr \circ \Lambda U.
+\end{array}\]
+Dies l"a"st sich per Fallunterscheidung nach der Form von $e$ leicht
+zeigen, ist aber immer noch recht m"uhsam, vorallem wenn $e$ ein Bezeichner ist.
+
 
 \end{document}
