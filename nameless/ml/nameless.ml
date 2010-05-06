@@ -3,118 +3,115 @@ open Tree;;
 
 module type Ast =
 sig
-  type access
+  type node
+  type ident
   type binder
-  type environment
   type operator =
       Op_add | Op_sub | Op_mul
     | Op_lss | Op_grt | Op_leq | Op_geq | Op_eq | Op_neq
-  ;;
-  type constant =
+  and constant =
       Const_unit
     | Const_bool of bool
     | Const_int of int
     | Const_proj of int
-  ;;
-  type label =
+    | Const_op of operator
+  and label =
       Lbl_const of constant
-    | Lbl_access of access
+    | Lbl_ident of ident
     | Lbl_abstr of binder
     | Lbl_app
-  ;;
-  type node
-  type value =
-      Val_const of constant
-    | Val_closure of binder * node * environment
-  ;;
+    | Lbl_let of binder
+    | Lbl_letrec of binder
+    | Lbl_tuple
   val label: node -> label
   val children: node -> node list
   val parent: node -> node
 end
 
-module type Binding =
+module type Interpreter =
 sig
-  type access
-  type binder
   type environment
+  type node
   type value
-  val lookup : access -> environment -> value
-  val update : binder -> environment -> value -> environment
+  val eval : node -> environment -> value
 end
 
-module NameBinding:Binding =
+module type MakeInterpreter = functor (A:Ast) -> Interpreter
+
+module MakeNamedInterpreter: MakeInterpreter = functor (A:Ast) ->
 struct
-  type access = string
-  and binder = string
-  and environment = Env of (string * value) list
-  and value
+  type value =
+      Val_const of A.constant
+    | Val_closure of string list * node * environment
+    | Val_tuple of value list
+  and node =
+      A.node
+  and environment =
+      (string * value) list
+
+  exception Unknown_identifier of string
+
   let rec lookup (id:string) (eta:environment): value =
-    let Env l = eta in List.assoc id l
-  let rec update (id:string) (eta:environment) (v:value): environment =
-    let Env l = eta in Env ((id, v) :: l)
+    match eta with
+        (id', v') :: eta' -> if id = id' then v' else lookup id eta'
+      | _ -> raise (Unknown_identifier id)
+
+  exception Tuple_mismatch
+
+  let rec update (eta:environment) (idl:string list) (vl:value list): environment =
+    match idl, vl with
+        [], [] -> eta
+      | (id :: idl), (v :: vl) -> (id, v) :: (update eta idl vl)
+      | _ -> raise Tuple_mismatch
+
+  exception Eval_abort
+
+  let rec eval_op (op:A.operator) (z1:int) (z2:int): A.constant =
+    match op with
+        A.Op_add -> A.Const_int  (z1 +  z2)
+      | A.Op_sub -> A.Const_int  (z1 -  z2)
+      | A.Op_mul -> A.Const_int  (z1 *  z2)
+      | A.Op_lss -> A.Const_bool (z1 <  z2)
+      | A.Op_grt -> A.Const_bool (z1 >  z2)
+      | A.Op_leq -> A.Const_bool (z1 <= z2)
+      | A.Op_geq -> A.Const_bool (z1 >= z2)
+      | A.Op_eq  -> A.Const_bool (z1 =  z2)
+      | A.Op_neq -> A.Const_bool (z1 <> z2)
+
+  let rec eval (k:node) (eta:environment): value =
+    match A.label k with
+        A.Lbl_const c -> Val_const c
+      | A.Lbl_ident id -> lookup id eta
+      | A.Lbl_abstr idl -> Val_closure (idl, k, eta)
+      | A.Lbl_app ->
+          (match A.children k with
+               k1 :: k2 :: [] ->
+                 (match (eval k1 eta), (eval k2 eta) with
+                      Val_const (A.Const_proj i), Val_tuple (vl) -> 
+                        (try List.nth vl i with _ -> raise Eval_abort)
+                    | Val_const (A.Const_op op), Val_tuple [Val_const (A.Const_int z1); Val_const (A.Const_int z2)] ->
+                        Val_const (eval_op op z1 z2)
+                    | Val_closure (id' :: [], k', eta'), v' ->
+                        eval (List.hd (A.children k')) (update eta' [id'] [v'])
+                    | Val_closure (idl', k', eta'), Val_tuple (vl') ->
+                        eval (List.hd (A.children k')) (update eta' idl' vl')
+                    | _ -> raise Eval_abort)
+             | _ -> raise Eval_abort)
+      | A.Lbl_let (id :: []) ->
+          (match A.children k with
+               k1 :: k2 :: [] -> eval k2 (update eta [id] [eval k1 eta])
+             | _ -> raise Eval_abort)
+      | A.Lbl_let idl ->
+          (match A.children k with
+               k1 :: k2 :: [] ->
+                 (match eval k1 eta with
+                      Val_tuple (vl) -> eval k2 (update eta idl vl)
+                    | _ -> raise Eval_abort)
+             | _ -> raise Eval_abort)
+      | A.Lbl_tuple -> Val_tuple (List.map (fun k' -> eval k' eta) (A.children k))
 end
 
-module MakeSemantic =
-  functor (A:Ast) ->
-    functor (B:Binding with type access = A.access
-                       and type binder = A.binder
-                       and type environment = A.environment
-                       and type value = A.value) ->
-struct
-  exception Eval_abort
-  let rec eval (k:A.node) (eta:A.environment): A.value =
-    match A.label k with
-        A.Lbl_const c -> A.Val_const c
-      | A.Lbl_access a -> B.lookup a eta
-      | A.Lbl_abstr b -> A.Val_closure (b, (List.hd (A.children k)), eta)
-      | A.Lbl_app ->
-          let k1 :: k2 :: kl = A.children k in
-            match (eval k1 eta), (eval k2 eta) with
-                (A.Val_closure (b, k, eta)), v -> eval k (B.update b eta v)
-              | _ -> raise Eval_abort
-end;;
-
-
-
-
-
-module type MakeBoundAst =
-  functor (A:Ast)
-    -> functor (B:Binding
-                with type access = A.access
-                and type binder = A.binder
-                and type environment = A.environment
-                and type value = A.value)
-      -> Ast with type access = A.access
-             and type binder = A.binder
-             and type environment = A.environment
-;;
-
-module type MakeBinding = functor (B:Base) -> Binding
-  with type binder = B.binder
-  and type environment = B.environment
-  and type value = B.value
-;;
-
-module type Ast =
-sig
-  include Base
-  type access
-  type label =
-      Lbl_const of constant
-    | Lbl_access of access
-    | Lbl_abstr of binder
-    | Lbl_app
-  ;;
-end;;
-
-module type MakeAst = functor (B:Binding) -> Ast
-  with type access = B.access
-  and type binder = B.binder
-  and type environment = B.environment
-;;
-
-
+(*
 type ('env) expression =
     Exp_const of constant
   | Exp_ident of ('env -> 'env value)
@@ -134,26 +131,6 @@ and ('env) value =
     Val_const of constant
   | Val_closure of ('env value -> 'env) * ('env expression)
 ;;
-
-
-module type Ast =
-sig
-  type ('env) t
-  and ('env) label =
-      Lbl_const of constant
-    | Lbl_ident of ('env -> 'env value)
-    | Lbl_abstr of ('env -> 'env value -> 'env)
-    | Lbl_app
-    | Lbl_cond
-    | Lbl_infix
-    | Lbl_let of ('env -> 'env value -> 'env)
-  and ('env) value =
-      Val_const of constant
-    | Val_closure of ('env value -> 'env) * Tree.path
-  ;;
-end;;
-
-
 
 exception Eval_abort;;
 
@@ -210,9 +187,10 @@ struct
     let update (eta:environment) (v:environment value): environment =
       Env_entry (id, v, eta)
     in Exp_abstr (update, e)
-  ;;
-end;;
+end
+*)
 
+(*
 let e =
   Exp_app ((Identifiers.make_abstr "x"
               (Exp_infix (Identifiers.make_id "x",
@@ -222,3 +200,4 @@ let e =
 in
   eval e Identifiers.Env_empty
 ;;
+*)

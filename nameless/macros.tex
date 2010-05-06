@@ -1,7 +1,7 @@
 %%
 %% macros.tex - Useful LaTeX macros
 %%
-%% Copyright (c) 2006-2009 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% Copyright (c) 2006-2010 Benedikt Meurer <benedikt.meurer@googlemail.com>
 %% 
 
 
@@ -37,8 +37,6 @@
 \newcommand{\dom}[1]{\ensuremath{\mathit{dom}\,(#1)}}
 \newcommand{\free}[1]{\ensuremath{\mathit{free}\,(#1)}}
 \newcommand{\height}[1]{\ensuremath{\mathit{height}\,(#1)}}
-\newcommand{\leafword}[1]{\ensuremath{\mathit{leafword}\,(#1)}}
-\newcommand{\leaves}[1]{\ensuremath{\mathit{leaves}\,(#1)}}
 \newcommand{\parent}[1]{\ensuremath{\mathit{parent}\,(#1)}}
 \newcommand{\powerset}[1]{\ensuremath{\mathcal{P}\,(#1)}}
 \newcommand{\powersetfin}[1]{\ensuremath{\mathcal{P}_{fin}\,(#1)}}
@@ -49,10 +47,14 @@
 %% Sets
 %%
 
+\newcommand{\N}{\ensuremath{\mathbb N}}
+
+\newcommand{\Const}{\ensuremath{\textsc{Const}}}
 \newcommand{\Env}{\ensuremath{\textsc{Env}}}
 \newcommand{\Exp}{\ensuremath{\textsc{Exp}}}
 \newcommand{\Ide}{\ensuremath{\textsc{Ide}}}
 \newcommand{\Val}{\ensuremath{\textsc{Val}}}
+\newcommand{\Var}{\ensuremath{\textsc{Var}}}
 
 \newcommand{\dEnv}{\mbox{d-\Env}}
 \newcommand{\dVal}{\mbox{d-\Val}}
@@ -68,6 +70,7 @@
 \newcommand{\app}[2]{{#1}\,{#2}}
 \newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
 \newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+\newcommand{\letin}[3]{\mathbf{let}\,{#1}={#2}\,\mathbf{in}\,{#3}}
 
 
 %%

@@ -36,6 +36,50 @@
 
 \section{Umgebungssemantik}
 
+Vorgegeben sei eine (unendliche) Menge $\Var$ von Namen $x$. Die abstrakte Syntax der Programmiersprache
+ist durch die kontextfreie Grammatik
+\[\begin{grammar}
+  e \in \Exp
+  \is c \mid x
+  \al \abstr{x}{e}
+  \al \app{e_1}{e_2}
+  \al \ifte{e_0}{e_1}{e_2}
+  \al \letin{x}{e_1}{e_2}
+\end{grammar}\]
+definiert.
+
+
+\section{B"aume}
+
+Die folgenden Definitionen basieren auf \emph{``Grundlagen der Programmiersprachen''} von Loeckx,
+Mehlhorn und Willhelm.
+\begin{definition}[Baumbereiche und B"aume] \
+  \begin{enumerate}
+  \item Die partiellen Funktionen $\mathit{parent}$ und $\mathit{brother}$ sind definiert durch
+    \[\begin{array}{rl}
+      \mathit{parent}: & \N^* \pto \N^*, \\
+      & w \cdot n \mapsto w \\
+      \\
+      \mathit{brother}: & \N^* \pto \N^*, \\
+      & w \cdot (n+1) \mapsto w \cdot n \\
+    \end{array}\]
+    Die reflexive, transitive H"ulle von $\mathit{parent}$ hei"st $\mathit{ancestor}$.
+  \item Ein \emph{Baumbereich} $K$ ist eine endliche Teilmenge von $\N^*$, die abgeschlossen
+    ist unter der Funktion $\mathit{parent}$, d.h. $\parent{K} \subseteq K$. Die Elemente des
+    Baumbereichs hei"sen \emph{Knoten}.
+  \item Sei $D$ eine Menge. Ein \emph{$D$-Baum} (kurz \emph{Baum}) ist ein Paar $(K,\ell)$,
+    wobei $K$ ein Baumbereich ist, und $\ell$ eine totale Abbildung von $K$ nach $D$. Die
+    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Bereich}.
+    Die Menge aller $D$-B"aume bezeichnen wir mit $T_D$.
+  \item Ein Baumbereich $K$ hei"st \emph{vollst"andig}, wenn $K$ abgeschlossen ist unter der
+    Funktion $\mathit{brother}$, d.h. $\brother{K} \subseteq K$. Ein Baum $(K,\ell)$ hei"st
+    \emph{vollst"andig}, wenn sein Baumbereich $K$ vollst"andig ist.
+  \end{enumerate}
+\end{definition}
+
+
+\section{Umgebungssemantik}
+
 Eine \emph{Umgebungssemantik} besteht aus Mengen $\Env$, $\Exp$, $\Ide$ und $\Val$ und beruht im
 Wesentlichen auf den beiden Funktionen
 \[\begin{array}{rl}

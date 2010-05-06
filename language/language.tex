@@ -116,23 +116,6 @@ zeigen, dass eine Relation zwischen den verschiedenen semantischen Bereichen exi
 genau diejenigen Bereiche enth"alt, deren beobachtbares Verhalten "ubereinstimmt, und dass die
 Semantik der semantisch relevanten Bestandteile der Programme diese Relation erh"alt.
 
-% \begin{definition}
-%   Seien $A,B$ beliebige Mengen, $\L$ eine Syntax und $\Obs$ eine Menge von beoachtbaren Verhalten.
-%   Eine \emph{$(A,B,\L,\Obs)$-Implementierung} ist ein Tupel $M = (\Exp,A,B,\semantic{\cdot},\obs^B)$ mit
-%   \begin{enumerate}
-%   \item $\Exp \supseteq \L$, 
-%   \item $\semantic{\cdot}:\Exp\to(A \to B)$ und
-%   \item $\obs^B:B \to \powerset{\Obs}$.
-%   \end{enumerate}
-% \end{definition}
-
-% Offensichtlich ist jede $(A,B,\L,\Obs)$-Implementierung $M=(\Exp,A,B,\semantic{\cdot},\obs^B)$
-% auch eine $(\L,\Obs)$-Implementierung $(\Exp,D,\semantic{\cdot},\obs)$ mit
-% \begin{enumerate}
-% \item $D = (A \to B)$ und
-% \item $\obs: D \to \powerset{\Obs}, d \mapsto \bigcup_{a \in A} \obs^B(d\,a)$.
-% \end{enumerate}
-
 Interessant ist inbesondere der Fall, dass der semantische Bereich $D$ aus Funktionen $A \to B$ besteht,
 f"ur zun"achst beliebige $A,B$. Dies entspricht den "ublichen Substitutions- und Umgebungsmodellen, welche
 Ausdr"ucke in Abh"angigkeit einer Substitution bzw. einer Umgebung auf einen Wert abbilden (bzw. in einer
@@ -145,7 +128,7 @@ denotationellen Semantik auf seine Bedeutung abbilden).
   $M_2$ ist ad"aquat f"ur $S$, wenn $M_1$ ad"aquat f"ur $S$ ist und Relationen
   $\sim\ \subseteq A_1 \times A_2$ und $\sim\ \subseteq B_1 \times B_2$ existieren, so dass gilt:
   \begin{enumerate}
-  \item Wenn $(d_{1,i}\,a_1) \sim (d_{2,i}\,a_2)$ f"ur alle $a_1 \in A_1,a_2 \in A_2$ mit
+  \item Wenn $d_{1,i}\,a_1 \sim d_{2,i}\,a_2$ f"ur alle $a_1 \in A_1,a_2 \in A_2$ mit
     $a_1 \sim a_2$ und $i = 1,\ldots,n$ dann gilt
     \[\begin{array}{c}
       \semantic{\zeta_n}_1\,(d_{1,1} \ldots d_{1,n})\,a_1
@@ -164,7 +147,7 @@ denotationellen Semantik auf seine Bedeutung abbilden).
   \[\begin{array}{rcl}
     d_1 \sim d_2
     &:\Leftrightarrow&
-    \forall a_1,a_2.\,a_1 \sim a_2 \Rightarrow (d_1\,a_1) \sim (d_2\,a_2)
+    \forall a_1,a_2.\,a_1 \sim a_2 \Rightarrow d_1\,a_1 \sim d_2\,a_2
   \end{array}\]
   Seien nun also $d_{1,i} \sim d_{2,i}$ f"ur $i=1,\ldots,n$, dann folgt nach der ersten Voraussetzung, dass
   \[\begin{array}{c}
