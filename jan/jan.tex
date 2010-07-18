@@ -1,0 +1,183 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Rekursion}
+
+\begin{definition}[Rekursionsschema]
+  Seien $A,B$ disjunkte Mengen. Ein \emph{$(A,B)$-Rekursionsschema} ist eine Relation
+  $\sigma \subseteq A \times B^* \times (A \uplus B)$. $\Sigma^A_B$ bezeichnet die Menge
+  aller $(A,B)$-Rekursionsschemata.
+\end{definition}
+
+\begin{definition}[Rekursion]
+  Sei $\sigma \in \Sigma^A_B$. Die durch $\sigma$ definierte \emph{Rekursion}
+  $\Rightarrow_\sigma\ \subseteq A \times B$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $(a,\varepsilon, b) \in \sigma$, dann $a \Rightarrow_\sigma b$.
+  \item Wenn $n \ge 1$, $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$,
+    und $(a,b_1 \ldots b_n,b)\in\sigma$, dann $a \Rightarrow_\sigma b$.
+  \end{enumerate}
+\end{definition}
+Diese induktive Definition von $\Rightarrow_\sigma$ l"asst sich auch k"urzer notieren:
+\begin{quote}
+  F"ur alle $n \in \N$, $a, a_1,\ldots,a_n \in A$ und $b,b_1,\ldots,b_n\in B$ gilt: 
+  Wenn $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur $i = 1,\ldots,n$ und
+  $(a,b_1 \ldots b_n,b)\in\sigma$, dann $a \Rightarrow_\sigma b$.
+\end{quote}
+Wie man leicht sieht, ist $\Rightarrow_\sigma$ eine Funktion wenn $\sigma$ eine Funktion ist.
+% Eine Funktion $f : A \pto B$ hei"st \emph{rekursiv definierbar}, wenn ein Rekursions\-schema
+% $\sigma: A \Rightarrow B$ existiert, so dass $f = \Lambda \sigma$.
+
+\begin{definition}[Co-Rekursion]
+  Sei $\sigma \in \Sigma^A_B$. Die durch $\sigma$ definierte \emph{Co-Rekursion}
+  $\stackrel{\infty}{\Rightarrow}_\sigma\ \subseteq A$ ist co-induktiv definiert durch:
+  \begin{quote}
+    Wenn $n \in \N$, $a, a_1,\ldots,a_n,a_{n+1} \in A$, $b_1,\ldots,b_n\in B$,
+    $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur $i=1,\ldots,n$,
+    und $a_{n+1} \stackrel{\infty}{\Rightarrow}_\sigma$ und $(a,b_1 \ldots b_n,a_{n+1})\in\sigma$,
+    dann $a \stackrel{\infty}{\Rightarrow}_\sigma$.
+  \end{quote}
+\end{definition}
+Statt $\Rightarrow_\sigma$ und $\stackrel{\infty}{\Rightarrow}_\sigma$ schreiben wir kurz $\Rightarrow$
+und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
+
+% \begin{definition}
+%   Ein Rekursionsschema $\sigma: A \Rightarrow B$ hei"st \emph{kanonisch}, wenn
+%   f"ur alle $n \in \N$, $a \in A$, $b_1,\ldots,b_{n+1} \in B$ und $x \in A \uplus B$ gilt:
+%     Wenn $(a,b_1 \ldots b_{n+1},x) \in \sigma$,
+%     dann existiert ein $\hat{a} \in A$ so dass $(a,b_1 \ldots b_n,\hat{a}) \in \sigma$.
+% \end{definition}
+
+% \begin{lemma}
+%   Zu jedem $\sigma: A \Rightarrow B$ existiert ein kanonisches $\sigma':A \Rightarrow B$ mit
+%   $\sigma' \subseteq \sigma$ und $\Lambda \sigma' = \Lambda \sigma$.
+% \end{lemma}
+
+
+\section{Iteration}
+
+\begin{definition}[Iteration]
+  Sei $\sigma: A \Rightarrow B$ ein Rekursionsschema. Die durch $\sigma$ definierte \emph{Iteration}
+  $\to_\sigma\ \in (A \uplus B)^* \times (A \uplus B)^*$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $(a,b_1 \ldots b_n,b) \in \sigma$,
+    dann $w\,a\,b_1 \ldots b_n \to_\sigma w\,b$.
+  \item Wenn $(a,b_1 \ldots b_n,a') \in \sigma$,
+    dann $w\,a\,b_1 \ldots b_n \to_\sigma w\,a\,b_1 \ldots b_n\,a'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{theorem}[Vollst"andigkeit]
+  F"ur alle $n \in \N$, $a,a_1,\ldots,a_n \in A$, $b,b_1,\ldots,b_n \in B$ und $w \in (A \uplus B)^*$ gilt:
+  \begin{enumerate}
+  \item Wenn $a \Rightarrow b$, dann gilt $w\,a \stackrel{*}{\to} w\,b$.
+  \item Wenn $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$, dann gilt
+    $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Per Induktion "uber die Herleitung von $a \Rightarrow b$ und $n$.
+  \begin{enumerate}
+  \item Es existieren $n \in \N$, $a_1,\ldots,a_n \in A$ und $b_1,\ldots,b_n \in B$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i = 1,\ldots,n$,
+    und es gilt $(a,b_1 \ldots b_n,b) \in \sigma$. Also existiert eine Berechnung der Form
+    $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$, und wegen $(a,b_1 \ldots b_n,b) \in \sigma$
+    folgt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n \to w\,a\,b$.
+
+  \item F"ur $n = 0$ folgt unmittelbar $w\,a \stackrel{*}{\to} w\,a$.
+
+    F"ur $n > 0$ gilt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_{n-1}$ nach Induktionsvoraussetzung und wegen
+    $(a,b_1 \ldots b_{n-1},a_n)\in\sigma$ folgt $w\,a\,b_1 \ldots b_{n-1} \to w\,a\,b_1 \ldots b_{n-1}\,a_n$.
+    Nach Induktionsvoraussetzung folgt
+    $w\,a\,b_1 \ldots b_{n-1}\,a_n \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$ wegen $a_n \Rightarrow b_n$.
+    Also gilt insgesamt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}[Korrektheit]
+  F"ur alle $n,l \in N$, $\hat{a} \in A$, $b, b_1,\ldots,b_n \in B$ und
+  $w \in (A \uplus B)^*$ gilt:
+  \begin{enumerate}
+  \item Wenn $\hat{a} \stackrel{l}{\to} w\,b$, dann existieren $k < l$ und $a \in A$ mit
+    $a \Rightarrow b$ und $\hat{a} \stackrel{k}{\to} w\,a$.
+  \item Wenn $\hat{a} \stackrel{l}{\to} w\,a\,b_1 \ldots b_n$, dann existieren $k \le l$
+    und $a_1,\ldots,a_n \in A$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$, und
+    $\hat{a} \stackrel{k}{\to} w\,a$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Per Induktion "uber $l$.
+  \begin{enumerate}
+  \item Der letzte Schritt kann nur mit der 1. Regel folgen, es existieren also $n\in\N$, $a \in A$
+    und $b_1,\ldots,b_n \in B$, so dass gilt $(a,b_1 \ldots b_n,b) \in \sigma$ und
+    $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_n \to w\,b$. Nach Induktionsvoraussetzung existieren
+    nun $k < l-1$ und $a_1,\ldots,a_n \in A$ mit $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$
+    f"ur $i=1,\ldots,n$ und es gilt $\hat{a} \stackrel{k}{\to} w\,a$. Also existiert insgesamt eine
+    Herleitung f"ur $a \Rightarrow b$.
+  \item Trivial im Fall von $n = 0$.
+
+    F"ur $n > 0$ muss der letzte Schritt mit der 1. Regel hergeleitet worden sein, d.h. es existieren
+    $m \in \N$, $a_n \in A$, $b_1',\ldots,b_m' \in B$ mit $(a_n,b_1' \ldots b_m',b_n) \in \sigma$ und
+    $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_{n-1}\,a_n\,b_1'\ldots b_m' \to w\,a\,b_1 \ldots b_n$.
+
+    Nach Induktionsvoraussetzung existeren $k' \le l-1$ und $a_1',\ldots,a_m' \in A$ mit
+    $a_i' \Rightarrow b_i'$ und $(a_n,b_1' \ldots b_{i-1}',a_i') \in \sigma$ f"ur $i=1,\ldots,m$
+    und es gilt $\hat{a} \stackrel{k'}{\to} w\,a\,b_1 \ldots b_{n-1}\,a_n$. Also folgt sofort
+    $a_n \Rightarrow b_n$.
+
+    Der letzte Schritt kann nur mit der 2. Regel hergeleitet worden sein, d.h. es gilt
+    $(a,b_1 \ldots b_{n-1},a_n) \in \sigma$ und $\hat{a} \stackrel{k'-1}{\to} w\,a\,b_1 \ldots b_{n-1}$.
+    Nach Induktionsvoraussetzung existeren $k \le k' < l$ und $a_1,\ldots,a_{n-1} \in A$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur alle $i=1,\ldots,n-1$, und
+    es gilt $\hat{a} \stackrel{k}{\to} w\,a$.
+  \end{enumerate}
+\end{proof}
+
+% \begin{proof}
+%   Per Induktion "uber $l$. Der letzte small step muss mit Regel 1. hergeleitet worden sein,
+%   d.h. es existieren $a \in A$ und $b_1,\ldots,b_n \in B$ mit
+%   $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_n \to w\,b$ und es gilt
+%   $(a,b_1 \ldots b_n,b) \in \sigma$.
+% \end{proof}
+
+\begin{theorem}["Aquivalenz]
+  Sei $\sigma \in \Sigma^A_B$. Dann gilt f"ur alle $a \in A, b \in B$:
+  \begin{enumerate}
+  \item $a \Rightarrow b$ gdw. $a \stackrel{*}{\to} b$.
+  \item $a \stackrel{\infty}{\Rightarrow}$ gdw. $a \stackrel{\infty}{\to}$.
+  \end{enumerate}
+\end{theorem}
+
+\end{document}
