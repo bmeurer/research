@@ -54,8 +54,6 @@ Diese induktive Definition von $\Rightarrow_\sigma$ l"asst sich auch k"urzer not
   $(a,b_1 \ldots b_n,b)\in\sigma$, dann $a \Rightarrow_\sigma b$.
 \end{quote}
 Wie man leicht sieht, ist $\Rightarrow_\sigma$ eine Funktion wenn $\sigma$ eine Funktion ist.
-% Eine Funktion $f : A \pto B$ hei"st \emph{rekursiv definierbar}, wenn ein Rekursions\-schema
-% $\sigma: A \Rightarrow B$ existiert, so dass $f = \Lambda \sigma$.
 
 \begin{definition}[Co-Rekursion]
   Sei $\sigma \in \Sigma^A_B$. Die durch $\sigma$ definierte \emph{Co-Rekursion}
@@ -70,18 +68,6 @@ Wie man leicht sieht, ist $\Rightarrow_\sigma$ eine Funktion wenn $\sigma$ eine 
 Statt $\Rightarrow_\sigma$ und $\stackrel{\infty}{\Rightarrow}_\sigma$ schreiben wir kurz $\Rightarrow$
 und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
 
-% \begin{definition}
-%   Ein Rekursionsschema $\sigma: A \Rightarrow B$ hei"st \emph{kanonisch}, wenn
-%   f"ur alle $n \in \N$, $a \in A$, $b_1,\ldots,b_{n+1} \in B$ und $x \in A \uplus B$ gilt:
-%     Wenn $(a,b_1 \ldots b_{n+1},x) \in \sigma$,
-%     dann existiert ein $\hat{a} \in A$ so dass $(a,b_1 \ldots b_n,\hat{a}) \in \sigma$.
-% \end{definition}
-
-% \begin{lemma}
-%   Zu jedem $\sigma: A \Rightarrow B$ existiert ein kanonisches $\sigma':A \Rightarrow B$ mit
-%   $\sigma' \subseteq \sigma$ und $\Lambda \sigma' = \Lambda \sigma$.
-% \end{lemma}
-
 
 \section{Iteration}
 
@@ -95,8 +81,15 @@ und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich i
     dann $w\,a\,b_1 \ldots b_n \to_\sigma w\,a\,b_1 \ldots b_n\,a'$.
   \end{enumerate}
 \end{definition}
+Wir schreiben $\to$ statt $\to_\sigma$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
+\\[5mm]
+\begin{tabular}{ll}
+  $\Rule{w \to v \quad v \stackrel{\infty}{\to}}{w \stackrel{\infty}{\to}}$ 
+\end{tabular} \\[5mm]
+$\stackrel{*}{\to}$ ist die reflexive, transitive H"ulle von $\to$. $w \stackrel{\infty}{\to}$
+beschreibt unendliche Folgen von Reduktionen.
 
-\begin{theorem}[Vollst"andigkeit]
+\begin{theorem}[Vollst"andigkeit] \label{theorem:Vollstaendigkeit}
   F"ur alle $n \in \N$, $a,a_1,\ldots,a_n \in A$, $b,b_1,\ldots,b_n \in B$ und $w \in (A \uplus B)^*$ gilt:
   \begin{enumerate}
   \item Wenn $a \Rightarrow b$, dann gilt $w\,a \stackrel{*}{\to} w\,b$.
@@ -124,7 +117,7 @@ und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich i
   \end{enumerate}
 \end{proof}
 
-\begin{theorem}[Korrektheit]
+\begin{theorem}[Korrektheit] \label{theorem:Korrektheit}
   F"ur alle $n,l \in N$, $\hat{a} \in A$, $b, b_1,\ldots,b_n \in B$ und
   $w \in (A \uplus B)^*$ gilt:
   \begin{enumerate}
@@ -165,13 +158,6 @@ und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich i
   \end{enumerate}
 \end{proof}
 
-% \begin{proof}
-%   Per Induktion "uber $l$. Der letzte small step muss mit Regel 1. hergeleitet worden sein,
-%   d.h. es existieren $a \in A$ und $b_1,\ldots,b_n \in B$ mit
-%   $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_n \to w\,b$ und es gilt
-%   $(a,b_1 \ldots b_n,b) \in \sigma$.
-% \end{proof}
-
 \begin{theorem}["Aquivalenz]
   Sei $\sigma \in \Sigma^A_B$. Dann gilt f"ur alle $a \in A, b \in B$:
   \begin{enumerate}
@@ -179,5 +165,51 @@ und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich i
   \item $a \stackrel{\infty}{\Rightarrow}$ gdw. $a \stackrel{\infty}{\to}$.
   \end{enumerate}
 \end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item Folgt unmittelbar aus Theorem~\ref{theorem:Korrektheit} und Theorem~\ref{theorem:Vollstaendigkeit}.
+  \end{enumerate}
+\end{proof}
+
+
+\section{Implementationen}
+
+\begin{definition}[Transitionssystem]
+  Ein \emph{Transitionssystem} ist ein Quadrupel $T = (S, S_0, S_F, \step)$ mit $S_0 \subseteq S$,
+  $S_F \subseteq S$ und $\step\ \subseteq S \times S$.
+\end{definition}
+
+\begin{definition}[Implementation]
+  Eine \emph{Implementation} von $\sigma\in\Sigma^A_B$ ist ein Paar
+  $(T,\sim)$, mit $T = (S,S_0,S_F,\step)$ und $\sim\ \subseteq S \times (A \uplus B)^*$.
+\end{definition}
+
+\begin{definition}[Korrektheit von Implementationen]
+  Eine Implementation $((S,S_0,S_F,\step),\sim)$ von $\sigma \in \Sigma^A_B$ hei"st \emph{korrekt},
+  wenn gilt:
+  \begin{enumerate}
+  \item Wenn $s \in S_0$, dann existiert ein $a \in A$ mit $s \sim a$.
+  \item Wenn $s \in S_F$, dann existiert ein $b \in B$ mit $s \sim b$.
+  \item Wenn $s \step s'$ und $s \sim w$, dann existiert ein $w' \in (A \uplus B)^*$
+    mit $w \to_\sigma w'$ und $s' \sim w'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Vollst"andigkeit von Implementationen]
+  Eine Implementation $((S,S_0,S_F,\step),\sim)$ von $\sigma \in \Sigma^A_B$ hei"st \emph{vollst"andig},
+  wenn gilt:
+  \begin{enumerate}
+  \item Wenn $a \in A$, dann existiert ein $s \in S_0$ mit $s \sim a$.
+  \item Wenn $b \in B$, dann existiert ein $s \in S_F$ mit $s \sim b$.
+  \item Wenn $w \to_\sigma w'$ und $s \sim w$, dann existiert ein $s' \in S$
+    mit $s \step s'$ und $s' \sim w'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Modell]
+  Ein \emph{Modell} von $\sigma \in \Sigma^A_B$ ist eine
+  korrekte und vollst"andige Implementation $(T,\sim)$.
+\end{definition}
 
 \end{document}
