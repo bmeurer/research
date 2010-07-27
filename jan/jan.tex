@@ -30,6 +30,65 @@
 \begin{document}
 
 
+\section{Kalk"ul}
+
+\begin{definition}[Kalk"ul]
+  Ein \emph{Kalk"ul} $\mathcal{K} = (\mathcal{U}, \mathcal{R})$ besteht aus
+  \begin{enumerate}
+  \item einer Formelmenge $\mathcal{U}$, dem \emph{Universum}, und
+  \item einer entscheidbaren Relation $\mathcal{R} \subseteq \mathcal{U}^+$, der \emph{Ableitungsrelation}.
+  \end{enumerate}
+\end{definition}
+Zu jedem Kalk"ul $\mathcal{K}$ l"asst sich eine Funktion
+$\mathcal{F}:\powerset{\mathcal{U}} \to \powerset{\mathcal{U}}$ definieren durch
+\[\begin{array}{rcl}
+\mathcal{F}(X) &=& \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
+\end{array}\]
+$\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset{\mathcal{U}}$, d.h. es
+existiert
+\begin{itemize}
+\item ein kleinster Fixpunkt $\mu\mathcal{F} = \bigcup_{n\in\N}\mathcal{F}^n(\emptyset)$, und
+\item ein gr"o"ster Fixpunkt $\nu\mathcal{F} = \bigcap_{n\in\N}\mathcal{F}^n(\mathcal{U})$.
+\end{itemize}
+Ein \emph{$\mathcal{K}$-Ableitungsbaum} f"ur eine Formel $u \in \mathcal{U}$ ist (endl. oder unendl.)
+$\mathcal{U}$-markierter Baum $t$, so dass:
+\begin{enumerate}
+\item $t(\varepsilon) = u$, und
+\item $(t(k.1),\ldots,t(k.n),t(k)) \in \mathcal{R}$ f"ur jeden Knoten $k$ mit den Kindern $k.1,\ldots,k.n$.
+\end{enumerate}
+
+\begin{theorem} \
+  \begin{enumerate}
+  \item $u$ besitzt einen endlichen Ableitungsbaum gdw. $u \in \mu\mathcal{F}$.
+  \item $u$ besitzt einen beliebigen Ableitungsbaum gdw. $u \in \nu\mathcal{F}$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item $u \in \mathcal{F}^n(\emptyset)$ gdw. $u$ besitzt Ableitugnsbaum der H"ohe $\le n$.
+  \item 
+    \begin{itemize}
+    \item[``$\Rightarrow$'']
+      Sei $X$ die Menge der Markierungen, dann ist $u \in X$ und f"ur jedes $w \in X$ ex.
+      $w_1,\ldots,w_n \in X$ mit $(w_1 \ldots w_n\,w) \in \mathcal{R}$, also
+      $w \in \mathcal{F}(X)$. D.h. $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
+      $u \in X \subseteq \nu \mathcal{F}$.
+    \item[``$\Leftarrow$'']
+      Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N^* \pto \nu\mathcal{F}$ induktiv definiert
+      durch:
+      \begin{itemize}
+      \item $(\varepsilon,u) \in t$
+      \item Wenn $(k,w) \in t$, dann ex. $n\in\N,w_1,\ldots,w_n \in \nu\mathcal{F}$ --
+        denn $w \in \nu\mathcal{F} = \mathcal{F}(\nu\mathcal{F})$ -- mit
+        $(w_1 \ldots w_n\,w) \in \mathcal{R}$ \\
+        ind. def. $\leadsto$ $(k.i,w_i) \in t$ f"ur $i=1,\ldots,n$.
+      \end{itemize}
+    \end{itemize}
+  \end{enumerate}
+\end{proof}
+
+
 \section{Rekursion}
 
 \begin{definition}[Rekursionsschema]
