@@ -148,6 +148,11 @@ Wir schreiben $\to$ statt $\to_\sigma$ wenn $\sigma$ aus dem Kontext ersichtlich
 $\stackrel{*}{\to}$ ist die reflexive, transitive H"ulle von $\to$. $w \stackrel{\infty}{\to}$
 beschreibt unendliche Folgen von Reduktionen.
 
+\begin{lemma} \label{lemma:Redex_Star_und_Infty}
+  Wenn $v \stackrel{*}{\rightarrow} w$ und $w \stackrel{\infty}{\rightarrow}$,
+  dann $v \stackrel{\infty}{\rightarrow}$.
+\end{lemma}
+
 \begin{theorem}[Vollst"andigkeit] \label{theorem:Vollstaendigkeit}
   F"ur alle $n \in \N$, $a,a_1,\ldots,a_n \in A$, $b,b_1,\ldots,b_n \in B$ und $w \in (A \uplus B)^*$ gilt:
   \begin{enumerate}
@@ -215,6 +220,29 @@ beschreibt unendliche Folgen von Reduktionen.
     $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur alle $i=1,\ldots,n-1$, und
     es gilt $\hat{a} \stackrel{k}{\to} w\,a$.
   \end{enumerate}
+\end{proof}
+
+\begin{theorem}
+  Wenn $a \stackrel{\infty}{\Rightarrow}$, dann $w\,a \stackrel{\infty}{\rightarrow}$.
+\end{theorem}
+
+\begin{proof}
+  Seien $\stackrel{\infty}{\Rightarrow}\ = \nu\mathcal{F}$
+  und $\stackrel{\infty}{\rightarrow}\ = \nu\mathcal{G}$. Z.z.:
+  $\underbrace{\bigcup_w w\,\nu\mathcal{F}}_X \subseteq \nu\mathcal{G}$ \\
+  Dazu gen"ugt es zu zeigen, dass $X \subseteq \mathcal{G}(X)$, d.h.
+  $\bigcup_w w\,\nu\mathcal{F} \subseteq \mathcal{G}(\bigcup_w w\,\nu\mathcal{F})$.
+  Sei $wa \in \bigcup_w w\,\nu\mathcal{F}$, dann ist $a \in \nu\mathcal{F}$, d.h. $a \stackrel{\infty}{\Rightarrow}$.
+
+  Nach Voraussetzung existieren also $n \in \N$, $a_1,\ldots,a_{n+1} \in A$ und
+  $b_1,\ldots,b_n \in B$, so dass $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$
+  f"ur $i=1,\ldots,n$, und $a_{n+1} \stackrel{\infty}{\Rightarrow}$ (d.h. $a_{n+1} \in \nu\mathcal{F}$).
+  Also existiert nach Theorem~\ref{theorem:Vollstaendigkeit} eine Folge der Form
+  \[
+  w\,a \stackrel{*}{\rightarrow} w\,a\,b_1 \ldots b_n \rightarrow w\,a\,b_1 \ldots b_n\,a_{n+1}
+  \]
+  und weiterhin gilt $w\,a\,b_1 \ldots b_n\,a_{n+1} \in \bigcup_w w\,\nu\mathcal{F}$,
+  da $a_{n+1} \in \nu\mathcal{F}$.
 \end{proof}
 
 \begin{theorem}["Aquivalenz]
