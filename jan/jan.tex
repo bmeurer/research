@@ -159,17 +159,31 @@ $\sigma$ aus dem Kontext ersichtlich ist.
   \end{enumerate}
 \end{definition}
 Wir schreiben $\to$ statt $\to_\sigma$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
-\\[5mm]
-\begin{tabular}{ll}
-  $\Rule{w \to v \quad v \stackrel{\infty}{\to}}{w \stackrel{\infty}{\to}}$ 
-\end{tabular} \\[5mm]
-$\stackrel{*}{\to}$ ist die reflexive, transitive H"ulle von $\to$. $w \stackrel{\infty}{\to}$
-beschreibt unendliche Folgen von Reduktionen.
+$\stackrel{*}{\to}$ ist die reflexive, transitive H"ulle von $\to$.
+
+\begin{definition}[Co-Iteration]
+  Zu jedem $\sigma \in \Sigma^A_B$ sei eine generierende Funktion
+  $\mathcal{G}_\sigma:\powerset{(A \uplus B)^*} \to \powerset{(A \uplus B)^*}$ definiert durch:
+  \[\begin{array}{rcl}
+    \mathcal{G}_\sigma(X) = \{v \in (A \uplus B)^* \mid \exists w \in (A \uplus B)^*.\,v \rightarrow w \wedge w \in X\}
+  \end{array}\]
+  Die durch $\sigma$ definierte \emph{Co-Iteration} $\stackrel{\infty}{\rightarrow}_\sigma$ ist definiert
+  als gr"o"ster Fixpunkt $\nu\mathcal{G}_\sigma$ der generierenden Funktion $\mathcal{G}_\sigma$.
+\end{definition}
+Statt $\stackrel{\infty}{\rightarrow}_\sigma$ schreiben wir kurz $\stackrel{\infty}{\rightarrow}$,
+wenn $\sigma$ aus dem Kontext ersichtlich ist.
 
 \begin{lemma} \label{lemma:Redex_Star_und_Infty}
-  Wenn $v \stackrel{*}{\rightarrow} w$ und $w \stackrel{\infty}{\rightarrow}$,
-  dann $v \stackrel{\infty}{\rightarrow}$.
+  F"ur alle $\sigma \in \Sigma^A_B$ und $v,w \in (A \uplus B)^*$ gilt:
+  \begin{quote}
+    Wenn $v \stackrel{*}{\rightarrow}_\sigma w$ und $w \stackrel{\infty}{\rightarrow}_\sigma$,
+    dann gilt ebenfalls $v \stackrel{\infty}{\rightarrow}_\sigma$.
+  \end{quote}
 \end{lemma}
+
+\begin{proof}
+  Triviale Induktion.
+\end{proof}
 
 \begin{theorem}[Vollst"andigkeit] \label{theorem:Vollstaendigkeit}
   F"ur alle $n \in \N$, $a,a_1,\ldots,a_n \in A$, $b,b_1,\ldots,b_n \in B$ und $w \in (A \uplus B)^*$ gilt:
