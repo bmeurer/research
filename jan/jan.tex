@@ -115,17 +115,35 @@ Diese induktive Definition von $\Rightarrow_\sigma$ l"asst sich auch k"urzer not
 Wie man leicht sieht, ist $\Rightarrow_\sigma$ eine Funktion wenn $\sigma$ eine Funktion ist.
 
 \begin{definition}[Co-Rekursion]
-  Sei $\sigma \in \Sigma^A_B$. Die durch $\sigma$ definierte \emph{Co-Rekursion}
-  $\stackrel{\infty}{\Rightarrow}_\sigma\ \subseteq A$ ist co-induktiv definiert durch:
-  \begin{quote}
-    Wenn $n \in \N$, $a, a_1,\ldots,a_n,a_{n+1} \in A$, $b_1,\ldots,b_n\in B$,
-    $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur $i=1,\ldots,n$,
-    und $a_{n+1} \stackrel{\infty}{\Rightarrow}_\sigma$ und $(a,b_1 \ldots b_n,a_{n+1})\in\sigma$,
-    dann $a \stackrel{\infty}{\Rightarrow}_\sigma$.
-  \end{quote}
+  Zu jedem $\sigma \in \Sigma^A_B$ sei $\mathcal{F}_\sigma:\powerset{A} \to \powerset{A}$ definiert durch:
+  \[\begin{array}{rll}
+    \mathcal{F}_\sigma(X) = \{a \in A & \mid & \exists n\in\N,a_1,\ldots,a_{n+1}\in A,b_1,\ldots,b_n\in B.\\
+    && (\forall i=1,\ldots,n.\,a_i \Rightarrow_\sigma b_i) \\
+    &\wedge& (\forall i=1,\ldots,n+1.\,(a,b_1 \ldots b_{i-1},a_i) \in \sigma) \\
+    &\wedge& a_{n+1} \in X\}
+  \end{array}\]
+  Die durch $\sigma$ definierte \emph{Co-Rekursion} $\stackrel{\infty}{\Rightarrow}_\sigma$ ist definiert
+  als gr"o"ster Fixpunkt $\nu\mathcal{F}_\sigma$ der generierenden Funktion $\mathcal{F}_\sigma$.
 \end{definition}
-Statt $\Rightarrow_\sigma$ und $\stackrel{\infty}{\Rightarrow}_\sigma$ schreiben wir kurz $\Rightarrow$
-und $\stackrel{\infty}{\Rightarrow}$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
+Statt $\Rightarrow_\sigma$, $\stackrel{\infty}{\Rightarrow}_\sigma$ bzw. $\mathcal{F}_\sigma$
+schreiben wir kurz $\Rightarrow$, $\stackrel{\infty}{\Rightarrow}$ bzw. $\mathcal{F}$ wenn
+$\sigma$ aus dem Kontext ersichtlich ist.
+
+\begin{lemma}
+  F"ur alle $\sigma\in\Sigma^A_B$, $n\in\N$, $a_1,\ldots,a_{n+1}\in A$ und $b_1,\ldots,b_n \in B$ gilt:
+  \begin{quote}
+    Wenn $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur alle $i=1,\ldots,n$,
+    $(a,b_1 \ldots b_n,a_{n+1})\in\sigma$ und $a_{n+1} \stackrel{\infty}{\Rightarrow}_\sigma$, dann
+    auch $a \stackrel{\infty}{\Rightarrow}_\sigma$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Wegen $a_{n+1}\in\nu\mathcal{F}_\sigma$ folgt unmittelbar nach Definition
+  $a \in \mathcal{F}_\sigma(\nu\mathcal{F}_\sigma)$. Da $\nu\mathcal{F}_\sigma$
+  ein Fixpunkt von $\mathcal{F}_\sigma$ ist, gilt somit auch $a \in \nu\mathcal{F}_\sigma$, also
+  $a \stackrel{\infty}{\Rightarrow}_\sigma$.
+\end{proof}
 
 
 \section{Iteration}
