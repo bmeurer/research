@@ -432,7 +432,82 @@ implementing the instruction relative to some well-defined base address. Executi
 instruction is then a matter of determining the C code address from the offset in the instruction
 opcode and the well-defined base address\footnote{On 32bit targets the base address is $0$, hence the
 offset is already the address, while on 64bit targets the offset is added to the base address.},
-and jumping to that address.
+and jumping to that address. The threaded byte-code sequence itself therefore provides a mapping
+from byte-code to native machine code addresses.
+
+We have found that a similar approach is applicable in the context of a JIT engine. Whenever a
+given byte-code instruction is JIT compiled to native code, we replace the instruction opcode word
+within the byte-code sequence by the offset of the generated native code relative to the base address
+\texttt{caml\_jit\_code\_end}. When jumping to a byte-code address -- i.e. during closure application -- we
+just read the offset from the instruction opcode field, add it to \texttt{caml\_jit\_code\_end} and jump to that
+address. This trampoline code for x86\_64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
+(\texttt{\%rdi} contains the address of the byte-code to execute and \texttt{\%rdx} is a temporary
+register, not preserved across byte-code jumps).
+
+\begin{figure}[ht]
+  \centering
+  \begin{verbatim}
+  movslq (%rdi), %rdx
+  addq   caml_jit_code_end(%rip), %rdx
+  jmpq   *%rdx
+\end{verbatim}
+  \caption{Byte code trampoline (x86\_64)}
+  \label{figure:Byte_code_trampoline_x86_64}
+\end{figure}
+
+Care must taken on 64bit targets, as the addressable range is limited to $-2^{31} \ldots 2^{31}-1$ bytes,
+since the width of the instruction opcode field is only 32 bits. Our current approach is to allocate
+a fixed $2^{27}-x$ bytes code area\footnote{Where $x$ is a small amount of memory reserved for special purposes.}
+(using \texttt{mmap}) with \texttt{caml\_jit\_code\_end} pointing to the end of the code area.
+The offsets are therefore values in the range $-2^{27}+x \ldots{-1}$.
+
+\subsection{Incremental compilation}
+
+Byte-code is incrementally translated to native machine code. Whenever the JIT engine detects a
+byte-code instruction, which has not been translated to native machine code yet, it invokes the
+C function \texttt{caml\_jit\_compile}. \texttt{caml\_jit\_compile} then translates the byte-code
+block starting at the given byte-code offset and all byte-code blocks, which appear as branch
+targets. These \emph{byte-code blocks} are basic blocks within the \textsc{OCaml} byte-code,
+terminated by branch, raise, return and stop instructions. Translation of a byte-code block also
+stops once an instruction is hit, which was already translated, and the compiler simply generates
+a jump to the previously translated native machine code.
+
+With the address mapping described above, this incremental, \emph{on-demand} compilation scheme
+was very easy to implement. Given that all offsets to native machine code are negative values and
+all byte-code instruction opcodes are positive values between $0$ and $145$, it is easy to distinguish
+already translated and not yet translated byte-code instructions. Now one could alter the byte code
+trampoline in figure~\ref{figure:Byte_code_trampoline_x86_64} and add a test to see whether \texttt{(\%rdi)}
+contains a positive value, and if so invoke the \texttt{caml\_jit\_compile} function.
+
+We did however discover that such a test is unnecessary if we ensure that a jump to an address in
+the range $0 \ldots 145$ relative to \texttt{caml\_jit\_code\_end} automatically invokes the
+\texttt{caml\_jit\_compile} function. This was surprisingly easy to accomplish on x86\_64 (and
+x86); we simply reserve space after \texttt{caml\_jit\_code\_end} for $145$ \texttt{nop} instructions
+and trampoline code which invokes \texttt{caml\_jit\_compile} and jumps to the generated code afterwards.
+The byte-code compile trampoline for x86\_64 is shown in figure~\ref{figure:Byte_code_compile_trampoline_x86_64}.
+
+\begin{figure}[ht]
+  \centering
+  \begin{verbatim}
+  movq %rax, 0(%rsp)
+  call caml_jit_compile(%rip)
+  movq %rax, %rdx
+  movq 0(%rsp), %rax
+  jmpq *%rdx
+\end{verbatim}
+  \caption{Byte-code compile trampoline (x86\_64)}
+  \label{figure:Byte_code_compile_trampoline_x86_64}
+\end{figure}
+
+Now whenever a jump to a not yet compiled byte-code instruction is performed, the byte-code trampoline
+will jump to one of the \texttt{nop} instructions and fall through the following \texttt{nop}'s to the
+byte-code compile trampoline. At this point \texttt{\%rax} contains the \texttt{accu} value, \texttt{\%rdi}
+contains the byte-code address and current state of the virtual machine is stored in global variables
+and callee-save registers \cite{Matz10}. Now the compile trampoline preserves \texttt{\%rax} in a pre-allocated
+cell on the native machine stack and invokes \texttt{caml\_jit\_compile} with the byte-code address to
+compile in \texttt{\%rdi}. Once \texttt{caml\_jit\_compile} returns, \texttt{\%rax} contains the
+address of the generated native code, so we save that address to \texttt{\%rdx}, restore the previous
+value of \texttt{\%rax}, and jump to the native machine code.
 
 \subsection{TODO}
 
