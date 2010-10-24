@@ -35,10 +35,12 @@ Benedikt Meurer\\
 
 \begin{abstract}
   This paper presents the current state of an ongoing research
-  project to improve the performance of the \textsc{Ocaml}
-  byte-code interpreter using just in time native code generation.
-
-  TODO
+  project to improve the performance of the \textsc{OCaml}
+  byte-code interpreter using Just-In-Time native code generation.
+  The JIT engine \textsc{OCamlJit2} currently runs
+  on x86-64 processors, mimicing precisly the behavior of the
+  \textsc{OCaml} virtual machine. Its design and implementation
+  is described, and performance measures are given.
 \end{abstract}
 
 \category{D.3.3}{Programming Languages}{Language Constructs and Features}
@@ -53,6 +55,7 @@ Benedikt Meurer\\
 \section{Introduction}
 
 \textsc{OCaml}\cite{Leroy10} TODO
+\textsc{MetaOCaml}
 
 
 %% Related work
@@ -752,22 +755,6 @@ instructions.
 This way we were able to avoid nearly all unnecessary stack pointer updates, which
 also reduced the size of the generated native machine code.
 
-\subsection{Floating point operations}
-
-Most floating point operations are implemented as C primitives in the byte-code
-interpreter. Calling C primitives from the generated native code comes at a
-certain cost -- i.e. making the stack and minor allocation pointer available
-to C code, and reloading it once the C function returns -- which significantly
-decrease the performance of programs using a lot of floating point operations.
-
-We have therefore decided to inline various floating point primitives (i.e.
-\texttt{caml\_add\_float}, \texttt{caml\_sub\_float}, etc.), which
-speed up certain floating point benchmarks by a factor of $1.7$.
-
-
-%% Performance
-\section{Performance}
-
 \begin{table*}[ht!]
   \centering
   \begin{tabular}{l|rrr|rrr|l}
@@ -805,6 +792,22 @@ speed up certain floating point benchmarks by a factor of $1.7$.
   \caption{Running time and speedup}
   \label{table:Running_time_and_speedup}
 \end{table*}
+
+\subsection{Floating point operations}
+
+Most floating point operations are implemented as C primitives in the byte-code
+interpreter. Calling C primitives from the generated native code comes at a
+certain cost -- i.e. making the stack and minor allocation pointer available
+to C code, and reloading it once the C function returns -- which significantly
+decrease the performance of programs using a lot of floating point operations.
+
+We have therefore decided to inline various floating point primitives (i.e.
+\texttt{caml\_add\_float}, \texttt{caml\_sub\_float}, etc.), which
+speed up certain floating point benchmarks by a factor of $1.7$.
+
+
+%% Performance
+\section{Performance}
 
 \begin{figure*}[ht!]
   \centering
@@ -916,8 +919,8 @@ profiling data \cite{Cuthbertson09,Vaswani03}.
 
 Both JVM and CLR depend on profile guided optimizations for good performance,
 because the their byte-code is slower than the \textsc{OCaml} byte-code. This
-is mostly because of the additional overhead that comes with multi-threading,
-class loading and object synchronization. But it is also due to the fact that
+is mostly because of the additional overhead that comes with exceptions handling,
+multi-threading, class loading and object synchronization. But it is also due to the fact that
 both the JVM byte-code \cite{LindholmYellin99} and the Common Intermediate
 Language (CLI) \cite{Ecma335} instruction sets are not as optimized as the
 \textsc{OCaml} byte-code.
@@ -937,7 +940,36 @@ several applications by a factor of $2$ to $4$.
 %% Future work
 \section{Further work}
 
-TODO
+Although the current implementation already performs quite well in most cases,
+it also has several drawbacks, which will be addressed in the future.
+
+First of all, instruction selection, instruction scheduling and register
+allocation in general is far from optimal. This is due to the naive
+compilation scheme. For example, most of the generated code uses less than
+a fourth of the registers provided by the x86-64 processor.
+
+The code memory management is another open issue. Right now code memory
+is managed by allocating in one large memory chunk. Unused code memory
+is never released or reused. This may cause trouble for \textsc{MetaOCaml}
+or long lived interactive top-level shells. We plan to address this
+issue by adding support for garbage collected byte-code segments to the
+\textsc{OCaml} runtime, which will then also take care of native machine
+code segments.
+
+Last but not least we also plan to improve the portability of the JIT
+engine. While it is more or less straight-forward to port the current
+code to the x86 architecture (trivial in most cases, but nevertheless a time
+consuming task), it would take considerable amounts of time to port the JIT
+engine to a different architecture like PowerPC, Sparc or ARM.
+
+In the future, we may even be able to get the JIT engine on par with
+the optimizing native code compiler \texttt{ocamlopt} w.r.t. execution speed,
+which would offer the possibility to drop \texttt{ocamlopt} and its runtime.
+This would improve the maintainability of \textsc{OCaml}, because then
+only a single compiler and a single runtime would have to be maintained
+-- plus the JIT engine, of course. This however is an optional goal and
+by no means a requirement, especially since \textsc{OCaml}'s optimizing
+native code compiler is also of educational interest.
 
 
 %% Conclusion
