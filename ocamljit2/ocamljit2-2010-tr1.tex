@@ -41,6 +41,7 @@ Benedikt Meurer\\
   TODO
 \end{abstract}
 
+\category{D.3.3}{Programming Languages}{Language Constructs and Features}
 \category{D.3.4}{Programming Languages}{Processor}[code generation, incremental compiler]
 
 \terms{OCaml, just-in-time compilation, byte-code, machine code generation}
@@ -57,8 +58,8 @@ Benedikt Meurer\\
 %% Related work
 \section{Related work}
 
-We present the existing \textsc{OCaml} system and the previous \textsc{OCamlJit}\cite{Starynkevitch04}
-implementation based on the \textsc{Gnu Lightning} library\cite{Bonzini10}. For the sake of completeness
+We present the existing \textsc{OCaml} system and the previous \textsc{OCamlJit} \cite{Starynkevitch04}
+implementation based on the \textsc{Gnu Lightning} library \cite{Bonzini10}. For the sake of completeness
 we repeat the overview of the \textsc{OCaml} compiler and runtime given in \cite{Starynkevitch04} below.
 Readers already familiar with the internals of the \textsc{Ocaml} implementation can skip to
 \ref{subsection:OCamlJit}.
@@ -82,7 +83,7 @@ are interpreted by the \texttt{ocamlrun} program\footnote{Technically speeking, 
 The goal of the present work is to substitute the interpreter part of the \textsc{OCaml} runtime
 \texttt{ocamlrun} with a Just-In-Time compiler, which incrementally compiles the byte-code to
 native code and runs the generated native code, instead of interpreting the byte-code. Unlike
-\textsc{OCamlJit}\cite{Starynkevitch04}, we do not aim to provide a separate \texttt{ocamljitrun}
+\textsc{OCamlJit} \cite{Starynkevitch04}, we do not aim to provide a separate \texttt{ocamljitrun}
 runtime, since that way one would have to explicitly use the runtime replacement to achieve the
 benefits of Just-In-Time compilation.
 
@@ -285,8 +286,8 @@ Byte-code instructions are classified as follows:
 
 \subsection{OCamlJit} \label{subsection:OCamlJit}
 
-In this section we briefly describe the design and implementation of the \textsc{Gnu Lightning}\cite{Bonzini10}
-based \textsc{OCamlJit}\cite{Starynkevitch04},
+In this section we briefly describe the design and implementation of the \textsc{Gnu Lightning} \cite{Bonzini10}
+based \textsc{OCamlJit} \cite{Starynkevitch04},
 which inspired many aspects of our present work. The main goal of \textsc{OCamlJit} is maximal compatibility
 with the \textsc{OCaml} byte-code interpreter, its runtime system (including the garbage collector), and its
 behavior. That means programs running under \texttt{ocamljitrun} see the same virtual machine as
@@ -368,7 +369,7 @@ interesting achievement, there are however some shortcomings to be noted:
   \texttt{ocamlrun}. There are various points that add to this slow translation speed; for
   example, adding every (byte-code, native-code) address pair to the translation
   hash-table takes a significant amount of the translation time -- actually more than a fourth
-  of it\cite{Starynkevitch04}.
+  of it \cite{Starynkevitch04}.
 \item The limited register set provided by \textsc{Gnu Lightning} prevents efficient register
   usage for modern targets like x86-64, ARM or PowerPC, which offer more than just 8 general
   purpose registers. In addition, the \emph{portability at the lowest level} approach of
@@ -383,7 +384,7 @@ The present work is part of a research project to overcome these problems.
 % \section{Earlier work}
 
 % We started the project with an early prototype of an \textsc{OCaml} JIT engine based on the
-% \textsc{LLVM} compiler framework\cite{Lattner02,Lattner04}. \textsc{LLVM}\footnote{\url{http://llvm.org/}}
+% \textsc{LLVM} compiler framework \cite{Lattner02,Lattner04}. \textsc{LLVM}\footnote{\url{http://llvm.org/}}
 % provides an internal code representation (IR), which describes a program using an abstract RISC-like instruction
 % set, and offers C/C++ APIs for code generation and Just-In-Time compilation, which currently supports
 % x86, x86\_64 and PowerPC.
@@ -767,7 +768,7 @@ speed up certain floating point benchmarks by a factor of $1.7$.
 %% Performance
 \section{Performance}
 
-\begin{table*}[ht]
+\begin{table*}[ht!]
   \centering
   \begin{tabular}{l|rrr|rrr|l}
     \multicolumn{1}{l|}{\large invocation}
@@ -805,7 +806,7 @@ speed up certain floating point benchmarks by a factor of $1.7$.
   \label{table:Running_time_and_speedup}
 \end{table*}
 
-\begin{figure*}[ht]
+\begin{figure*}[ht!]
   \centering
   \begin{tikzpicture}
     \definecolor{color}{HTML}{483D8B}
@@ -846,12 +847,12 @@ speed up certain floating point benchmarks by a factor of $1.7$.
   \label{figure:Speedup_w_r_t_the_byte_code_interpreter}
 \end{figure*}
 
-The performance measurements presented here are done on a MacBook notebook
-(Intel Core 2 Duo 2.4 GHz with 3 MiB L2 Cache, and 4 GiB 1067 MHz DDR3 RAM)
-running Mac OS X 10.6. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
-build 5664). The \textsc{OCaml} compiler is 3.12. The \textsc{OCamlJit2}
-code is the revision tagged with \texttt{ocamljit2-2010-tr1},
-compiled with optimization level \texttt{-O3}.
+The performance measurements presented here are done on a MacBook 
+with an Intel Core 2 Duo 2.4 GHz CPU (3 MiB L2 Cache), and 4 GiB 1067 MHz DDR3 RAM,
+running Mac OS X 10.6.4. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
+build 5664). The \textsc{OCaml} compiler is 3.12.0. The \textsc{OCamlJit2}
+code is the tagged revision \texttt{ocamljit2-2010-tr1},
+compiled with \texttt{gcc} optimization level \texttt{-O3}.
 
 \subsection{Execution time speedup}
 
@@ -881,7 +882,7 @@ speedup of \textsc{OCamlJit2} w.r.t. the byte-code interpreter. As expected, sho
 executions (i.e. \texttt{ocamlc -help}) do not benefit from the Just-In-Time
 compilation, but thanks to our design, their running time is on par with the
 byte-code interpreter (in contrast to \textsc{OCamlJit}, where the running
-time was worse). Other invocations are speed up by a factor of $2.1$ to $6.27$.
+time was worse). Other invocations are speed up by a factor of $2.1$ to $6.3$.
 
 Floating point intensive programs like \texttt{almabench}, \texttt{fft}
 and \texttt{nucleic} spend a large amount of time collecting garbage,
@@ -900,6 +901,37 @@ x86-64 processors, so we are unable to directly compare the running times of
 We can only compare the relative speedups achieved on different architectures
 (x86 in case of \textsc{OCamlJit} and x86-64 in case of \textsc{OCamlJit2}),
 which seem to indicate that we are doing quite well.
+
+
+%% Related work
+\section{Related work}
+
+Just-In-Time compilation is still a very active research field \cite{Arnold04}.
+A lot of work has been done on effecient dynamic compilation in the field of
+the Java Virtual Machine (JVM) and the Common Language Runtime (CLR), which is
+part of the .NET framework. JIT compilation of Java or .NET byte-code is usually
+driven by first interpreting the byte-code, collecting profiling information,
+and selecting the appropriate methods to optimize by inspecting the collected
+profiling data \cite{Cuthbertson09,Vaswani03}.
+
+Both JVM and CLR depend on profile guided optimizations for good performance,
+because the their byte-code is slower than the \textsc{OCaml} byte-code. This
+is mostly because of the additional overhead that comes with multi-threading,
+class loading and object synchronization. But it is also due to the fact that
+both the JVM byte-code \cite{LindholmYellin99} and the Common Intermediate
+Language (CLI) \cite{Ecma335} instruction sets are not as optimized as the
+\textsc{OCaml} byte-code.
+
+More recent examples include the Lua programming language \cite{Ierusalimschy07,Ierusalimschy96},
+a powerful, fast, lightweight, embeddable scripting language, accompanied
+by LuaJIT \cite{Pall10}, which combines a high-performance interpreter with
+a state-of-the-art Just-In-Time compiler.
+
+Another recent example is the Dalvik virtual machine\footnote{\url{http://dalvikvm.com/}}
+\cite{Bornstein08}, which drives applications running on the Android mobile
+operating system\footnote{\url{http://www.android.com/}}. As of Android 2.2,
+Dalvik features a Just-In-Time compiler, which increased performance of
+several applications by a factor of $2$ to $4$.
 
 
 %% Future work
