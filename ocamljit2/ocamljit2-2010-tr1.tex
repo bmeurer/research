@@ -12,7 +12,7 @@
 \usepackage{tikz}
 
 \usetikzlibrary{arrows}
-\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{trees}
 
 \author{Benedikt Meurer}
 \title{OCAMLJIT 2.0 - Faster Objective Caml}
@@ -83,16 +83,18 @@ a typed syntax tree (see file \texttt{typing/typedtree.mli}) as shown in figure~
 
 \begin{figure}[ht]
   \centering
-  TODO
+  \begin{tikzpicture}
+    \node {$\mathbf{let}$}
+    child {node {$\mathbf{var}\,x$}}
+    child {node {$\mathbf{const}\,1$}}
+    child {node {$\mathbf{apply}$}
+      child {node {$\mathbf{var}\,+$}}
+      child {node {$\mathbf{var}\,x$}}
+      child {node {$\mathbf{const}\,3$}}
+    };
+  \end{tikzpicture}
   \caption{Abstract syntax tree}
   \label{figure:Abstract_syntax_tree}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  TODO
-  \caption{Typed syntax tree}
-  \label{figure:Typed_syntax_tree}
 \end{figure}
 
 From this typed syntax tree, the byte-code compiler generates a so called {\em lambda representation} (see
@@ -105,9 +107,18 @@ kind of explicit type information.
 
 \begin{figure}[ht]
   \centering
-  \texttt{(let (x/1038 1) (+ x/1038 3))}
-  \caption{Lambda representation}
-  \label{figure:Lambda_representation}
+  \begin{tikzpicture}
+    \node {$\stackrel{\mathbf{int}}{\mathbf{let}}$}
+    child {node {$\stackrel{\mathbf{int}}{\mathbf{var}\,x}$}}
+    child {node {$\stackrel{\mathbf{int}}{\mathbf{const}\,1}$}}
+    child {node {$\stackrel{\mathbf{int}}{\mathbf{apply}}$}
+      child {node {$\stackrel{\mathbf{int}\to\mathbf{int}\to\mathbf{int}}{\mathbf{var}\,+}$}}
+      child {node {$\stackrel{\mathbf{int}}{\mathbf{var}\,x}$}}
+      child {node {$\stackrel{\mathbf{int}}{\mathbf{const}\,3}$}}
+    };
+  \end{tikzpicture}
+  \caption{Typed syntax tree}
+  \label{figure:Typed_syntax_tree}
 \end{figure}
 
 This lambda tree representation includes leaves for variables and constants as well as nodes for function
@@ -115,6 +126,13 @@ definitions and applications, \texttt{let} and \texttt{let rec}, primitive opera
 switches (used in compiled forms of \texttt{match} expressions), exception handling (\texttt{raise}
 and \texttt{try$\ldots$with} nodes), imperative traits (sequences, \texttt{for} and \texttt{while}
 loops), etc.
+
+\begin{figure}[ht]
+  \centering
+  \texttt{(let (x/1038 1) (+ x/1038 3))}
+  \caption{Lambda representation}
+  \label{figure:Lambda_representation}
+\end{figure}
 
 After several optimizations are applied\footnote{These are mostly peephole optimizations, transforming
   lambda trees into {\em better} or smaller lambda tress.}, the lambda tree representation is
