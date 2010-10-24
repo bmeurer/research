@@ -681,14 +681,16 @@ which contains a not yet translated \texttt{PUSH} instruction.
 
 \begin{figure}[htb]
   \centering
+  \definecolor{bytecolor}{HTML}{685D8B}
+  \definecolor{nativecolor}{HTML}{8FBC8F}
   \begin{tikzpicture}
     \draw (0.5,5.25) node {byte code};
     \draw (3.5,5.25) node {generated code};
     \draw (0,1) rectangle (1,5);
-    \filldraw [fill=gray] (0,2.5) rectangle (1,3);
+    \filldraw [fill=bytecolor] (0,2.5) rectangle (1,3);
     \draw (3,1) rectangle (4,5);
-    \filldraw [fill=gray] (3,1.5) rectangle (4,2);
-    \filldraw [fill=gray] (3,3.5) rectangle (4,4);
+    \filldraw [fill=nativecolor] (3,1.5) rectangle (4,2);
+    \filldraw [fill=nativecolor] (3,3.5) rectangle (4,4);
     \draw [*-stealth] (0.5,2.75) .. controls (1.5,2.75) and (2.5,1.75) .. (3,1.75);
     \draw [*-stealth] (3.5,1.75) .. controls (5,1.75) and (5,3.75) .. (4,3.75);
     \draw (1.3,3) node {$b_1$};
@@ -762,6 +764,144 @@ We have therefore decided to inline various floating point primitives (i.e.
 speed up certain floating point benchmarks by a factor of $1.7$.
 
 
+%% Performance
+\section{Performance}
+
+\begin{table*}[ht]
+  \centering
+  \begin{tabular}{l|rrr|rrr|l}
+    \multicolumn{1}{l|}{\large invocation}
+    & \multicolumn{3}{c|}{{\large time} (cpu sec.)}
+    & \multicolumn{3}{c|}{\large speedup}
+    & \multicolumn{1}{l}{\large notes} \\
+    command
+    & $t_{byt}$
+    & $t_{jit}$
+    & $t_{opt}$
+    & $\sigma^{jit}_{byt}$
+    & $\sigma^{opt}_{jit}$
+    & $\sigma^{opt}_{byt}$
+    \\
+    \hline
+\texttt{almabench} & $27.83$ & $10.05$ & $4.47$ & $2.77$ & $2.25$ & $6.22$ & number crunching \\
+\texttt{almabench.unsafe} & $27.74$ & $9.76$ & $4.35$ & $2.84$ & $2.24$ & $6.38$ & number crunching {\small(no bounds check)} \\
+\texttt{bdd} & $8.50$ & $1.93$ & $0.68$ & $4.41$ & $2.86$ & $12.60$ & binary decision digram \\
+\texttt{boyer} & $4.34$ & $1.68$ & $1.06$ & $2.59$ & $1.59$ & $4.11$ & tautology proving \\
+\texttt{fft} & $5.72$ & $2.17$ & $0.64$ & $2.63$ & $3.39$ & $8.94$ & fast fourier transformation \\
+\texttt{nucleic} & $14.78$ & $4.10$ & $0.80$ & $3.61$ & $5.13$ & $18.52$ & floating point \\
+\texttt{quicksort} & $6.78$ & $1.27$ & $0.24$ & $5.34$ & $5.34$ & $28.48$ & array quicksort \\
+\texttt{quicksort.unsafe} & $4.07$ & $0.93$ & $0.20$ & $4.36$ & $4.79$ & $20.86$ & array quicksort {\small(no bounds check)} \\
+\texttt{soli} & $0.17$ & $0.03$ & $0.01$ & $5.09$ & $3.40$ & $17.30$ & tiny solitaire \\
+\texttt{soli.unsafe} & $0.14$ & $0.02$ & $0.01$ & $6.27$ & $2.75$ & $17.25$ & tiny solitaire {\small(no bounds check)} \\
+\texttt{sorts} & $19.29$ & $7.13$ & $3.71$ & $2.71$ & $1.92$ & $5.19$ & various sorting algorithms \\
+\hline
+\texttt{ocamlc -help} & $0.01$ & $0.01$ & $0.00$ & $1.14$ & $7.00$ & $8.00$ & {\small(short execution)} \\
+\texttt{ocamlc -c format.ml} & $0.17$ & $0.08$ & $0.05$ & $2.16$ & $1.65$ & $3.57$ &  \\
+\texttt{ocamlopt -c format.ml} & $0.65$ & $0.28$ & $0.19$ & $2.31$ & $1.46$ & $3.38$ &  \\
+\texttt{ocamlc -c stdlib/*.ml} & $2.03$ & $0.95$ & $0.67$ & $2.14$ & $1.42$ & $3.04$ & byte-compile most of \texttt{stdlib/*.ml} \\
+\texttt{ocamlopt -c stdlib/*.ml} & $5.04$ & $2.36$ & $1.70$ & $2.14$ & $1.39$ & $2.97$ & native-compile most of \texttt{stdlib/*.ml} \\
+  \end{tabular}
+  \caption{Running time and speedup}
+  \label{table:Running_time_and_speedup}
+\end{table*}
+
+\begin{figure*}[ht]
+  \centering
+  \begin{tikzpicture}
+    \definecolor{color}{HTML}{483D8B}
+    \draw (0cm,0cm) -- (16.0cm,0cm);  %Abzisse
+    \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+    \draw (16.0cm,0cm) -- (16.0cm,-0.1cm);  %rechtes Ende der Abzisse
+    \draw (-0.1cm,0cm) -- (-0.1cm,6.5cm);  %Ordinate
+    \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+    \draw (-0.1cm,6.5cm) -- (-0.2cm,6.5cm) node [left] {$\sigma^{jit}_{byt}$};  %oberes Ende der Ordinate
+    \foreach \x in {1,...,6}  %Hilfslinien
+      \draw[gray!50, text=black] (-0.2 cm,\x cm) -- (16.0 cm,\x cm) node at (-0.5 cm,\x cm) {\x};  %Beschriftung
+      \foreach \x/\y/\bench in
+      {
+        0.1/2.77/almabench,  %\x ist Anfang der Säulen
+        1.1/2.84/almabench.unsafe,  %\y ist Höhe der Säulen
+        2.1/4.41/bdd,
+        3.1/2.59/boyer,
+        4.1/2.63/fft,
+        5.1/3.61/nucleic,
+        6.1/5.34/quicksort,
+        7.1/4.36/quicksort.unsafe,
+        8.1/5.09/soli,
+        9.1/6.27/soli.unsafe,
+        10.1/2.71/sorts,
+        11.1/1.14/ocamlc -help,
+        12.1/2.16/ocamlc -c format.ml,
+        13.1/2.31/ocamlopt -c format.ml,
+        14.1/2.14/ocamlc -c stdlib/*.ml,
+        15.1/2.14/ocamlopt -c stdlib/*.ml
+      }
+      {
+        \draw[fill=color] (\x cm,0cm) rectangle (0.5cm+\x cm,\y cm) %die Säulen
+        node at (0.25cm + \x cm,\y cm + 0.3cm) {\y}; %Faktor über den Säulen
+        \node[rotate=45, left] at (0.4 cm +\x cm,-0.1cm) {\small\texttt{\bench}}; %Säulenbeschriftung
+      };
+  \end{tikzpicture}
+  \caption{Speedup w.r.t. the byte-code interpreter}
+  \label{figure:Speedup_w_r_t_the_byte_code_interpreter}
+\end{figure*}
+
+The performance measurements presented here are done on a MacBook notebook
+(Intel Core 2 Duo 2.4 GHz with 3 MiB L2 Cache, and 4 GiB 1067 MHz DDR3 RAM)
+running Mac OS X 10.6. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
+build 5664). The \textsc{OCaml} compiler is 3.12. The \textsc{OCamlJit2}
+code is the revision tagged with \texttt{ocamljit2-2010-tr1},
+compiled with optimization level \texttt{-O3}.
+
+\subsection{Execution time speedup}
+
+We measured only the total execution time, as this is the significant
+time. Table~\ref{table:Running_time_and_speedup} gives some timings
+(combined system and user CPU time, in seconds), comparing the byte-code interpreter
+time $t_{byt}$ to the \textsc{OCamlJit2} time $t_{jit}$, and the
+time $t_{opt}$ taken by the same program compiled with the optimizing
+native code compiler \texttt{ocamlopt}. It also lists the relative speedups
+$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$, $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$,
+and $\sigma^{jit}_{opt} = \frac{t_{byt}}{t_{opt}}$, where bigger values are
+better, and a value less than $1$ would represent a regression.
+
+The commands listed in the first $11$ rows are test programs from the
+\texttt{testsuite/tests} folder of the \textsc{OCaml} 3.12.0 distribution.
+They do more or less represent typical \textsc{OCaml} applications.
+The remaining rows are invocations of the \texttt{ocamlc} and \texttt{ocamlopt}
+compilers, where \texttt{stdlib/*.ml} means all source files from the
+\texttt{stdlib} folder of the \textsc{OCaml} 3.12.0 distribution which
+do not require special compilation arguments like \texttt{-nopervasives}
+needed for \texttt{stdlib/pervasives.ml} and \texttt{stdlib/pervasives.mli},
+or \texttt{-nolabels} needed for \linebreak[4]\texttt{stdlib/*Labels.ml} and
+\texttt{stdlib/*Labels.mli}.
+
+Figure~\ref{figure:Speedup_w_r_t_the_byte_code_interpreter} highlights the
+speedup of \textsc{OCamlJit2} w.r.t. the byte-code interpreter. As expected, short
+executions (i.e. \texttt{ocamlc -help}) do not benefit from the Just-In-Time
+compilation, but thanks to our design, their running time is on par with the
+byte-code interpreter (in contrast to \textsc{OCamlJit}, where the running
+time was worse). Other invocations are speed up by a factor of $2.1$ to $6.27$.
+
+Floating point intensive programs like \texttt{almabench}, \texttt{fft}
+and \texttt{nucleic} spend a large amount of time collecting garbage,
+which is due to the fact that we still allocate a heap block for each
+and every floating point value used during execution. We intend to
+further optimize the performance here using better instruction selection
+and register allocation.
+
+\subsection{Comparison with OCamlJit}
+
+Unfortunately we were unable to get \textsc{OCamlJit} running with \textsc{OCaml}
+3.12.0 and the most recent revision of \textsc{Gnu Lightning}, which supports
+x86-64 processors, so we are unable to directly compare the running times of
+\textsc{OCamlJit} and \textsc{OCamlJit2} on identical hardware.
+
+We can only compare the relative speedups achieved on different architectures
+(x86 in case of \textsc{OCamlJit} and x86-64 in case of \textsc{OCamlJit2}),
+which seem to indicate that we are doing quite well.
+
+
 %% Future work
 \section{Further work}
 
@@ -771,7 +911,12 @@ TODO
 %% Conclusion
 \section{Conclusion}
 
-TODO
+The \textsc{OCamlJit2} implementation presented here did achieve some significant
+speed (at least twice as fast as the byte-code interpreter in all relevant
+comparisons), but there are various open issues to address. Especially the
+poor instruction selection and register allocation will be addressed in the
+near future to get \textsc{OCamlJit2} on par with the optimizing native code
+compiler and JIT engines available for other programming languages.
 
 
 %% References
