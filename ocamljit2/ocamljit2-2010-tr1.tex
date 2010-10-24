@@ -9,6 +9,10 @@
             pdfauthor={Benedikt Meurer},%
             pdfsubject={},%
             pdfdisplaydoctitle=true]{hyperref}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows}
+\usetikzlibrary{decorations.pathreplacing}
 
 \author{Benedikt Meurer}
 \title{OCAMLJIT 2.0 - Faster Objective Caml}
@@ -558,7 +562,8 @@ Now whenever a jump to a not yet translated byte-code instruction is performed, 
 will jump to one of the \texttt{nop} instructions and fall through the following \texttt{nop}'s to the
 byte-code compile trampoline. At this point \texttt{\%rax} contains the \texttt{accu} value, \texttt{\%rdi}
 contains the byte-code address and current state of the virtual machine is stored in global variables
-and callee-save registers \cite{Matz10}. Now the compile trampoline preserves \texttt{\%rax} in the
+and callee-save registers (see section~\ref{subsection:Virtual_machine_design}).
+Now the compile trampoline preserves \texttt{\%rax} in the
 callee-save register \texttt{\%rbx} and invokes \texttt{caml\_jit\_compile} with the byte-code address to
 compile in \texttt{\%rdi}. Once \texttt{caml\_jit\_compile} returns, \texttt{\%rax} contains the
 address of the generated native code, so we save that address to \texttt{\%rbx}, restore the previous
@@ -602,7 +607,7 @@ case for the \texttt{ANDINT} instruction on x86-64.
 The generated native code for \texttt{ANDINT} on x86-64 is shown in figure~\ref{figure:ANDINT_native_code}.
 The \texttt{andq} instruction performs the ``bitwise and'' of \texttt{accu} (found in \texttt{\%rax}) and
 the top-most stack cell (found in \texttt{0(\%r14)}), storing the result in \texttt{\%rax}. The \texttt{addq}
-instruction pops the top-most stack cell (the \textsc{OCaml} stack grows towards lower addresses).
+instruction pops the top-most cell off the stack (the \textsc{OCaml} stack grows towards lower addresses).
 
 \begin{figure}[ht]
   \centering
@@ -614,19 +619,59 @@ instruction pops the top-most stack cell (the \textsc{OCaml} stack grows towards
   \label{figure:ANDINT_native_code}
 \end{figure}
 
-\subsection{TODO}
+The translation of most other byte-code instructions is just as straight-forward as
+the \texttt{ANDINT} case shown above. There are however a few byte-code instructions that
+required special processing, most notably branch instructions. These instructions are used
+to change the flow of control within a byte-code segment.
 
-\begin{enumerate}
-\item Byte-code instruction replaced with native code offset; positive value is (not yet compiled)
-  byte-code instruction (or (not yet compiled) branch target), negative value is offset of native code
-  for this byte-code relative to \texttt{caml\_jit\_code\_end}
-\item Incremental compilation; on function basis (with few exceptions, i.e. trap handlers might not be
-  compiled immediately); driven by \texttt{caml\_jit\_compile}
-\item Compilation triggered by compile trampoline; jump to a code pointer \texttt{bcp} is done
-  by \texttt{jmp caml\_jit\_code\_end+*bcp}, a negative \texttt{*bcp} resolves to the already available
-  native code for the byte-code, positive \texttt{*bcp} (must be a byte-code instruction then) causes
-  a jump to the compile trampoline (via NOP indirections)
-\end{enumerate}
+Whenever a \texttt{BRANCH} instruction is hit, we check whether the branch target is already
+translated (i.e. if the opcode of the instruction contains a native code offset). If so, we
+simply generate a \texttt{jmp} to the known native code address.
+Otherwise we generate a \emph{forward jump} (i.e. a \texttt{jmp} instruction with no known
+target), record a reference from the target byte-code to the forward jump\footnote{The
+term \emph{forward jump} may be misleading, since the jump does not need to be forward
+within the byte-code segment.}, and append the target byte-code to the pending list
+(if it wasn't already listed there). The translation of conditional branch and \texttt{SWITCH}
+instructions follows a similar scheme. Since \texttt{caml\_jit\_compile}
+loops until all pending blocks are translated, we are sure that all forward jumps will
+have been patched once \texttt{caml\_jit\_compile} returns.
+
+Recording a reference from a target byte-code to a forward jump is done by threading the
+jump templates to the target byte-code: The current value of the target byte-code opcode
+is stored into the forward jump and the target byte-code opcode field is set to point
+to the address of the forward jump. This is illustrated in figure~\ref{figure:Threading_of_forward_jumps},
+which shows two forward jumps $f_1$ and $f_2$ threaded to a byte-code address $b_1$,
+which contains a not yet translated \texttt{PUSH} instruction.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}
+    \draw (0.5,5.25) node {byte code};
+    \draw (3.5,5.25) node {generated code};
+    \draw (0,1) rectangle (1,5);
+    \filldraw [fill=gray] (0,2.5) rectangle (1,3);
+    \draw (3,1) rectangle (4,5);
+    \filldraw [fill=gray] (3,1.5) rectangle (4,2);
+    \filldraw [fill=gray] (3,3.5) rectangle (4,4);
+    \draw [*-stealth] (0.5,2.75) .. controls (1.5,2.75) and (2.5,1.75) .. (3,1.75);
+    \draw [*-stealth] (3.5,1.75) .. controls (5,1.75) and (5,3.75) .. (4,3.75);
+    \draw (1.3,3) node {$b_1$};
+    \draw (4.3,4) node {$f_1$};
+    \draw (4.3,1.5) node {$f_2$};
+    \draw (3.5,3.75) node {$\mathtt{PUSH}$};
+  \end{tikzpicture}
+  \caption{Threading of forward jumps}
+  \label{figure:Threading_of_forward_jumps}
+\end{figure}
+
+The \texttt{caml\_jit\_compile} driver loop works by allocating a native code address,
+patching all forward jumps threaded to the current byte-code address\footnote{We intentionally
+omitted the implementation details of threading and patching, and refer to the interested
+reader to the source code in the file \texttt{byterun/jit.c}.}, replacing the
+instruction opcode of the current byte-code with the offset to the native machine code,
+and generating the native code for the byte-code instruction at the allocated address.
+This way all byte-code instructions within the translated blocks contain the offsets
+of the appropriate native machine code once \texttt{caml\_jit\_compile} returns.
 
 
 %% Future work
