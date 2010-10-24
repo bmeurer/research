@@ -710,6 +710,58 @@ This way all byte-code instructions within the translated blocks contain the off
 of the appropriate native machine code once \texttt{caml\_jit\_compile} returns.
 
 
+%% Optimizations
+\section{Optimizations}
+
+We have applied several optimizations to improve the performance of the generated
+native machine code. In this section we describe two important optimizations that
+caused significant performance improvements.
+
+\subsection{Stack pointer updates}
+
+The compilation scheme described above is similar to the one implemented by \textsc{OCamlJit}
+in that it generates a lot of unnecessary stack pointer updates. For every instruction
+that pushes values to or pops values off the stack an appropriate update of the stack
+pointer is generated.
+
+For example, the byte-code sequence \texttt{PUSH\,ACC4\,ADDINT} generates two stack pointer
+updates, one decrement by \texttt{PUSH} and one increment by \texttt{ADDINT}, which are
+unnecessary, since in the end, the stack pointer will point to exactly the same stack cell.
+
+In order to avoid these unnecessary updates, we introduced a \emph{stack offset} into
+the compilation loop, which identifies the current top of stack relative the stack
+pointer in the hardware register. Whenever the real stack pointer must reside in the
+hardware register (i.e. at the end of a byte-code block), we emit an instruction to
+add the stack offset to the stack pointer, and reset the stack offset to $0$.
+
+This did of course required changes to the addressing in the compilation loop: 
+Byte-code addresses can only be mapped to native code addresses if the stack
+offset is $0$ at this point in code generation, and when patching forward jumps,
+the stack offset must be flushed first. Now, not every translated byte-code
+instruction gets mapped to a native code address, which may lead to duplicate
+translation of the same byte-code instruction. However this duplicate
+translation happens seldomly and affects mostly backward branches, which are
+usually loop branches jumping to a \texttt{CHECK\_SIGNALS} byte-code instruction.
+So we can almost reduce the probability of duplicate translation to zero by
+ensuring that the stack offset is flushed prior to generating code for \texttt{CHECK\_SIGNALS}
+instructions.
+
+This way we were able to avoid nearly all unnecessary stack pointer updates, which
+also reduced the size of the generated native machine code.
+
+\subsection{Floating point operations}
+
+Most floating point operations are implemented as C primitives in the byte-code
+interpreter. Calling C primitives from the generated native code comes at a
+certain cost -- i.e. making the stack and minor allocation pointer available
+to C code, and reloading it once the C function returns -- which significantly
+decrease the performance of programs using a lot of floating point operations.
+
+We have therefore decided to inline various floating point primitives (i.e.
+\texttt{caml\_add\_float}, \texttt{caml\_sub\_float}, etc.), which
+speed up certain floating point benchmarks by a factor of $1.7$.
+
+
 %% Future work
 \section{Further work}
 
