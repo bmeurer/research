@@ -571,12 +571,13 @@ which performs the actual translation of byte-code instructions to native machin
 gives a detailed overview of the translation process.
 
 Whenever the byte-code compile trampoline invokes \texttt{caml\_jit\_compile}, it translates the byte-code
-block starting at the byte-code instruction that triggered the translation (usually the beginning of a function)
+block starting at the byte-code instruction that triggered the translation (usually the beginning of a function,
+i.e. a \texttt{GRAB} instruction)
 and continues until a terminating instruction is found (i.e. \texttt{STOP}, \texttt{RETURN}, etc.) or an already
 translated instruction is reached. During this process, all referenced byte-code addresses, which have no associated 
 native machine code yet, are collected in a list of pending byte-code blocks. Once the translation of a byte-code
 block is done, \texttt{caml\_jit\_compile} continues with the next pending block, and repeats until
-all pending blocks are translated. It is trivial to see that this process terminates, since the
+all pending blocks are translated. It is trivial to see that this process terminates, since 
 every block is translated at most once; as soon as it is translated, the native machine code address
 is known and it will not be added to the pending list again.
 
@@ -596,6 +597,21 @@ case for the \texttt{ANDINT} instruction on x86\_64.
 \end{verbatim}
   \caption{\texttt{caml\_jit\_compile} \texttt{ANDINT} case (x86\_64)}
   \label{figure:caml_jit_compile_ANDINT}
+\end{figure}
+
+The generated native code for \texttt{ANDINT} on x86\_64 is shown in figure~\ref{figure:ANDINT_native_code}.
+The \texttt{andq} instruction performs the ``bitwise and'' of \texttt{accu} (found in \texttt{\%rax}) and
+the top-most stack cell (found in \texttt{0(\%r14)}), storing the result in \texttt{\%rax}. The \texttt{addq}
+instruction pops the top-most stack cell (the \textsc{OCaml} stack grows towards lower addresses).
+
+\begin{figure}[ht]
+  \centering
+  \begin{verbatim}
+  andq 0(%r14), %rax
+  addq $8, %r14
+\end{verbatim}
+  \caption{\texttt{ANDINT} native code (x86\_64)}
+  \label{figure:ANDINT_native_code}
 \end{figure}
 
 \subsection{TODO}
