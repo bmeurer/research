@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper,twocolumn]{article}
+\documentclass[a4paper]{acm_proc_article-sp}
 
 \usepackage{amssymb}
 \usepackage[a4paper,%
@@ -14,20 +14,38 @@
 \usetikzlibrary{arrows}
 \usetikzlibrary{trees}
 
-\author{Benedikt Meurer}
-\title{OCAMLJIT 2.0 - Faster Objective Caml}
-
 \begin{document}
+
+\title{OCAMLJIT 2.0}
+\subtitle{Faster Objective Caml}
+
+\numberofauthors{1}
+\author{
+\alignauthor
+Benedikt Meurer\\
+\affaddr{Compiler Construction and Software Analysis Group}\\
+\affaddr{University of Siegen}\\
+\affaddr{D-57072 Siegen, Germany}\\
+\email{meurer@informatik.uni-siegen.de}
+}
+
+\date{\today}
 
 \maketitle
 
 \begin{abstract}
-  This paper presents the initial state of an ongoing research
+  This paper presents the current state of an ongoing research
   project to improve the performance of the \textsc{Ocaml}
   byte-code interpreter using just in time native code generation.
 
   TODO
 \end{abstract}
+
+\category{D.3.4}{Programming Languages}{Processor}[code generation, incremental compiler]
+
+\terms{OCaml, just-in-time compilation, byte-code, machine code generation}
+
+\keywords{OCaml, Just In Time compilation, machine code generation}
 
 
 %% Introduction
@@ -98,7 +116,7 @@ a typed syntax tree (see file \texttt{typing/typedtree.mli}) as shown in figure~
 \end{figure}
 
 From this typed syntax tree, the byte-code compiler generates a so called {\em lambda representation} (see
-file \texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} has a similar
+file \linebreak[4]\texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} has a similar
   representation (in file \texttt{asmcomp/clambda.mli}), which adds explicit direct or indirect calls and
   closures.} as shown in Figure~\ref{figure:Lambda_representation}, inspired by
 the untyped call-by-value $\lambda$-calculus. This intermediate representation is not directly related to the
@@ -188,7 +206,7 @@ the values of the free variables, thereby forming the environment of the closure
 The byte-code interpreter \texttt{ocamlrun} starts by unmarshalling the global data, loading
 the byte-code sequence into memory and processing dynamically linked libraries containing
 external C function primitives (referenced from the byte-code file). Once everything is in
-place, the function \texttt{caml\_interprete} (see file \texttt{byterun/interp.c}) is invoked
+place, the function \linebreak[4]\texttt{caml\_interprete} (see file \texttt{byterun/interp.c}) is invoked
 to interpret the initial byte-code segment (using threaded code \cite{Bell73,ErtlGregg03}),
 starting from its first byte-code, with an empty stack, and a default environment and accumulator.
 
@@ -245,7 +263,7 @@ Byte-code instructions are classified as follows:
   and $\mathtt{SETSTRINGCHAR}$ are used to access and update characters within strings (the index
   being popped off the stack). All modifying operations have to cooperate with the garbage collector.
 \item Control instructions include -- in addition to the instructions for function application --
-  conditional $\mathtt{BRANCHIF}_p$ and $\mathtt{BRANCHIFNOT}_p$ (depending upon boolean value in
+  conditional \linebreak[4]$\mathtt{BRANCHIF}_p$ and $\mathtt{BRANCHIFNOT}_p$ (depending upon boolean value in
   \texttt{accu}), comparing $\mathtt{BEQ}_{p,q}$, $\mathtt{BNEG}_{p,q}, \ldots$ (comparing $q$ with
   the integer value in \texttt{accu}) and unconditional $\mathtt{BRANCH}_p$ jumps. There is also
   a $\mathtt{SWITCH}_{p,q,k_1,\ldots,k_p,k_1',\ldots,k_q'}$ instruction (used to compile the \textsc{OCaml}
@@ -406,7 +424,7 @@ adjust the runtime or add costly work-arounds within the JIT engine, we choose t
 runtime. Nevertheless, \textsc{OCamlJit2} should be able to handle any byte-code sequence, and the
 heap and stack should be the same as with the \textsc{OCaml} byte-code interpreter.
 
-Our design goals are therefore quite similar to those of \textsc{OCamlJit}:
+Our design goals are therefore similar to those of \textsc{OCamlJit}:
 \begin{itemize}
 \item The runtime (i.e. the garbage collector and the required C primitives) should be 
   (roughly) the same as in the byte-code interpreter.
@@ -517,8 +535,8 @@ We have found that a similar approach is applicable in the context of a JIT engi
 given byte-code instruction is JIT compiled to native code, we replace the instruction opcode word
 within the byte-code sequence by the offset of the generated native code relative to the base address
 \texttt{caml\_jit\_code\_end}. When jumping to a byte-code address -- i.e. during closure application -- we
-just read the offset from the instruction opcode field, add it to \texttt{caml\_jit\_code\_end} and jump to that
-address. This trampoline code for x86-64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
+just read the offset from the instruction opcode field, add it to \linebreak[4]\texttt{caml\_jit\_code\_end},
+and jump to that address. This trampoline code for x86-64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
 (\texttt{\%rdi} contains the address of the byte-code to execute and \texttt{\%rdx} is a temporary
 register, not preserved across byte-code jumps).
 
@@ -543,7 +561,7 @@ The offsets are therefore values in the range $-2^{27}+x$ to $-1$.
 
 Byte-code is incrementally translated to native machine code. Whenever the JIT engine detects a
 byte-code instruction, which has not been translated to native machine code yet, it invokes the
-C function \texttt{caml\_jit\_compile}. \texttt{caml\_jit\_compile} then translates the byte-code
+C function \texttt{caml\_jit\_compile}. \linebreak[4]\texttt{caml\_jit\_compile} then translates the byte-code
 block starting at the given byte-code offset and all byte-code blocks, which appear as branch
 targets. These \emph{byte-code blocks} are basic blocks within the \textsc{OCaml} byte-code,
 terminated by branch, raise, return and stop instructions. Translation of a byte-code block also
@@ -593,7 +611,7 @@ In the previous section we have already briefly described the \texttt{caml\_jit\
 which performs the actual translation of byte-code instructions to native machine code. This section
 gives a detailed overview of the translation process.
 
-Whenever the byte-code compile trampoline invokes \texttt{caml\_jit\_compile}, it translates the byte-code
+Whenever the byte-code compile trampoline invokes \linebreak[4]\texttt{caml\_jit\_compile}, it translates the byte-code
 block starting at the byte-code instruction that triggered the translation (usually the beginning of a function,
 i.e. a \texttt{GRAB} instruction)
 and continues until a terminating instruction is found (i.e. \texttt{STOP}, \texttt{RETURN}, etc.) or an already
@@ -623,8 +641,8 @@ case for the \texttt{ANDINT} instruction on x86-64.
 \end{figure}
 
 The generated native code for \texttt{ANDINT} on x86-64 is shown in figure~\ref{figure:ANDINT_native_code}.
-The \texttt{andq} instruction performs the ``bitwise and'' of \texttt{accu} (found in \texttt{\%rax}) and
-the top-most stack cell (found in \texttt{0(\%r14)}), storing the result in \texttt{\%rax}. The \texttt{addq}
+The \texttt{andq} instruction performs the ``bitwise and'' of \texttt{accu} (located in \texttt{\%rax}) and
+the top-most stack cell (located in \texttt{0(\%r14)}), storing the result in \texttt{\%rax}. The \texttt{addq}
 instruction pops the top-most cell off the stack (the \textsc{OCaml} stack grows towards lower addresses).
 
 \begin{figure}[ht]
@@ -705,7 +723,7 @@ TODO
 
 
 %% References
-\bibliographystyle{plain}
+\bibliographystyle{abbrv}
 \bibliography{citations}
 
 \end{document}
