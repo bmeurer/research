@@ -36,15 +36,15 @@
 \section{Related work}
 
 We present the existing \textsc{OCaml} system and the previous \textsc{OCamlJit}\cite{Starynkevitch04}
-implementation based on the \textsc{Gnu Lightning}\cite{Bonzini10} library. For the sake of completeness
-the overview of the \textsc{OCaml} compiler and runtime given in \cite{Starynkevitch04} is repeated below.
+implementation based on the \textsc{Gnu Lightning} library\cite{Bonzini10}. For the sake of completeness
+we repeat the overview of the \textsc{OCaml} compiler and runtime given in \cite{Starynkevitch04} below.
 Readers already familiar with the internals of the \textsc{Ocaml} implementation can skip to
 \ref{subsection:OCamlJit}.
 
 \subsection{OCaml compiler usage}
 
 The \textsc{OCaml} system can be used either interactively via the \texttt{ocaml} command, which
-provides a ``\textit{read, compile, eval}'' loop, or in batch mode through the \texttt{ocamlc}
+provides a ``\textit{read, compile, eval}'' loop, or in batch mode via the \texttt{ocamlc}
 command, which takes a set of \texttt{*.ml} or \texttt{*.mli} source or \texttt{*.cmi} or
 \texttt{*.cmo} byte-code object files\footnote{Source files are either module interfaces
   \texttt{*.mli} or module implementations \texttt{*.ml}. Byte-code object files are either
@@ -249,7 +249,7 @@ In this section we briefly describe the design and implementation of the \textsc
 based \textsc{OCamlJit}\cite{Starynkevitch04},
 which inspired many aspects of our present work. The main goal of \textsc{OCamlJit} is maximal compatibility
 with the \textsc{OCaml} byte-code interpreter, its runtime system (including the garbage collector), and its
-behavior. That means that a program running under \texttt{ocamljitrun} sees the same virtual machine as
+behavior. That means programs running under \texttt{ocamljitrun} see the same virtual machine as
 \texttt{ocamlrun}, so utilizing \textsc{OCamlJit} is a matter of exchanging \texttt{ocamlrun} with
 \texttt{ocamljitrun} when executing \textsc{OCaml} programs.
 
@@ -267,7 +267,7 @@ The core of \textsc{OCamlJit} is the \texttt{caml\_jit\_translate} C function, w
 sequence and emits equivalent native code. It loops around a big \texttt{switch} statement, with one
 \texttt{case} for every byte-code instruction. For example, figure~\ref{figure:caml_jit_translate_andint} shows
 the case for the \texttt{ANDINT} instruction, which pops a tagged integer off the \textsc{OCaml} stack
-and does a bitwise ``and'' with \texttt{accu}.
+and does a ``bitwise and'' with \texttt{accu}.
 
 \begin{figure}[ht]
   \centering
@@ -287,10 +287,10 @@ and does a bitwise ``and'' with \texttt{accu}.
 
 \paragraph{Byte-code and native-code addresses}
 
-Total compatibility demands the use of byte-code addresses, in particular in \textsc{OCaml}
+Total compatibility demands the use of byte-code addresses, in particular within \textsc{OCaml}
 closures. This means that closure application -- a very common operation in \textsc{OCaml} -- has
 to retrieve the byte-code from the closure, find the corresponding native machine code, and jump to
-it. The byte-code address to native machine code address mapping is accomplished by a sparse 
+it. The byte-code to native machine code address mapping is accomplished by a sparse 
 translation hash-table. An entry is added to this table for every compiled byte-code instruction.
 
 Every byte-code segment has its own native code block, which references a linked list of native
@@ -329,15 +329,14 @@ interesting achievement, there are however some shortcomings to be noted:
   example, adding every (byte-code, native-code) address pair to the translation
   hash-table takes a significant amount of the translation time -- actually more than a fourth
   of it\cite{Starynkevitch04}.
-\item The limited register set provided by \textsc{Gnu Lightning} prevents effecient register
-  usage for modern targets like x86\_64, ARM or PowerPC, which offer more than just 8 general
+\item The limited register set provided by \textsc{Gnu Lightning} prevents efficient register
+  usage for modern targets like x86-64, ARM or PowerPC, which offer more than just 8 general
   purpose registers. In addition, the \emph{portability at the lowest level} approach of
-  \textsc{Gnu Lightning} prevents several interesting platform specific optimizations.
+  \textsc{Gnu Lightning} prevents several interesting target specific optimizations.
 \item The naive compilation scheme (with peephole optimizations) is limited in efficiency. There
   is almost no way to achieve performance close to the optimizing native code compiler \texttt{ocamlopt}.
 \end{enumerate}
-The present work is part of a research project to overcome these problems. Up until now we have
-already addressed the first two of the shortcomings listed above.
+The present work is part of a research project to overcome these problems. 
 
 
 %% Earlier work
@@ -408,16 +407,17 @@ or JIT compiled, except by measuring the execution speed.
 
 \subsection{Virtual machine design} \label{subsection:Virtual_machine_design}
 
-This section describes the mapping of the \textsc{OCaml} virtual machine to the x86\_64 architecture,
+This section describes the mapping of the \textsc{OCaml} virtual machine to the x86-64 architecture\footnote{
+Also known as \emph{AMD64 architecture}, but we prefer the vendor-neutral term.},
 in particular the mapping of the virtual machine registers to the available physical registers. These
 are inherently target specific, in contrast to most of the other ideas we present.
 
-The x86\_64 architecture \cite{Intel10Vol1} provides $16$ general purpose 64bit registers \texttt{\%rax},
+The x86-64 architecture \cite{Amd09Vol1,Intel10Vol1} provides $16$ general purpose 64bit registers \texttt{\%rax},
 \texttt{\%rbx}, \texttt{\%rcx}, \texttt{\%rdx}, \texttt{\%rbp}, \texttt{\%rsp}, \texttt{\%rdi}, \texttt{\%rsi},
 \texttt{\%r8}, $\ldots$, \texttt{\%r15}, as well as $8$ 80bit floating-point registers (also used
 as MMX registers) and $16$ 128bit SSE2 registers \texttt{\%xmm0}, $\ldots$, \texttt{\%xmm15}.
-The System V ABI for the AMD64 architecture \cite{Matz10}, implemented by almost all operating
-systems running on AMD64 processors\footnote{With the notable and unfortunate exception of
+The System V ABI for the x86-64 architecture \cite{Matz10}, implemented by almost all operating
+systems running on x86-64 processors\footnote{With the notable and unfortunate exception of
 Win64, which uses a quite different ABI.}, mandates that registers \texttt{\%rbx}, \texttt{\%rbp}
 and \texttt{\%r12} through \texttt{\%r15} belong to the calling function and the called function is 
 required to preserve their values. The remaining registers belong to the called function.
@@ -429,8 +429,8 @@ is called. We therefore settled on the following assignment for our current impl
 \begin{itemize}
 \item \texttt{accu} goes into \texttt{\%rax} for various reasons: typically \texttt{accu} does not
   need to be preserved across C calls, but is usually assigned the result of C function calls, which
-  is then already available in \texttt{\%rax} \cite{Matz10}; many computations are performed on
-  \texttt{accu} and several x86\_64 instructions have shorter encodings when used with \texttt{\%rax}.
+  is then already available in \texttt{\%rax} \cite{Matz10}; additionally, many computations are performed on
+  \texttt{accu} and several x86-64 instructions have shorter encodings when used with \texttt{\%rax}.
 \item \texttt{extra\_args} goes into \texttt{\%r13}. One difference to the byte-code interpreter
   is that \texttt{\%r13} contains the number of extra arguments as tagged integer, in order to
   avoid the conversions when storing it to and loading it off the \textsc{OCaml} stack.
@@ -467,7 +467,7 @@ and returns to the calling C function (i.e. \texttt{caml\_interpret}).
 As previously described, \textsc{OCamlJit} uses a sparse hash-table to map byte-code addresses to
 native machine code addresses.
 Whenever the virtual machine needs to jump to a byte-code pointer (i.e. during closure application),
-it needs to find the corresponding native machine code in the hash-table, and jump to it (falling back
+it has to lookup the corresponding native machine code in the hash-table, and jump to it (falling back
 to the JIT compiler if no native code address is recorded).
 
 Since closure application is a somewhat common operation in \textsc{OCaml}, this indirection via a
@@ -487,7 +487,7 @@ which replaces every instruction opcode in the byte-code sequence with the offse
 implementing the instruction relative to some well-defined base address. Executing a byte-code
 instruction is then a matter of determining the C code address from the offset in the instruction
 opcode and the well-defined base address\footnote{On 32bit targets the base address is $0$, hence the
-offset is already the address, while on 64bit targets the offset is added to the base address.},
+offset is already the address, while on 64bit targets the offset is usually added to the base address.},
 and jumping to that address. The threaded byte-code sequence itself therefore provides a mapping
 from byte-code to native machine code addresses.
 
@@ -496,7 +496,7 @@ given byte-code instruction is JIT compiled to native code, we replace the instr
 within the byte-code sequence by the offset of the generated native code relative to the base address
 \texttt{caml\_jit\_code\_end}. When jumping to a byte-code address -- i.e. during closure application -- we
 just read the offset from the instruction opcode field, add it to \texttt{caml\_jit\_code\_end} and jump to that
-address. This trampoline code for x86\_64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
+address. This trampoline code for x86-64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
 (\texttt{\%rdi} contains the address of the byte-code to execute and \texttt{\%rdx} is a temporary
 register, not preserved across byte-code jumps).
 
@@ -507,7 +507,7 @@ register, not preserved across byte-code jumps).
   addq   caml_jit_code_end(%rip), %rdx
   jmpq   *%rdx
 \end{verbatim}
-  \caption{Byte code trampoline (x86\_64)}
+  \caption{Byte code trampoline (x86-64)}
   \label{figure:Byte_code_trampoline_x86_64}
 \end{figure}
 
@@ -537,10 +537,10 @@ contains a positive value, and if so invoke the \texttt{caml\_jit\_compile} func
 
 We did however discover that such a test is unnecessary if we ensure that a jump to an address in
 the range $0 \ldots 145$ relative to \texttt{caml\_jit\_code\_end} automatically invokes the
-\texttt{caml\_jit\_compile} function. This was surprisingly easy to accomplish on x86\_64 (and
+\texttt{caml\_jit\_compile} function. This was surprisingly easy to accomplish on x86-64 (and
 x86); we simply reserve space after \texttt{caml\_jit\_code\_end} for $145$ \texttt{nop} instructions
 and trampoline code which invokes \texttt{caml\_jit\_compile} and jumps to the generated code afterwards.
-The byte-code compile trampoline for x86\_64 is shown in figure~\ref{figure:Byte_code_compile_trampoline_x86_64}.
+The byte-code compile trampoline for x86-64 is shown in figure~\ref{figure:Byte_code_compile_trampoline_x86_64}.
 
 \begin{figure}[ht]
   \centering
@@ -550,7 +550,7 @@ The byte-code compile trampoline for x86\_64 is shown in figure~\ref{figure:Byte
   xchgq %rbx, %rax
   jmpq  *%rbx
 \end{verbatim}
-  \caption{Byte-code compile trampoline (x86\_64)}
+  \caption{Byte-code compile trampoline (x86-64)}
   \label{figure:Byte_code_compile_trampoline_x86_64}
 \end{figure}
 
@@ -584,7 +584,7 @@ is known and it will not be added to the pending list again.
 The actual translation of byte-code instructions is done in a large \texttt{switch} statement, which is
 quite similar to the non-threaded byte-code interpreter, except that we do not interpret the opcodes,
 but generate appropriate native machine code. Figure~\ref{figure:caml_jit_compile_ANDINT} shows the 
-case for the \texttt{ANDINT} instruction on x86\_64.
+case for the \texttt{ANDINT} instruction on x86-64.
 
 \begin{figure}[ht]
   \centering
@@ -595,11 +595,11 @@ case for the \texttt{ANDINT} instruction on x86\_64.
     jx86_addq_reg_imm(cp, JX86_R14, 8);
     break;
 \end{verbatim}
-  \caption{\texttt{caml\_jit\_compile} \texttt{ANDINT} case (x86\_64)}
+  \caption{\texttt{caml\_jit\_compile} \texttt{ANDINT} case (x86-64)}
   \label{figure:caml_jit_compile_ANDINT}
 \end{figure}
 
-The generated native code for \texttt{ANDINT} on x86\_64 is shown in figure~\ref{figure:ANDINT_native_code}.
+The generated native code for \texttt{ANDINT} on x86-64 is shown in figure~\ref{figure:ANDINT_native_code}.
 The \texttt{andq} instruction performs the ``bitwise and'' of \texttt{accu} (found in \texttt{\%rax}) and
 the top-most stack cell (found in \texttt{0(\%r14)}), storing the result in \texttt{\%rax}. The \texttt{addq}
 instruction pops the top-most stack cell (the \textsc{OCaml} stack grows towards lower addresses).
@@ -610,7 +610,7 @@ instruction pops the top-most stack cell (the \textsc{OCaml} stack grows towards
   andq 0(%r14), %rax
   addq $8, %r14
 \end{verbatim}
-  \caption{\texttt{ANDINT} native code (x86\_64)}
+  \caption{\texttt{ANDINT} native code (x86-64)}
   \label{figure:ANDINT_native_code}
 \end{figure}
 
