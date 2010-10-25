@@ -211,9 +211,9 @@ mentioned above.
 The \textsc{OCaml} virtual machine (see file \texttt{byterun/interp.c}) is an interpreter for the
 byte-code\footnote{Since each token of the byte-code is a 32-bit word, the byte-code is actually
   a \emph{word-code}.} produced by \texttt{ocamlc} (as described in the previous section). It operates on a 
-stack of \textsc{OCaml} values and six \emph{virtual registers}: the stack pointer \texttt{sp},
+stack of \textsc{OCaml} values and five \emph{virtual registers}: the stack pointer \texttt{sp},
 the accumulator \texttt{accu}, the environment pointer \texttt{env} (pointing to the current
-closure, which contains the values for the free variables), the trap frame pointer \texttt{trapsp},
+closure, which contains the values for the free variables),
 the extra arguments counter \texttt{extra\_args} and the byte-code program counter \texttt{pc}.
 The virtual machine also deals with byte-code segments (byte-code sequences to be interpreted)
 and a global data array \texttt{caml\_global\_data} of \textsc{OCaml} values. There is usually
@@ -506,7 +506,6 @@ is called. We therefore settled on the following assignment for our current impl
   avoid the conversions when storing it to and loading it off the \textsc{OCaml} stack.
 \item The environment pointer \texttt{env} goes into \texttt{\%r12}.
 \item The stack pointer \texttt{sp} goes into \texttt{\%r14}.
-\item The trap frame pointer remains in the global variable \texttt{caml\_trapsp}.
 \item The byte-code program counter \texttt{pc} is not needed anymore.
 \end{itemize}
 We use \texttt{\%r15} to cache the value of the minor heap allocation pointer \texttt{caml\_young\_ptr},
