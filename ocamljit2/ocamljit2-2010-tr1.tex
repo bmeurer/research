@@ -65,6 +65,11 @@ development.
 instructions for the \textsc{OCaml} virtual machine, which is based on the ZINC machine
 \cite{Leroy90} originally developed for Caml Light \cite{Leroy02}.
 
+The optimizing native code compiler \texttt{ocamlopt} produces fast machine code for
+the supported targets, but it is only applicable to \emph{static program compilation}.
+For example, it cannot be used with multi-stage programming in \textsc{MetaOCaml}
+\cite{Taha06}, or the interactive top-level \texttt{ocaml}.
+
 This paper introduces \textsc{OCamlJit2}, a new open-source\footnote{The full source-code
 is available from \url{http://gitorious.org/ocamljit2/} under the terms of the
 QPL and LGPL licenses.} implementation of the \textsc{OCaml} virtual machine, based
@@ -893,11 +898,9 @@ The commands listed in the first $11$ rows are test programs from the
 They do more or less represent typical \textsc{OCaml} applications.
 The remaining rows are invocations of the \texttt{ocamlc} and \texttt{ocamlopt}
 compilers, where \texttt{stdlib/*.ml} means all source files from the
-\texttt{stdlib} folder of the \textsc{OCaml} 3.12.0 distribution which
-do not require special compilation arguments like \texttt{-nopervasives}
-needed for \texttt{stdlib/pervasives.ml} and \texttt{stdlib/pervasives.mli},
-or \texttt{-nolabels} needed for \linebreak[4]\texttt{stdlib/*Labels.ml} and
-\texttt{stdlib/*Labels.mli}.
+\texttt{stdlib} folder of the \textsc{OCaml} 3.12.0 distribution that
+do not require special compilation arguments, like \texttt{-nopervasives}
+for \texttt{stdlib/pervasives.ml*}, or \texttt{-nolabels} for \texttt{stdlib/*Labels.ml*}.
 
 Figure~\ref{figure:Speedup_w_r_t_the_byte_code_interpreter} highlights the
 speedup of \textsc{OCamlJit2} w.r.t. the byte-code interpreter. As expected, short
@@ -968,6 +971,13 @@ operating system\footnote{\url{http://www.android.com/}}. As of Android 2.2,
 Dalvik features a Just-In-Time compiler, which increased performance of
 several applications by a factor of $2$ to $4$.
 
+During the last decades a lot of work has been done on improving the
+performance of interpreters and native code compilers for other
+stack-based languages like \textsc{Forth} \cite{Ertl93}. 
+Several of the ideas used in \textsc{Forth} to native code generation
+\cite{Ertl92,Ertl96,ErtlPirker97,ErtlPirker98} may also be applicable in
+the context of JIT compilation of \textsc{OCaml} byte-code.
+
 
 %% Future work
 \section{Further work} \label{section:Further_work}
@@ -990,11 +1000,11 @@ issue by adding support for garbage collected byte-code segments to the
 \textsc{OCaml} runtime, which will then also take care of native machine
 code segments.
 
-Last but not least we also plan to improve the portability of the JIT
-engine. While it is more or less straight-forward to port the current
-code to the x86 architecture (trivial in most cases, but nevertheless a time
-consuming task), it would take considerable amounts of time to port the JIT
-engine to a different architecture like PowerPC, Sparc or ARM.
+We also plan to improve the portability of the JIT engine. While it is more or
+less straight-forward to port the current code to the x86 architecture (trivial
+in most cases, but nevertheless a time consuming task), it would take considerable
+amounts of time to port the JIT engine to a different architecture like PowerPC,
+Sparc or ARM.
 
 In the future, we may even be able to get the JIT engine on par with
 the optimizing native code compiler \texttt{ocamlopt} w.r.t. execution speed,
