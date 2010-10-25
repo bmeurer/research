@@ -54,12 +54,35 @@ Benedikt Meurer\\
 %% Introduction
 \section{Introduction}
 
-\textsc{OCaml}\cite{Leroy10} TODO
-\textsc{MetaOCaml}
+The \textsc{OCaml} \cite{Leroy10,Remy02} system is the main implementation of the Caml
+language\footnote{\url{http://caml.inria.fr/}}, featuring a powerful module system combined
+with a full-fledged object-oriented layer. It comes with an optimizing native code compiler
+\texttt{ocamlopt}, for high performance; a byte-code compiler \texttt{ocamlrun}, for
+increased portability; and an interactive loop \texttt{ocaml}, for experimentation and rapid
+development.
+
+\texttt{ocamlrun} and \texttt{ocaml} translate the source code into a sequence of byte-code 
+instructions for the \textsc{OCaml} virtual machine, which is based on the ZINC machine
+\cite{Leroy90} originally developed for Caml Light \cite{Leroy02}.
+
+This paper introduces \textsc{OCamlJit2}, a new open-source\footnote{The full source-code
+is available from \url{http://gitorious.org/ocamljit2/} under the terms of the
+QPL and LGPL licenses.} implementation of the \textsc{OCaml} virtual machine, based
+on Just-In-Time native machine code generation. \textsc{OCamlJit2} is developed on
+64bit Mac OS X 10.6, but should also run on \linebreak[4]Linux/amd64 and FreeBSD/amd64
+systems without modifications.
+
+The paper is organized as follows: Section~\ref{section:Existing_systems} presents the
+existing system (the relevant parts of the \textsc{OCaml} implementation, and the
+previous \textsc{OCamlJit} implementation which inspired the present work).
+Section~\ref{section:Design_and_implementation} details the design and implementation
+of the \textsc{OCamlJit2} implementation. Performance measures are given
+in section~\ref{section:Performance}. Section~\ref{section:Related_work} and \ref{section:Further_work}
+list related and further work, followed by the conclusion in section~\ref{section:Conclusion}.
 
 
-%% Related work
-\section{Related work}
+%% Existing systems
+\section{Existing systems} \label{section:Existing_systems}
 
 We present the existing \textsc{OCaml} system and the previous \textsc{OCamlJit} \cite{Starynkevitch04}
 implementation based on the \textsc{Gnu Lightning} library \cite{Bonzini10}. For the sake of completeness
@@ -715,15 +738,13 @@ and generating the native code for the byte-code instruction at the allocated ad
 This way all byte-code instructions within the translated blocks contain the offsets
 of the appropriate native machine code once \texttt{caml\_jit\_compile} returns.
 
-
-%% Optimizations
-\section{Optimizations}
+\subsection{Optimizations}
 
 We have applied several optimizations to improve the performance of the generated
 native machine code. In this section we describe two important optimizations that
 caused significant performance improvements.
 
-\subsection{Stack pointer updates}
+\subsubsection{Stack pointer updates}
 
 The compilation scheme described above is similar to the one implemented by \textsc{OCamlJit}
 in that it generates a lot of unnecessary stack pointer updates. For every instruction
@@ -755,7 +776,23 @@ instructions.
 This way we were able to avoid nearly all unnecessary stack pointer updates, which
 also reduced the size of the generated native machine code.
 
-\begin{table*}[ht!]
+\subsubsection{Floating point operations}
+
+Most floating point operations are implemented as C primitives in the byte-code
+interpreter. Calling C primitives from the generated native code comes at a
+certain cost -- i.e. making the stack and minor allocation pointer available
+to C code, and reloading it once the C function returns -- which significantly
+decrease the performance of programs using a lot of floating point operations.
+
+We have therefore decided to inline various floating point primitives (i.e.
+\texttt{caml\_add\_float}, \texttt{caml\_sub\_float}, etc.), which
+speed up certain floating point benchmarks by a factor of $1.7$.
+
+
+%% Performance
+\section{Performance} \label{section:Performance}
+
+\begin{table*}[ht]
   \centering
   \begin{tabular}{l|rrr|rrr|l}
     \multicolumn{1}{l|}{\large invocation}
@@ -793,23 +830,7 @@ also reduced the size of the generated native machine code.
   \label{table:Running_time_and_speedup}
 \end{table*}
 
-\subsection{Floating point operations}
-
-Most floating point operations are implemented as C primitives in the byte-code
-interpreter. Calling C primitives from the generated native code comes at a
-certain cost -- i.e. making the stack and minor allocation pointer available
-to C code, and reloading it once the C function returns -- which significantly
-decrease the performance of programs using a lot of floating point operations.
-
-We have therefore decided to inline various floating point primitives (i.e.
-\texttt{caml\_add\_float}, \texttt{caml\_sub\_float}, etc.), which
-speed up certain floating point benchmarks by a factor of $1.7$.
-
-
-%% Performance
-\section{Performance}
-
-\begin{figure*}[ht!]
+\begin{figure*}[hbt]
   \centering
   \begin{tikzpicture}
     \definecolor{color}{HTML}{483D8B}
@@ -907,7 +928,7 @@ which seem to indicate that we are doing quite well.
 
 
 %% Related work
-\section{Related work}
+\section{Related work} \label{section:Related_work}
 
 Just-In-Time compilation is still a very active research field \cite{Arnold04}.
 A lot of work has been done on effecient dynamic compilation in the field of
@@ -938,20 +959,22 @@ several applications by a factor of $2$ to $4$.
 
 
 %% Future work
-\section{Further work}
+\section{Further work} \label{section:Further_work}
 
 Although the current implementation already performs quite well in most cases,
 it also has several drawbacks, which will be addressed in the future.
 
 First of all, instruction selection, instruction scheduling and register
-allocation in general is far from optimal. This is due to the naive
-compilation scheme. For example, most of the generated code uses less than
-a fourth of the registers provided by the x86-64 processor.
+allocation \cite{Aho06} in the current implementation are far from optimal.
+For example most of the generated code uses less than a fourth of the
+registers provided by the x86-64 processor. This is due to the simple
+compilation scheme. We are already working on improvements in this
+area.
 
 The code memory management is another open issue. Right now code memory
 is managed by allocating in one large memory chunk. Unused code memory
 is never released or reused. This may cause trouble for \textsc{MetaOCaml}
-or long lived interactive top-level shells. We plan to address this
+\cite{Taha06} or long lived interactive top-level sessions. We plan to address this
 issue by adding support for garbage collected byte-code segments to the
 \textsc{OCaml} runtime, which will then also take care of native machine
 code segments.
@@ -973,14 +996,15 @@ native code compiler is also of educational interest.
 
 
 %% Conclusion
-\section{Conclusion}
+\section{Conclusion} \label{section:Conclusion}
 
 The \textsc{OCamlJit2} implementation presented here did achieve some significant
 speed (at least twice as fast as the byte-code interpreter in all relevant
-comparisons), but there are various open issues to address. Especially the
-poor instruction selection and register allocation will be addressed in the
-near future to get \textsc{OCamlJit2} on par with the optimizing native code
-compiler and JIT engines available for other programming languages.
+comparisons), but there are various open issues to address. In particular the
+poor instruction selection and register allocation will have to be addressed
+to get \textsc{OCamlJit2} on par with the optimizing native code
+compiler and JIT engines available for other programming languages and runtime
+environments.
 
 
 %% References
