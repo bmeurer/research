@@ -1,0 +1,16 @@
+\texttt{almabench} & $27.83$ & $10.05$ & $4.47$ & $2.77$ & $2.25$ & $6.22$ & number crunching \\
+\texttt{almabench.unsafe} & $27.74$ & $9.76$ & $4.35$ & $2.84$ & $2.24$ & $6.38$ & number crunching {\small(no bounds check)} \\
+\texttt{bdd} & $8.50$ & $1.93$ & $0.68$ & $4.41$ & $2.86$ & $12.60$ & binary decision digram \\
+\texttt{boyer} & $4.34$ & $1.68$ & $1.06$ & $2.59$ & $1.59$ & $4.11$ & tautology proving \\
+\texttt{fft} & $5.72$ & $2.17$ & $0.64$ & $2.63$ & $3.39$ & $8.94$ & fast fourier transformation \\
+\texttt{nucleic} & $14.78$ & $4.10$ & $0.80$ & $3.61$ & $5.13$ & $18.52$ & floating point \\
+\texttt{quicksort} & $6.78$ & $1.27$ & $0.24$ & $5.34$ & $5.34$ & $28.48$ & array quicksort \\
+\texttt{quicksort.unsafe} & $4.07$ & $0.93$ & $0.20$ & $4.36$ & $4.79$ & $20.86$ & array quicksort {\small(no bounds check)} \\
+\texttt{soli} & $0.17$ & $0.03$ & $0.01$ & $5.09$ & $3.40$ & $17.30$ & tiny solitaire \\
+\texttt{soli.unsafe} & $0.14$ & $0.02$ & $0.01$ & $6.27$ & $2.75$ & $17.25$ & tiny solitaire {\small(no bounds check)} \\
+\texttt{sorts} & $19.29$ & $7.13$ & $3.71$ & $2.71$ & $1.92$ & $5.19$ & various sorting algorithms \\
+\texttt{ocamlc -help} & $0.01$ & $0.01$ & $0.00$ & $1.14$ & $7.00$ & $8.00$ & {\small(short execution)} \\
+\texttt{ocamlc -c format.ml} & $0.17$ & $0.08$ & $0.05$ & $2.16$ & $1.65$ & $3.57$ &  \\
+\texttt{ocamlopt -c format.ml} & $0.65$ & $0.28$ & $0.19$ & $2.31$ & $1.46$ & $3.38$ &  \\
+\texttt{ocamlc -c stdlib/*.ml} & $2.03$ & $0.95$ & $0.67$ & $2.14$ & $1.42$ & $3.04$ & byte-compile most of \texttt{stdlib/*.ml} \\
+\texttt{ocamlopt -c stdlib/*.ml} & $5.04$ & $2.36$ & $1.70$ & $2.14$ & $1.39$ & $2.97$ & native-compile most of \texttt{stdlib/*.ml} \\
