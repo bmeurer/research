@@ -760,7 +760,7 @@ in that it generates a lot of unnecessary stack pointer updates. For every instr
 that pushes values to or pops values off the stack an appropriate update of the stack
 pointer is generated.
 
-For example, the byte-code sequence \texttt{PUSH\,ACC4\,ADDINT} generates two stack pointer
+For example, the byte-code sequence \texttt{PUSH\ ACC4\ ADDINT} generates two stack pointer
 updates, one decrement by \texttt{PUSH} and one increment by \texttt{ADDINT}, which are
 unnecessary as the stack pointer will point to the initial stack cell again after executing
 the three instructions.
