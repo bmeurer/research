@@ -950,7 +950,7 @@ which seem to indicate that we are doing quite well.
 %% Related work
 \section{Related work} \label{section:Related_work}
 
-Just-In-Time compilation is still a very active research field \cite{Arnold04}.
+Just-In-Time compilation is still a very active research field \cite{Arnold04,Aycock03}.
 A lot of work has been done on efficient dynamic compilation in the field of
 the Java Virtual Machine (JVM) and the Common Language Runtime (CLR), which is
 part of the .NET framework. JIT compilation of Java or .NET byte-code is usually
@@ -961,10 +961,9 @@ profiling data \cite{Cuthbertson09,Vaswani03}.
 Both JVM and CLR depend on profile guided optimizations for good performance,
 because their byte-code is slower than the \textsc{OCaml} byte-code. This
 is mostly because of the additional overhead that comes with exceptions handling,
-multi-threading, class loading and object synchronization. But it is also due to the fact that
-both the JVM byte-code \cite{LindholmYellin99} and the Common Intermediate
-Language (CLI) \cite{Ecma335} instruction sets are not as optimized as the
-\textsc{OCaml} byte-code.
+multi-threading, class loading and object synchronization. But it is also due to
+the fact that both the JVM byte-code \cite{LindholmYellin99} and the Common Intermediate
+Language (CLI) \cite{Ecma335} instruction sets are not as optimized as the \textsc{OCaml} byte-code.
 
 More recent examples include the Lua programming language \cite{Ierusalimschy07,Ierusalimschy96},
 a powerful, fast, lightweight, embeddable scripting language, accompanied
@@ -979,10 +978,9 @@ several applications by a factor of $2$ to $4$.
 
 During the last decades a lot of work has been done on improving the
 performance of interpreters and native code compilers for other
-stack-based languages like \textsc{Forth} \cite{Ertl93}. Several of the
-ideas used in compiling \textsc{Forth} to efficient native machine code
-\cite{Ertl92,Ertl96,ErtlPirker97,ErtlPirker98} may also be applicable in
-\textsc{OCaml} byte-code to native code compilation.
+stack-based languages like \textsc{Forth} \cite{Ertl93}, in particular
+compiling \textsc{Forth} to efficient native code for register
+machines \cite{Ertl92,Ertl96,ErtlPirker97,ErtlPirker98}.
 
 
 %% Future work
