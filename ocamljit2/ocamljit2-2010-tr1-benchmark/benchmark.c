@@ -304,7 +304,7 @@ int main(int argc, char **argv)
   simple("almabench", 0, "number crunching");
   simple("almabench", 1, "number crunching {\\small(no bounds check)}");
   simple("bdd", 0, "binary decision digram");
-  simple("boyer", 0, "tautology proving");
+  simple("boyer", 0, "term processing");
   simple("fft", 0, "fast fourier transformation");
   simple("nucleic", 0, "floating point");
   simple("quicksort", 0, "array quicksort");
