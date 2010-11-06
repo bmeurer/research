@@ -302,21 +302,21 @@ int main(int argc, char **argv)
          "byt/jit", "jit/opt", "byt/opt");
   printf("------------------------------------------------------------------------------\n");
   simple("almabench", 0, "number crunching");
-  simple("almabench", 1, "number crunching {\\small(no bounds check)}");
+  simple("almabench", 1, "number crunching {\\tiny(no bounds check)}");
   simple("bdd", 0, "binary decision digram");
   simple("boyer", 0, "term processing");
   simple("fft", 0, "fast fourier transformation");
   simple("nucleic", 0, "floating point");
   simple("quicksort", 0, "array quicksort");
-  simple("quicksort", 1, "array quicksort {\\small(no bounds check)}");
+  simple("quicksort", 1, "array quicksort {\\tiny(no bounds check)}");
   simple("soli", 0, "tiny solitaire");
-  simple("soli", 1, "tiny solitaire {\\small(no bounds check)}");
+  simple("soli", 1, "tiny solitaire {\\tiny(no bounds check)}");
   simple("sorts", 0, "various sorting algorithms");
-  compiler("ocamlc", "ocamlc -help", "{\\small(short execution)}", "-help", NULL);
+  compiler("ocamlc", "ocamlc -help", "{\\tiny(short execution)}", "-help", NULL);
   compiler("ocamlc", "ocamlc -c format.ml", "", "-c", "stdlib/format.ml", NULL);
   compiler("ocamlopt", "ocamlopt -c format.ml", "", "-c", "stdlib/format.ml", NULL);
-  compiler("ocamlc", "ocamlc -c stdlib/*.ml", "byte-compile most of \\texttt{stdlib/*.ml}", "-c", STDLIB_SOURCES);
-  compiler("ocamlopt", "ocamlopt -c stdlib/*.ml", "native-compile most of \\texttt{stdlib/*.ml}", "-c", STDLIB_SOURCES);
+  compiler("ocamlc", "ocamlc -c stdlib/*.ml", "byte-compile \\texttt{stdlib/*.ml}", "-c", STDLIB_SOURCES);
+  compiler("ocamlopt", "ocamlopt -c stdlib/*.ml", "native-compile \\texttt{stdlib/*.ml}", "-c", STDLIB_SOURCES);
   cleanup();
   return EXIT_SUCCESS;
 }
