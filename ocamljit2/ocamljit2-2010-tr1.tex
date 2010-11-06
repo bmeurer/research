@@ -1,38 +1,36 @@
-\documentclass[a4paper,preprint]{acm_proc_article-sp}
+\documentclass[12pt,a4paper,final]{article}
 
+\usepackage{a4wide}
 \usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{color}
 \usepackage[a4paper,%
             colorlinks=false,%
-            draft,%
-            pdfkeywords={},%
-            pdftitle={},%
+            pdfkeywords={OCaml, Just In Time compilation, machine code generation},%
+            pdftitle={OCamlJIT 2.0},%
             pdfauthor={Benedikt Meurer},%
             pdfsubject={},%
             pdfdisplaydoctitle=true]{hyperref}
 \usepackage{tikz}
+\usepackage{varwidth}
 
 \usetikzlibrary{arrows}
 \usetikzlibrary{trees}
 
 \begin{document}
 
-\title{OCAMLJIT 2.0}
-\subtitle{Faster Objective Caml}
-
-\numberofauthors{1}
-\author{
-\alignauthor
-Benedikt Meurer\\
-\affaddr{Compiler Construction and Software Analysis Group}\\
-\affaddr{University of Siegen}\\
-\affaddr{D-57072 Siegen, Germany}\\
-\email{meurer@informatik.uni-siegen.de}
+\title{%
+  OCamlJIT 2.0 - Faster Objective Caml
 }
-
-\toappear{Working Draft -- \today}
-
+\author{%
+  Benedikt Meurer\\
+  Compiler Construction and Software Analysis Group\\
+  University of Siegen\\
+  D-57072 Siegen, Germany\\
+  \url{meurer@informatik.uni-siegen.de}
+}
+\date{}
 \maketitle
-
 \begin{abstract}
   This paper presents the current state of an ongoing research
   project to improve the performance of the \textsc{OCaml}
@@ -42,13 +40,6 @@ Benedikt Meurer\\
   \textsc{OCaml} virtual machine. Its design and implementation
   is described, and performance measures are given.
 \end{abstract}
-
-\category{D.3.3}{Programming Languages}{Language Constructs and Features}
-\category{D.3.4}{Programming Languages}{Processor}[code generation, incremental compiler]
-
-\terms{OCaml, just-in-time compilation, byte-code, machine code generation}
-
-\keywords{OCaml, Just In Time compilation, machine code generation}
 
 
 %% Introduction
@@ -64,7 +55,6 @@ development.
 \texttt{ocamlrun} and \texttt{ocaml} translate the source code into a sequence of byte-code 
 instructions for the \textsc{OCaml} virtual machine, which is based on the ZINC machine
 \cite{Leroy90} originally developed for Caml Light \cite{Leroy02}.
-
 The optimizing native code compiler \texttt{ocamlopt} produces fast machine code for
 the supported targets, but is only applicable to \emph{static program compilation}.
 It cannot be used with multi-stage programming in \textsc{MetaOCaml} \cite{Taha06},
@@ -73,13 +63,13 @@ or the interactive top-level \texttt{ocaml}.
 This paper introduces \textsc{OCamlJit2}, a new open-source\footnote{The full source code
 is available from \url{http://gitorious.org/ocamljit2/} under the terms of the
 QPL and LGPL licenses.} implementation of the \textsc{OCaml} virtual machine, based
-on Just-In-Time native machine code generation. \textsc{OCamlJit2} is developed on
-64-bit Mac OS X 10.6, but should also run on \linebreak[4]Linux/amd64 and FreeBSD/amd64
+on Just-In-Time native code generation. \textsc{OCamlJit2} is developed on
+64-bit Mac OS X 10.6, but should also run on Linux/amd64 and FreeBSD/amd64
 systems without modifications.
 
 The paper is organized as follows: Section~\ref{section:Existing_systems} presents the
-existing systems (the relevant parts of the \textsc{OCaml} implementation, and the
-previous \textsc{OCamlJit} implementation which inspired the present work).
+existing systems, including the relevant parts of the \textsc{OCaml} implementation, and the
+previous \textsc{OCamlJit} implementation \cite{Starynkevitch04} which inspired the present work.
 Section~\ref{section:Design_and_implementation} details the design and implementation
 of \textsc{OCamlJit2}. Performance measures are given in section~\ref{section:Performance}.
 Section~\ref{section:Related_work} and \ref{section:Future_work} list related and future
@@ -120,7 +110,7 @@ benefits of Just-In-Time compilation.
 
 \subsection{Overview of the OCaml system}
 
-This section presents a brief overview of the \textsc{OCaml} byte-code compiler and runtime.
+This section gives a brief overview of the \textsc{OCaml} byte-code compiler and runtime.
 Feel free to skip to \ref{subsection:OCamlJit} if you are already familiar with the details.
 
 \subsubsection{Compiler phases and representations}
@@ -148,7 +138,7 @@ a typed syntax tree (see file \texttt{typing/typedtree.mli}) as shown in figure~
 \end{figure}
 
 From this typed syntax tree, the byte-code compiler generates a so called {\em lambda representation} (see
-file \linebreak[4]\texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} has a similar
+file \texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} has a similar
   representation (see file \texttt{asmcomp/clambda.mli}), which adds explicit direct or indirect calls and
   closures.} as shown in Figure~\ref{figure:Lambda_representation}, inspired by
 the untyped call-by-value $\lambda$-calculus. This intermediate representation is not directly related to the
@@ -172,10 +162,10 @@ kind of explicit type information.
 \end{figure}
 
 This lambda tree representation includes leaves for variables and constants as well as nodes for function
-definitions and applications, \texttt{let} and \texttt{let rec}, primitive operations (like addition, etc.),
-switches (used in compiled forms of \texttt{match} expressions), exception handling (\texttt{raise}
-and \texttt{try$\ldots$with} nodes), imperative traits (sequences, \texttt{for} and \texttt{while}
-loops), etc.
+definitions and applications, \texttt{let} and \texttt{let rec}, primitive operations (like addition, 
+multiplication, array access, etc.), switches (used in compiled forms of pattern matchings),
+exception handling (\texttt{raise} and \texttt{try$\ldots$with} nodes), imperative traits (sequences,
+\texttt{for} and \texttt{while} loops), etc.
 
 \begin{figure}[ht]
   \centering
@@ -184,8 +174,8 @@ loops), etc.
   \label{figure:Lambda_representation}
 \end{figure}
 
-After several optimizations are applied\footnote{These are mostly peephole optimizations, transforming
-  lambda trees into {\em better} or smaller lambda tress.}, the lambda tree representation is
+After several optimizations are applied (mostly peephole optimizations, transforming lambda
+trees into \emph{better} or smaller lambda trees), the lambda tree representation is
 transformed into a list of byte-code instructions as shown in figure~\ref{figure:Byte_code}.
 This instruction list is optimized and afterwards written into the generated byte-code file
 (or kept in a memory buffer for the interactive top-level).
@@ -214,8 +204,8 @@ byte-code\footnote{Since each token of the byte-code is a 32-bit word, the byte-
 stack of \textsc{OCaml} values and five \emph{virtual registers}: the stack pointer \texttt{sp},
 the accumulator \texttt{accu}, the environment pointer \texttt{env} (pointing to the current
 closure, which contains the values for the free variables),
-the extra arguments counter \texttt{extra\_args} and the byte-code program counter \texttt{pc}.
-The virtual machine also deals with byte-code segments (byte-code sequences to be interpreted)
+the extra arguments counter \texttt{extra\_args} (for partial applications), and the byte-code program
+counter \texttt{pc}. The virtual machine also deals with byte-code segments (byte-code sequences to be interpreted)
 and a global data array \texttt{caml\_global\_data} of \textsc{OCaml} values. There is usually
 only a single byte-code segment, the byte-code sequence in the executable file produced by
 \texttt{ocamlc}, which also contains the marshalled representation of the global data.
@@ -233,14 +223,14 @@ the native C stack, contains values, byte-code return addresses and extra argume
 organized into so-called \emph{call frames}. The byte-code is pointed to from either return
 addresses stored on the stack or closures stored in the heap. The first slot of every closure
 contains the byte-code address of the closure's function code; the remaining slots contain
-the values of the free variables, thereby forming the environment of the closure\footnote{Mutually
+the values of the free variables, thereby forming the environment of the closure. Mutually
 recursive closures -- used to implement the \texttt{let rec} language construct -- may contain
-more than just one byte-code address.}.
+more than just one byte-code address, followed by the values of the free variables.
 
 The byte-code interpreter \texttt{ocamlrun} starts by unmarshalling the global data, loading
 the byte-code sequence into memory and processing dynamically linked libraries containing
-external C function primitives (referenced from the byte-code file). Once everything is in
-place, the function \linebreak[4]\texttt{caml\_interprete} (see file \texttt{byterun/interp.c}) is invoked
+external C function primitives referenced from the byte-code file. Once everything is in
+place, the function \texttt{caml\_interprete} (see file \texttt{byterun/interp.c}) is invoked
 to interpret the initial byte-code segment (using threaded code \cite{Bell73,ErtlGregg03}),
 starting from its first byte-code, with an empty stack, and a default environment and accumulator.
 
@@ -250,19 +240,19 @@ Every byte-code instruction is represented by one or more consecutive 32-bit wor
 first word of each byte-code includes the operation (see file \texttt{byterun/instruct.h})
 and the remaining words include the operands, which are constant integer arguments (usually
 offsets). Most byte-code instructions operate on the accumulator and the top-most stack elements and
-produce a result in the accumulator. Some byte-codes include offsets (denoted $p,q,\ldots$
-or byte subscripts), which are either encoded within the operation or following the
+produce a result in the accumulator. Some byte-codes include offsets (denoted by $p,q,\ldots$
+subscripts), which are either encoded within the operation or following the
 operation as 32-bit words. All byte-code offsets referencing other byte-codes are interpreted relative to their
 respective positions, so the byte-code forms a \emph{position-independent code}.
 
 Byte-code instructions are classified as follows:
 \begin{itemize}
-\item Stack manipulation instructions: $\mathtt{ACC}_p$ loads \texttt{accu} with the value $p$-th top-most stack
+\item Stack manipulation instructions: $\mathtt{ACC}_p$ loads \texttt{accu} with the value of the $p$-th top-most stack
   cell; $\mathtt{PUSH}$ pushes the accumulator value onto the stack; $\mathtt{POP}_p$ pops the top-most $p$ elements
   off the stack; $\mathtt{ASSIGN}_p$ places the accumulator value into the $p$-th top-most stack cell.
-\item Loading instructions: $\mathtt{CONSTINT}_p$ loads \texttt{accu} with the tagged integer $p$;
+\item Loading instructions: $\mathtt{CONSTINT}_p$ loads \texttt{accu} with the tagged integer $p$, whereas
   $\mathtt{ATOM}_p$ loads \texttt{accu} with the $p$-tagged atom\footnote{Atoms are pre-allocated $0$-sized
-    blocks}.
+    blocks.}.
 \item Primitive operations: unary $\mathtt{NEGINT}$ (negation) and $\mathtt{BOOLNOT}$ (logical negation)
   operate on \texttt{accu}; binary operations $\mathtt{ADDINT}$, $\mathtt{SUBINT}$, $\mathtt{MULINT}$,
   $\mathtt{DIVINT}$, $\mathtt{MODINT}$, $\mathtt{ANDINT}$, etc. take the first operand in \texttt{accu}
@@ -276,18 +266,18 @@ Byte-code instructions are classified as follows:
   the \textsc{OCaml} stack and jumps to the called code, whereas $\mathtt{APPTERM}_{p,q}$ ($q$ denotes the
   height of the current stack frame) performs a tail-call to the called code. In either case the accumulator
   contains the closure which is applied to the $p$ top-most arguments on the \textsc{OCaml} stack and becomes
-  the new \texttt{env}. Call frames contain arguments, byte-code return address and previous
+  the new \texttt{env}. Call frames contain arguments, byte-code return address, previous \texttt{env}, and previous
   \texttt{extra\_args}; when adding call frames, the stack may grow if necessary.
 \item Function return instructions: $\mathtt{RETURN}_p$ pops the top-most $p$ values off the stack and
   returns to the caller; $\mathtt{RESTART}$ and $\mathtt{GRAB}_p$ handle partial application (allocating
   appropriate closures as necessary).
-\item Closure allocation instructions: $\mathtt{CLOSURE}_{p,q}$ allocates a single closure of $p$ variable slots and
+\item Closure allocation instructions: $\mathtt{CLOSURE}_{p,q}$ allocates a single closure with $p$ variable slots and
   byte-code at offset $q$; $\mathtt{CLOSUREREC}_{p,q,k_1,\ldots,k_p}$ allocates a mutually recursive 
   closure with $p$ functions $k_1,\ldots,k_p$ and $q$ variable slots.
 \item Allocation instructions: $\mathtt{MAKEBLOCK}_{p,q}$ creates a $p$-tagged block of $q$ values (first
   in \texttt{accu}, remaining popped off the stack); $\mathtt{MAKEFLOATBLOCK}_p$ creates an array of floats.
-  Every allocation may trigger a garbage collection. The accumulator is loaded with the pointer to the
-  newly allocated block.
+  The accumulator is loaded with the pointer to the newly allocated block.
+  Every allocation may trigger a garbage collection.
 \item Field access and modify instructions: $\mathtt{GETGLOBALFIELD}_{p,q}$ loads \texttt{accu} with the
   $q$-th field of the $p$-th global value; $\mathtt{GETFIELD}_p$ loads the accumulator with the $p$-th
   field of the block pointed to by \texttt{accu}; symmetrically $\mathtt{SETFIELD}_p$ sets the $p$-th
@@ -297,7 +287,7 @@ Byte-code instructions are classified as follows:
   and $\mathtt{SETSTRINGCHAR}$ are used to access and update characters within strings (the index
   being popped off the stack). All modifying operations have to cooperate with the garbage collector.
 \item Control instructions include -- in addition to the instructions for function application --
-  conditional \linebreak[4]$\mathtt{BRANCHIF}_p$ and $\mathtt{BRANCHIFNOT}_p$ (depending upon boolean value in
+  conditional $\mathtt{BRANCHIF}_p$ and $\mathtt{BRANCHIFNOT}_p$ (depending upon boolean value in
   \texttt{accu}), comparing $\mathtt{BEQ}_{p,q}$, $\mathtt{BNEG}_{p,q}, \ldots$ (comparing $q$ with
   the integer value in \texttt{accu}) and unconditional $\mathtt{BRANCH}_p$ jumps. There is also
   a $\mathtt{SWITCH}_{p,q,k_1,\ldots,k_p,k_1',\ldots,k_q'}$ instruction (used to compile the \textsc{OCaml}
@@ -345,16 +335,16 @@ and does a ``bitwise and'' with \texttt{accu}.
 
 \begin{figure}[ht]
   \centering
+  \begin{varwidth}{\linewidth}
   \begin{verbatim}
- case ANDINT:
-   /* tmp1 = *sp; ++sp; accu &= tmp1; */
-   jit_ldr_p(JML_REG_TMP1, JML_REG_SP);
-   jit_addi_p(JML_REG_SP, JML_REG_SP,
-              WORDSIZE);
-   jit_andr_l(JML_REG_ACCU, JML_REG_ACCU,
-              JML_REG_TMP1);
-   break;
+case ANDINT:
+  /* tmp1 = *sp; ++sp; accu &= tmp1; */
+  jit_ldr_p(JML_REG_TMP1, JML_REG_SP);
+  jit_addi_p(JML_REG_SP, JML_REG_SP, WORDSIZE);
+  jit_andr_l(JML_REG_ACCU, JML_REG_ACCU,  JML_REG_TMP1);
+  break;
 \end{verbatim}
+  \end{varwidth}
   \caption{\texttt{ANDINT} case in \texttt{caml\_jit\_translate}}
   \label{figure:caml_jit_translate_andint}
 \end{figure}
@@ -384,7 +374,7 @@ invoking the garbage collector when space in the minor heap is exhausted during 
 (i.e.~\texttt{MAKEBLOCK}, \texttt{CLOSURE}, etc.). Most of the commonly used runtime interactions
 are inlined in the generated native code.
 
-Less common interactions, which are too complex to be inlined, are done by saving the current
+Less common interactions, which are too complex to be inlined, are performed by saving the current
 state of the virtual machine, returning from the virtual machine with a particular
 \texttt{MLJSTATE\_*} (passing the required data in the state structure), and letting the
 \texttt{caml\_interprete} function do the processing. For example \texttt{MLJSTATE\_MODIF} is
@@ -393,7 +383,7 @@ used to modify a heap cell while \texttt{MLJSTATE\_RAISE} is used to raise an ex
 \paragraph{Performance}
 
 On x86 machines, \texttt{ocamljitrun} typically gives significant
-speedups w.r.t.~\texttt{ocamlrun} of a factor above two. While this is already a quite
+speedups with respect to \texttt{ocamlrun} of a factor above two. While this is already a quite
 interesting achievement, there are however some shortcomings to be noted:
 \begin{enumerate}
 \item The compilation overhead is high, even with this naive compilation scheme. This is
@@ -404,10 +394,9 @@ interesting achievement, there are however some shortcomings to be noted:
   hash-table takes a significant amount of the translation time -- actually more than a fourth
   of it \cite{Starynkevitch04}.
 \item The limited register set provided by \textsc{Gnu Lightning} prevents efficient register
-  usage for modern targets like x86-64\footnote{Also known as \emph{AMD64}, but
-  we prefer the vendor-neutral term.}, ARM or PowerPC, which offer more than just 8 general
+  usage for modern targets like x86-64, ARM or PowerPC, which offer more than just 8 general
   purpose registers. In addition, the \emph{portability at the lowest level} approach of
-  \textsc{Gnu Lightning} prevents several interesting target specific optimizations.
+  \textsc{Gnu Lightning} prevents interesting target specific optimizations.
 \item The naive compilation scheme (with peephole optimizations) is limited in efficiency. There
   is almost no way to achieve performance close to the optimizing native code compiler \texttt{ocamlopt}.
 \end{enumerate}
@@ -420,7 +409,8 @@ Several runtime code generators are available today, including but not limited t
 and \textsc{AsmJit} \cite{Kobalicek10}. These projects provide building blocks for
 JIT engines using different levels of abstraction.
 
-\textsc{Gnu Lightning}, which was recently ported to the x86-64 architecture, provides
+\textsc{Gnu Lightning}, which was recently ported to the x86-64 architecture\footnote{Also
+known as \emph{AMD64 architecture}, but we prefer the vendor-neutral term.}, provides
 users with a \emph{portability at the lowest level} approach. To gain reasonable
 portability, one has to limit itself to the least common denominator w.r.t.~instruction
 sets and registers available on the target platforms. This is a great concept for
@@ -454,7 +444,7 @@ replacing the code emitter functions provided by \textsc{AsmJit}.
 We aim to provide almost the same amount of compatibility with the \textsc{OCaml} byte-code interpreter
 as provided by \textsc{OCamlJit}, although not at all costs. At each point where we have to either
 adjust the runtime or add costly work-arounds within the JIT engine, we choose to adjust the
-runtime. Nevertheless, \textsc{OCamlJit2} should be able to handle any byte-code sequence, and the
+runtime. Nonetheless \textsc{OCamlJit2} should be able to handle any byte-code sequence, and the
 heap and stack should be the same as with the \textsc{OCaml} byte-code interpreter.
 
 Our design goals are therefore similar to those of \textsc{OCamlJit}:
@@ -466,7 +456,7 @@ Our design goals are therefore similar to those of \textsc{OCamlJit}:
   relevant parts of the byte-code runtime (i.e.~the serialization mechanism) are reused\footnote{Especially
     hashing and serializing closures or objects (with their classes) give the same result
     in \textsc{OCamlJit2} as in the \textsc{OCaml} byte-code interpreter.}.
-\item C programs embedding the \textsc{OCaml} byte-code interpreter should work with \textsc{OCamlJit2}
+\item C programs embedding the \textsc{OCaml} byte-code interpreter should work with \linebreak[4]\textsc{OCamlJit2}
   as well, without the need to recompile the C program\footnote{We therefore need to ensure that the
     API of \textsc{OCamlJit2}'s \texttt{libcamlrun\_shared.so} match exactly the API of \textsc{OCaml}'s
     \texttt{libcamlrun\_shared.so}.}.
@@ -479,7 +469,7 @@ running with the byte-code interpreter. It should not be able to tell whether it
 or JIT compiled, except by measuring the execution speed.
 
 The relevant files are \texttt{byterun/jit.c}, which contains the actual JIT engine,
-\texttt{byterun/jit\_rt\_amd64.S}, containing the x86-64 runtime setup and helper routines
+\linebreak[4]\texttt{byterun/jit\_rt\_amd64.S} containing the x86-64 runtime setup and helper routines
 for the JIT generated machine code, and \texttt{byterun/jx86.h}, which contains the
 x86-64 (and x86) code emitter preprocessor macros.
 
@@ -559,7 +549,7 @@ byte-code interpreter is faced with a similar problem, whose solution may also b
 context of a JIT engine. When threading is enabled for the byte-code interpreter\footnote{This requires
 the byte-code interpreter to be compiled with \texttt{gcc} at the time of this writing.}, prior to
 execution, every byte-code segment is preprocessed by the C function \texttt{caml\_thread\_code},
-which replaces every instruction opcode in the byte-code sequence with the offset of the C code
+which replaces each instruction opcode in the byte-code sequence with the offset of the C code
 implementing the instruction relative to some well-defined base address. Executing a byte-code
 instruction is then a matter of determining the C code address from the offset in the instruction
 opcode and the well-defined base address\footnote{On 32-bit targets the base address is $0$, hence the
@@ -571,24 +561,26 @@ We have found that a similar approach is applicable in the context of a JIT engi
 given byte-code instruction is JIT compiled to native code, we replace the instruction opcode word
 within the byte-code sequence by the offset of the generated native code relative to the base address
 \texttt{caml\_jit\_code\_end}. When jumping to a byte-code address -- i.e.~during closure application -- we
-just read the offset from the instruction opcode field, add it to \linebreak[4]\texttt{caml\_jit\_code\_end},
+just read the offset from the instruction opcode field, add it to \texttt{caml\_jit\_code\_end},
 and jump to that address. This trampoline code for x86-64 is shown in figure~\ref{figure:Byte_code_trampoline_x86_64}
 (\texttt{\%rdi} contains the address of the byte-code to execute and \texttt{\%rdx} is a temporary
 register, not preserved across byte-code jumps).
 
 \begin{figure}[ht]
   \centering
+  \begin{varwidth}{\linewidth}
   \begin{verbatim}
-  movslq (%rdi), %rdx
-  addq   caml_jit_code_end(%rip), %rdx
-  jmpq   *%rdx
+movslq (%rdi), %rdx
+addq   caml_jit_code_end(%rip), %rdx
+jmpq   *%rdx
 \end{verbatim}
+  \end{varwidth}
   \caption{Byte code trampoline (x86-64)}
   \label{figure:Byte_code_trampoline_x86_64}
 \end{figure}
 
-Care must be taken on 64-bit targets, as the addressable range is limited to $-2^{31} \ldots 2^{31}-1$ bytes,
-since the width of the instruction opcode field is only 32 bits. Our current approach is to allocate
+Care must be taken on 64-bit targets, as the addressable range is limited to \mbox{$-2^{31} \ldots 2^{31}-1$} bytes,
+since the width of the instruction opcode field is only 32 bits. Our current approach allocates
 a fixed $2^{27}-x$ bytes code area\footnote{Where $x$ is a small amount of memory reserved for special purposes.}
 (using \texttt{mmap}) with \texttt{caml\_jit\_code\_end} pointing to the end of the code area.
 The offsets are therefore values in the range $-2^{27}+x$ to $-1$.
@@ -597,7 +589,7 @@ The offsets are therefore values in the range $-2^{27}+x$ to $-1$.
 
 Byte-code is incrementally translated to native machine code. Whenever the JIT engine detects a
 byte-code instruction, which has not been translated to native machine code yet, it invokes the
-C function \texttt{caml\_jit\_compile}. \linebreak[4]\texttt{caml\_jit\_compile} then translates the byte-code
+C function \texttt{caml\_jit\_compile}. \texttt{caml\_jit\_compile} then translates the byte-code
 block starting at the given byte-code offset and all byte-code blocks, which appear as branch
 targets. These \emph{byte-code blocks} are basic blocks within the \textsc{OCaml} byte-code,
 terminated by branch, raise, return and stop instructions. Translation of a byte-code block also
@@ -610,7 +602,6 @@ all byte-code instruction opcodes are positive values between $0$ and $145$, it 
 already translated and not yet translated byte-code instructions. Now one could alter the byte code
 trampoline in figure~\ref{figure:Byte_code_trampoline_x86_64} and add a test to see whether \texttt{(\%rdi)}
 contains a positive value, and if so invoke the \texttt{caml\_jit\_compile} function.
-
 We did however discover that such a test is unnecessary if we ensure that a jump to an address in
 the range $0 \ldots 145$ relative to \texttt{caml\_jit\_code\_end} automatically invokes the
 \texttt{caml\_jit\_compile} function. This was surprisingly easy to accomplish on x86-64 (and
@@ -620,12 +611,14 @@ The byte-code compile trampoline for x86-64 is shown in figure~\ref{figure:Byte_
 
 \begin{figure}[ht]
   \centering
+  \begin{varwidth}{\linewidth}
   \begin{verbatim}
-  xchgq %rax, %rbx
-  call  caml_jit_compile(%rip)
-  xchgq %rbx, %rax
-  jmpq  *%rbx
+movq  %rax, %rbx
+call  caml_jit_compile(%rip)
+xchgq %rbx, %rax
+jmpq  *%rbx
 \end{verbatim}
+  \end{varwidth}
   \caption{Byte-code compile trampoline (x86-64)}
   \label{figure:Byte_code_compile_trampoline_x86_64}
 \end{figure}
@@ -647,7 +640,7 @@ In the previous section we have already briefly described the \texttt{caml\_jit\
 which performs the actual translation of byte-code instructions to native machine code. This section
 gives a detailed overview of the translation process.
 
-Whenever the byte-code compile trampoline invokes \linebreak[4]\texttt{caml\_jit\_compile}, it translates the byte-code
+Whenever the byte-code compile trampoline invokes \texttt{caml\_jit\_compile}, it translates the byte-code
 block starting at the byte-code instruction that triggered the translation (usually the beginning of a function,
 i.e.~a \texttt{GRAB} instruction)
 and continues until a terminating instruction is found (i.e.~\texttt{STOP}, \texttt{RETURN}, etc.) or an already
@@ -665,13 +658,14 @@ case for the \texttt{ANDINT} instruction on x86-64.
 
 \begin{figure}[ht]
   \centering
+  \begin{varwidth}{\linewidth}
   \begin{verbatim}
-  case ANDINT:
-    jx86_andq_reg_membase(cp, JX86_RAX,
-                          JX86_R14, 0);
-    jx86_addq_reg_imm(cp, JX86_R14, 8);
-    break;
+case ANDINT:
+  jx86_andq_reg_membase(cp, JX86_RAX, JX86_R14, 0);
+  jx86_addq_reg_imm(cp, JX86_R14, 8);
+  break;
 \end{verbatim}
+  \end{varwidth}
   \caption{\texttt{caml\_jit\_compile} \texttt{ANDINT} case (x86-64)}
   \label{figure:caml_jit_compile_ANDINT}
 \end{figure}
@@ -683,10 +677,12 @@ instruction pops the top-most cell off the stack (the \textsc{OCaml} stack grows
 
 \begin{figure}[ht]
   \centering
+  \begin{varwidth}{\linewidth}
   \begin{verbatim}
-  andq 0(%r14), %rax
-  addq $8, %r14
+andq 0(%r14), %rax
+addq $8, %r14
 \end{verbatim}
+  \end{varwidth}
   \caption{\texttt{ANDINT} native code (x86-64)}
   \label{figure:ANDINT_native_code}
 \end{figure}
@@ -695,7 +691,6 @@ The translation of most other byte-code instructions is just as straight-forward
 the \texttt{ANDINT} case shown above. There are however a few byte-code instructions that
 required special processing, most notably branch instructions. These instructions are used
 to change the flow of control within a byte-code segment.
-
 Whenever a \texttt{BRANCH} instruction is hit, we check whether the branch target is already
 translated (i.e.~whether the opcode of the instruction contains a native code offset). If so, we
 simply generate a \texttt{jmp} to the known native code address.
@@ -759,7 +754,6 @@ The compilation scheme described above is similar to the one implemented by \tex
 in that it generates a lot of unnecessary stack pointer updates. For every instruction
 that pushes values to or pops values off the stack an appropriate update of the stack
 pointer is generated.
-
 For example, the byte-code sequence \texttt{PUSH ACC4 ADDINT} generates two stack pointer
 updates, one decrement by \texttt{PUSH} and one increment by \texttt{ADDINT}, which are
 unnecessary as the stack pointer will point to the initial stack cell again after executing
@@ -784,7 +778,8 @@ ensuring that the stack offset is flushed prior to generating code for \texttt{C
 instructions.
 
 This way we were able to avoid nearly all unnecessary stack pointer updates, which
-also reduced the size of the generated native machine code.
+also reduced the size of the generated native machine code by $4-17\,\%$ in
+our tests.
 
 \subsubsection{Floating point operations}
 
@@ -793,7 +788,6 @@ interpreter. Calling C primitives from the generated native code comes at a
 certain cost -- i.e.~making the stack and minor allocation pointer available
 to C code, and reloading it once the C function returns -- which significantly
 decreases the performance of programs using a lot of floating point operations.
-
 We have therefore decided to inline various floating point primitives (\texttt{caml\_add\_float},
 \texttt{caml\_sub\_float}, etc.), which speed up certain floating point benchmarks by a factor of $1.7$.
 
@@ -801,7 +795,27 @@ We have therefore decided to inline various floating point primitives (\texttt{c
 %% Performance
 \section{Performance} \label{section:Performance}
 
+The performance measurements presented here are done on a MacBook 
+with an Intel Core 2 Duo 2.4 GHz CPU (3 MiB L2 Cache), and 4 GiB 1067 MHz DDR3 RAM,
+running Mac OS X 10.6.4. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
+build 5664). The \textsc{OCaml} compiler is 3.12.0. The \textsc{OCamlJit2}
+code is the tagged revision \texttt{ocamljit2-2010-tr1},
+compiled with \texttt{gcc} optimization level \texttt{-O3}.
+
+\subsection{Execution time speedup}
+
+We measured only the total execution time, as this is the significant
+time. Table~\ref{table:Running_time_and_speedup} gives some timings
+(combined system and user CPU time, in seconds), comparing the byte-code interpreter
+time $t_{byt}$ to the \textsc{OCamlJit2} time $t_{jit}$, and the
+time $t_{opt}$ taken by the same program compiled with the optimizing
+native code compiler \texttt{ocamlopt}. It also lists the relative speedups
+$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$, $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$,
+and $\sigma^{jit}_{opt} = \frac{t_{byt}}{t_{opt}}$, where bigger values are
+better, and a value less than $1$ would represent a regression.
+
 \begin{table*}[ht]
+  \footnotesize
   \centering
   \begin{tabular}{l|rrr|rrr|l}
     \multicolumn{1}{l|}{\large invocation}
@@ -818,22 +832,22 @@ We have therefore decided to inline various floating point primitives (\texttt{c
     \\
     \hline
 \texttt{almabench} & $27.83$ & $10.05$ & $4.47$ & $2.77$ & $2.25$ & $6.22$ & number crunching \\
-\texttt{almabench.unsafe} & $27.74$ & $9.76$ & $4.35$ & $2.84$ & $2.24$ & $6.38$ & number crunching {\small(no bounds check)} \\
+\texttt{almabench.unsafe} & $27.74$ & $9.76$ & $4.35$ & $2.84$ & $2.24$ & $6.38$ & number crunching {\tiny(no bounds check)} \\
 \texttt{bdd} & $8.50$ & $1.93$ & $0.68$ & $4.41$ & $2.86$ & $12.60$ & binary decision digram \\
 \texttt{boyer} & $4.34$ & $1.68$ & $1.06$ & $2.59$ & $1.59$ & $4.11$ & term processing \\
 \texttt{fft} & $5.72$ & $2.17$ & $0.64$ & $2.63$ & $3.39$ & $8.94$ & fast fourier transformation \\
 \texttt{nucleic} & $14.78$ & $4.10$ & $0.80$ & $3.61$ & $5.13$ & $18.52$ & floating point \\
 \texttt{quicksort} & $6.78$ & $1.27$ & $0.24$ & $5.34$ & $5.34$ & $28.48$ & array quicksort \\
-\texttt{quicksort.unsafe} & $4.07$ & $0.93$ & $0.20$ & $4.36$ & $4.79$ & $20.86$ & array quicksort {\small(no bounds check)} \\
+\texttt{quicksort.unsafe} & $4.07$ & $0.93$ & $0.20$ & $4.36$ & $4.79$ & $20.86$ & array quicksort {\tiny(no bounds check)} \\
 \texttt{soli} & $0.17$ & $0.03$ & $0.01$ & $5.09$ & $3.40$ & $17.30$ & tiny solitaire \\
-\texttt{soli.unsafe} & $0.14$ & $0.02$ & $0.01$ & $6.27$ & $2.75$ & $17.25$ & tiny solitaire {\small(no bounds check)} \\
+\texttt{soli.unsafe} & $0.14$ & $0.02$ & $0.01$ & $6.27$ & $2.75$ & $17.25$ & tiny solitaire {\tiny(no bounds check)} \\
 \texttt{sorts} & $19.29$ & $7.13$ & $3.71$ & $2.71$ & $1.92$ & $5.19$ & various sorting algorithms \\
 \hline
-\texttt{ocamlc -help} & $0.01$ & $0.01$ & $0.00$ & $1.14$ & $7.00$ & $8.00$ & {\small(short execution)} \\
+\texttt{ocamlc -help} & $0.01$ & $0.01$ & $0.00$ & $1.14$ & $7.00$ & $8.00$ & {\tiny(short execution)} \\
 \texttt{ocamlc -c format.ml} & $0.17$ & $0.08$ & $0.05$ & $2.16$ & $1.65$ & $3.57$ &  \\
 \texttt{ocamlopt -c format.ml} & $0.65$ & $0.28$ & $0.19$ & $2.31$ & $1.46$ & $3.38$ &  \\
-\texttt{ocamlc -c stdlib/*.ml} & $2.03$ & $0.95$ & $0.67$ & $2.14$ & $1.42$ & $3.04$ & byte-compile most of \texttt{stdlib/*.ml} \\
-\texttt{ocamlopt -c stdlib/*.ml} & $5.04$ & $2.36$ & $1.70$ & $2.14$ & $1.39$ & $2.97$ & native-compile most of \texttt{stdlib/*.ml} \\
+\texttt{ocamlc -c stdlib/*.ml} & $2.03$ & $0.95$ & $0.67$ & $2.14$ & $1.42$ & $3.04$ & byte-compile \texttt{stdlib/*.ml} \\
+\texttt{ocamlopt -c stdlib/*.ml} & $5.04$ & $2.36$ & $1.70$ & $2.14$ & $1.39$ & $2.97$ & native-compile \texttt{stdlib/*.ml} \\
   \end{tabular}
   \caption{Running time and speedup}
   \label{table:Running_time_and_speedup}
@@ -841,7 +855,7 @@ We have therefore decided to inline various floating point primitives (\texttt{c
 
 \begin{figure*}[hbt]
   \centering
-  \begin{tikzpicture}
+  \begin{tikzpicture}[scale=.95]
     \definecolor{color}{HTML}{483D8B}
     \draw (0cm,0cm) -- (16.0cm,0cm);  %Abzisse
     \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
@@ -879,25 +893,6 @@ We have therefore decided to inline various floating point primitives (\texttt{c
   \caption{Speedup w.r.t.~the byte-code interpreter}
   \label{figure:Speedup_w_r_t_the_byte_code_interpreter}
 \end{figure*}
-
-The performance measurements presented here are done on a MacBook 
-with an Intel Core 2 Duo 2.4 GHz CPU (3 MiB L2 Cache), and 4 GiB 1067 MHz DDR3 RAM,
-running Mac OS X 10.6.4. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
-build 5664). The \textsc{OCaml} compiler is 3.12.0. The \textsc{OCamlJit2}
-code is the tagged revision \texttt{ocamljit2-2010-tr1},
-compiled with \texttt{gcc} optimization level \texttt{-O3}.
-
-\subsection{Execution time speedup}
-
-We measured only the total execution time, as this is the significant
-time. Table~\ref{table:Running_time_and_speedup} gives some timings
-(combined system and user CPU time, in seconds), comparing the byte-code interpreter
-time $t_{byt}$ to the \textsc{OCamlJit2} time $t_{jit}$, and the
-time $t_{opt}$ taken by the same program compiled with the optimizing
-native code compiler \texttt{ocamlopt}. It also lists the relative speedups
-$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$, $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$,
-and $\sigma^{jit}_{opt} = \frac{t_{byt}}{t_{opt}}$, where bigger values are
-better, and a value less than $1$ would represent a regression.
 
 The commands listed in the first $11$ rows are test programs from the
 \texttt{testsuite/tests} folder of the \textsc{OCaml} 3.12.0 distribution.
@@ -993,15 +988,14 @@ First of all, instruction selection, instruction scheduling and register
 allocation \cite{Aho06} in the current implementation are far from optimal.
 For example most of the generated code uses less than a fourth of the
 registers provided by the x86-64 processor. This is due to the simple
-compilation scheme. We are already working on improvements in this
-area.
+compilation scheme. 
 
 The code memory management is another open issue. Right now code memory
 is managed by allocating in one large memory chunk. Unused code memory
-is never released or reused. This may cause trouble for \textsc{MetaOCaml}
-\cite{Taha06} or long-lived interactive top-level sessions. We plan to address this
-issue by adding support for garbage collected byte-code segments to the
-\textsc{OCaml} runtime, which will then also take care of native machine
+is never released or reused, which may cause trouble for \textsc{MetaOCaml}
+\cite{Taha06} or long-lived interactive top-level sessions. This could be
+addressed by adding support for garbage collected byte-code segments to the
+\textsc{OCaml} runtime, which would then also take care of native machine
 code segments.
 
 We also plan to improve the portability of the JIT engine. While it is more or
@@ -1015,7 +1009,7 @@ the optimizing native code compiler \texttt{ocamlopt} w.r.t.~execution speed,
 which would offer the possibility to drop \texttt{ocamlopt} and its runtime.
 This would improve the maintainability of \textsc{OCaml}, because then
 only a single compiler and a single runtime would have to be maintained
--- plus the JIT engine, of course. This however is an optional goal and
+-- plus the JIT engine, of course. However this is an optional goal and
 by no means a requirement, especially since \textsc{OCaml}'s optimizing
 native code compiler is also of educational interest.
 
