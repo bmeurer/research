@@ -94,7 +94,7 @@
 NULL
 
 #define OCAMLPREFIX "/opt/local"
-#define OCAMLJITPREFIX "/tmp/ocamljit"
+#define OCAMLJITPREFIX "/tmp/ocamljit2"
 
 
 static FILE *latex;
