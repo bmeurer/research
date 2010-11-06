@@ -855,6 +855,7 @@ better, and a value less than $1$ would represent a regression.
 
 \begin{figure*}[hbt]
   \centering
+  \footnotesize
   \begin{tikzpicture}[scale=.95]
     \definecolor{color}{HTML}{483D8B}
     \draw (0cm,0cm) -- (16.0cm,0cm);  %Abzisse
@@ -887,7 +888,7 @@ better, and a value less than $1$ would represent a regression.
       {
         \draw[fill=color] (\x cm,0cm) rectangle (0.5cm+\x cm,\y cm) %die Säulen
         node at (0.25cm + \x cm,\y cm + 0.3cm) {\y}; %Faktor über den Säulen
-        \node[rotate=45, left] at (0.4 cm +\x cm,-0.1cm) {\small\texttt{\bench}}; %Säulenbeschriftung
+        \node[rotate=45, left] at (0.4 cm +\x cm,-0.1cm) {\texttt{\bench}}; %Säulenbeschriftung
       };
   \end{tikzpicture}
   \caption{Speedup w.r.t.~the byte-code interpreter}
