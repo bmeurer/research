@@ -802,18 +802,6 @@ build 5664). The \textsc{OCaml} compiler is 3.12.0. The \textsc{OCamlJit2}
 code is the tagged revision \texttt{ocamljit2-2010-tr1},
 compiled with \texttt{gcc} optimization level \texttt{-O3}.
 
-\subsection{Execution time speedup}
-
-We measured only the total execution time, as this is the significant
-time. Table~\ref{table:Running_time_and_speedup} gives some timings
-(combined system and user CPU time, in seconds), comparing the byte-code interpreter
-time $t_{byt}$ to the \textsc{OCamlJit2} time $t_{jit}$, and the
-time $t_{opt}$ taken by the same program compiled with the optimizing
-native code compiler \texttt{ocamlopt}. It also lists the relative speedups
-$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$, $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$,
-and $\sigma^{jit}_{opt} = \frac{t_{byt}}{t_{opt}}$, where bigger values are
-better, and a value less than $1$ would represent a regression.
-
 \begin{table*}[ht]
   \footnotesize
   \centering
@@ -853,7 +841,19 @@ better, and a value less than $1$ would represent a regression.
   \label{table:Running_time_and_speedup}
 \end{table*}
 
-\begin{figure*}[hbt]
+\subsection{Execution time speedup}
+
+We measured only the total execution time, as this is the significant
+time. Table~\ref{table:Running_time_and_speedup} gives some timings
+(combined system and user CPU time, in seconds), comparing the byte-code interpreter
+time $t_{byt}$ to the \textsc{OCamlJit2} time $t_{jit}$, and the
+time $t_{opt}$ taken by the same program compiled with the optimizing
+native code compiler \texttt{ocamlopt}. It also lists the relative speedups
+$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$, $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$,
+and $\sigma^{jit}_{opt} = \frac{t_{byt}}{t_{opt}}$, where bigger values are
+better, and a value less than $1$ would represent a regression.
+
+\begin{figure*}[bht]
   \centering
   \footnotesize
   \begin{tikzpicture}[scale=.95]
@@ -866,7 +866,7 @@ better, and a value less than $1$ would represent a regression.
     \draw (-0.1cm,6.5cm) -- (-0.2cm,6.5cm) node [left] {$\sigma^{jit}_{byt}$};  %oberes Ende der Ordinate
     \foreach \x in {1,...,6}  %Hilfslinien
       \draw[gray!50, text=black] (-0.2 cm,\x cm) -- (16.0 cm,\x cm) node at (-0.5 cm,\x cm) {\x};  %Beschriftung
-      \foreach \x/\y/\bench in
+    \foreach \x/\y/\bench in
       {
         0.1/2.77/almabench,  %\x ist Anfang der Säulen
         1.1/2.84/almabench.unsafe,  %\y ist Höhe der Säulen
@@ -930,6 +930,63 @@ significant upon first sight, but it is indeed a nice improvement
 for a task that is mostly I/O bound and involves numerous invocations
 of the C compiler, the assembler and the linker, which aren't
 affected by the use of \textsc{OCamlJit2}.
+
+\subsection{Branch prediction accuracy}
+
+\begin{figure*}[bht]
+  \centering
+  \footnotesize
+  \begin{tikzpicture}
+    \definecolor{color1}{HTML}{8B0000}
+    \definecolor{color2}{HTML}{4682B4}
+    \draw (0cm,0cm) -- (8.5cm,0cm);  %Abzisse
+    \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+    \draw (8.5cm,0cm) -- (8.5cm,-0.1cm);  %rechtes Ende der Abzisse
+    \draw (-0.1cm,0cm) -- (-0.1cm,4.5cm);  %Ordinate
+    \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+    \draw (-0.1cm,4.5cm) -- (-0.2cm,4.5cm) node [left] {};  %oberes Ende der Ordinate
+    \foreach \x in {85,90,95,100}  %Hilfslinien
+      \draw[gray!50, text=black] (-0.2 cm,\x * 0.2 cm - 80 * 0.2cm) -- (8.5 cm,\x * 0.2 cm - 80 * 0.2 cm) node at (-0.5 cm,\x * 0.2 cm - 80 * 0.2 cm) {$\x \%\quad$};  %Beschriftung
+    \foreach \x/\j/\b/\bench in
+    {
+      0/99.1/85.0/almabench,
+      1/96.2/84.7/bdd,
+      2/97.4/88.9/boyer,
+      3/99.6/88.1/fft,
+      4/98.9/89.2/nucleic,
+      5/99.3/90.2/quicksort,
+      6/98.0/89.6/soli,
+      7/98.6/92.7/sorts
+    }
+    {
+      \draw[fill=color1] (\x cm+0.1cm,0cm) rectangle (0.5cm+\x cm,\j * 0.2cm - 80 * 0.2cm);
+      \draw[fill=color2] (\x cm+0.51cm,0cm) rectangle (0.9cm+\x cm,\b * 0.2cm - 80 * 0.2cm);
+      \node[rotate=45,left] at (0.5cm + \x cm,-0.1cm) {\texttt{\bench}};
+    };
+    %Legende
+    \draw[fill=color1] (9.5cm,4.0cm) rectangle (10.0cm,4.2cm)
+    node at (11.1cm,4.1cm) {\textsc{OCamlJit2}};
+    \draw[fill=color2] (9.5cm,3.6cm) rectangle (10.0cm,3.8cm)
+    node at (10.745cm,3.7cm) {\textsc{OCaml}};
+  \end{tikzpicture}
+  \caption{Branch prediction accuracy}
+  \label{figure:Branch_prediction_accuracy}
+\end{figure*}
+
+Efficient virtual machine interpreters -- like the \textsc{OCaml} byte-code interpreter --
+perform a large number of indirect jumps (up to $11\%$ of all executed instructions in
+our benchmarks). Even though branch target buffers (BTBs) in modern CPUs and various threading techniques
+can greatly reduce the number of mispredicted branches, low branch prediction accuracy
+is still a major bottleneck in virtual machine interpreters.
+
+Virtual machines based on Just-In-Time compilers are able to reduce almost all indirect branches and thereby
+improve the branch prediction accuracy to nearly $98-99\%$ in most cases. A few indirect branches
+cannot be eliminated, for example closure application in a virtual machine for a
+functional language needs an indirect branch (unless the closure's code pointer is
+known at compile time).
+Figure~\ref{figure:Branch_prediction_accuracy} compares the branch
+prediction accuracy of \textsc{OCaml} and \textsc{OCamlJit2} in various
+benchmarks on the Intel Core 2 Duo.
 
 \subsection{Comparison with OCamlJit}
 
