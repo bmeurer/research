@@ -975,12 +975,12 @@ affected by the use of \textsc{OCamlJit2}.
 
 Efficient virtual machine interpreters -- like the \textsc{OCaml} byte-code interpreter --
 perform a large number of indirect jumps (up to $11\%$ of all executed instructions in
-our benchmarks). Even though branch target buffers (BTBs) in modern CPUs and various threading techniques
-can greatly reduce the number of mispredicted branches, low branch prediction accuracy
-is still a major bottleneck in virtual machine interpreters.
+our benchmarks). Even though branch target buffers (BTBs) in modern CPUs and various interpreter techniques
+\cite{CaseyErtlGregg07} can greatly reduce the number of mispredicted branches, low branch prediction accuracy
+is still a major bottleneck in virtual machine interpreters \cite{ErtlGregg01}.
 
 Virtual machines based on Just-In-Time compilers are able to reduce almost all indirect branches and thereby
-improve the branch prediction accuracy to nearly $98-99\%$ in most cases. A few indirect branches
+increase the branch prediction accuracy to nearly $98-99\%$ in most cases. A few indirect branches
 cannot be eliminated, for example closure application in a virtual machine for a
 functional language needs an indirect branch (unless the closure's code pointer is
 known at compile time).
