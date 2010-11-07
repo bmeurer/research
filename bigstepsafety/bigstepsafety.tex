@@ -1,0 +1,250 @@
+\documentclass[12pt,a2paper,draft]{article}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[blocks]{authblk}
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage[colorlinks=false,%
+            pdfkeywords={type safety, big-step, operational, semantics},%
+            pdftitle={A new approach to prove type safety using big-step operational semantics},%
+            pdfauthor={Benedikt Meurer and Kurt Sieber},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{mathpartir}
+\usepackage{varwidth}
+
+\newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
+\newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+\renewcommand{\int}{\ensuremath{\textbf{int}}}
+\newcommand{\rec}[2]{\ensuremath{\textbf{rec}\,{#1}.\,{#2}}}
+\newcommand{\tj}[2]{\mbox{\ensuremath{{#1}:{#2}}}}
+\newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash\tj{#2}{#3}}}}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+
+\begin{document}
+
+\title{%
+  A new approach to prove type safety\\using big-step operational semantics
+}
+\author{Benedikt Meurer}
+\author{Kurt Sieber}
+\affil{%
+  Compiler Construction and Software Analysis Group\\
+  University of Siegen\\
+  D-57072 Siegen, Germany\\
+  {\tt \{meurer,sieber\}@informatik.uni-siegen.de}
+}
+% \author{%
+%   Benedikt Meurer\\
+%   \small Compiler Construction and Software Analysis Group\\
+%   \small University of Siegen\\
+%   \small D-57072 Siegen, Germany\\
+%   \small \url{meurer@informatik.uni-siegen.de}
+%   \and
+%   Kurt Sieber\\
+%   \small Compiler Construction and Software Analysis Group\\
+%   \small University of Siegen\\
+%   \small D-57072 Siegen, Germany\\
+%   \small \url{sieber@informatik.uni-siegen.de}
+% }
+\date{}
+\maketitle
+\begin{abstract}
+  TODO
+\end{abstract}
+
+
+%% Introduction
+\section{Introduction}
+
+
+%% The language and its big-step semantics
+\section{The language and its big-step semantics}
+
+This section describes the programming language considered in this paper,
+the simply typed $\lambda$-calculus extended with constants and recursion, which
+presents the simplest possible functional language that exhibits run-time
+errors (closed expressions that ``go wrong''). Figure~\ref{figure:Basic_syntax}
+shows the basic syntax of the programming language.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{llcl}
+    Variables   & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
+    Constants   & $c$ & $::=$ & $0 \mid 1 \mid 2 \mid \ldots$ \\
+    Expressions & $e$ & $::=$ & $c \mid x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \rec{x}{e}$ \\
+    Values      & $v$ & $::=$ & $c \mid \abstr{x}{e}$
+  \end{tabular}
+  \caption{Basic syntax}
+  \label{figure:Basic_syntax}
+\end{figure}
+
+We write $e'[e/x]$ for the capture-avoiding substitution of $e$ for all free occurrences
+of $x$ in $e'$. The standard call-by-value semantics in big-step style for this language is
+defined inductively by the inference rules given in figure~\ref{figure:Call_by_value_inference_rules}.
+To be exact, the \emph{evaluation relation} $e \Downarrow v$ is the smallest fixpoint of
+the given inference rules. That is, $e \Downarrow v$ holds if and only if it is the conclusion
+of a finite derivation tree built from the inference rules.
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(Val)]{}{v \Downarrow v}
+    \and
+    \inferrule[(App)]{%
+      e_1 \Downarrow \abstr{x}{e} \\
+      e_2 \Downarrow v_2 \\
+      e[v_2/x] \Downarrow v
+    }{%
+      \app{e_1}{e_2} \Downarrow v
+    }
+    \and
+    \inferrule[(Rec)]{%
+      e[\rec{x}{e}/x] \Downarrow v
+    }{%
+      \rec{x}{e} \Downarrow v
+    }
+  \end{mathpar}
+  \caption{Call-by-value inference rules}
+  \label{figure:Call_by_value_inference_rules}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(App-1)]{}{\app{e_1}{e_2} \Rightarrow e_1}
+    \and
+    \inferrule[(App-2)]{%
+      e_1 \Downarrow \abstr{x}{e}
+    }{%
+      \app{e_1}{e_2} \Rightarrow e_2
+    }
+    \and
+    \inferrule[(App-3)]{%
+      e_1 \Downarrow \abstr{x}{e} \\
+      e_2 \Downarrow v_2
+    }{%
+      \app{e_1}{e_2} \Rightarrow e[v_2/x]
+    }
+    \and
+    \inferrule[(Rec-1)]{}{\rec{x}{e} \Rightarrow e[\rec{x}{e}/x]}
+  \end{mathpar}
+  \caption{Call-by-value prerequisite rules}
+  \label{figure:Call_by_value_prerequisite_rules}
+\end{figure}
+
+
+%% Type safety
+\section{Type safety}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(Const)]{}{\Tj{\Gamma}{c}{\int}}
+    \and
+    \inferrule[(Var)]{%
+      \Gamma(x) = \tau
+    }{%
+      \Tj{\Gamma}{x}{\tau}
+    }
+    \and
+    \inferrule[(Abstr)]{%
+      \Tj{\Gamma[\tau/x]}{e}{\tau'}
+    }{%
+      \Tj{\Gamma}{\abstr{x}{e}}{\tau \to \tau'}
+    }
+    \\
+    \inferrule[(Rec)]{%
+      \Tj{\Gamma[\tau/x]}{e}{\tau}
+    }{%
+      \Tj{\Gamma}{\rec{x}{e}}{\tau}
+    }
+    \and
+    \inferrule[(App)]{%
+      \Tj{\Gamma}{e_1}{\tau' \to \tau} \\
+      \Tj{\Gamma}{e_2}{\tau'}
+    }{%
+      \Tj{\Gamma}{\app{e_1}{e_2}}{\tau}
+    }
+  \end{mathpar}
+  \caption{Typing rules}
+  \label{figure:Typing_rules}
+\end{figure}
+
+\begin{lemma}[Preservation of types under substitution]
+  \label{lemma:Preservation_of_types_under_substitution}
+  If $\Tj{\Gamma[\tau/x]}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
+  then $\Tj{\Gamma}{e'[e/x]}{\tau'}$.
+\end{lemma}
+
+\begin{theorem}[Preservation]
+  \label{theorem:Preservation}
+  Let $\Tj{\Gamma}{e}{\tau}$.
+  \begin{enumerate}
+  \item If $e \Downarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
+  \item If $e \Rightarrow e'$, then there is some $\tau'$ such that $\Tj{\Gamma}{e'}{\tau'}$
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  The proof is by simultaneous induction on the derivations of $e \Downarrow v$ and $e \Rightarrow e'$.
+  The cases for $e \Downarrow v$ are standard and therefore omitted.
+  $e \Rightarrow e'$ implies that $e$ is either an application $\app{e_1}{e_2}$ or
+  a recursion $\rec{x}{e_1}$.
+
+  If $e = \app{e_1}{e_2}$, then we have $\Tj{\Gamma}{\app{e_1}{e_2}}{\tau}$, which
+  must have been derived from $\Tj{\Gamma}{e_1}{\tau_2 \to \tau}$ and $\Tj{\Gamma}{e_2}{\tau_2}$
+  using \textsc{(App)}. We consider only the interesting case of \textsc{(App-3)}. Then we have
+  $e_1 \Downarrow \abstr{x}{e_1'}$ and $e_2 \Downarrow v_2$. By
+  induction hypothesis we get $\Tj{\Gamma}{\abstr{x}{e_1'}}{\tau_2 \to \tau}$, derived from
+  $\Tj{\Gamma[\tau_2/x]}{e_1'}{\tau}$ using \textsc{(Abstr)}, and $\Tj{\Gamma}{v_2}{\tau_2}$.
+  We conclude using Lemma~\ref{lemma:Preservation_of_types_under_substitution}.
+
+  If $e = \rec{x}{e_1}$, then we have $\Tj{\Gamma}{\rec{x}{e_1}}{\tau}$, which must have
+  been derived from $\Tj{\Gamma[\tau/x]}{e_1}{\tau}$ using \textsc{(Rec)}.
+  We conclude using Lemma~\ref{lemma:Preservation_of_types_under_substitution}.
+\end{proof}
+
+\begin{theorem}[Progress]
+  \label{theorem:Progress}
+  If $\tj{e}{\tau}$, then there is either a $v$ such that $e \Downarrow v$, or an $e'$ such that
+  $e \Rightarrow e'$.
+\end{theorem}
+
+\begin{proof}
+  For values $e = v$ we have $v \Downarrow v$ using \textsc{(Val)}, for applications
+  $e = \app{e_1}{e_2}$ we have $\app{e_1}{e_2} \Rightarrow e_1$ using \textsc{(App-1)},
+  and for recursions $e = \rec{x}{e'}$ we have $\rec{x}{e'} \Rightarrow e'[\rec{x}{e'}/x]$
+  using \textsc{(Rec-1)}.
+\end{proof}
+
+\begin{theorem}[Type safety]
+  If $\tj{e}{\tau}$, then there is no $e'$ with
+  $e' \not\Downarrow$ and $e' \not\Rightarrow$,
+  such that $e \stackrel{*}{\Rightarrow} e'$.
+\end{theorem}
+
+\begin{proof}
+  Let $e \stackrel{*}{\Rightarrow} e'$. According to theorem~\ref{theorem:Preservation} there
+  exists some $\tau'$ such that $\tj{e'}{\tau'}$, and according to theorem~\ref{theorem:Progress}
+  there is either a $v$ such that $e' \Downarrow v$ or an $e''$ such that $e' \Rightarrow e''$.
+\end{proof}
+
+
+%% Related work
+\section{Related work}
+
+
+%% Conclusion
+\section{Conclusions}
+
+
+%% References
+\bibliographystyle{abbrv}
+\bibliography{citations}
+
+
+\end{document}
