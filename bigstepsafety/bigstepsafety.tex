@@ -16,13 +16,18 @@
 
 \newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
 \newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
-\renewcommand{\int}{\ensuremath{\textbf{int}}}
-\newcommand{\rec}[2]{\ensuremath{\textbf{rec}\,{#1}.\,{#2}}}
+\newcommand{\rec}[2]{\ensuremath{{\normalfont\textsf{rec}}\,{#1}.\,{#2}}}
+\newcommand{\unit}{\ensuremath{\normalfont\textsf{unit}}}
+\newcommand{\Unit}{\ensuremath{\normalfont\textsf{Unit}}}
+
 \newcommand{\tj}[2]{\mbox{\ensuremath{{#1}:{#2}}}}
 \newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash\tj{#2}{#3}}}}
+\newcommand{\Pj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}\rightarrow{#3}}}}
+\newcommand{\tree}[1]{\mathit{tree}(#1)}
 
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
 
 \begin{document}
 
@@ -65,18 +70,17 @@
 \section{The language and its big-step semantics}
 
 This section describes the programming language considered in this paper,
-the simply typed $\lambda$-calculus extended with constants and recursion, which
+the simply typed $\lambda$-calculus with $\unit$ and general recursion, which
 presents the simplest possible functional language that exhibits run-time
-errors (closed expressions that ``go wrong''). Figure~\ref{figure:Basic_syntax}
+errors (closed expressions that ``go wrong'') and divergence. Figure~\ref{figure:Basic_syntax}
 shows the basic syntax of the programming language.
 
 \begin{figure}[htb]
   \centering
   \begin{tabular}{llcl}
     Variables   & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
-    Constants   & $c$ & $::=$ & $0 \mid 1 \mid 2 \mid \ldots$ \\
-    Expressions & $e$ & $::=$ & $c \mid x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \rec{x}{e}$ \\
-    Values      & $v$ & $::=$ & $c \mid \abstr{x}{e}$
+    Expressions & $e$ & $::=$ & $\unit \mid x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \rec{x}{e}$ \\
+    Values      & $v$ & $::=$ & $\unit \mid \abstr{x}{e}$
   \end{tabular}
   \caption{Basic syntax}
   \label{figure:Basic_syntax}
@@ -112,29 +116,24 @@ of a finite derivation tree built from the inference rules.
   \label{figure:Call_by_value_inference_rules}
 \end{figure}
 
-\begin{figure}[htb]
-  \centering
-  \begin{mathpar}
-    \inferrule[(App-1)]{}{\app{e_1}{e_2} \Rightarrow e_1}
-    \and
-    \inferrule[(App-2)]{%
-      e_1 \Downarrow \abstr{x}{e}
-    }{%
-      \app{e_1}{e_2} \Rightarrow e_2
-    }
-    \and
-    \inferrule[(App-3)]{%
-      e_1 \Downarrow \abstr{x}{e} \\
-      e_2 \Downarrow v_2
-    }{%
-      \app{e_1}{e_2} \Rightarrow e[v_2/x]
-    }
-    \and
-    \inferrule[(Rec-1)]{}{\rec{x}{e} \Rightarrow e[\rec{x}{e}/x]}
-  \end{mathpar}
-  \caption{Call-by-value prerequisite rules}
-  \label{figure:Call_by_value_prerequisite_rules}
-\end{figure}
+\begin{definition}[Derivation tree] \label{definition:Derivation_tree}
+  The \emph{derivation tree} for $e$ is the smallest set $\tree{e}$ such that:
+  \begin{enumerate}
+  \item $(\varepsilon, e) \in \tree{e}$
+  \item If $(\kappa,e_0) \in \tree{e}$ and there is an inference rule
+    \begin{mathpar}
+      \inferrule*{%
+        e_1 \Downarrow v_1 \\
+        \ldots \\
+        e_n \Downarrow v_n
+      }{%
+        e_0 \Downarrow v_n
+      }
+    \end{mathpar}
+    and $e_1 \Downarrow v_1$, $\ldots$, $e_{i-1} \Downarrow v_{i-1}$ for some $i = 1,\ldots,n$, then
+    $(\kappa \cdot i,e_i) \in \tree{e}$.
+  \end{enumerate}
+\end{definition}
 
 
 %% Type safety
@@ -143,27 +142,27 @@ of a finite derivation tree built from the inference rules.
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
-    \inferrule[(Const)]{}{\Tj{\Gamma}{c}{\int}}
+    \inferrule[(T-Unit)]{}{\Tj{\Gamma}{\unit}{\Unit}}
     \and
-    \inferrule[(Var)]{%
+    \inferrule[(T-Var)]{%
       \Gamma(x) = \tau
     }{%
       \Tj{\Gamma}{x}{\tau}
     }
     \and
-    \inferrule[(Abstr)]{%
+    \inferrule[(T-Abstr)]{%
       \Tj{\Gamma[\tau/x]}{e}{\tau'}
     }{%
       \Tj{\Gamma}{\abstr{x}{e}}{\tau \to \tau'}
     }
     \\
-    \inferrule[(Rec)]{%
+    \inferrule[(T-Rec)]{%
       \Tj{\Gamma[\tau/x]}{e}{\tau}
     }{%
       \Tj{\Gamma}{\rec{x}{e}}{\tau}
     }
     \and
-    \inferrule[(App)]{%
+    \inferrule[(T-App)]{%
       \Tj{\Gamma}{e_1}{\tau' \to \tau} \\
       \Tj{\Gamma}{e_2}{\tau'}
     }{%
@@ -174,63 +173,62 @@ of a finite derivation tree built from the inference rules.
   \label{figure:Typing_rules}
 \end{figure}
 
-\begin{lemma}[Preservation of types under substitution]
-  \label{lemma:Preservation_of_types_under_substitution}
+\begin{lemma}[Preservation of types under substitution] \label{lemma:Preservation_of_types_under_substitution}
   If $\Tj{\Gamma[\tau/x]}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
   then $\Tj{\Gamma}{e'[e/x]}{\tau'}$.
 \end{lemma}
 
-\begin{theorem}[Preservation]
-  \label{theorem:Preservation}
-  Let $\Tj{\Gamma}{e}{\tau}$.
+\begin{lemma}[Canonical Forms] \label{lemma:Canonical_Forms} \
   \begin{enumerate}
-  \item If $e \Downarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
-  \item If $e \Rightarrow e'$, then there is some $\tau'$ such that $\Tj{\Gamma}{e'}{\tau'}$
+  \item If $\tj{v}{\Unit}$, then $v = \unit$.
+  \item If $\tj{v}{\tau' \to \tau}$, then $v = \abstr{x}{e}$.
   \end{enumerate}
+\end{lemma}
+
+\begin{theorem}[Preservation] \label{theorem:Preservation}
+  If $\Tj{\Gamma}{e}{\tau}$ and $e \Downarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
 \end{theorem}
-
-\begin{proof}
-  The proof is by simultaneous induction on the derivations of $e \Downarrow v$ and $e \Rightarrow e'$.
-  The cases for $e \Downarrow v$ are standard and therefore omitted.
-  $e \Rightarrow e'$ implies that $e$ is either an application $\app{e_1}{e_2}$ or
-  a recursion $\rec{x}{e_1}$.
-
-  If $e = \app{e_1}{e_2}$, then we have $\Tj{\Gamma}{\app{e_1}{e_2}}{\tau}$, which
-  must have been derived from $\Tj{\Gamma}{e_1}{\tau_2 \to \tau}$ and $\Tj{\Gamma}{e_2}{\tau_2}$
-  using \textsc{(App)}. We consider only the interesting case of \textsc{(App-3)}. Then we have
-  $e_1 \Downarrow \abstr{x}{e_1'}$ and $e_2 \Downarrow v_2$. By
-  induction hypothesis we get $\Tj{\Gamma}{\abstr{x}{e_1'}}{\tau_2 \to \tau}$, derived from
-  $\Tj{\Gamma[\tau_2/x]}{e_1'}{\tau}$ using \textsc{(Abstr)}, and $\Tj{\Gamma}{v_2}{\tau_2}$.
-  We conclude using Lemma~\ref{lemma:Preservation_of_types_under_substitution}.
-
-  If $e = \rec{x}{e_1}$, then we have $\Tj{\Gamma}{\rec{x}{e_1}}{\tau}$, which must have
-  been derived from $\Tj{\Gamma[\tau/x]}{e_1}{\tau}$ using \textsc{(Rec)}.
-  We conclude using Lemma~\ref{lemma:Preservation_of_types_under_substitution}.
-\end{proof}
-
-\begin{theorem}[Progress]
-  \label{theorem:Progress}
-  If $\tj{e}{\tau}$, then there is either a $v$ such that $e \Downarrow v$, or an $e'$ such that
-  $e \Rightarrow e'$.
-\end{theorem}
-
-\begin{proof}
-  For values $e = v$ we have $v \Downarrow v$ using \textsc{(Val)}, for applications
-  $e = \app{e_1}{e_2}$ we have $\app{e_1}{e_2} \Rightarrow e_1$ using \textsc{(App-1)},
-  and for recursions $e = \rec{x}{e'}$ we have $\rec{x}{e'} \Rightarrow e'[\rec{x}{e'}/x]$
-  using \textsc{(Rec-1)}.
-\end{proof}
 
 \begin{theorem}[Type safety]
-  If $\tj{e}{\tau}$, then there is no $e'$ with
-  $e' \not\Downarrow$ and $e' \not\Rightarrow$,
-  such that $e \stackrel{*}{\Rightarrow} e'$.
+  If $\tj{e}{\tau}$ and $\tree{e}$ is finite, then there is some $v$ such that $e \Downarrow v$.
 \end{theorem}
 
 \begin{proof}
-  Consider $e \stackrel{*}{\Rightarrow} e'$. According to theorem~\ref{theorem:Preservation} there
-  exists some $\tau'$ such that $\tj{e'}{\tau'}$, and according to theorem~\ref{theorem:Progress}
-  there is either a $v$ such that $e' \Downarrow v$ or an $e''$ such that $e' \Rightarrow e''$.
+  By induction on the size of the (finite) derivation tree $\tree{e}$ and case analysis
+  over $\tj{e}{\tau}$.
+  \begin{description}
+  \item \textsc{(T-Unit)}: $\tj{\unit}{\Unit}$
+
+    $\unit \Downarrow \unit$ exists using \textsc{(Val)}.
+
+  \item \textsc{(T-Abstr)}: $\tj{\abstr{x}{e}}{\tau \to \tau'}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau'}$
+
+    $\abstr{x}{e} \Downarrow \abstr{x}{e}$ exists using \textsc{(Val)}.
+
+  \item \textsc{(T-Rec)}: $\tj{\rec{x}{e}}{\tau}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau}$
+
+    By lemma~\ref{lemma:Preservation_of_types_under_substitution}
+    we also have $\tj{e[\rec{x}{e}/x]}{\tau}$. Since $\tree{e[\rec{x}{e}/x]} = \tree{\rec{x}{e}}/1$ we
+    can use the induction hypothesis, yielding some $v$ such that $e[\rec{x}{e}/x] \Downarrow v$,
+    and therefore concluding $\rec{x}{e} \Downarrow v$ using \textsc{(Rec)}.
+
+  \item \textsc{(T-App)}: $\tj{\app{e_1}{e_2}}{\tau}$ $\quad$ $\tj{e_1}{\tau'\to\tau}$ $\quad$ $\tj{e_2}{\tau'}$
+
+    We have $\tree{e_1} = \tree{\app{e_1}{e_2}}/1$ and the induction hypothesis yields
+    some $v_1$ such that $e_1 \Downarrow v_1$. By theorem~\ref{theorem:Preservation} we
+    have $\tj{v_1}{\tau'\to\tau}$, and as such $v_1 = \abstr{x}{e}$ according to lemma~\ref{lemma:Canonical_Forms}.
+
+    Hence we also have $\tree{e_2} = \tree{\app{e_1}{e_2}}/2$ and using the induction hypothesis
+    on $e_2$ yields a $v_2$ such that $e_2 \Downarrow v_2$, plus $\tj{v_2}{\tau'}$ using
+    theorem~\ref{theorem:Preservation}.
+
+    $\tj{e[v_2/x]}{\tau}$ holds due to \textsc{(T-Abstr)} and
+    lemma~\ref{lemma:Preservation_of_types_under_substitution}. Since
+    $\tree{e[v_2/x]} = \tree{\app{e_1}{e_2}}/3$ we can use the induction hypothesis again and
+    get a $v$ such that $e[v_2/x] \Downarrow v$.
+
+    Using \textsc{(App)} we conclude $\app{e_1}{e_2} \Downarrow v$.
+  \end{description}
 \end{proof}
 
 
