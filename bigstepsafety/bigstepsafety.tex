@@ -65,6 +65,19 @@
 %% Introduction
 \section{Introduction}
 
+Two widely-used styles of \emph{operational semantics} are available today: \emph{big step semantics} \cite{Kahn87},
+also known as \emph{natural semantics}, relates program expressions to the final results of their
+evaluation; \emph{small step semantics} \cite{Plotkin81,Plotkin04}, also known as
+\emph{structured operational semantics}, repeatedly applies a one-step transition relation to
+form reduction sequences.
+
+So far, three different big-step semantics have been proposed for the $\lambda$-calculus to
+proof type-safety of a programming language: the first uses additional inductive rules
+$e \Downarrow \textsf{err}$ to model evaluations that ``go wrong'' \cite{Tofte87}, the second uses
+additional coinductive rules to formalize diverging compuations (following Cousot et al.
+\cite{CousotCousot07,LeroyGrall09}), and the third interprets the usual inference
+rules coinductively \cite{LeroyGrall09}. 
+
 
 %% The language and its big-step semantics
 \section{The language and its big-step semantics}
