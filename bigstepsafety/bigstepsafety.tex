@@ -23,7 +23,7 @@
 \newcommand{\tj}[2]{\mbox{\ensuremath{{#1}:{#2}}}}
 \newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash\tj{#2}{#3}}}}
 \newcommand{\Pj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}\rightarrow{#3}}}}
-\newcommand{\tree}[1]{\mathit{tree}(#1)}
+\newcommand{\tree}[1]{\mathcal{D}(#1)}
 
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
@@ -42,19 +42,6 @@
   D-57072 Siegen, Germany\\
   {\tt \{meurer,sieber\}@informatik.uni-siegen.de}
 }
-% \author{%
-%   Benedikt Meurer\\
-%   \small Compiler Construction and Software Analysis Group\\
-%   \small University of Siegen\\
-%   \small D-57072 Siegen, Germany\\
-%   \small \url{meurer@informatik.uni-siegen.de}
-%   \and
-%   Kurt Sieber\\
-%   \small Compiler Construction and Software Analysis Group\\
-%   \small University of Siegen\\
-%   \small D-57072 Siegen, Germany\\
-%   \small \url{sieber@informatik.uni-siegen.de}
-% }
 \date{}
 \maketitle
 \begin{abstract}
@@ -70,13 +57,6 @@ also known as \emph{natural semantics}, relates program expressions to the final
 evaluation; \emph{small step semantics} \cite{Plotkin81,Plotkin04}, also known as
 \emph{structured operational semantics}, repeatedly applies a one-step transition relation to
 form reduction sequences.
-
-So far, three different big-step semantics have been proposed for the $\lambda$-calculus to
-proof type-safety of a programming language: the first uses additional inductive rules
-$e \Downarrow \textsf{err}$ to model evaluations that ``go wrong'' \cite{Tofte87}, the second uses
-additional coinductive rules to formalize diverging compuations (following Cousot et al.
-\cite{CousotCousot07,LeroyGrall09}), and the third interprets the usual inference
-rules coinductively \cite{LeroyGrall09}. 
 
 
 %% The language and its big-step semantics
@@ -247,6 +227,13 @@ of a finite derivation tree built from the inference rules.
 
 %% Related work
 \section{Related work}
+
+So far, three different big-step semantics have been proposed for the $\lambda$-calculus to
+proof type-safety of a programming language: the first uses additional inductive rules
+$e \Downarrow \textsf{err}$ to model evaluations that ``go wrong'' \cite{Tofte87}, the second uses
+additional coinductive rules to formalize diverging compuations (following Cousot et al.
+\cite{CousotCousot07,LeroyGrall09}), and the third interprets the usual inference
+rules coinductively \cite{LeroyGrall09}. 
 
 
 %% Conclusion
