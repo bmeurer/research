@@ -82,27 +82,27 @@ shows the basic syntax of the programming language.
 We write $e'[e/x]$ for the capture-avoiding substitution of $e$ for all free occurrences
 of $x$ in $e'$. The standard call-by-value semantics in big-step style for this language is
 defined inductively by the inference rules given in figure~\ref{figure:Call_by_value_inference_rules}.
-To be exact, the \emph{evaluation relation} $e \Downarrow v$ is the smallest fixpoint of
-the given inference rules. That is, $e \Downarrow v$ holds if and only if it is the conclusion
+To be exact, the \emph{evaluation relation} $e \Rightarrow v$ is the smallest fixpoint of
+the given inference rules. That is, $e \Rightarrow v$ holds if and only if it is the conclusion
 of a finite derivation tree built from the inference rules.
 
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
-    \inferrule[(Val)]{}{v \Downarrow v}
+    \inferrule[(Val)]{}{v \Rightarrow v}
     \and
     \inferrule[(App)]{%
-      e_1 \Downarrow \abstr{x}{e} \\
-      e_2 \Downarrow v_2 \\
-      e[v_2/x] \Downarrow v
+      e_1 \Rightarrow \abstr{x}{e} \\
+      e_2 \Rightarrow v_2 \\
+      e[v_2/x] \Rightarrow v
     }{%
-      \app{e_1}{e_2} \Downarrow v
+      \app{e_1}{e_2} \Rightarrow v
     }
     \and
     \inferrule[(Rec)]{%
-      e[\rec{x}{e}/x] \Downarrow v
+      e[\rec{x}{e}/x] \Rightarrow v
     }{%
-      \rec{x}{e} \Downarrow v
+      \rec{x}{e} \Rightarrow v
     }
   \end{mathpar}
   \caption{Call-by-value inference rules}
@@ -116,14 +116,14 @@ of a finite derivation tree built from the inference rules.
   \item If $(\kappa,e_0) \in \tree{e}$ and there is an inference rule
     \begin{mathpar}
       \inferrule*{%
-        e_1 \Downarrow v_1 \\
+        e_1 \Rightarrow v_1 \\
         \ldots \\
-        e_n \Downarrow v_n
+        e_n \Rightarrow v_n
       }{%
-        e_0 \Downarrow v_n
+        e_0 \Rightarrow v_n
       }
     \end{mathpar}
-    and $e_1 \Downarrow v_1$, $\ldots$, $e_{i-1} \Downarrow v_{i-1}$ for some $i = 1,\ldots,n$, then
+    and $e_1 \Rightarrow v_1$, $\ldots$, $e_{i-1} \Rightarrow v_{i-1}$ for some $i = 1,\ldots,n$, then
     $(\kappa \cdot i,e_i) \in \tree{e}$.
   \end{enumerate}
 \end{definition}
@@ -179,11 +179,11 @@ of a finite derivation tree built from the inference rules.
 \end{lemma}
 
 \begin{theorem}[Preservation] \label{theorem:Preservation}
-  If $\Tj{\Gamma}{e}{\tau}$ and $e \Downarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
+  If $\Tj{\Gamma}{e}{\tau}$ and $e \Rightarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
 \end{theorem}
 
 \begin{theorem}[Type safety]
-  If $\tj{e}{\tau}$ and $\tree{e}$ is finite, then there is some $v$ such that $e \Downarrow v$.
+  If $\tj{e}{\tau}$ and $\tree{e}$ is finite, then there is some $v$ such that $e \Rightarrow v$.
 \end{theorem}
 
 \begin{proof}
@@ -192,35 +192,35 @@ of a finite derivation tree built from the inference rules.
   \begin{description}
   \item \textsc{(T-Unit)}: $\tj{\unit}{\Unit}$
 
-    $\unit \Downarrow \unit$ exists using \textsc{(Val)}.
+    $\unit \Rightarrow \unit$ exists using \textsc{(Val)}.
 
   \item \textsc{(T-Abstr)}: $\tj{\abstr{x}{e}}{\tau \to \tau'}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau'}$
 
-    $\abstr{x}{e} \Downarrow \abstr{x}{e}$ exists using \textsc{(Val)}.
+    $\abstr{x}{e} \Rightarrow \abstr{x}{e}$ exists using \textsc{(Val)}.
 
   \item \textsc{(T-Rec)}: $\tj{\rec{x}{e}}{\tau}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau}$
 
     By lemma~\ref{lemma:Preservation_of_types_under_substitution}
     we also have $\tj{e[\rec{x}{e}/x]}{\tau}$. Since $\tree{e[\rec{x}{e}/x]} = \tree{\rec{x}{e}}/1$ we
-    can use the induction hypothesis, yielding some $v$ such that $e[\rec{x}{e}/x] \Downarrow v$,
-    and therefore concluding $\rec{x}{e} \Downarrow v$ using \textsc{(Rec)}.
+    can use the induction hypothesis, yielding some $v$ such that $e[\rec{x}{e}/x] \Rightarrow v$,
+    and therefore concluding $\rec{x}{e} \Rightarrow v$ using \textsc{(Rec)}.
 
   \item \textsc{(T-App)}: $\tj{\app{e_1}{e_2}}{\tau}$ $\quad$ $\tj{e_1}{\tau'\to\tau}$ $\quad$ $\tj{e_2}{\tau'}$
 
     We have $\tree{e_1} = \tree{\app{e_1}{e_2}}/1$ and the induction hypothesis yields
-    some $v_1$ such that $e_1 \Downarrow v_1$. By theorem~\ref{theorem:Preservation} we
+    some $v_1$ such that $e_1 \Rightarrow v_1$. By theorem~\ref{theorem:Preservation} we
     have $\tj{v_1}{\tau'\to\tau}$, and as such $v_1 = \abstr{x}{e}$ according to lemma~\ref{lemma:Canonical_Forms}.
 
     Hence we also have $\tree{e_2} = \tree{\app{e_1}{e_2}}/2$ and using the induction hypothesis
-    on $e_2$ yields a $v_2$ such that $e_2 \Downarrow v_2$, plus $\tj{v_2}{\tau'}$ using
+    on $e_2$ yields a $v_2$ such that $e_2 \Rightarrow v_2$, plus $\tj{v_2}{\tau'}$ using
     theorem~\ref{theorem:Preservation}.
 
     $\tj{e[v_2/x]}{\tau}$ holds due to \textsc{(T-Abstr)} and
     lemma~\ref{lemma:Preservation_of_types_under_substitution}. Since
     $\tree{e[v_2/x]} = \tree{\app{e_1}{e_2}}/3$ we can use the induction hypothesis again and
-    get a $v$ such that $e[v_2/x] \Downarrow v$.
+    get a $v$ such that $e[v_2/x] \Rightarrow v$.
 
-    Using \textsc{(App)} we conclude $\app{e_1}{e_2} \Downarrow v$.
+    Using \textsc{(App)} we conclude $\app{e_1}{e_2} \Rightarrow v$.
   \end{description}
 \end{proof}
 
@@ -228,12 +228,32 @@ of a finite derivation tree built from the inference rules.
 %% Related work
 \section{Related work}
 
-So far, three different big-step semantics have been proposed for the $\lambda$-calculus to
-proof type-safety of a programming language: the first uses additional inductive rules
-$e \Downarrow \textsf{err}$ to model evaluations that ``go wrong'' \cite{Tofte87}, the second uses
-additional coinductive rules to formalize diverging compuations (following Cousot et al.
-\cite{CousotCousot07,LeroyGrall09}), and the third interprets the usual inference
-rules coinductively \cite{LeroyGrall09}. 
+So far, three different big-step semantics have been proposed for the $\lambda$-calculus to proof
+type-safety of a programming language:
+
+The standard approach \cite{Tofte87} for proving type safety using big-step semantics is to use
+additional inductive rules to define a predicate $e \Rightarrow \textsf{err}$ characterizing expressions that
+``go wrong'', and prove $\neg(e \Rightarrow \textsf{err})$ for all closed,
+well-typed expressions $e$. This formulation is both easy to understand and easy to prove, but
+it has two important drawbacks compared to our approach:
+(1) it requires extra rules to be provided to define $e \Rightarrow \textsf{err}$,
+which increases the size of the semantics, and (2) there is a risk that the set of rules for
+$e \Rightarrow \textsf{err}$ is incomplete and misses some expressions that ``go wrong'',
+in which case the type safety theorem no longer guarantees that closed, well-typed expressions
+either evaluate to a value or diverge.
+
+The second approach \cite{CousotCousot07,LeroyGrall09} complements the normal inductive big-step
+inference rules for finite evaluations $e \Rightarrow v$ with coinductive big-step rules describing
+diverging evaluations $e \stackrel{\infty}{\Rightarrow}$. Type safety is proved by showing
+$e \stackrel{\infty}{\Rightarrow}$ for all closed, well-typed expressions $e$ that do not terminate
+with a value. As with the standard approach the size of the semantics is increased, but the risk of
+putting too few or too many divergence rules is low, hence this approach seems rather robust with
+respect to mistakes in the specification of the semantics. Compared to our approach, it is less
+intuitive and requires knowledge of coinductive techniques.
+
+The third interprets coinductively the normal big-step inference rules, leading to a \emph{coevaluation
+relation} $e \stackrel{\mathsf{co}}{\Rightarrow} v$, thus enabling them to describe both terminating
+and non-terminating evaluations \cite{LeroyGrall09}.
 
 
 %% Conclusion
