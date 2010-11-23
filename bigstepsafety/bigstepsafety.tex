@@ -20,10 +20,11 @@
 \newcommand{\unit}{\ensuremath{\normalfont\textsf{unit}}}
 \newcommand{\Unit}{\ensuremath{\normalfont\textsf{Unit}}}
 
-\newcommand{\tj}[2]{\mbox{\ensuremath{{#1}:{#2}}}}
-\newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash\tj{#2}{#3}}}}
+\newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}:{#3}}}}
+\newcommand{\tj}[2]{\Tj{\emptyset}{#1}{#2}}
 \newcommand{\Pj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}\rightarrow{#3}}}}
 \newcommand{\tree}[1]{\mathcal{D}(#1)}
+\newcommand{\rn}[1]{\mbox{\ensuremath{\textsc{(#1)}}}}
 
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
@@ -65,7 +66,7 @@ form reduction sequences.
 This section describes the programming language considered in this paper,
 the simply typed $\lambda$-calculus with $\unit$ and general recursion, which
 presents the simplest possible functional language that exhibits run-time
-errors (closed expressions that ``go wrong'') and divergence. Figure~\ref{figure:Basic_syntax}
+errors (closed expressions that ``go wrong'') and divergence. Figure~\ref{fig:Basic_syntax}
 shows the basic syntax of the programming language.
 
 \begin{figure}[htb]
@@ -76,12 +77,12 @@ shows the basic syntax of the programming language.
     Values      & $v$ & $::=$ & $\unit \mid \abstr{x}{e}$
   \end{tabular}
   \caption{Basic syntax}
-  \label{figure:Basic_syntax}
+  \label{fig:Basic_syntax}
 \end{figure}
 
-We write $e'[e/x]$ for the capture-avoiding substitution of $e$ for all free occurrences
+We write $e'[x \mapsto e]$ for the capture-avoiding substitution of $e$ for all free occurrences
 of $x$ in $e'$. The standard call-by-value semantics in big-step style for this language is
-defined inductively by the inference rules given in figure~\ref{figure:Call_by_value_inference_rules}.
+defined inductively by the inference rules given in figure~\ref{fig:Call_by_value_inference_rules}.
 To be exact, the \emph{evaluation relation} $e \Rightarrow v$ is the smallest fixpoint of
 the given inference rules. That is, $e \Rightarrow v$ holds if and only if it is the conclusion
 of a finite derivation tree built from the inference rules.
@@ -93,40 +94,50 @@ of a finite derivation tree built from the inference rules.
     \and
     \inferrule[(App)]{%
       e_1 \Rightarrow \abstr{x}{e} \\
-      e_2 \Rightarrow v_2 \\
-      e[v_2/x] \Rightarrow v
+      e_2 \Rightarrow v \\
+      e[x \mapsto v] \Rightarrow v'
     }{%
-      \app{e_1}{e_2} \Rightarrow v
+      \app{e_1}{e_2} \Rightarrow v'
     }
     \and
     \inferrule[(Rec)]{%
-      e[\rec{x}{e}/x] \Rightarrow v
+      e[x \mapsto \rec{x}{e}] \Rightarrow v
     }{%
       \rec{x}{e} \Rightarrow v
     }
   \end{mathpar}
   \caption{Call-by-value inference rules}
-  \label{figure:Call_by_value_inference_rules}
+  \label{fig:Call_by_value_inference_rules}
 \end{figure}
 
-\begin{definition}[Derivation tree] \label{definition:Derivation_tree}
-  The \emph{derivation tree} for $e$ is the smallest set $\tree{e}$ such that:
-  \begin{enumerate}
-  \item $(\varepsilon, e) \in \tree{e}$
-  \item If $(\kappa,e_0) \in \tree{e}$ and there is an inference rule
-    \begin{mathpar}
-      \inferrule*{%
-        e_1 \Rightarrow v_1 \\
-        \ldots \\
-        e_n \Rightarrow v_n
-      }{%
-        e_0 \Rightarrow v_n
-      }
-    \end{mathpar}
-    and $e_1 \Rightarrow v_1$, $\ldots$, $e_{i-1} \Rightarrow v_{i-1}$ for some $i = 1,\ldots,n$, then
-    $(\kappa \cdot i,e_i) \in \tree{e}$.
-  \end{enumerate}
-\end{definition}
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(App-1)]{}{\app{e_1}{e_2} \leadsto e_1}
+    \and
+    \inferrule[(App-2)]{%
+      e_1 \Rightarrow \abstr{x}{e}
+    }{%
+      \app{e_1}{e_2} \leadsto e_2
+    }
+    \and
+    \inferrule[(App-3)]{%
+      e_1 \Rightarrow \abstr{x}{e} \\
+      e_2 \Rightarrow v
+    }{%
+      \app{e_1}{e_2} \leadsto e[x \mapsto v]
+    }
+    \and
+    \inferrule[(Rec-1)]{}{\rec{x}{e} \leadsto e[x \mapsto \rec{x}{e}]}
+  \end{mathpar}
+  \caption{Call-by-value prerequisite rules}
+  \label{fig:Call_by_value_prerequisite_rules}
+\end{figure}
+
+\begin{lemma} \label{lemma:Finite_prerequisites}
+  If $e \leadsto e'$ and $e \not\stackrel{\infty}{\leadsto}$, then
+  $e' \not\stackrel{\infty}{\leadsto}$.
+\end{lemma}
 
 
 %% Type safety
@@ -144,13 +155,13 @@ of a finite derivation tree built from the inference rules.
     }
     \and
     \inferrule[(T-Abstr)]{%
-      \Tj{\Gamma[\tau/x]}{e}{\tau'}
+      \Tj{\Gamma + \{x : \tau \}}{e}{\tau'}
     }{%
       \Tj{\Gamma}{\abstr{x}{e}}{\tau \to \tau'}
     }
     \\
     \inferrule[(T-Rec)]{%
-      \Tj{\Gamma[\tau/x]}{e}{\tau}
+      \Tj{\Gamma + \{x:\tau\}}{e}{\tau}
     }{%
       \Tj{\Gamma}{\rec{x}{e}}{\tau}
     }
@@ -167,8 +178,8 @@ of a finite derivation tree built from the inference rules.
 \end{figure}
 
 \begin{lemma}[Preservation of types under substitution] \label{lemma:Preservation_of_types_under_substitution}
-  If $\Tj{\Gamma[\tau/x]}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
-  then $\Tj{\Gamma}{e'[e/x]}{\tau'}$.
+  If $\Tj{\Gamma + \{x:\tau\}}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
+  then $\Tj{\Gamma}{e'[x \mapsto e]}{\tau'}$.
 \end{lemma}
 
 \begin{lemma}[Canonical Forms] \label{lemma:Canonical_Forms} \
@@ -178,51 +189,38 @@ of a finite derivation tree built from the inference rules.
   \end{enumerate}
 \end{lemma}
 
-\begin{theorem}[Preservation] \label{theorem:Preservation}
-  If $\Tj{\Gamma}{e}{\tau}$ and $e \Rightarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
-\end{theorem}
-
-\begin{theorem}[Type safety]
-  If $\tj{e}{\tau}$ and $\tree{e}$ is finite, then there is some $v$ such that $e \Rightarrow v$.
+\begin{theorem}[Termination]
+  If $\tj{e}{\tau}$ and $e \not\stackrel{\infty}{\leadsto}$, then there is some
+  $v$ such that $e \Rightarrow v$ and $\tj{v}{\tau}$.
 \end{theorem}
 
 \begin{proof}
-  By induction on the size of the (finite) derivation tree $\tree{e}$ and case analysis
-  over $\tj{e}{\tau}$.
-  \begin{description}
-  \item \textsc{(T-Unit)}: $\tj{\unit}{\Unit}$
+  Straightforward induction on typing derivations. The \rn{T-Unit} and \rn{T-Abstr}
+  cases are immediate, since $e$ is already a value. The \rn{T-Var} case cannot occur
+  because $e$ is closed.
 
-    $\unit \Rightarrow \unit$ exists using \textsc{(Val)}.
+  In case of \rn{T-App} we have $\tj{\app{e_1}{e_2}}{\tau}$, $\tj{e_1}{\tau' \to \tau}$
+  and $\tj{e_2}{\tau'}$. By \rn{App-1}, lemma~\ref{lemma:Finite_prerequisites} and
+  induction hypothesis, there is some $v_1$ such that $e_1 \Rightarrow v_1$ and
+  $\tj{v_1}{\tau' \to \tau}$, which implies $v_1 = \abstr{x}{e}$ according to
+  lemma~\ref{lemma:Canonical_Forms}. Similarly we get $e_2 \Rightarrow v$ and
+  $\tj{v}{\tau'}$ using \rn{App-2}. By lemma~\ref{lemma:Preservation_of_types_under_substitution}
+  we also have $\tj{e[x \mapsto v]}{\tau}$, yielding $e[x \mapsto v] \Rightarrow v'$
+  and $\tj{v'}{\tau}$ using \rn{App-3}, lemma~\ref{lemma:Finite_prerequisites}
+  and the induction hypothesis. We conclude $\app{e_1}{e_2} \Rightarrow v'$ using
+  inference rule \rn{App}.
 
-  \item \textsc{(T-Abstr)}: $\tj{\abstr{x}{e}}{\tau \to \tau'}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau'}$
-
-    $\abstr{x}{e} \Rightarrow \abstr{x}{e}$ exists using \textsc{(Val)}.
-
-  \item \textsc{(T-Rec)}: $\tj{\rec{x}{e}}{\tau}$ $\quad$ $\Tj{[x:\tau]}{e}{\tau}$
-
-    By lemma~\ref{lemma:Preservation_of_types_under_substitution}
-    we also have $\tj{e[\rec{x}{e}/x]}{\tau}$. Since $\tree{e[\rec{x}{e}/x]} = \tree{\rec{x}{e}}/1$ we
-    can use the induction hypothesis, yielding some $v$ such that $e[\rec{x}{e}/x] \Rightarrow v$,
-    and therefore concluding $\rec{x}{e} \Rightarrow v$ using \textsc{(Rec)}.
-
-  \item \textsc{(T-App)}: $\tj{\app{e_1}{e_2}}{\tau}$ $\quad$ $\tj{e_1}{\tau'\to\tau}$ $\quad$ $\tj{e_2}{\tau'}$
-
-    We have $\tree{e_1} = \tree{\app{e_1}{e_2}}/1$ and the induction hypothesis yields
-    some $v_1$ such that $e_1 \Rightarrow v_1$. By theorem~\ref{theorem:Preservation} we
-    have $\tj{v_1}{\tau'\to\tau}$, and as such $v_1 = \abstr{x}{e}$ according to lemma~\ref{lemma:Canonical_Forms}.
-
-    Hence we also have $\tree{e_2} = \tree{\app{e_1}{e_2}}/2$ and using the induction hypothesis
-    on $e_2$ yields a $v_2$ such that $e_2 \Rightarrow v_2$, plus $\tj{v_2}{\tau'}$ using
-    theorem~\ref{theorem:Preservation}.
-
-    $\tj{e[v_2/x]}{\tau}$ holds due to \textsc{(T-Abstr)} and
-    lemma~\ref{lemma:Preservation_of_types_under_substitution}. Since
-    $\tree{e[v_2/x]} = \tree{\app{e_1}{e_2}}/3$ we can use the induction hypothesis again and
-    get a $v$ such that $e[v_2/x] \Rightarrow v$.
-
-    Using \textsc{(App)} we conclude $\app{e_1}{e_2} \Rightarrow v$.
-  \end{description}
+  In case of \rn{T-Rec} we have $\tj{\rec{x}{e}}{\tau}$ and $\Tj{\{x:\tau\}}{e}{\tau}$,
+  which yields $\tj{e[x \mapsto \rec{x}{e}]}{\tau}$ using
+  lemma~\ref{lemma:Preservation_of_types_under_substitution}. By \rn{Rec-1},
+  lemma~\ref{lemma:Finite_prerequisites} and induction hypothesis, there is some
+  $v$ such that $e[x \mapsto \rec{x}{e}] \Rightarrow v$ and $\tj{v}{\tau}$, so
+  there is also a big-step $\rec{x}{e} \Rightarrow v$ using \rn{Rec}.
 \end{proof}
+
+\begin{theorem}[Type safety]
+  If $\tj{e}{\tau}$, then $e \Rightarrow v$ or $e \stackrel{\infty}{\leadsto}$.
+\end{theorem}
 
 
 %% Related work
