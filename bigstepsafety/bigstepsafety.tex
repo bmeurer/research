@@ -113,31 +113,40 @@ of a finite derivation tree built from the inference rules.
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
-    \inferrule[(App-1)]{}{\app{e_1}{e_2} \leadsto e_1}
+    \inferrule[(App-1)]{}{\app{e_1}{e_2} \leadsto_1 e_1}
     \and
     \inferrule[(App-2)]{%
       e_1 \Rightarrow \abstr{x}{e}
     }{%
-      \app{e_1}{e_2} \leadsto e_2
+      \app{e_1}{e_2} \leadsto_2 e_2
     }
     \and
     \inferrule[(App-3)]{%
       e_1 \Rightarrow \abstr{x}{e} \\
       e_2 \Rightarrow v
     }{%
-      \app{e_1}{e_2} \leadsto e[x \mapsto v]
+      \app{e_1}{e_2} \leadsto_3 e[x \mapsto v]
     }
     \and
-    \inferrule[(Rec-1)]{}{\rec{x}{e} \leadsto e[x \mapsto \rec{x}{e}]}
+    \inferrule[(Rec-1)]{}{\rec{x}{e} \leadsto_1 e[x \mapsto \rec{x}{e}]}
   \end{mathpar}
   \caption{Call-by-value prerequisite rules}
   \label{fig:Call_by_value_prerequisite_rules}
 \end{figure}
 
-\begin{lemma} \label{lemma:Finite_prerequisites}
-  If $e \leadsto e'$ and $e \not\stackrel{\infty}{\leadsto}$, then
-  $e' \not\stackrel{\infty}{\leadsto}$.
+\begin{lemma}
+  If $e \leadsto_{n+1} e_{n+1}$ then there are $e_1,\ldots,e_n$ and
+  $v_1,\ldots,v_n$ such that $e \leadsto_i e_i$ and $e_i \Rightarrow v_i$
+  for $i=1,\ldots,n$.
 \end{lemma}
+
+\begin{definition}[Strict determinism]
+  A big-step semantics is \emph{strictly deterministic} if:
+  \begin{enumerate}
+  \item For every $e$ and $i$ there is at most one $e_i$ such that $e \leadsto_i e_i$.
+  \item For every $e$ there is at most one $v$ such that $e \Rightarrow v$.
+  \end{enumerate}
+\end{definition}
 
 
 %% Type safety
@@ -189,38 +198,60 @@ of a finite derivation tree built from the inference rules.
   \end{enumerate}
 \end{lemma}
 
-\begin{theorem}[Termination]
-  If $\tj{e}{\tau}$ and $e \not\stackrel{\infty}{\leadsto}$, then there is some
-  $v$ such that $e \Rightarrow v$ and $\tj{v}{\tau}$.
+\begin{theorem}[Preservation] \label{theorem:Preservation}
+  If $\Tj{\Gamma}{e}{\tau}$, then:
+  \begin{enumerate}
+  \item If $e \leadsto_i e_i$, then there is some $\tau_i$ such that $\Tj{\Gamma}{e_i}{\tau_i}$.
+  \item If $e \Rightarrow v$, then $\Tj{\Gamma}{v}{\tau}$.
+  \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-  Straightforward induction on typing derivations. The \rn{T-Unit} and \rn{T-Abstr}
-  cases are immediate, since $e$ is already a value. The \rn{T-Var} case cannot occur
-  because $e$ is closed.
-
-  In case of \rn{T-App} we have $\tj{\app{e_1}{e_2}}{\tau}$, $\tj{e_1}{\tau' \to \tau}$
-  and $\tj{e_2}{\tau'}$. By \rn{App-1}, lemma~\ref{lemma:Finite_prerequisites} and
-  induction hypothesis, there is some $v_1$ such that $e_1 \Rightarrow v_1$ and
-  $\tj{v_1}{\tau' \to \tau}$, which implies $v_1 = \abstr{x}{e}$ according to
-  lemma~\ref{lemma:Canonical_Forms}. Similarly we get $e_2 \Rightarrow v$ and
-  $\tj{v}{\tau'}$ using \rn{App-2}. By lemma~\ref{lemma:Preservation_of_types_under_substitution}
-  we also have $\tj{e[x \mapsto v]}{\tau}$, yielding $e[x \mapsto v] \Rightarrow v'$
-  and $\tj{v'}{\tau}$ using \rn{App-3}, lemma~\ref{lemma:Finite_prerequisites}
-  and the induction hypothesis. We conclude $\app{e_1}{e_2} \Rightarrow v'$ using
-  inference rule \rn{App}.
-
-  In case of \rn{T-Rec} we have $\tj{\rec{x}{e}}{\tau}$ and $\Tj{\{x:\tau\}}{e}{\tau}$,
-  which yields $\tj{e[x \mapsto \rec{x}{e}]}{\tau}$ using
-  lemma~\ref{lemma:Preservation_of_types_under_substitution}. By \rn{Rec-1},
-  lemma~\ref{lemma:Finite_prerequisites} and induction hypothesis, there is some
-  $v$ such that $e[x \mapsto \rec{x}{e}] \Rightarrow v$ and $\tj{v}{\tau}$, so
-  there is also a big-step $\rec{x}{e} \Rightarrow v$ using \rn{Rec}.
+  Standard proof.
 \end{proof}
 
-\begin{theorem}[Type safety]
-  If $\tj{e}{\tau}$, then $e \Rightarrow v$ or $e \stackrel{\infty}{\leadsto}$.
+\begin{theorem}[Progress] \label{theorem:Progress}
+  If $\tj{e}{\tau}$, $e \leadsto_i e_i$ and $e_i \Rightarrow v_i$ for all $i=1,\ldots,n$, then
+  $e \Rightarrow v$ or $e \leadsto_{n+1} e_{n+1}$.
 \end{theorem}
+
+\begin{proof}
+  By case analysis on the typing derivation.
+  \begin{itemize}
+  \item \rn{T-Unit} and \rn{T-Abstr} are immediate.
+  \item \rn{T-Var} cannot occur because $e$ is closed.
+  \item \rn{T-Rec} \quad $\tj{\rec{x}{e}}{\tau}$ \quad $\Tj{x:\tau}{e}{\tau}$
+
+    For $n = 0$ we yield $\rec{x}{e} \leadsto_1 e[x \mapsto \rec{x}{e}]$ using \rn{Rec-1}.
+
+    For $n = 1$ we have $\rec{x}{e} \leadsto_1 e[x \mapsto \rec{x}{e}]$ and
+    $e[x \mapsto \rec{x}{e}] \Rightarrow v$. We conclude $\rec{x}{e} \Rightarrow v$
+    using \rn{Rec}.
+
+  \item \rn{T-App} \quad $\tj{\app{e_1}{e_2}}{\tau}$ \quad $\tj{e_1}{\tau' \to \tau}$ \quad $\tj{e_2}{\tau'}$
+
+    For $n = 0$ we yield $\app{e_1}{e_2} \leadsto_1 e_1$ using \rn{App-1}.
+
+    For $n = 1$ we have $\app{e_1}{e_2} \leadsto_1 e_1$ and $e_1 \Downarrow v_1$.
+    By theorem~\ref{theorem:Preservation} and lemma~\ref{lemma:Canonical_Forms} we
+    yield $v_1 = \abstr{x}{e}$, and therefore $\app{e_1}{e_2} \leadsto_2 e_2$ using
+    \rn{App-2}.
+
+    $\vdots$
+  \end{itemize}
+\end{proof}
+
+\begin{theorem}[Safety]
+  If $\tj{e}{\tau}$ and $e$ has only a finite number of prerequisite sequences, then $e \Rightarrow v$.
+\end{theorem}
+
+\begin{proof}
+  By induction on the longest prerequisite sequence.
+  Since there is only a finite number of prerequisite sequences, there has to be some $n \in \mathbb{N}$
+  such that $e \leadsto_i e_i$ for $i = 1,\ldots,n$ and $e \not\leadsto_{n+1}$. By theorem~\ref{theorem:Preservation}
+  and induction hypothesis we have $v_1,\ldots,v_n$ with $e_i \Rightarrow v_i$ for $i=1,\ldots,n$. Using
+  theorem~\ref{theorem:Progress} we conclude $e \Rightarrow v$.
+\end{proof}
 
 
 %% Related work
