@@ -7,7 +7,7 @@
 \usepackage{color}
 \usepackage[colorlinks=false,%
             pdfkeywords={type safety, big-step, operational, semantics},%
-            pdftitle={A new approach to prove type safety using big-step operational semantics},%
+            pdftitle={Proving type soundness using big-step operational semantics},%
             pdfauthor={Benedikt Meurer and Kurt Sieber},%
             pdfsubject={},%
             pdfdisplaydoctitle=true]{hyperref}
@@ -33,7 +33,7 @@
 \begin{document}
 
 \title{%
-  A new approach to prove type safety\\using big-step operational semantics
+  Proving type soundness using\\big-step operational semantics
 }
 \author{Benedikt Meurer}
 \author{Kurt Sieber}
@@ -109,6 +109,27 @@ of a finite derivation tree built from the inference rules.
   \caption{Call-by-value inference rules}
   \label{fig:Call_by_value_inference_rules}
 \end{figure}
+
+For every \emph{L-attributed} big-step inference rule
+\begin{mathpar}
+  \inferrule[(R)]{%
+    e_1 \Rightarrow v_1 \\
+    \ldots \\
+    e_n \Rightarrow v_n
+  }{%
+    e \Rightarrow v
+  }
+\end{mathpar}
+we add $n$ prerequisite rules:
+\begin{mathpar}
+  \inferrule[(R-$i$)]{%
+    e_1 \Rightarrow v_1 \\
+    \ldots \\
+    e_{i-1} \Rightarrow v_{i-1}
+  }{%
+    e \leadsto_i e_i
+  }
+\end{mathpar}
 
 \begin{figure}[htb]
   \centering
