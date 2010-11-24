@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 
-#define RUNS 5
+#define RUNS 4
 
 #define OCAMLPREFIX "/tmp/ocaml"
 #define OCAMLJITPREFIX "/tmp/ocamljit"
@@ -129,10 +129,11 @@ void result(const char *title, double byt, double jit, double jit2, double opt)
     double byt_opt = byt / opt;
     double jit2_opt = jit2 / opt;
 
-    printf("%-16s %8.2f %8s %8.2f %8.2f %8s %8.2f %8.2f %8s %8s %8.2f\n",
+    printf("%-16s %8.2f %8s %8.2f %8.2f %8s %8.2f %8.2f %8s %8s %8.2f %8.2f %8s %8.2f\n",
            title,
            byt, "", jit2, opt,
-           "", byt_jit2, byt_opt, "", "", jit2_opt);
+           "", byt_jit2, byt_opt, "", "", jit2_opt,
+           opt / byt * 100., "", opt / jit2 * 100.);
 
     fprintf(latex,
             "\\texttt{%s} & $%.2f$ & %s & $%.2f$ & $%.2f$ &"
@@ -150,11 +151,12 @@ void result(const char *title, double byt, double jit, double jit2, double opt)
     double jit_opt = jit / opt;
     double jit2_opt = jit2 / opt;
 
-    printf("%-16s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f\n",
+    printf("%-16s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f\n",
            title,
            byt, jit, jit2, opt,
            byt_jit, byt_jit2, byt_opt,
-           jit_jit2, jit_opt, jit2_opt);
+           jit_jit2, jit_opt, jit2_opt,
+           opt / byt * 100., opt / jit * 100., opt / jit2 * 100.);
 
     fprintf(latex,
             "\\texttt{%s} & $%.2f$ & $%.2f$ & $%.2f$ & $%.2f$ &"
@@ -218,11 +220,12 @@ int main(int argc, char **argv)
   if (latex == NULL)
     err(EXIT_FAILURE, "Failed to open results.tex for writing");
 
-  printf("%-16s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n",
+  printf("%-16s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n",
          "command", "byt", "jit", "jit2", "opt",
          "byt/jit", "byt/jit2", "byt/opt",
-         "jit/jit2", "jit/opt", "jit2/opt");
-  printf("----------------------------------------------------------------------------------------------------------\n");
+         "jit/jit2", "jit/opt", "jit2/opt",
+         "byt%", "jit%", "jit2%");
+  printf("-------------------------------------------------------------------------------------------------------------------------------------\n");
   simple("almabench", 0, "number crunching");
   simple("almabench", 1, "number crunching {\\tiny(no bounds check)}");
   simple("bdd", 0, "binary decision diagram");
