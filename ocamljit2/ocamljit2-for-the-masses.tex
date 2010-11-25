@@ -308,9 +308,32 @@ earlier \textsc{OCamlJit2} prototype).
 %% Performance
 \section{Performance} \label{section:Performance}
 
-TODO
+With the x86 port in place we were finally able to compare the performance of
+\textsc{OCamlJit} \cite{Starynkevitch04} and \textsc{OCamlJit2} running on the
+same machine. We measured the performance on three different systems, one x86
+box for comparison with \textsc{OCamlJit}, and two x86-64 machines with
+different processors and operating systems to test-drive the recent improvements
+with our primary 64-bit targets.
+\begin{itemize}
+\item A MacBook with an Intel Core 2 Duo ``Penryn'' 2.4 GHz CPU (3 MiB L2 Cache), and
+  4 GiB RAM, running Mac OS X 10.6.4. The C compiler is \texttt{gcc-4.2.1} (Apple Inc.
+  build 5664).
+\item A Fujitsu Siemens Primergy server with two Intel Xeon E5520 2.26GHz CPUs (8 MiB L2 Cache, 4 Cores),
+  and 12 GiB RAM, running CentOS release 5.5 (Final) with Linux/x86\_64 2.6.18-194.17.1.el5.
+  The C compiler is \texttt{gcc-4.2.1} (Red Hat 4.1.2-48).
+\item A Fujitsu Siemens Primergy server with an Intel Pentium 4 ``Northwood'' 2.4 GHz CPU (512 KiB L2 Cache),
+  and 768 MiB RAM, running Debian testing as of 2010/11/20 with Linux/i686 2.6.32-3-686.
+  The C compiler is \texttt{gcc-4.4.5} (Debian 4.4.5-6).
+\end{itemize}
+The \textsc{OCaml} distribution used for the tests is 3.12.0. The \textsc{OCamlJit2} version
+is the tagged revision \texttt{ocamljit2-2010-tr2}, compiled with a \texttt{gcc} optimization
+level of \texttt{-O} (we used \texttt{-O3} in the previous measurement, but that seems to
+trigger compilation bugs with recent \texttt{gcc} versions). For \textsc{OCamlJit} we had to
+use \textsc{OCaml} 3.08.4, because building it with 3.12.0 caused mysterious crashes in some
+test cases. We used the most recent version of \textsc{Gnu Lightning} \cite{Bonzini10} from
+the Git repository at the time of this writing (commit \texttt{d2239c223ad22a0e9d7a9909c46d2ac4e5bc0e7f}).
 
-\begin{table*}[h]
+\begin{table*}[p]
   \footnotesize
   \centering
   \begin{tabular}{l|rrrr|rrrrrr}
@@ -340,7 +363,7 @@ TODO
   \label{table:Running_time_and_speedup_Intel_Core_2_Duo}
 \end{table*}
 
-\begin{table*}[h]
+\begin{table*}[p]
   \footnotesize
   \centering
   \begin{tabular}{l|rrrr|rrrrrr}
@@ -370,7 +393,7 @@ TODO
   \label{table:Running_time_and_speedup_Intel_Xeon}
 \end{table*}
 
-\begin{table*}[h]
+\begin{table*}[p]
   \footnotesize
   \centering
   \begin{tabular}{l|rrrr|rrrrrr}
@@ -399,6 +422,43 @@ TODO
   \caption{Running time and speedup (Intel Pentium 4, Debian testing)}
   \label{table:Running_time_and_speedup_Intel_Pentium_4}
 \end{table*}
+
+The benchmark programs used to measure the performance are the following test programs from the
+\texttt{testsuite/tests} folder of the \textsc{OCaml} 3.12.0 distribution:
+\begin{itemize}
+\item \texttt{almabench} is a number-crunching benchmark designed for cross-language
+  comparisons. \texttt{almabench.unsafe} is the same program compiled with the \texttt{-unsafe}
+  compiler switch.
+\item \texttt{bdd} is an implementation of binary decision diagrams, and therefore a good
+  test for the symbolic computation performance.
+\item \texttt{boyer} is a term manipulation benchmark.
+\item \texttt{fft} is an implementation of the Fast Fourier Transformation.
+\item \texttt{nucleic} is another floating-point benchmark.
+\item \texttt{quicksort} is an implementation of the well-known QuickSort algorithm
+  for arrays and serves as a good test for loops.
+\item \texttt{soli} is a simple solitair solver, well suited for testing the performance
+  of non-trivial, short running programs.
+\item \texttt{sorts} is a test bench for various sorting algorithms.
+\end{itemize}
+
+For our tests we measured the total execution time of the benchmarks, given as combined
+system and user CPU time, in seconds.
+Table~\ref{table:Running_time_and_speedup_Intel_Core_2_Duo}
+lists the running times and speedups for the Intel Core 2 Duo,
+table~\ref{table:Running_time_and_speedup_Intel_Xeon}
+for the Intel Xeon,
+and table~\ref{table:Running_time_and_speedup_Intel_Pentium_4}
+for the Intel Pentium 4. We compare the byte-code interpreter time $t_{byt}$ to
+the \textsc{OCamlJit} time $t_{jit}$ (if available), the \textsc{OCamlJit2} time
+$t_{jit2}$, and the time $t_{opt}$ taken by the same program compiled with the
+optimizing native code compiler \texttt{ocamlopt}. The tables also list the relative
+speedups
+$\sigma^{jit}_{byt} = \frac{t_{byt}}{t_{jit}}$,
+$\sigma^{jit2}_{byt} = \frac{t_{byt}}{t_{jit2}}$,
+$\sigma^{opt}_{byt} = \frac{t_{byt}}{t_{opt}}$,
+$\sigma^{jit2}_{jit} = \frac{t_{jit}}{t_{jit2}}$,
+$\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$, and
+$\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better.
 
 \begin{figure*}[h]
   \centering
