@@ -5,8 +5,8 @@
 \usepackage[english]{babel}
 \usepackage{color}
 \usepackage[colorlinks=false,%
-            pdfkeywords={OCaml, Just In Time compilation, machine code generation},%
-            pdftitle={Just-In-Time Compilation of OCaml byte-code},%
+            pdfkeywords={OCaml, Just In Time compilation, byte-code, machine code generation},%
+            pdftitle={Just-In-Time compilation of OCaml byte-code},%
             pdfauthor={Benedikt Meurer},%
             pdfsubject={},%
             pdfdisplaydoctitle=true]{hyperref}
@@ -19,7 +19,7 @@
 \begin{document}
 
 \title{%
-  Just-In-Time Compilation of OCaml byte-code
+  Just-In-Time compilation of OCaml byte-code
 }
 \author{%
   Benedikt Meurer\\
@@ -44,10 +44,11 @@ TODO
 %% Improvements
 \section{Improvements} \label{section:Improvements}
 
-This section describes the improvements that were applied to \textsc{OCamlJit2}. This
-includes both the new \texttt{x86} port as well as improvements to the implementation
-of floating-point primitives, which caused another speedup of up to $30\%$ for some
-floating-point benchmarks.
+This section describes the improvements that were applied to the \textsc{OCamlJit2} prototype
+as described in \cite{Meurer10:OCamlJit2.0}. This
+includes the new x86 port, a simple native code managment strategy, as well as improvements
+to the implementation of floating-point primitives, which caused another speedup of around
+$30\%$ for some floating-point benchmarks.
 
 \subsection{32-bit support}
 
@@ -82,7 +83,7 @@ the stack pointer \texttt{sp} goes into \texttt{\%esi}.
 \texttt{\%edi} contains the cached value of the minor heap allocation pointer
 \texttt{caml\_young\_ptr} to speed up allocations of blocks in the minor heap. This
 is different from \texttt{ocamlopt} on x86, where \texttt{caml\_young\_ptr} is not
-cached in a register, unlike x86-64 where \texttt{ocamlopt} caches it in \texttt{\%r15}.
+cached in a register, unlike x86-64 where \texttt{ocamlopt} caches its value in \texttt{\%r15}.
 
 The setup and helper routines that form the runtime of the JIT engine are located in the
 file \texttt{byterun/jit\_rt\_i386.S}. These are mostly copies of their x86-64 counterparts
@@ -151,19 +152,91 @@ Afterwards the stack frame is removed, restoring \texttt{\%eax}, and execution
 continues at the native code address.
 
 The remaining porting effort was mostly related to generalizing the code
-emitter macros to conditionally emit x86 or x86-64 code, and fiddling with
+emitter preprocessor macros to conditionally emit x86 or x86-64 code, and fiddling with
 some nasty details of the different addressing modes. The core of the code
-generator is almost free of \texttt{\#ifdef}'s, because the code generated
+generator is almost free of \texttt{\#ifdef}'s, because the structure of the generated code
 for the two targets is pretty much equivalent. This is especially true for
-floating point operations, which use SSE2 registers and instructions on
+floating-point operations, which use SSE2 registers and instructions on
 both x86 and x86-64. \textsc{OCamlJit2} therefore requires a processor
-with support for the SSE2 instruction set; if \textsc{OCamlJit2} detects a
+with support for the SSE2 extension \cite{Intel10Vol1}; if \textsc{OCamlJit2} detects a
 processor without SSE2, it disables the JIT engine and falls back to
-the byte-code interpreter.
+the byte-code interpreter\footnote{This is only relevant in case of x86,
+as all x86-64 processors are required to implement the SSE2 extension.}.
+
+\subsection{Native code managment}
+
+Previously, memory allocated to a chunk of generated native machine code was never freed
+by \textsc{OCamlJit2}, even if the byte-code segment, for which this native machine code
+was generated was released (using the \texttt{Meta.static\_release\_bytecode} OCaml
+function). This may cause trouble for MetaOCaml \cite{Taha06} and long-lived interactive
+top-level session, where the life-time of most byte-code segments is limited.
+
+This was mostly due to the fact that all generated native machine code was stored 
+incrementally in one large memory region, with no way to figure out which part of
+the memory region contains code for a certain byte-code segment. We have addressed
+this problem with a solution quite similar to that used in \textsc{OCamlJit}
+\cite{Starynkevitch04}.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}
+    \filldraw [fill=blue!10] (0,1) rectangle (1,3);
+    \filldraw [fill=blue!10] (0,4) rectangle (1,6);
+    \filldraw [fill=green!10] (3,1) rectangle (6,6);
+    \draw (0.5,6.2) node {\footnotesize $\mbox{segment}_1$};
+    \draw (0.5,3.2) node {\footnotesize $\mbox{segment}_2$};
+    \draw (4.5,6.2) node {\footnotesize $\mbox{chunk pool}$};
+    \draw (4,2.7) node {\footnotesize $\mbox{chunk}_3$};
+    \draw (4,4.2) node {\footnotesize $\mbox{chunk}_2$};
+    \draw (4,5.7) node {\footnotesize $\mbox{chunk}_1$};
+    \filldraw [fill=green!80] (3.5,1.5) rectangle (4.5,2.5);
+    \filldraw [fill=green!80] (3.5,3.0) rectangle (4.5,4.0);
+    \filldraw [fill=green!80] (3.5,4.5) rectangle (4.5,5.5);
+    \draw [densely dotted,->] (1,2) -- (3.45,2);
+    \draw [densely dotted,->] (1,5) -- (3.45,5);
+    \draw [densely dotted,->] (4.5,5) .. controls (5.0,4.7) and (5.0,3.7) .. (4.5,3.5);
+  \end{tikzpicture}
+  \caption{Byte-code segments and native code chunks}
+  \label{figure:Byte_code_segments_and_native_code_chunks}
+\end{figure}
+
+Instead of generating native machine code incrementally into one large region of
+memory, we divide the region into smaller parts, called native code \emph{chunks},
+and generate code to these chunks instead. Every byte-code segment has an associated list of
+chunks, allocated from the large memory region, now called \emph{chunk pool},
+which contain the generated code for the given byte-code segment, as shown
+in figure~\ref{figure:Byte_code_segments_and_native_code_chunks}.
+
+Every segment starts out with an empty list of chunks. As soon as on-demand compilation
+triggers for the segment, a new chunk is allocated from the chunk pool and native
+machine code is generated into this chunk until it is filled up; when this happens,
+the code generator allocates another chunk for this segment, and emits a \texttt{jmp}
+instruction from the previous chunk to the new chunk if necessary. Once a byte-code
+segment is using \texttt{Meta.static\_release\_bytecode}, all associated native code
+chunks are also released to the chunk pool. This way \textsc{OCamlJit2} no longer leaks
+native code generated for previously released byte-code segments.
+
+While this technique is both simple and effective, there are also several drawbacks.
+The speed of both the JIT compiler and the generated code is somewhat dependant
+on the size of the native code chunks. A small chunk size helps to reduce the size of
+the working set and the amount of memory wasted in long-lived interactive top-level
+sessions, but on the other hand decreases the throughput of the JIT compilation
+driver and leads to somewhat less efficient execution for common byte-code programs
+which use only a single byte-code segment. At the time of this writing we weren't
+able to figure out the exact cause for the reduced execution speed with small chunk
+sizes. For now we have settled on a chunk size of $256$ KiB, which seems to be a
+good compromise.
+
+Another possible way to reduce the amount of wasted memory with the interactive
+top-level would be to generate code for small byte-code segments to special,
+shared code chunks, and manage the life-time of these shared chunks using a
+reference counting scheme.
 
 
 %% Performance
 \section{Performance} \label{section:Performance}
+
+TODO
 
 \begin{table*}[h]
   \footnotesize
