@@ -41,6 +41,127 @@
 TODO
 
 
+%% Improvements
+\section{Improvements} \label{section:Improvements}
+
+This section describes the improvements that were applied to \textsc{OCamlJit2}. This
+includes both the new \texttt{x86} port as well as improvements to the implementation
+of floating-point primitives, which caused another speedup of up to $30\%$ for some
+floating-point benchmarks.
+
+\subsection{32-bit support}
+
+\textsc{OCamlJit2} now supports both x86-64 processors (operating in long mode)
+as well as x86 processors (operating in protected mode). This section gives an
+overview of the mapping of the \textsc{OCaml} virtual machine to the x86
+architecture, especially the mapping of the virtual machine registers to the available
+physical registers. See \cite{Meurer10:OCamlJit2.0} for a description of the implementation
+details of the x86-64 port.
+
+The x86 architecture \cite{Intel10Vol1} provides $8$ general purpose 32-bit registers
+\texttt{\%eax}, \texttt{\%ebx}, \texttt{\%ecx}, \texttt{\%edx}, \texttt{\%ebp}, \texttt{\%esp},
+\texttt{\%edi} and \texttt{\%esi}, as well as $8$ 80-bit floating-point registers organized
+into a so-called \emph{FPU stack} (and also used as 64-bit MMX registers). Recent incarnations also
+include a set of $8$ SSE2 registers \texttt{\%xmm0}, $\ldots$, \texttt{\%xmm7}.
+The System V ABI for the x86 architecture \cite{SCO97Abi386}, implemented by almost all
+operating systems running on x86 processors, except Win32 which uses a different ABI,
+mandates that registers \texttt{\%ebp}, \texttt{\%ebx}, \texttt{\%edi}, \texttt{\%esi}
+and \texttt{\%esp} belong to the caller and the callee is required to preserve their
+values across function calls. The remaining registers belong to the callee.
+
+To share as much code as possible with the x86-64 port, we use a similar register assignment
+for the x86 architecture. This includes making good use of callee-save registers to avoid
+saving and restoring too many aspects of the machine state whenever a C function is
+invoked. Our register assignment therefore looks as follows:
+
+The virtual register \texttt{accu} is mapped to \texttt{\%eax}.
+\texttt{extra\_args} goes into \texttt{\%ebx}, which -- just like on x86-64 -- contains
+the number of extra arguments as tagged integer.
+The environment pointer \texttt{env} goes into \texttt{\%ebp}, and
+the stack pointer \texttt{sp} goes into \texttt{\%esi}.
+\texttt{\%edi} contains the cached value of the minor heap allocation pointer
+\texttt{caml\_young\_ptr} to speed up allocations of blocks in the minor heap. This
+is different from \texttt{ocamlopt} on x86, where \texttt{caml\_young\_ptr} is not
+cached in a register, unlike x86-64 where \texttt{ocamlopt} caches it in \texttt{\%r15}.
+
+The setup and helper routines that form the runtime of the JIT engine are located in the
+file \texttt{byterun/jit\_rt\_i386.S}. These are mostly copies of their x86-64 counterparts
+in the file \texttt{byterun/jit\_rt\_amd64.S}, adapted to the x86 architecture. The
+adaption was mostly straight-forward, replacing the x86-64 registers with their x86
+counterparts and the 64-bit opcodes with their 32-bit counterparts.
+
+\subsubsection{Address mapping and on-demand compilation}
+
+We use the existing scheme to map byte-code to native machine code address, which
+replaces the instruction opcode word within the byte-code sequence by
+the offset of the generated native code relative to the base address
+\texttt{caml\_jit\_code\_end}. Whenever jumping to a byte-code address - i.e.
+during closure application or return -- this offset is read from the instruction
+opcode, \texttt{caml\_jit\_code\_end} is added to it, and a jump to the resulting
+address is performed. The trampoline code for x86 -- shown in
+figure~\ref{figure:Byte_code_trampoline_x86} -- is therefore quite similar to
+the trampoline code for x86-64; on x86 \texttt{\%ecx} contains the address of the
+byte-code to execute and \texttt{\%edx} is a temporary register.
+
+\begin{figure}[h]
+  \centering
+  \begin{varwidth}{\linewidth}
+  \begin{verbatim}
+movl (%ecx), %edx
+addl caml_jit_code_end, %edx
+jmpl *%edx
+\end{verbatim}
+  \end{varwidth}
+  \caption{Byte-code trampoline (x86)}
+  \label{figure:Byte_code_trampoline_x86}
+\end{figure}
+
+Adapting the on-demand compilation driver was also straight-forward, due to
+the similarities of the x86 and x86-64 architectures. It was merely a matter
+of adding a x86 byte-code compile trampoline, which is shown in
+figure~\ref{figure:Byte_code_compile_trampoline_x86}. It is slightly longer
+than its x86-64 counterpart, because of the C calling convention \cite{SCO97Abi386},
+which requires all parameters to be passed on the C stack.
+
+\begin{figure}[h]
+  \centering
+  \begin{varwidth}{\linewidth}
+  \begin{verbatim}
+pushl %eax
+pushl %ecx
+call  caml_jit_compile
+movl  %eax, %edx
+popl  %ecx
+popl  %eax
+jmpl  *%edx
+\end{verbatim}
+  \end{varwidth}
+  \caption{Byte-code compile trampoline (x86)}
+  \label{figure:Byte_code_compile_trampoline_x86}
+\end{figure}
+
+Whenever the byte-code compile trampoline is invoked, \texttt{\%eax} contains
+the current \texttt{accu} value, \texttt{\%ecx} contains the byte-code address
+and the remaininder of the \textsc{OCaml} virtual machine state is located in
+global memory locations and callee-save registers. Therefore \texttt{\%eax}
+has to be preserved on the C stack and \texttt{\%ecx} must be passed as parameter
+to the \texttt{caml\_jit\_compile} function. Upon return \texttt{\%eax} contains
+the address of the generated native code, which is saved to \texttt{\%edx}.
+Afterwards the stack frame is removed, restoring \texttt{\%eax}, and execution
+continues at the native code address.
+
+The remaining porting effort was mostly related to generalizing the code
+emitter macros to conditionally emit x86 or x86-64 code, and fiddling with
+some nasty details of the different addressing modes. The core of the code
+generator is almost free of \texttt{\#ifdef}'s, because the code generated
+for the two targets is pretty much equivalent. This is especially true for
+floating point operations, which use SSE2 registers and instructions on
+both x86 and x86-64. \textsc{OCamlJit2} therefore requires a processor
+with support for the SSE2 instruction set; if \textsc{OCamlJit2} detects a
+processor without SSE2, it disables the JIT engine and falls back to
+the byte-code interpreter.
+
+
 %% Performance
 \section{Performance} \label{section:Performance}
 
@@ -250,7 +371,7 @@ TODO
 
 
 %% References
-\bibliographystyle{abbrv}
+\bibliographystyle{habbrv}
 \bibliography{citations}
 
 \end{document}
