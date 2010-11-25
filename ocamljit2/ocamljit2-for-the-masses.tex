@@ -46,11 +46,12 @@ TODO
 
 This section describes the improvements that were applied to the \textsc{OCamlJit2} prototype
 as described in \cite{Meurer10:OCamlJit2.0}. This
-includes the new x86 port, a simple native code managment strategy, as well as improvements
-to the implementation of floating-point primitives, which caused another speedup of around
-$30\%$ for some floating-point benchmarks.
+includes the new x86 port (section~\ref{subsection:32_bit_support}), a simple native code managment
+strategy (section~\ref{subsection:Native_code_management}), as well as improvements
+to the implementation of floating-point primitives (section~\ref{subsection:Floating_point_optimizations}),
+which caused another speedup of around $30\%$ for some floating-point benchmarks.
 
-\subsection{32-bit support}
+\subsection{32-bit support} \label{subsection:32_bit_support}
 
 \textsc{OCamlJit2} now supports both x86-64 processors (operating in long mode)
 as well as x86 processors (operating in protected mode). This section gives an
@@ -163,7 +164,7 @@ processor without SSE2, it disables the JIT engine and falls back to
 the byte-code interpreter\footnote{This is only relevant in case of x86,
 as all x86-64 processors are required to implement the SSE2 extension.}.
 
-\subsection{Native code managment}
+\subsection{Native code managment} \label{subsection:Native_code_management}
 
 Previously, memory allocated to a chunk of generated native machine code was never freed
 by \textsc{OCamlJit2}, even if the byte-code segment, for which this native machine code
@@ -185,7 +186,7 @@ this problem with a solution quite similar to that used in \textsc{OCamlJit}
     \filldraw [fill=green!10] (3,1) rectangle (6,6);
     \draw (0.5,6.2) node {\footnotesize $\mbox{segment}_1$};
     \draw (0.5,3.2) node {\footnotesize $\mbox{segment}_2$};
-    \draw (4.5,6.2) node {\footnotesize $\mbox{chunk pool}$};
+    \draw (4.5,6.2) node {\footnotesize $\mbox{native code area}$};
     \draw (4,2.7) node {\footnotesize $\mbox{chunk}_3$};
     \draw (4,4.2) node {\footnotesize $\mbox{chunk}_2$};
     \draw (4,5.7) node {\footnotesize $\mbox{chunk}_1$};
@@ -212,8 +213,8 @@ triggers for the segment, a new chunk is allocated from the chunk pool and nativ
 machine code is generated into this chunk until it is filled up; when this happens,
 the code generator allocates another chunk for this segment, and emits a \texttt{jmp}
 instruction from the previous chunk to the new chunk if necessary. Once a byte-code
-segment is using \texttt{Meta.static\_release\_bytecode}, all associated native code
-chunks are also released to the chunk pool. This way \textsc{OCamlJit2} no longer leaks
+segment is freed using \texttt{Meta.static\_release\_bytecode}, all associated native code
+chunks are also released. This way \textsc{OCamlJit2} no longer leaks
 native code generated for previously released byte-code segments.
 
 While this technique is both simple and effective, there are also several drawbacks.
@@ -231,6 +232,77 @@ Another possible way to reduce the amount of wasted memory with the interactive
 top-level would be to generate code for small byte-code segments to special,
 shared code chunks, and manage the life-time of these shared chunks using a
 reference counting scheme.
+
+\subsection{Floating-point optimizations} \label{subsection:Floating_point_optimizations}
+
+\textsc{OCaml} uses a boxed representation for floating-point values. It does this
+for various reasons, i.e.~to simplify the interface to the garbage collector
+and the garbage collector itself. While this is an elegant and portable solution, it decreases
+the performance of \textsc{OCaml} programs using floating-point calculations, especially
+when executed with the byte-code interpreter.
+
+The optimizing native code compiler \texttt{ocamlopt} applies various optimizations to avoid generating
+a boxed floating-point object in the heap for each and every floating-point value during
+the execution of the program. The byte-code interpreter \texttt{ocamlrun} however has to box every floating-point
+value, which is certainly slower than using the available floating-point registers, and
+also causes a non-negligible load on the garbage collector. Both \textsc{OCamlJit} and
+\textsc{OCamlJit2} (as described in \cite{Meurer10:OCamlJit2.0}) used the same strategy
+as the byte-code interpreter, namely allocating a heap object for every floating-point
+value during the execution, but both JIT engines applied various peephole optimizations
+to avoid the overhead of calling the floating-point C primitives.
+
+We have implemented a new technique for \textsc{OCamlJit2}, which avoids the heap
+allocation for temporary floating-point values that appear as result of a byte-code
+instruction and are used as argument in the subsequent byte-code instruction.
+Figure~\ref{figure:Subsequent_floating_point_primitives_almabench} shows an example
+taken from the byte-code of the \texttt{almabench.ml} \textsc{OCaml} program.
+
+\begin{figure}[h]
+  \centering
+  \begin{varwidth}{\linewidth}
+\begin{verbatim}
+ccall caml_array_unsafe_get_float, 2
+ccall caml_mul_float, 2
+ccall caml_add_float, 2
+ccall caml_add_float, 2
+ccall caml_sqrt_float, 1
+push
+\end{verbatim}
+  \end{varwidth}
+  \caption{Subsequent floating-point primitives (\texttt{almabench.ml})}
+  \label{figure:Subsequent_floating_point_primitives_almabench}
+\end{figure}
+
+Executing this piece of byte-code with the byte-code interpreter allocates five
+floating-point objects in the minor heap, one for each \texttt{ccall}. The first
+four objects will die immediately once the garbage collector is run, since they
+are only used as temporary results, while the result of the \texttt{caml\_sqrt\_float}
+call may indeed survive for a longer period of time. Furthermore, accessing the
+actual floating-point values of the temporary results requires at least four
+additional load instructions.
+
+If the temporary results would be kept in registers, there would be no need for
+the heap allocation and this would also eliminate the additional load instructions.
+While the heap allocations can seriously decrease performance, the additional
+load instructions are a minor issue, since the \emph{store-to-load forwarding}
+techniques \cite{Austin95,Lipasti96} implemented in modern processors will usually
+eliminate the load from memory.
+
+We have implemented a clever optimization in \textsc{OCamlJit2}, which translates
+various floating-point primitives using SSE2 instructions and functions from the
+standard C math library, in a way that the result of each primitive is not stored in
+a heap-allocated object, but is left in the \texttt{\%xmm0} register. Subsequent
+floating-point primitives then take the value from the \texttt{\%xmm0} register
+instead of the memory location pointed to by \texttt{\%rax} (or \texttt{\%eax}).
+This process is repeated for all floating-point primitives in a row. The last
+floating-point instruction -- the call to \texttt{caml\_sqrt\_float} in our
+example -- then allocates a heap block for its result.
+
+Our optimization is particularly benefical for the x86 port, where we were even able
+to beat the optimizing native code compiler in the \texttt{almabench.unsafe}
+benchmark, but it also pays off for the x86-64 port, where we could increase the
+performance of the floating-point benchmarks by up to $30\%$ compared to the
+previous prototype.
 
 
 %% Performance
