@@ -16,6 +16,14 @@
 \usetikzlibrary{arrows}
 \usetikzlibrary{trees}
 
+\definecolor{core2byt}{HTML}{7FFFD4}
+\definecolor{core2jit2}{HTML}{D2691E}
+\definecolor{xeonbyt}{HTML}{2F4F4F}
+\definecolor{xeonjit2}{HTML}{9932CC}
+\definecolor{p4byt}{HTML}{32CD32}
+\definecolor{p4jit}{HTML}{FFD700}
+\definecolor{p4jit2}{HTML}{4169E1}
+
 \begin{document}
 
 \title{%
@@ -464,7 +472,6 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
   \centering
   \footnotesize
   \begin{tikzpicture}[scale=.95]
-    \definecolor{color}{HTML}{483D8B}
     \draw (0cm,0cm) -- (13.5cm,0cm);  %Abzisse
     \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
     \draw (13.5cm,0cm) -- (13.5cm,-0.1cm);  %rechtes Ende der Abzisse
@@ -496,11 +503,25 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
       \pgfmathsetmacro\boff{\b - 1.0}
       \pgfmathsetmacro\coff{\c - 1.0}
       \pgfmathsetmacro\doff{\d - 1.0}
-      \draw[fill=red!20] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (1 * \xinc cm + \xoff cm, \aoff);
-      \draw[fill=red!50] (\xoff cm + 1 * \xinc cm + .1cm, 0 cm) rectangle (2 * \xinc cm + \xoff cm + .1cm, \boff);
-      \draw[fill=green!70] (\xoff cm + 2 * \xinc cm + .2cm, 0 cm) rectangle (3 * \xinc cm + \xoff cm + .2cm, \coff);
-      \draw[fill=red!70] (\xoff cm + 3 * \xinc cm + .2cm, 0 cm) rectangle (4 * \xinc cm + \xoff cm + .2cm, \doff);
+      \draw[fill=core2jit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (1 * \xinc cm + \xoff cm, \aoff);
+      \draw[fill=xeonjit2] (\xoff cm + 1 * \xinc cm + .1cm, 0 cm) rectangle (2 * \xinc cm + \xoff cm + .1cm, \boff);
+      \draw[fill=p4jit] (\xoff cm + 2 * \xinc cm + .2cm, 0 cm) rectangle (3 * \xinc cm + \xoff cm + .2cm, \coff);
+      \draw[fill=p4jit2] (\xoff cm + 3 * \xinc cm + .2cm, 0 cm) rectangle (4 * \xinc cm + \xoff cm + .2cm, \doff);
       \node[rotate=45,left] at (\xoff cm + 3 * \xinc cm, -.1cm) {\texttt{\name}};
+    };
+    \filldraw[fill=white] (2,8.4) rectangle (5.4,7.1);
+    \foreach \engine/\proc/\color/\y in
+    {
+      OCamlJit2/Core 2 Duo/core2jit2/0,
+      OCamlJit2/Xeon/xeonjit2/1,
+      OCamlJit/Pentium 4/p4jit/2,
+      OCamlJit2/Pentium 4/p4jit2/3
+    }
+    {
+      \pgfmathsetmacro\xoff{2.1}
+      \pgfmathsetmacro\yoff{8.3 - \y * 0.3}
+      \filldraw[fill=\color] (\xoff,\yoff-0.02) rectangle (\xoff+0.3,\yoff-0.18)
+        node at (\xoff+0.3,\yoff-0.1) [right] {\tiny\textsc{\engine} \proc};
     };
   \end{tikzpicture}
   \caption{Speedup relative to the byte-code interpreter}
@@ -541,14 +562,31 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
     {
       \pgfmathsetmacro\xinc{0.13}
       \pgfmathsetmacro\xoff{\x * 1.3 + \xinc}
-      \draw[fill=blue!20] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (1 * \xinc cm + \xoff cm, \a);
-      \draw[fill=red!20] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (2 * \xinc cm + \xoff cm, \b);
-      \draw[fill=blue!50] (\xoff cm + 2 * \xinc cm + .1cm, 0 cm) rectangle (3 * \xinc cm + \xoff cm + .1cm, \c);
-      \draw[fill=red!50] (\xoff cm + 3 * \xinc cm + .1cm, 0 cm) rectangle (4 * \xinc cm + \xoff cm + .1cm, \d);
-      \draw[fill=blue!70] (\xoff cm + 4 * \xinc cm + .2cm, 0 cm) rectangle (5 * \xinc cm + \xoff cm + .2cm, \e);
-      \draw[fill=green!70] (\xoff cm + 5 * \xinc cm + .2cm, 0 cm) rectangle (6 * \xinc cm + \xoff cm + .2cm, \f);
-      \draw[fill=red!70] (\xoff cm + 6 * \xinc cm + .2cm, 0 cm) rectangle (7 * \xinc cm + \xoff cm + .2cm, \g);
+      \draw[fill=core2byt] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (1 * \xinc cm + \xoff cm, \a);
+      \draw[fill=core2jit2] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (2 * \xinc cm + \xoff cm, \b);
+      \draw[fill=xeonbyt] (\xoff cm + 2 * \xinc cm + .1cm, 0 cm) rectangle (3 * \xinc cm + \xoff cm + .1cm, \c);
+      \draw[fill=xeonjit2] (\xoff cm + 3 * \xinc cm + .1cm, 0 cm) rectangle (4 * \xinc cm + \xoff cm + .1cm, \d);
+      \draw[fill=p4byt] (\xoff cm + 4 * \xinc cm + .2cm, 0 cm) rectangle (5 * \xinc cm + \xoff cm + .2cm, \e);
+      \draw[fill=p4jit] (\xoff cm + 5 * \xinc cm + .2cm, 0 cm) rectangle (6 * \xinc cm + \xoff cm + .2cm, \f);
+      \draw[fill=p4jit2] (\xoff cm + 6 * \xinc cm + .2cm, 0 cm) rectangle (7 * \xinc cm + \xoff cm + .2cm, \g);
       \node[rotate=45,left] at (\xoff cm + 5 * \xinc cm, -.1cm) {\texttt{\name}};
+    };
+    \filldraw[fill=white] (11,11.4) rectangle (14.25,9.2);
+    \foreach \engine/\proc/\color/\y in
+    {
+      OCaml/Core 2 Duo/core2byt/0,
+      OCamlJit2/Core 2 Duo/core2jit2/1,
+      OCaml/Xeon/xeonbyt/2,
+      OCamlJit2/Xeon/xeonjit2/3,
+      OCaml/Pentium 4/p4byt/4,
+      OCamlJit/Pentium 4/p4jit/5,
+      OCamlJit2/Pentium 4/p4jit2/6
+    }
+    {
+      \pgfmathsetmacro\xoff{11.1}
+      \pgfmathsetmacro\yoff{11.3 - \y * 0.3}
+      \filldraw[fill=\color] (\xoff,\yoff-0.02) rectangle (\xoff+0.3,\yoff-0.18)
+        node at (\xoff+0.3,\yoff-0.1) [right] {\tiny\textsc{\engine} \proc};
     };
   \end{tikzpicture}
   \caption{Performance relative to \texttt{ocamlopt}}
