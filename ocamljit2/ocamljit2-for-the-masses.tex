@@ -49,7 +49,7 @@ as described in \cite{Meurer10:OCamlJit2.0}. This
 includes the new x86 port (section~\ref{subsection:32_bit_support}), a simple native code managment
 strategy (section~\ref{subsection:Native_code_management}), as well as improvements
 to the implementation of floating-point primitives (section~\ref{subsection:Floating_point_optimizations}),
-which caused another speedup of around $30\%$ for some floating-point benchmarks.
+which reduced the execution time of floating-point benchmarks by up to $30\%$.
 
 \subsection{32-bit support} \label{subsection:32_bit_support}
 
@@ -300,9 +300,9 @@ example -- then allocates a heap block for its result.
 
 Our optimization is particularly benefical for the x86 port, where we were even able
 to beat the optimizing native code compiler in the \texttt{almabench.unsafe}
-benchmark, but it also pays off for the x86-64 port, where we could increase the
-performance of the floating-point benchmarks by up to $30\%$ compared to the
-previous prototype.
+benchmark, but it also pays off for the x86-64 port, where we could reduce the
+execution time of floating-point benchmarks by up to $30\%$ (compared to the
+earlier \textsc{OCamlJit2} prototype).
 
 
 %% Performance
