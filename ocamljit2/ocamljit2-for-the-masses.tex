@@ -49,6 +49,12 @@
 TODO
 
 
+%% Related work
+\section{Related work}
+
+TODO
+
+
 %% Improvements
 \section{Improvements} \label{section:Improvements}
 
@@ -90,7 +96,7 @@ the number of extra arguments as tagged integer.
 The environment pointer \texttt{env} goes into \texttt{\%ebp}, and
 the stack pointer \texttt{sp} goes into \texttt{\%esi}.
 \texttt{\%edi} contains the cached value of the minor heap allocation pointer
-\texttt{caml\_young\_ptr} to speed up allocations of blocks in the minor heap. This
+\texttt{caml\_young\_ptr} to speed up allocations of blocks in the minor heap; this
 is different from \texttt{ocamlopt} on x86, where \texttt{caml\_young\_ptr} is not
 cached in a register, unlike x86-64 where \texttt{ocamlopt} caches its value in \texttt{\%r15}.
 
@@ -129,9 +135,9 @@ jmpl *%edx
 Adapting the on-demand compilation driver was also straight-forward, due to
 the similarities of the x86 and x86-64 architectures. It was merely a matter
 of adding a x86 byte-code compile trampoline, which is shown in
-figure~\ref{figure:Byte_code_compile_trampoline_x86}. It is slightly longer
-than its x86-64 counterpart, because of the C calling convention \cite{SCO97Abi386},
-which requires all parameters to be passed on the C stack.
+figure~\ref{figure:Byte_code_compile_trampoline_x86}, which is slightly longer
+than its x86-64 counterpart, because the C calling convention \cite{SCO97Abi386}
+requires all parameters to be passed on the C stack.
 
 \begin{figure}[h]
   \centering
@@ -174,12 +180,11 @@ as all x86-64 processors are required to implement the SSE2 extension.}.
 
 \subsection{Native code managment} \label{subsection:Native_code_management}
 
-Previously, memory allocated to a chunk of generated native machine code was never freed
+With our earlier prototype, memory allocated to a chunk of generated native machine code was never freed
 by \textsc{OCamlJit2}, even if the byte-code segment, for which this native machine code
 was generated was released (using the \texttt{Meta.static\_release\_bytecode} OCaml
 function). This may cause trouble for MetaOCaml \cite{Taha06} and long-lived interactive
 top-level session, where the life-time of most byte-code segments is limited.
-
 This was mostly due to the fact that all generated native machine code was stored 
 incrementally in one large memory region, with no way to figure out which part of
 the memory region contains code for a certain byte-code segment. We have addressed
@@ -211,7 +216,7 @@ this problem with a solution quite similar to that used in \textsc{OCamlJit}
 
 Instead of generating native machine code incrementally into one large region of
 memory, we divide the region into smaller parts, called native code \emph{chunks},
-and generate code to these chunks instead. Every byte-code segment has an associated list of
+and generate code to these chunks. Every byte-code segment has an associated list of
 chunks, allocated from the large memory region, now called \emph{chunk pool},
 which contain the generated code for the given byte-code segment, as shown
 in figure~\ref{figure:Byte_code_segments_and_native_code_chunks}.
@@ -288,7 +293,6 @@ are only used as temporary results, while the result of the \texttt{caml\_sqrt\_
 call may indeed survive for a longer period of time. Furthermore, accessing the
 actual floating-point values of the temporary results requires at least four
 additional load instructions.
-
 If the temporary results would be kept in registers, there would be no need for
 the heap allocation and this would also eliminate the additional load instructions.
 While the heap allocations can seriously decrease performance, the additional
@@ -305,7 +309,6 @@ instead of the memory location pointed to by \texttt{\%rax} (or \texttt{\%eax}).
 This process is repeated for all floating-point primitives in a row. The last
 floating-point instruction -- the call to \texttt{caml\_sqrt\_float} in our
 example -- then allocates a heap block for its result.
-
 Our optimization is particularly benefical for the x86 port, where we were even able
 to beat the optimizing native code compiler in the \texttt{almabench.unsafe}
 benchmark, but it also pays off for the x86-64 port, where we could reduce the
@@ -443,7 +446,7 @@ The benchmark programs used to measure the performance are the following test pr
 \item \texttt{fft} is an implementation of the Fast Fourier Transformation.
 \item \texttt{nucleic} is another floating-point benchmark.
 \item \texttt{quicksort} is an implementation of the well-known QuickSort algorithm
-  for arrays and serves as a good test for loops.
+  on arrays and serves as a good test for loops.
 \item \texttt{soli} is a simple solitair solver, well suited for testing the performance
   of non-trivial, short running programs.
 \item \texttt{sorts} is a test bench for various sorting algorithms.
