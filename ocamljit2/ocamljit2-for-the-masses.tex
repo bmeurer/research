@@ -469,9 +469,11 @@ $\sigma^{jit2}_{byt} = \frac{t_{byt}}{t_{jit2}}$,
 $\sigma^{opt}_{byt} = \frac{t_{byt}}{t_{opt}}$,
 $\sigma^{jit2}_{jit} = \frac{t_{jit}}{t_{jit2}}$,
 $\sigma^{opt}_{jit} = \frac{t_{jit}}{t_{opt}}$, and
-$\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better.
+$\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better. The
+times were collected by executing each benchmark $5$ times with every engine, and
+using the timings of the fastest run.
 
-\begin{figure*}[h]
+\begin{figure*}[htb]
   \centering
   \footnotesize
   \begin{tikzpicture}[scale=.95]
@@ -531,7 +533,7 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
   \label{figure:Speedup_relative_to_the_byte_code_interpreter}
 \end{figure*}
 
-\begin{figure*}[h]
+\begin{figure*}[htb]
   \centering
   \footnotesize
   \begin{tikzpicture}
@@ -577,11 +579,11 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
     \filldraw[fill=white] (11,11.4) rectangle (14.25,9.2);
     \foreach \engine/\proc/\color/\y in
     {
-      OCaml/Core 2 Duo/core2byt/0,
+      OCamlrun/Core 2 Duo/core2byt/0,
       OCamlJit2/Core 2 Duo/core2jit2/1,
-      OCaml/Xeon/xeonbyt/2,
+      OCamlrun/Xeon/xeonbyt/2,
       OCamlJit2/Xeon/xeonjit2/3,
-      OCaml/Pentium 4/p4byt/4,
+      OCamlrun/Pentium 4/p4byt/4,
       OCamlJit/Pentium 4/p4jit/5,
       OCamlJit2/Pentium 4/p4jit2/6
     }
@@ -596,12 +598,32 @@ $\sigma^{opt}_{jit2} = \frac{t_{jit2}}{t_{opt}}$, where bigger values are better
   \label{figure:Performance_relative_to_ocamlopt}
 \end{figure*}
 
+Figure~\ref{figure:Speedup_relative_to_the_byte_code_interpreter} highlights the speedup of
+the JIT engines relative to the byte-code interpreter on the three test systems. The x86-64
+port received another nice speedup in the floating point benchmarks compared to the earlier
+prototype due to the improvements described in section~\ref{subsection:Floating_point_optimizations}.
+On x86 \textsc{OCamlJit2} provides a performance boost of $2.2$ to $9.6$ compared to the
+byte-code interpreter, and is $1.1$ to $2.0$ times faster than \textsc{OCamlJit}. This is
+especially noticable with short running programs like \texttt{soli.unsafe}, where \textsc{OCamlJit2}
+benefits from the reduced compilation overhead, and in floating-point programs, where \textsc{OCamlJit}
+wins because of clever floating point optimizations and the use of the SSE2 extension.
 
+Figure~\ref{figure:Performance_relative_to_ocamlopt} shows the performance of the byte-code
+interpreter and the JIT engines relative to the optimizing native code compiler \texttt{ocamlopt}.
+One rather surprising result was the bad performance of the generated x86 native code for
+the \texttt{almabench.unsafe} benchmark, where \textsc{OCamlJit2} was able to beat the
+native code compiler by a factor of $1.2$. This may be related to the use of SSE2 instead of
+x87 instructions, which are generally faster, but it also seems that we have spotted a problem
+within the x86 port of \texttt{ocamlopt} here.
 
-%% Future work
-\section{Future work} \label{section:Future_work}
-
-TODO
+In general, floating-point benchmarks benefit the most from the use of \textsc{OCamlJit2},
+which was somewhat expected, in particular with the optimizations implemented in the latest
+prototype. \textsc{OCamlJit} does a respectable job, but is unable to compete with
+\textsc{OCamlJit2} performance-wise. This is probably caused by the improved compilation
+scheme used by \textsc{OCamlJit2} and also related to the use of \textsc{Gnu Lightning}
+within \textsc{OCamlJit}. Nevertheless, it is this use of \textsc{Gnu Lightning}, which
+makes \textsc{OCamlJit} slightly more portable than \textsc{OCamlJit2} (three supported
+platforms in case of \textsc{OCamlJit}, compared to only two with \textsc{OCamlJit2}).
 
 
 %% Conclusion
