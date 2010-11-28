@@ -216,7 +216,7 @@ processor without SSE2, it disables the JIT engine and falls back to
 the byte-code interpreter\footnote{This is only relevant in case of x86,
 as all x86-64 processors are required to implement the SSE2 extension.}.
 
-\subsection{Native code managment} \label{subsection:Native_code_management}
+\subsection{Native code management} \label{subsection:Native_code_management}
 
 With our earlier prototype, memory allocated to a chunk of generated native machine code was never freed
 by \textsc{OCamlJit2}, even if the byte-code segment, for which this native machine code
