@@ -219,7 +219,7 @@ as all x86-64 processors are required to implement the SSE2 extension.}.
 
 With our earlier prototype, memory allocated to a chunk of generated native machine code was never freed
 by \textsc{OCamlJit2}, even if the byte-code segment, for which this native machine code
-was generated was released (using the \texttt{Meta.static\_release\_bytecode} OCaml
+was generated, was released (using the \texttt{Meta.static\_release\_bytecode} OCaml
 function). This may cause trouble for MetaOCaml \cite{Taha06} and long-lived interactive
 top-level session, where the life-time of most byte-code segments is limited.
 This was mostly due to the fact that all generated native machine code was stored 
@@ -344,7 +344,7 @@ instead of the memory location pointed to by \texttt{\%rax} (or \texttt{\%eax}).
 This process is repeated for all floating-point primitives in a row. The last
 floating-point instruction -- the call to \texttt{caml\_sqrt\_float} in our
 example -- then allocates a heap block for its result.
-Our optimization is particularly benefical for the x86 port, where we were able
+Our optimization is particularly beneficial for the x86 port, where we were able
 to beat the optimizing native code compiler in the \texttt{almabench.unsafe}
 benchmark, but it also pays off for the x86-64 port, where we could reduce the
 execution time of floating-point benchmarks by up to $30\%$ (compared to the
