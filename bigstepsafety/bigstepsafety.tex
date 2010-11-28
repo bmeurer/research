@@ -110,7 +110,27 @@ of a finite derivation tree built from the inference rules.
   \label{fig:Call_by_value_inference_rules}
 \end{figure}
 
-For every \emph{L-attributed} big-step inference rule
+Following Ibraheem and Schmidt \cite{IbraheemSchmidt98}, we define an
+\emph{L-attributed} natural-semantics rule scheme as follows: A big-step
+inference rule of the form
+\begin{mathpar}
+  \inferrule{%
+    e_1 \Rightarrow v_1 \\
+    \ldots \\
+    e_n \Rightarrow v_n
+  }{%
+    e \Rightarrow v
+  }
+\end{mathpar}
+is L-attributed if
+\begin{itemize}
+\item the value of each $e_i$ is a function of $e$ and those $v_j$ such that $j < i$, and
+\item the value of $v$ is a function of $e$ and $v_1,\ldots,v_n$.
+\end{itemize}
+Obviously the call-by-value inference rules for our $\lambda$-calculus -- as shown in
+figure~\ref{fig:Call_by_value_inference_rules} -- are L-attributed.
+
+For every L-attributed big-step inference rule
 \begin{mathpar}
   \inferrule[(R)]{%
     e_1 \Rightarrow v_1 \\
@@ -120,7 +140,7 @@ For every \emph{L-attributed} big-step inference rule
     e \Rightarrow v
   }
 \end{mathpar}
-we add $n$ prerequisite rules:
+we add $n$ prerequisite rules ($i = 1,\ldots,n$):
 \begin{mathpar}
   \inferrule[(R-$i$)]{%
     e_1 \Rightarrow v_1 \\
@@ -170,8 +190,8 @@ we add $n$ prerequisite rules:
 \end{definition}
 
 
-%% Type safety
-\section{Type safety}
+%% Type soundness
+\section{Type soundness}
 
 \begin{figure}[htb]
   \centering
@@ -262,7 +282,7 @@ we add $n$ prerequisite rules:
   \end{itemize}
 \end{proof}
 
-\begin{theorem}[Safety]
+\begin{theorem}[Type soundness]
   If $\tj{e}{\tau}$ and $e$ has only a finite number of prerequisite sequences, then $e \Rightarrow v$.
 \end{theorem}
 
