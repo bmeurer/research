@@ -195,7 +195,7 @@ jmpl  *%edx
 
 Whenever the byte-code compile trampoline is invoked, \texttt{\%eax} contains
 the current \texttt{accu} value, \texttt{\%ecx} contains the byte-code address
-and the remaininder of the \textsc{OCaml} virtual machine state is located in
+and the remainder of the \textsc{OCaml} virtual machine state is located in
 global memory locations and callee-save registers. Therefore \texttt{\%eax}
 has to be preserved on the C stack and \texttt{\%ecx} must be passed as parameter
 to the \texttt{caml\_jit\_compile} function. Upon return \texttt{\%eax} contains
