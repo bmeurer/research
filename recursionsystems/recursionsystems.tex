@@ -1,0 +1,118 @@
+\documentclass[12pt,a2paper,draft]{article}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[blocks]{authblk}
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage[colorlinks=false,%
+            pdfkeywords={TODO},%
+            pdftitle={TODO},%
+            pdfauthor={TODO},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{mathpartir}
+\usepackage{ngerman} %TODO
+\usepackage{varwidth}
+
+\newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
+\newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+\newcommand{\rec}[2]{\ensuremath{{\normalfont\textsf{rec}}\,{#1}.\,{#2}}}
+\newcommand{\unit}{\ensuremath{\normalfont\textsf{unit}}}
+\newcommand{\Unit}{\ensuremath{\normalfont\textsf{Unit}}}
+
+\newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}:{#3}}}}
+\newcommand{\tj}[2]{\Tj{\emptyset}{#1}{#2}}
+\newcommand{\Pj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}\rightarrow{#3}}}}
+\newcommand{\tree}[1]{\mathcal{D}(#1)}
+\newcommand{\rn}[1]{\mbox{\ensuremath{\textsc{(#1)}}}}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+
+\begin{document}
+
+\title{%
+  Typsicherheit in Rekursionssystemen
+}
+\author{Benedikt Meurer}
+\author{Kurt Sieber}
+\affil{%
+  Compilerbau und Softwareanalyse\\
+  Universit\"at Siegen\\
+  D-57072 Siegen, Germany\\
+  {\tt \{meurer,sieber\}@informatik.uni-siegen.de}
+}
+\date{}
+\maketitle
+\begin{abstract}
+  TODO
+\end{abstract}
+
+
+\begin{definition}[Rekursionssystem]
+  Seien $A$ und $B$ beliebige disjunkte Mengen. Eine \emph{$(A,B)$-Rekursionsregel}
+  ist eine Relation $R \subseteq A \times B^* \times (A \uplus B)$. Ein
+  \emph{$(A,B)$-Rekursionssystem} ist eine Menge $S$
+  von $(A,B)$-Rekursionsregeln.
+  Die durch $S$ definierte \emph{nat\"urliche Semantik} ist die kleinste Relation
+  $\Downarrow_S\ \subseteq A \times B$, f\"ur die gilt:
+  \begin{quote}
+    Wenn $R \in S$, $(a,b_1 \ldots b_{i-1},a_i) \in R$ und
+    $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und $(a,b_1 \ldots b_n,b) \in R$,
+    dann gilt auch $a \Downarrow_S b$.
+  \end{quote}
+\end{definition}
+
+\begin{definition}[Typsystem]
+  Ein \emph{$(A,B)$-Typsystem} $T$ besteht aus
+  \begin{itemize}
+  \item einer Menge \textsf{Type} von Typen $\tau$, und
+  \item Mengen $A^\tau \subseteq A$ und $B^\tau \subseteq B$ f\"ur jeden Typ $\tau \in \textsf{Type}$.
+  \end{itemize}
+\end{definition}
+
+\begin{definition}[Programmiersprache]
+  Eine \emph{Programmiersprache} $\mathcal{L}$ ist ein Quadrupel $(A,B,S,T)$, wobei $S$ ein
+  $(A,B)$-Rekursionssystem und $T$ ein $(A,B)$-Typsystem ist. $\mathcal{L}$ hei\"st \emph{typsicher},
+  wenn f\"ur jedes $a \in \bigcup_{\tau}A^\tau$ gilt: Es existiert keine Berechnung f\"ur $a$,
+  die stecken bleibt.
+\end{definition}
+
+\begin{definition}[Zwischenresultate]
+  $b_1,\ldots,b_n$ ($n \ge 0$) hei"sen \emph{Zwischenresultate} f\"ur $a$ bzgl. $R$, wenn
+  $a_1,\ldots,a_n$ existieren, so dass gilt:
+  \begin{itemize}
+  \item $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und
+  \item $(a,b_1 \ldots b_{i-1}, a_i) \in R$ f\"ur $i = 1,\ldots,n$.
+  \end{itemize}
+\end{definition}
+
+\noindent
+(Intuitiv sind $b_1,\ldots,b_n$ die Resultate der ersten $n$ Pr\"amissen f\"ur $a$ in der
+Regel $R$).
+
+\begin{theorem}[Typsicherheit]
+  F\"ur Typsicherheit gen\"ugt zu zeigen:
+  \begin{enumerate}
+  \item \emph{Local Progress}
+
+    Wenn $a \in A^\tau$ und $b_1,\ldots,b_n$ Zwischenresultate f\"ur $a$ bzgl. $R$,
+    dann ex. $x \in A \uplus B$ mit $(a,b_1 \ldots b_n,x) \in R$.
+
+  \item \emph{Local Preservation}
+
+    Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,b) \in R$, dann $b \in B^\tau$.
+    Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,a') \in R$, dann ex. $\tau'$ mit $a' \in A^{\tau'}$.
+  \end{enumerate}
+\end{theorem}
+
+
+
+%% References
+%\bibliographystyle{abbrv}
+%\bibliography{citations}
+
+
+\end{document}
