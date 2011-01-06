@@ -73,15 +73,108 @@
   \end{itemize}
 \end{definition}
 
+\begin{definition}
+  Sei $S$ ein $(A,B)$-Rekursionssystem. Die Menge $\textsf{State}(S)$ aller
+  \emph{Rekursionszust\"ande} $st$ von $S$ ist definiert als
+  \begin{quote}
+    $\textsf{State}(S) = (A \cup B \cup S)^+$.
+  \end{quote}
+  Auf $\textsf{State}(S)$ sei eine \"Ubergangsrelation $\vdash_S$ definiert durch:
+  \begin{mathpar}
+    \inferrule[(AA)]{%
+      (a,\varepsilon,a') \in R
+    }{%
+      w\,a \vdash_S w\,a\,R\,a'
+    }
+    \and
+    \inferrule[(AB)]{%
+      (a,\varepsilon,b) \in R
+    }{%
+      w\,a \vdash_S w\,b
+    }
+    \and
+    \inferrule[(BB)]{%
+      (a,b_1 \ldots b_n,b) \in R
+    }{%
+      w\,a\,R\,b_1 \ldots b_n \vdash_S w\,b
+    }
+    \and
+    \inferrule[(BA)]{%
+      (a,b_1 \ldots b_n,a_{n+1}) \in R
+    }{%
+      w\,a\,R\,b_1 \ldots b_n \vdash_S w\,a\,R\,b_1 \ldots b_n\,a_{n+1}
+    }
+  \end{mathpar}
+  Eine \emph{Berechnung f\"ur $a$} ist eine maximale Folge $a \vdash_S \ldots$. Ist die Folge unendlich,
+  so sagen wir Berechnung \emph{divergiert}, ist die Folge endlich und der letzte Rekursionszustand ein
+  Resultat, so sagen wir die Berechnung \emph{terminiert}, ansonsten sagen wir die Berechnung \emph{bleibt
+  stecken}. $S$ hei"st \emph{deterministisch}, wenn zu jedem $a \in A$ exakt eine Berechnung existiert.
+\end{definition}
+
+\begin{lemma}[Reachable states]
+  Wenn $a_0 \vdash^* st$ und $st'$ nicht-leeres Pr\"afix von $st$, dann gilt eine
+  der folgenden Aussagen:
+  \begin{enumerate}
+  \item[(1)] $st' = a_0$
+  \item[(2)] $st' \in B$
+  \item[(3)] $st'$ endet auf $a\,R\,b_1 \ldots b_n$, wobei ex. $a_1,\ldots,a_n$ mit
+    \begin{itemize}
+    \item $(a,b_1 \ldots b_i,a_{i+1}) \in R$ f\"ur $i=1,\ldots,n-1$, und
+    \item $a_i \Downarrow b_i$ f\"ur $i=1,\ldots,n$.
+    \end{itemize}
+  \item[(4)] $st'$ endet auf $a\,R\,b_1 \ldots b_n\,a_{n+1}$, wobei ex. $a_1,\ldots,a_n$ mit
+    \begin{itemize}
+    \item $(a,b_1 \ldots b_i,a_{i+1}) \in R$ f\"ur $i=1,\ldots,n$, und
+    \item $a_i \Downarrow b_i$ f\"ur $i=1,\ldots,n$.
+    \end{itemize}
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Induktion \"uber die L\"ange der Berechnung. I.A. trivial, f\"ur den
+  I.S. Fallunterscheidung nach der zuletzt angewendeten Regel:
+  \begin{itemize}
+  \item \rn{AA} $a_0 \vdash^* w\,a \vdash w\,a\,R\,a'$ mit $(a,\varepsilon,a') \in R$
+    
+    Nach I.V. hat jedes nicht-leere Pr\"afix von $w\,a$ die passende Form, f\"ur $w\,a\,R$
+    gilt trivialerweise $(3)$, f\"ur $w\,a\,R\,a'$ gilt $(4)$ wegen $(a,\varepsilon,a') \in R$.
+
+  \item \rn{BB} $a_0 \vdash^* w\,a\,R\,b_1 \ldots b_n \vdash w\,b$ mit $(a,b_1 \ldots b_n,b) \in R$
+
+    Nach I.V. hat jedes nicht-leere Pr\"afix von $w\,a$ die passende Form, also insbesondere auch
+    jedes nicht-leere Pr\"afix von $w$, wobei gilt entweder $w = \varepsilon$ oder $w$ endet
+    auf $\hat{a}\,\hat{R}\,\hat{b}_1 \ldots \hat{b}_m$ und es ex. $\hat{a}_1,\ldots,\hat{a}_m$
+    so dass gilt
+    \begin{itemize}
+    \item $(\hat{a},\hat{b}_1 \ldots \hat{b}_m,\hat{a}_{i+1}) \in \hat{R}$ f\"ur $i=1,\ldots,m-1$, und
+    \item $\hat{a}_i \Downarrow \hat{b}_i$ f\"ur $i=1,\ldots,m$.
+    \end{itemize}
+    Der erste Fall ist klar, f\"ur den zweiten Fall gilt nach Voraussetzung $a \Downarrow b$,
+    also hat $w\,b$ die Form $(4)$.
+
+  \item \rn{AB} $a_0 \vdash^* w\,a \vdash w\,b$ mit $(a,\varepsilon,b) \in R$
+
+    analog zu \rn{BB}
+
+  \item \rn{BA} $a_0 \vdash^* w\,a\,R\,b_1 \ldots b_n \vdash w\,a\,R\,b_1 \ldots b_n\,a_{n+1}$
+    mit $(a,b_1 \ldots b_n,a_{n+1}) \in R$
+
+    folgt unmittelbar mit $(4)$
+  \end{itemize}
+\end{proof}
+
 \begin{definition}[Programmiersprache]
   Eine \emph{Programmiersprache} $\mathcal{L}$ ist ein Quadrupel $(A,B,S,T)$, wobei $S$ ein
-  $(A,B)$-Rekursionssystem und $T$ ein $(A,B)$-Typsystem ist. $\mathcal{L}$ hei\"st \emph{typsicher},
+  $(A,B)$-Rekursionssystem und $T$ ein $(A,B)$-Typsystem ist. $\mathcal{L}$ hei"st \emph{typsicher},
   wenn f\"ur jedes $a \in \bigcup_{\tau}A^\tau$ gilt: Es existiert keine Berechnung f\"ur $a$,
   die stecken bleibt.
 \end{definition}
 
+Formal ist eine Programmiersprache typsicher, wenn aus $a \in A^\tau$ und $a \vdash^*_S st$ folgt,
+dass entweder $st \in B$ oder es ex. $st'$ mit $st \vdash_S st'$.
+
 \begin{definition}[Zwischenresultate]
-  $b_1,\ldots,b_n$ ($n \ge 0$) hei"sen \emph{Zwischenresultate} f\"ur $a$ bzgl. $R$, wenn
+  $b_1,\ldots,b_n$ ($n \ge 1$) hei"sen \emph{Zwischenresultate} f\"ur $a$ bzgl. $R$, wenn
   $a_1,\ldots,a_n$ existieren, so dass gilt:
   \begin{itemize}
   \item $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und
@@ -93,22 +186,34 @@
 (Intuitiv sind $b_1,\ldots,b_n$ die Resultate der ersten $n$ Pr\"amissen f\"ur $a$ in der
 Regel $R$).
 
-\begin{theorem}[Typsicherheit]
+\begin{theorem}[Meta-Theorem]
   F\"ur Typsicherheit gen\"ugt zu zeigen:
   \begin{enumerate}
   \item \emph{Local Progress}
 
-    Wenn $a \in A^\tau$ und $b_1,\ldots,b_n$ Zwischenresultate f\"ur $a$ bzgl. $R$,
-    dann ex. $x \in A \uplus B$ mit $(a,b_1 \ldots b_n,x) \in R$.
+    Wenn $a \in A^\tau$, dann ex. $R$ und $x \in A \cup B$ mit $(a,\varepsilon,x) \in R$.
+
+    Wenn $a \in A^\tau$ und $b_1,\ldots,b_n$ Zwischenresultate f\"ur $a$ bzgl. $R$ $(n \ge 1)$,
+    dann ex. $x \in A \cup B$ mit $(a,b_1 \ldots b_n,x) \in R$.
 
   \item \emph{Local Preservation}
 
     Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,b) \in R$, dann $b \in B^\tau$.
+
     Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,a') \in R$, dann ex. $\tau'$ mit $a' \in A^{\tau'}$.
   \end{enumerate}
 \end{theorem}
 
-
+\noindent
+\textbf{Anwendungsbeispiele:}
+\begin{enumerate}
+\item $\mathcal{L}_2$ (ohne exceptions) $A = \textsf{Exp}$, $B = \textsf{Val}$
+\item $\mathcal{L}_2$ (mit exceptions) $A = \textsf{Exp}$, $B = \textsf{Exn} \cup \textsf{Val}$
+\item $\mathcal{L}_2$ (mit exceptions und states) $A = \textsf{Exp} \times \textsf{State}$,
+  $B = (\textsf{Exn} \cup \textsf{Val}) \times \textsf{State}$ \\
+  dazu: Schreibweisen, die es erlauben eine Relation $R$ durch exceptions und states
+  zu ``erweitern''.
+\end{enumerate}
 
 %% References
 %\bibliographystyle{abbrv}
