@@ -111,22 +111,29 @@
   stecken}. $S$ hei"st \emph{deterministisch}, wenn zu jedem $a \in A$ exakt eine Berechnung existiert.
 \end{definition}
 
-\begin{lemma}[Reachable states]
+\begin{definition}[Zwischenresultate]
+  $b_1,\ldots,b_n$ ($n \ge 0$) hei"sen \emph{Zwischenresultate f\"ur $a$ bzgl. $R$}, wenn
+  $a_1,\ldots,a_n$ existieren, so dass gilt:
+  \begin{itemize}
+  \item $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und
+  \item $(a,b_1 \ldots b_{i-1}, a_i) \in R$ f\"ur $i = 1,\ldots,n$.
+  \end{itemize}
+\end{definition}
+
+\noindent
+(Intuitiv sind $b_1,\ldots,b_n$ die Resultate der ersten $n$ Pr\"amissen f\"ur $a$ in der
+Regel $R$).
+
+\begin{lemma}[Reachable states] \label{lemma:Reachable_states}
   Wenn $a_0 \vdash^* st$ und $st'$ nicht-leeres Pr\"afix von $st$, dann gilt eine
   der folgenden Aussagen:
   \begin{enumerate}
   \item[(1)] $st' = a_0$
   \item[(2)] $st' \in B$
-  \item[(3)] $st'$ endet auf $a\,R\,b_1 \ldots b_n$, wobei ex. $a_1,\ldots,a_n$ mit
-    \begin{itemize}
-    \item $(a,b_1 \ldots b_i,a_{i+1}) \in R$ f\"ur $i=1,\ldots,n-1$, und
-    \item $a_i \Downarrow b_i$ f\"ur $i=1,\ldots,n$.
-    \end{itemize}
-  \item[(4)] $st'$ endet auf $a\,R\,b_1 \ldots b_n\,a_{n+1}$, wobei ex. $a_1,\ldots,a_n$ mit
-    \begin{itemize}
-    \item $(a,b_1 \ldots b_i,a_{i+1}) \in R$ f\"ur $i=1,\ldots,n$, und
-    \item $a_i \Downarrow b_i$ f\"ur $i=1,\ldots,n$.
-    \end{itemize}
+  \item[(3)] $st'$ endet auf $a\,R\,b_1 \ldots b_n$ und $b_1,\ldots,b_n$ sind Zwischenresultate
+    f\"ur $a$ bzgl. $R$.
+  \item[(4)] $st'$ endet auf $a\,R\,b_1 \ldots b_n\,a'$, wobei $b_1,\ldots,b_n$ Zwischenresultate
+    f\"ur $a$ bzgl. $R$ sind und $(a,b_1 \ldots b_n,a') \in R$.
   \end{enumerate}
 \end{lemma}
 
@@ -143,12 +150,8 @@
 
     Nach I.V. hat jedes nicht-leere Pr\"afix von $w\,a$ die passende Form, also insbesondere auch
     jedes nicht-leere Pr\"afix von $w$, wobei gilt entweder $w = \varepsilon$ oder $w$ endet
-    auf $\hat{a}\,\hat{R}\,\hat{b}_1 \ldots \hat{b}_m$ und es ex. $\hat{a}_1,\ldots,\hat{a}_m$
-    so dass gilt
-    \begin{itemize}
-    \item $(\hat{a},\hat{b}_1 \ldots \hat{b}_m,\hat{a}_{i+1}) \in \hat{R}$ f\"ur $i=1,\ldots,m-1$, und
-    \item $\hat{a}_i \Downarrow \hat{b}_i$ f\"ur $i=1,\ldots,m$.
-    \end{itemize}
+    auf $a'\,R'\,b_1' \ldots b_m'$ und $b_1',\ldots,b_m'$ sind Zwischenresultate f\"ur $a'$ bzgl.
+    $R'$.
     Der erste Fall ist klar, f\"ur den zweiten Fall gilt nach Voraussetzung $a \Downarrow b$,
     also hat $w\,b$ die Form $(4)$.
 
@@ -157,9 +160,8 @@
     analog zu \rn{BB}
 
   \item \rn{BA} $a_0 \vdash^* w\,a\,R\,b_1 \ldots b_n \vdash w\,a\,R\,b_1 \ldots b_n\,a_{n+1}$
-    mit $(a,b_1 \ldots b_n,a_{n+1}) \in R$
 
-    folgt unmittelbar mit $(4)$
+    Folgt unmittelbar mit $(4)$ wegen $(a,b_1 \ldots b_n,a_{n+1}) \in R$.
   \end{itemize}
 \end{proof}
 
@@ -173,19 +175,6 @@
 Formal ist eine Programmiersprache typsicher, wenn aus $a \in A^\tau$ und $a \vdash^*_S st$ folgt,
 dass entweder $st \in B$ oder es ex. $st'$ mit $st \vdash_S st'$.
 
-\begin{definition}[Zwischenresultate]
-  $b_1,\ldots,b_n$ ($n \ge 1$) hei"sen \emph{Zwischenresultate} f\"ur $a$ bzgl. $R$, wenn
-  $a_1,\ldots,a_n$ existieren, so dass gilt:
-  \begin{itemize}
-  \item $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und
-  \item $(a,b_1 \ldots b_{i-1}, a_i) \in R$ f\"ur $i = 1,\ldots,n$.
-  \end{itemize}
-\end{definition}
-
-\noindent
-(Intuitiv sind $b_1,\ldots,b_n$ die Resultate der ersten $n$ Pr\"amissen f\"ur $a$ in der
-Regel $R$).
-
 \begin{theorem}[Meta-Theorem]
   F\"ur Typsicherheit gen\"ugt zu zeigen:
   \begin{enumerate}
@@ -198,11 +187,37 @@ Regel $R$).
 
   \item \emph{Local Preservation}
 
-    Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,b) \in R$, dann $b \in B^\tau$.
-
-    Wenn $a \in A^\tau$ und $(a,b_1 \ldots b_n,a') \in R$, dann ex. $\tau'$ mit $a' \in A^{\tau'}$.
+    Wenn $a \in A^\tau$, $(a,b_1 \ldots b_n,a') \in R$ und $b_1,\ldots,b_n$ Zwischenresultate
+    f\"ur $a$ bzgl. $R$, dann ex. $\tau'$ mit $a' \in A^{\tau'}$.
   \end{enumerate}
 \end{theorem}
+
+\noindent
+Zum Beweis von \emph{Local Preservation} im konkreten Anwendungsfall ben\"otigt man mit ziemlicher
+Sicherheit \emph{Preservation} \"uber big steps, also: Wenn $a \in A^\tau$ und $a \Downarrow b$,
+dann $b \in B^\tau$.
+
+\begin{proof}
+  Sei $a_0 \in A^{\tau_0}$ und $a_0 \vdash^* st$. Nach Lemma~\ref{lemma:Reachable_states} unterscheiden wir
+  nach der Form von $st$:
+  \begin{enumerate}
+  \item[(1,4)] $st = wa$
+
+    Wegen \textbf{ARGPRES} ex. $\tau$ mit $a \in A^\tau$. Nach \emph{Local Progress} ex. $R$, $x$
+    mit $(a,\varepsilon,x) \in R$, also in weiterer Schritt mit \rn{AB} oder \rn{AA} je nach Form
+    von $x$.
+
+  \item[(2)] $st \in B$
+
+    Klar.
+
+  \item[(3)] $st = w\,a\,R\,b_1 \ldots b_n$ und $b_1,\ldots,b_n$ sind Zwischenresultate f\"ur $a$ bzgl.
+    $R$.
+
+    Wg. \textbf{ARGPRES} ex. $\tau$ mit $a \in A^\tau$, ex. nach \emph{Local Progress} ein $x$ mit
+    $(a,b_1 \ldots b_n,x) \in R$, und je nach Form von $x$ ein weiterer Schritt mit \rn{BA} oder \rn{BB}.
+  \end{enumerate}
+\end{proof}
 
 \noindent
 \textbf{Anwendungsbeispiele:}
