@@ -51,6 +51,9 @@
 \end{abstract}
 
 
+%% Metatheorie
+\section{Metatheorie}
+
 \begin{definition}[Rekursionssystem]
   Seien $A$ und $B$ beliebige disjunkte Mengen. Eine \emph{$(A,B)$-Rekursionsregel}
   ist eine Relation $R \subseteq A \times B^* \times (A \uplus B)$. Ein
@@ -175,6 +178,18 @@ Regel $R$).
 Formal ist eine Programmiersprache typsicher, wenn aus $a \in A^\tau$ und $a \vdash^*_S st$ folgt,
 dass entweder $st \in B$ oder es ex. $st'$ mit $st \vdash_S st'$.
 
+\begin{lemma}[Typerhaltung f"ur Argumente] \label{lemma:Argument_preservation}
+  Wenn f\"ur alle $a \in A^\tau$, $(a,b_1 \ldots b_n,a') \in R$ mit $b_1,\ldots,b_n$ Zwischenresultate
+  f\"ur $a$ bzgl. $R$ ein $\tau'$ mit $a' \in A^{\tau'}$ existiert, dann gilt:
+  \begin{quote}
+    Wenn $a \vdash^* v\,a'\,w$ und $a \in A^\tau$, dann existiert ein $\tau'$ so dass $a' \in A^{\tau'}$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Straight-forward induction.
+\end{proof}
+
 \begin{theorem}[Meta-Theorem]
   F\"ur Typsicherheit gen\"ugt zu zeigen:
   \begin{enumerate}
@@ -203,8 +218,8 @@ dann $b \in B^\tau$.
   \begin{enumerate}
   \item[(1,4)] $st = wa$
 
-    Wegen \textbf{ARGPRES} ex. $\tau$ mit $a \in A^\tau$. Nach \emph{Local Progress} ex. $R$, $x$
-    mit $(a,\varepsilon,x) \in R$, also in weiterer Schritt mit \rn{AB} oder \rn{AA} je nach Form
+    Wegen Lemma~\ref{lemma:Argument_preservation} ex. $\tau$ mit $a \in A^\tau$. Nach \emph{Local Progress}
+    ex. $R$, $x$ mit $(a,\varepsilon,x) \in R$, also in weiterer Schritt mit \rn{AB} oder \rn{AA} je nach Form
     von $x$.
 
   \item[(2)] $st \in B$
@@ -214,13 +229,15 @@ dann $b \in B^\tau$.
   \item[(3)] $st = w\,a\,R\,b_1 \ldots b_n$ und $b_1,\ldots,b_n$ sind Zwischenresultate f\"ur $a$ bzgl.
     $R$.
 
-    Wg. \textbf{ARGPRES} ex. $\tau$ mit $a \in A^\tau$, ex. nach \emph{Local Progress} ein $x$ mit
-    $(a,b_1 \ldots b_n,x) \in R$, und je nach Form von $x$ ein weiterer Schritt mit \rn{BA} oder \rn{BB}.
+    Wg. Lemma~\ref{lemma:Argument_preservation} ex. $\tau$ mit $a \in A^\tau$, ex. nach \emph{Local Progress}
+    ein $x$ mit $(a,b_1 \ldots b_n,x) \in R$, und je nach Form von $x$ ein weiterer Schritt mit \rn{BA} oder \rn{BB}.
   \end{enumerate}
 \end{proof}
 
-\noindent
-\textbf{Anwendungsbeispiele:}
+
+%% Anwendungsbeispiele
+\section{Anwendungsbeispiele}
+
 \begin{enumerate}
 \item $\mathcal{L}_2$ (ohne exceptions) $A = \textsf{Exp}$, $B = \textsf{Val}$
 \item $\mathcal{L}_2$ (mit exceptions) $A = \textsf{Exp}$, $B = \textsf{Exn} \cup \textsf{Val}$
@@ -230,9 +247,94 @@ dann $b \in B^\tau$.
   zu ``erweitern''.
 \end{enumerate}
 
+\subsection{Simply-typed $\lambda$-calculus with unit and recursion}
+
+This section describes the programming language considered in this paper,
+the simply typed $\lambda$-calculus with $\unit$ and general recursion, which
+presents the simplest possible functional language that exhibits run-time
+errors (closed expressions that ``go wrong'') and divergence. Figure~\ref{fig:Basic_syntax}
+shows the basic syntax of the programming language.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{llcl}
+    Variables   & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
+    Expressions & $e$ & $::=$ & $\unit \mid x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \rec{x}{e}$ \\
+    Values      & $v$ & $::=$ & $\unit \mid \abstr{x}{e}$
+  \end{tabular}
+  \caption{Basic syntax}
+  \label{fig:Basic_syntax}
+\end{figure}
+
+We write $e'[x \mapsto e]$ for the capture-avoiding substitution of $e$ for all free occurrences
+of $x$ in $e'$. The standard call-by-value semantics for this language is shown in
+figure~\ref{fig:Call_by_value_recursion_rules} as set of recursion rules.
+
+\begin{figure}[htb]
+  \centering
+  \[\begin{array}{rcl}
+    \textsc{Val} &:=& \{(v,\varepsilon,\underline{v})\} \\
+    \textsc{App} &:=& \{(\app{e_1}{e_2},\varepsilon,e_1)\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}},e_2)\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}}\,\underline{v},e[x \mapsto v])\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}}\,\underline{v}\,\underline{v'},\underline{v'})\} \\
+    \textsc{Rec} &:=& \{(\rec{x}{e},\varepsilon,e[x \mapsto \rec{x}{e}])\} \\
+                 &\cup& \{(\rec{x}{e},\underline{v},\underline{v})\}
+  \end{array}\]
+  \caption{Call-by-value recursion rules}
+  \label{fig:Call_by_value_recursion_rules}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(T-Unit)]{}{\Tj{\Gamma}{\unit}{\Unit}}
+    \and
+    \inferrule[(T-Var)]{%
+      \Gamma(x) = \tau
+    }{%
+      \Tj{\Gamma}{x}{\tau}
+    }
+    \and
+    \inferrule[(T-Abstr)]{%
+      \Tj{\Gamma + \{x : \tau \}}{e}{\tau'}
+    }{%
+      \Tj{\Gamma}{\abstr{x}{e}}{\tau \to \tau'}
+    }
+    \\
+    \inferrule[(T-Rec)]{%
+      \Tj{\Gamma + \{x:\tau\}}{e}{\tau}
+    }{%
+      \Tj{\Gamma}{\rec{x}{e}}{\tau}
+    }
+    \and
+    \inferrule[(T-App)]{%
+      \Tj{\Gamma}{e_1}{\tau' \to \tau} \\
+      \Tj{\Gamma}{e_2}{\tau'}
+    }{%
+      \Tj{\Gamma}{\app{e_1}{e_2}}{\tau}
+    }
+  \end{mathpar}
+  \caption{Typing rules}
+  \label{fig:Typing_rules}
+\end{figure}
+
+\begin{lemma}[Preservation of types under substitution] \label{lemma:Preservation_of_types_under_substitution}
+  If $\Tj{\Gamma + \{x:\tau\}}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
+  then $\Tj{\Gamma}{e'[x \mapsto e]}{\tau'}$.
+\end{lemma}
+
+\begin{lemma}[Canonical Forms] \label{lemma:Canonical_Forms} \
+  \begin{enumerate}
+  \item If $\tj{v}{\Unit}$, then $v = \unit$.
+  \item If $\tj{v}{\tau' \to \tau}$, then $v = \abstr{x}{e}$.
+  \end{enumerate}
+\end{lemma}
+
+
 %% References
-%\bibliographystyle{abbrv}
-%\bibliography{citations}
+\bibliographystyle{abbrv}
+\bibliography{citations}
 
 
 \end{document}
