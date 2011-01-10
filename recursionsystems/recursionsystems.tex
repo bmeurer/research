@@ -331,6 +331,44 @@ figure~\ref{fig:Call_by_value_recursion_rules} as set of recursion rules.
   \end{enumerate}
 \end{lemma}
 
+\begin{lemma}[Preservation of types across big steps] \label{lemma:Preservation_of_types_across_big_steps}
+  If $\Tj{\Gamma}{e}{\tau}$ and $e \Downarrow \underline{v}$, then $\Tj{\Gamma}{v}{\tau}$.
+\end{lemma}
+
+\begin{proof}
+  Yep.
+\end{proof}
+
+\begin{theorem}[Local Progress] \
+  \begin{enumerate}
+  \item Wenn $\tj{e}{\tau}$ dann ex. $R$ und entweder $e'$ mit $(e,\varepsilon,e') \in R$
+    oder $v$ mit $(e,\varepsilon,\underline{v}) \in R$.
+  \item Wenn $\tj{e}{\tau}$ und $\underline{v_1},\ldots,\underline{v_n}$ Zwischenresultate
+    f\"ur $e$ bzgl. $R$ $(n \ge 1)$, dann ex. entweder $e'$ mit $(e,\underline{v_1}\ldots\underline{v_n},e') \in R$
+    oder ein $v$ mit $(e,\underline{v_1}\ldots\underline{v_n},v) \in R$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item Klar.
+  \item Hier kommen nur \rn{T-App} und \rn{T-Rec} in Frage. F\"ur Applikationen braucht man
+    Lemma~\ref{lemma:Preservation_of_types_across_big_steps} (Preservation).
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}[Local Preservation]
+  Wenn $\tj{e}{\tau}$, $(e,\underline{v_1}\ldots\underline{v_n},e') \in R$ und
+  $\underline{v_1},\ldots,\underline{v_n}$ Zwischenresultate f\"ur $e$ bzgl. $R$, dann
+  ex. $\tau'$ so dass $\tj{e'}{\tau'}$.
+\end{theorem}
+
+\begin{proof}
+  Ebenfalls nur \rn{T-App} und \rn{T-Rec} m\"oglich, ben\"otigt
+  Lemma~\ref{lemma:Preservation_of_types_under_substitution}
+  und Lemma~\ref{lemma:Preservation_of_types_across_big_steps}.
+\end{proof}
+
 
 %% References
 \bibliographystyle{abbrv}
