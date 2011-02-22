@@ -1,0 +1,99 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section*{Grundlegende Algebra}
+
+Sei $\Sigma = \langle S, \mathcal{F} \rangle$ mit 
+$S = \{\nstyle{exp},\nstyle{label},\nstyle{nat}\}$ und $\mathcal{F}$
+\[\begin{array}{rl}
+label:& \nstyle{exp} \to \nstyle{label}\\
+child:& \nstyle{exp} \times \nstyle{nat} \to \nstyle{exp}\\
+compose_n:& \nstyle{label} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_{n} \to \nstyle{exp}\\
+subst_n:& \nstyle{exp} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_{n} \to \nstyle{exp}\\
+\end{array}\]
+
+
+\section*{Abstrakte Syntax}
+
+Die Menge $\sstyle{BS}$ aller \emph{Bindungsspezifikationen} $bs$ sei definiert durch
+\[\begin{grammar}
+bs
+\is \nstyle{Dynamic}
+\al \nstyle{Static}\,i \quad (i \in \N)
+\end{grammar}\]
+und die Menge $\sstyle{BT}$ aller \emph{Bindungstypen} durch
+\[\begin{grammar}
+bt \is (bs_1,\ldots,bs_n) \quad (n \in \N)
+\end{grammar}\]
+Eine \emph{Syntaxsignatur} $\Omega$ besteht aus einer Menge $F$ von \emph{Funktionszeichen} $f$
+und einer Funktion
+\[
+\arity: F \to \bigcup_{n\in\N}\sstyle{BT}^n
+\]
+wobei f\"ur jedes $f \in F$ gilt: Wenn $\arity(f) = (bt_1,\ldots,bt_n)$ und
+$\nstyle{Static}\,i$ in einem der $bt_j$ vorkommt, dann ist $i \in \{1,\ldots,n\}$.
+
+Durch eine Syntaxsignatur $\Omega$ wird die abstrakte Synta einer Programmiersprache
+festgelegt: Die Mengen $\Exp^{bt}_\Omega$ aller \emph{Ausdr\"ucke $e$} vom
+Typ $bt$ sind induktiv definiert durch:
+\begin{enumerate}
+\item $\id \in \Exp^{()}_\Omega$ f\"ur alle $\id \in \Id$.
+\item Wenn $\arity(f)=(bt_1,\ldots,bt_n)$ und $e_i \in \Exp^{bt_i}_\Omega$ f\"ur $i=1,\ldots,n$,
+  dann ist $f(e_1,\ldots,e_n) \in \Exp^{()}_\Omega$.
+\item Wenn $e \in \Exp^{()}_\Omega$, dann ist $\Lambda \vec{\id}:\vec{bs}.e \in \Exp^{(\vec{bs})}_\Omega$.
+\end{enumerate}
+$\free(e)$ ist wie \"ublich definiert; $e$ hei"st \emph{abgeschlossen} wenn $\free(e) = \emptyset$.
+Ein \emph{Programm} ist ein abgeschlossener Ausdruck vom Typ $()$.
+
+Jeder Ausdruck $e$ wird als markierter Baum mit Markierungen der Form $\id$, $f$ oder
+$\Lambda \id_1:bs_1,\ldots,\id_n:bs_n$ aufgefasst. Durch Bindungsspezifikationen der
+Form $\nstyle{Static}\,i$ wird aus diesem Baum ein Graph. $\graph(e)$ entsteht aus
+$e$ indem man (induktiv) f\"ur jeden Teilbaum der Form $f(e_1,\ldots,e_n)$ und
+f\"ur $i=1,\ldots,n$ Folgendes durchf\"uhrt: Wenn $e_i = \Lambda \vec{\id}:\vec{bs}.e'$
+und $bs_j = \nstyle{Static}\,k$, dann wird jedes freie Vorkommen von $\id_j$ in $e'$
+durch einen Pointer auf $e_k$ ersetzt.
+
+
+\section*{Substitutionsmodell}
+
+Tr\"agermengen:
+\begin{itemize}
+\item $\sem{\nstyle{exp}}_S = \sstyle{Exp}_\bot$
+\item $\sem{\nstyle{label}}_S = F_\bot$
+\item $\sem{\nstyle{nat}}_S = \N$
+\end{itemize}
+
+
+\section*{Umgebungsmodell}
+
+
+\end{document}
