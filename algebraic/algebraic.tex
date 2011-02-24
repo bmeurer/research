@@ -85,15 +85,78 @@ durch einen Pointer auf $e_k$ ersetzt.
 
 \section*{Substitutionsmodell}
 
-Tr\"agermengen:
+Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
+Im Folgenden sei weiterhin $\Exp = \bigcup_{bt\in\sstyle{BT}}\Exp^{bt}_\Omega$.
+
+\noindent\textbf{TODO:} Besser $\Exp$ allgemein definieren und nachtr\"aglich einschr\"anken.
+Dann brauch man sich bei den Funktionen der Algebra nicht verbiegen, sondern kann nachtr\"aglich
+zeigen, dass sie \emph{wohldefiniert} sind.
+
+\subsubsection*{Algebra}
+
 \begin{itemize}
-\item $\sem{\nstyle{exp}}_S = \sstyle{Exp}_\bot$
-\item $\sem{\nstyle{label}}_S = F_\bot$
+\item $\sem{\nstyle{exp}}_S = \Exp$
+\item $\sem{\nstyle{label}}_S = F$
 \item $\sem{\nstyle{nat}}_S = \N$
 \end{itemize}
 
+\[\begin{array}{rll}
+  \sem{label}_S: & \Exp \pto F, \\
+  & f(\vec{e}) \mapsto f \\
+  & \Lambda\vec{\id}:\vec{bs}.e' \mapsto \sem{label}_S(e') \\
+  \\\\
+  \sem{child}_S: & \Exp \times \N \pto \Exp, \\
+  & (f(\vec{e}),i) \mapsto e_i & 1 \le i \le n \\
+  & (\Lambda\vec{\id}:\vec{bs}.e',i) \mapsto \sem{child}_S(e',i) \\
+  \\\\
+  \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \pto \Exp, \\
+  & (f, \vec{e}) \mapsto f(\vec{e}) \\
+  \\\\
+  \sem{subst_n}_S: & \Exp \times \underbrace{\Exp \times \ldots \times \Exp}_n \pto \Exp, \\
+  & (\Lambda\vec{\id}:\vec{bs}.e',\vec{e}) \mapsto e'[\vec{e}/\vec{\id}]
+\end{array}\]
+
 
 \section*{Umgebungsmodell}
+
+Seien $\Cl$, $\Env$ und $\Frame$ wie folgt induktiv definiert:
+\[\begin{grammar}
+  \eta \in \Env
+  \is [\fr_1;\ldots;\fr_n]
+  \nl
+  \fr \in \Frame
+  \is [\id_1:\cl_1;\ldots;\id_n:\cl_n]
+  \nl
+  \cl \in \Cl
+  \is (e,\eta)
+  \al f(\cl_1,\ldots,\cl_n)
+\end{grammar}\]
+
+\subsubsection*{Algebra}
+
+\begin{itemize}
+\item $\sem{\nstyle{exp}}_\Env = \Cl$
+\item $\sem{\nstyle{label}}_\Env = F$
+\item $\sem{\nstyle{nat}}_\Env = \N$
+\end{itemize}
+
+\[\begin{array}{rll}
+  \sem{label}_\Env: & \Cl \pto F, \\
+  & (\id,\eta) \mapsto \sem{label}_\Env(\cl) & \cl = \eta(\id) \\
+  & (e,\eta) \mapsto \sem{label}_S(e) \\
+  & f(\vec{\cl}) \mapsto f \\
+  \\\\
+  \sem{child}_\Env: & \Cl \times \N \pto \Cl, \\
+  & ((\id,\eta),i) \mapsto \cl_i & \cl_i = \sem{child}_\Env(\eta(\id), i) \\
+  & ((e,\eta),i) \mapsto (e_i,\eta) & e_i = \sem{child}_S(e,i) \\
+  & f(\vec{\cl}) \mapsto \cl_i & 1 \le i \le n \\
+  \\\\
+  \sem{compose_n}_\Env: & F \times \underbrace{\Cl \times \ldots \times \Cl}_n \to \Cl, \\
+  & (f,\vec{\cl}) \mapsto f(\vec{\cl}) \\
+  \\\\
+  \sem{subst_n}_\Env: & \Cl \times \underbrace{\Cl \times \ldots \times \Cl}_n \pto \Cl, \\
+  & ((\Lambda\vec{\id}:\vec{bs}.e,\eta),\vec{\cl}) \mapsto (e,[\vec{\id}:\vec{cl}];\eta)
+\end{array}\]
 
 
 \end{document}
