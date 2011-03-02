@@ -20,9 +20,11 @@
 \usepackage{latexsym}
 \usepackage[final]{listings}
 \usepackage{makeidx}
+\usepackage{mathpartir}
 \usepackage{ngerman}
 \usepackage[standard,thmmarks]{ntheorem}
 \usepackage{stmaryrd}
+\usepackage{varwidth}
 
 %% LaTeX macros
 \include{macros}
@@ -30,19 +32,19 @@
 \begin{document}
 
 
-\section*{Grundlegende Algebra}
+\subsection*{Algebraische Grundlagen}
 
 Sei $\Sigma = \langle S, \mathcal{F} \rangle$ mit 
 $S = \{\nstyle{exp},\nstyle{label},\nstyle{nat}\}$ und $\mathcal{F}$
 \[\begin{array}{rl}
 label:& \nstyle{exp} \to \nstyle{label}\\
 child:& \nstyle{exp} \times \nstyle{nat} \to \nstyle{exp}\\
-compose_n:& \nstyle{label} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_{n} \to \nstyle{exp}\\
-subst_n:& \nstyle{exp} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_{n} \to \nstyle{exp}\\
+compose_n:& \nstyle{label} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_n \to \nstyle{exp}\\
+subst:& \nstyle{exp} \times \nstyle{exp} \to \nstyle{exp}\\
 \end{array}\]
 
 
-\section*{Abstrakte Syntax}
+\subsection*{Abstrakte Syntax}
 
 Die Menge $\sstyle{BS}$ aller \emph{Bindungsspezifikationen} $bs$ sei definiert durch
 \[\begin{grammar}
@@ -83,14 +85,45 @@ und $bs_j = \nstyle{Static}\,k$, dann wird jedes freie Vorkommen von $\id_j$ in 
 durch einen Pointer auf $e_k$ ersetzt.
 
 
-\section*{Substitutionsmodell}
+\subsection*{Substitutionsmodell}
 
 Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
-Im Folgenden sei weiterhin $\Exp = \bigcup_{bt\in\sstyle{BT}}\Exp^{bt}_\Omega$.
+\[\begin{grammar}
+  e \in \Exp
+  \is \id
+  \al f(e_1,\ldots,e_n) & n \in \N
+  \al \Lambda\id:\tau.e
+  \nl
+  \tau \in \Type
+  \is \Void
+  \al \Dynamic
+  \al \Static{n} & n \in \N
+\end{grammar}\]
 
-\noindent\textbf{TODO:} Besser $\Exp$ allgemein definieren und nachtr\"aglich einschr\"anken.
-Dann brauch man sich bei den Funktionen der Algebra nicht verbiegen, sondern kann nachtr\"aglich
-zeigen, dass sie \emph{wohldefiniert} sind.
+\begin{mathpar}
+  \inferrule[(Id)]{%
+  }{%
+    \Omega \vdash \id \div \Void
+  }
+  \and
+  \inferrule[(Bind)]{%
+    \Omega \vdash e \div \Void
+  }{%
+    \Omega \vdash \Lambda\id:\tau.e \div \tau
+  }
+  \and
+  \inferrule[(Cons)]{%
+    \Omega \vdash f \div (\tau_1,\ldots,\tau_n)
+    \\
+    \Omega \vdash e_1 \div \tau_1
+    \\
+    \ldots
+    \\
+    \Omega \vdash e_n \div \tau_n
+  }{%
+    \Omega \vdash f(e_1,\ldots,e_n) \div \Void
+  }
+\end{mathpar}
 
 \subsubsection*{Algebra}
 
@@ -103,34 +136,40 @@ zeigen, dass sie \emph{wohldefiniert} sind.
 \[\begin{array}{rll}
   \sem{label}_S: & \Exp \pto F, \\
   & f(\vec{e}) \mapsto f \\
-  & \Lambda\vec{\id}:\vec{bs}.e' \mapsto \sem{label}_S(e') \\
+%  & \Lambda\id:\tau.e \mapsto f & f = \sem{label}_S(e) \\
   \\\\
   \sem{child}_S: & \Exp \times \N \pto \Exp, \\
-  & (f(\vec{e}),i) \mapsto e_i & 1 \le i \le n \\
-  & (\Lambda\vec{\id}:\vec{bs}.e',i) \mapsto \sem{child}_S(e',i) \\
+  & (f(e_1,\ldots,e_n),i) \mapsto e_i & 1 \le i \le n \\
+%  & (\Lambda\id:\tau.e,i) \mapsto e_i & e_i = \sem{child}_S(e,i) \\
   \\\\
-  \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \pto \Exp, \\
-  & (f, \vec{e}) \mapsto f(\vec{e}) \\
+  \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \to \Exp, \\
+  & (f, e_1,\ldots,e_n) \mapsto f(e_1,\ldots,e_n) \\
   \\\\
-  \sem{subst_n}_S: & \Exp \times \underbrace{\Exp \times \ldots \times \Exp}_n \pto \Exp, \\
-  & (\Lambda\vec{\id}:\vec{bs}.e',\vec{e}) \mapsto e'[\vec{e}/\vec{\id}]
+  \sem{subst}_S: & \Exp \times \Exp \pto \Exp, \\
+  & (\Lambda\id:\tau.e',e) \mapsto e'[e/\id] \\
 \end{array}\]
 
 
-\section*{Umgebungsmodell}
+\subsection*{Umgebungsmodell}
 
-Seien $\Cl$, $\Env$ und $\Frame$ wie folgt induktiv definiert:
+Seien $\Cl$ und $\Env$ wie folgt induktiv definiert:
 \[\begin{grammar}
   \eta \in \Env
-  \is [\fr_1;\ldots;\fr_n]
-  \nl
-  \fr \in \Frame
-  \is [\id_1:\cl_1;\ldots;\id_n:\cl_n]
+  \is \varepsilon
+  \al \id:\cl;\eta
   \nl
   \cl \in \Cl
   \is (e,\eta)
   \al f(\cl_1,\ldots,\cl_n)
 \end{grammar}\]
+$\dom(\eta)$ und $\eta(\id)$ sind wie folgt induktiv definiert:
+\[\begin{array}{rcl}
+  \dom(\varepsilon) &=& \emptyset \\
+  \dom(\id:\cl;\eta) &=& \{\id\} \cup \dom(\eta) \\
+  \\
+  (\id:\cl;\eta)(\id) &=& \cl \\
+  (\id':\cl';\eta)(\id) &=& \eta(\id) \\
+\end{array}\]
 
 \subsubsection*{Algebra}
 
@@ -142,21 +181,65 @@ Seien $\Cl$, $\Env$ und $\Frame$ wie folgt induktiv definiert:
 
 \[\begin{array}{rll}
   \sem{label}_\Env: & \Cl \pto F, \\
-  & (\id,\eta) \mapsto \sem{label}_\Env(\cl) & \cl = \eta(\id) \\
-  & (e,\eta) \mapsto \sem{label}_S(e) \\
+  & (\id,\eta) \mapsto f & f = \sem{label}_\Env(\cl) \wedge \cl = \eta(\id) \\
+  & (e,\eta) \mapsto f & f = \sem{label}_S(e) \\
   & f(\vec{\cl}) \mapsto f \\
   \\\\
   \sem{child}_\Env: & \Cl \times \N \pto \Cl, \\
-  & ((\id,\eta),i) \mapsto \cl_i & \cl_i = \sem{child}_\Env(\eta(\id), i) \\
+  & ((\id,\eta),i) \mapsto \cl_i & \cl_i = \sem{child}_\Env(\cl, i) \wedge \cl = \eta(\id) \\
   & ((e,\eta),i) \mapsto (e_i,\eta) & e_i = \sem{child}_S(e,i) \\
   & f(\vec{\cl}) \mapsto \cl_i & 1 \le i \le n \\
   \\\\
-  \sem{compose_n}_\Env: & F \times \underbrace{\Cl \times \ldots \times \Cl}_n \to \Cl, \\
-  & (f,\vec{\cl}) \mapsto f(\vec{\cl}) \\
+  \sem{compose_n}_\Env: & \multicolumn{2}{l}{F \times \underbrace{\Cl \times \ldots \times \Cl}_n \to \Cl,} \\
+  & \multicolumn{2}{l}{(f,\vec{\cl}) \mapsto f(\vec{\cl})} \\
   \\\\
-  \sem{subst_n}_\Env: & \Cl \times \underbrace{\Cl \times \ldots \times \Cl}_n \pto \Cl, \\
-  & ((\Lambda\vec{\id}:\vec{bs}.e,\eta),\vec{\cl}) \mapsto (e,[\vec{\id}:\vec{cl}];\eta)
+  \sem{subst}_\Env: & \multicolumn{2}{l}{\Cl \times \Cl \pto \Cl,} \\
+  & \multicolumn{2}{l}{((\Lambda\id:\tau.e,\eta),\cl) \mapsto (e,\id:\cl;\eta)}
 \end{array}\]
 
+
+\subsection*{Zusammenhang}
+
+Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
+\[\begin{array}{rcll}
+  \tr(e,\eta)
+  &=& e[\eta(\id_i)/\id_i]^{i=1 \ldots n}
+  & \dom(\eta) = \{\id_1,\ldots,\id_n\}
+  \\
+  \tr(f(\cl_1,\ldots,\cl_n))
+  &=& f(\tr(\cl_1),\ldots,\tr(\cl_n))
+\end{array}\]
+
+\begin{lemma}
+  F\"ur alle $f \in F$ und $\cl \in \Cl$ gilt:
+  \begin{quote}
+  $f = \sem{label}_\Env(\cl)$ gdw. $f = \sem{label}_S(\tr(\cl))$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Via Induktion \"uber $\cl$:
+  \begin{itemize}
+  \item $\cl = (\id,\eta)$
+
+    Wenn $\id \not\in \dom(\eta)$, dann sind beide undefiniert.
+
+    Wenn $\id \in \dom(\eta)$, dann ex. $\cl' = \eta(\id)$, und nach I.V. gilt
+    \begin{quote}
+      $f = \sem{label}_\Env(\cl')$ gdw. $f = \sem{label}_S(\tr(\cl'))$.
+    \end{quote}
+    Es gilt $\sem{label}_\Env(\cl) = \sem{label}_\Env(\cl')$ und
+    $\tr(\cl) = \tr(\cl')$, also folgt die Behauptung.
+
+  \item $\cl = (e,\eta)$
+
+    \textbf{TODO}
+
+  \item $\cl = f(\cl_1,\ldots,\cl_n)$
+
+    Trivial.
+
+  \end{itemize}
+\end{proof}
 
 \end{document}
