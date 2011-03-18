@@ -29,13 +29,186 @@
 %% LaTeX macros
 \include{macros}
 
+\DeclareMathOperator{\as}{\textbf{as}}
+\newcommand{\any}{\textbf{any}}
+
+\newcommand{\tj}[2]{{#1}\div{#2}}
+\newcommand{\Tj}[3]{{#1}\vdash{#2}\div{#3}}
+
 \begin{document}
+
+
+\section*{Abstrakte Syntax}
+
+Die Mengen $\Spec$ aller \emph{(Bindungs-)Spezifikationen} $\gamma$ und
+$\Type$ aller \emph{(Bindungs-)Typen} $\tau$ sind definiert durch die
+folgende kontextfreie Grammatik:
+\[\begin{grammar}
+  \gamma \in \Spec
+  \is \Dynamic
+  \al \Static{i} & i \ge 1
+  \nl
+  \tau \in \Type
+  \is \langle \gamma_1,\ldots,\gamma_n \rangle & n \ge 0
+  \nl
+\end{grammar}\]
+Eine Bindungsspezifikation $\gamma$ bzw. ein Bindungstyp $\tau$ hei"st \emph{g\"ultig bzgl. $k \in \N$},
+geschrieben $\gamma \preceq k$ bzw. $\tau \preceq k$, wenn sich dies mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule{%
+  }{%
+    \Dynamic \preceq k
+  }%
+  \and
+  \inferrule{%
+    i \le k
+  }{%
+    \Static{i} \preceq k
+  }%
+  \and
+  \inferrule{%
+    \gamma_1 \preceq k \\
+    \ldots \\
+    \gamma_n \preceq k
+  }{%
+    \langle \gamma_1,\ldots,\gamma_n \rangle \preceq k
+  }%
+\end{mathpar}
+Intuitiv bedeutet $\tau \preceq k$, dass alle statischen Spezifikationen in $\tau$ innerhalb des
+Intervalls $[1,k]$ liegen.
+
+Eine \emph{Syntaxsignatur} $\Psi = \langle \mathcal{C}, \delta \rangle$ besteht
+aus einer Menge $\mathcal{C}$ von \emph{Konstruktoren} $\zeta$ und einer
+(totalen) Funktion $\delta: \mathcal{C} \to \bigcup_{n\in\N}\Type^n$, welche jedem Konstruktor
+eine Stelligkeit und damit verbundene Bindungstypen zuordnet.
+Sei $\Id$ eine (unendliche) Menge von \emph{Bezeichnern} $\id$.
+Die Menge $\Exp(\Psi)$ aller $\Psi$-Ausdr\"ucke $e$ ist definiert durch:
+\[\begin{grammar}
+  e \in \Exp(\Psi)
+  \is \id & \id \in \Id
+  \al \zeta(e_1,\ldots,e_n) & \zeta \in \mathcal{C}
+  \al \Lambda \id_1:\tau_1,\ldots,\id_n:\tau_n.e & n \ge 1
+  \nl
+\end{grammar}\]
+Ein \emph{Typurteil f\"ur $\Psi$-Ausdr\"ucke} ist eine Formel der Gestalt $\tj{e}{\tau}$. Ein solches
+Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule[(Id)]{%
+  }{%
+    \tj{\id}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(Bind)]{%
+    \tj{e}{\langle \rangle}
+  }{%
+    \tj{\Lambda\id_1:\tau_1,\ldots,\id_n:\tau_n.e}{\langle \tau_1,\ldots,\tau_n \rangle}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=\tau_1 \ldots \tau_n \\
+    \tj{e_i}{\tau_i} \\
+    \tau_i \preceq k \\
+    i=1,\ldots,n
+  }{%
+    \tj{\zeta(e_1,\ldots,e_n)}{\langle \rangle}
+  }%
+\end{mathpar}
+$\free(e)$ ist wie \"ublich definiert; ein Ausdruck $e$ hei"st \emph{abgeschlossen},
+wenn $\free(e) = \emptyset$. Ein \emph{Programm} ist ein abgeschlossener Ausdruck
+vom Typ $\langle \rangle$.
+
+
+\subsection*{Pattern und Terme}
+
+F\"ur jeden Typ $\tau$ sei $\Var^\tau$ eine (unendliche) Menge von \emph{$\tau$-Variablen}
+$X^\tau$, und $\Var = \bigcup_{\tau}\Var^\tau$ die Menge aller \emph{Variablen}.
+Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$ und $\Term(\Psi)$ aller
+\emph{$\Psi$-Terme} $t$ sind definiert durch die folgende kontextfreie Grammatik:
+\[\begin{grammar}
+  \pi \in \Pat(\Psi)
+  \is \any
+  \al \pi \as X^\tau
+  \al \zeta(\pi_1,\ldots,\pi_n)
+  \nl
+  t \in \Term(\Psi)
+  \is X^\tau
+  \al t \langle t_1,\ldots,t_n \rangle & n \ge 1
+  \al \zeta(t_1,\ldots,t_n)
+  \nl
+\end{grammar}\]
+Ein \emph{Typurteil f\"ur $\Psi$-Pattern} ist eine Formel der Gestalt $\tj{\pi}{\tau}$. Ein
+derartiges Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule[(Any)]{%
+  }{%
+    \tj{\any}{\tau}
+  }%
+  \and
+  \inferrule[(As)]{%
+    \tj{\pi}{\tau} \\
+  }{%
+    \tj{\pi \as X^\tau}{\tau}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=\tau_1 \ldots \tau_n \\
+    \tj{\pi_i}{\tau_i} \\
+    \tau_i \preceq k \\
+    i=1,\ldots,n
+  }{%
+    \tj{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}
+  }%
+\end{mathpar}
+Ein \emph{Typurteil f\"ur $\Psi$-Terme} ist eine Formel der Gestalt $\tj{t}{\tau}$, und
+hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
+\begin{mathpar}
+  \inferrule[(Var)]{%
+  }{%
+    \tj{X^\tau}{\tau}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=\tau_1 \ldots \tau_n \\
+    \tj{t_i}{\tau_i} \\
+    \tau_i \preceq k \\
+    i=1,\ldots,n
+  }{%
+    \tj{\zeta(t_1,\ldots,t_n)}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(App)]{%
+    \tj{t}{\langle\tau_1,\ldots,\tau_n\rangle} \\
+    \tj{t_i}{\tau_i} \\
+    \tau_i \preceq k \\
+    i=1,\ldots,n
+  }{%
+    \tj{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
+  }%
+\end{mathpar}
+
+
+\section*{Semantik}
+
+Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdot}_D)$, bestehend aus
+\begin{itemize}
+\item einer nicht-leeren Menge $D$,
+\item $\sem{\App_n}_D: D \times \underbrace{D \times \ldots \times D}_n \pto D$
+\item $\sem{\Child_n^i}_D: D \pto D$
+\item $\sem{\Compose_n}_D: \zeta \times \underbrace{D \times \ldots \times D}_n \pto D$
+\item $\sem{\Label}_D: D \pto \zeta$
+\end{itemize}
+
+
+\clearpage
 
 
 \subsection*{Algebraische Grundlagen}
 
 Sei $\Sigma = \langle S, \mathcal{F} \rangle$ mit 
-$S = \{\nstyle{exp},\nstyle{label},\nstyle{nat}\}$ und $\mathcal{F}$
+$S = \{\nstyle{exp},\nstyle{label},\nstyle{nat}\}$ und $F$
 \[\begin{array}{rl}
 label:& \nstyle{exp} \to \nstyle{label}\\
 child:& \nstyle{exp} \times \nstyle{nat} \to \nstyle{exp}\\
@@ -44,7 +217,7 @@ subst:& \nstyle{exp} \times \nstyle{exp} \to \nstyle{exp}\\
 \end{array}\]
 
 
-\subsection*{Abstrakte Syntax}
+\subsection*{Kurt}
 
 Die Menge $\sstyle{BS}$ aller \emph{Bindungsspezifikationen} $bs$ sei definiert durch
 \[\begin{grammar}
@@ -87,11 +260,11 @@ durch einen Pointer auf $e_k$ ersetzt.
 
 \subsection*{Substitutionsmodell}
 
-Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
+Sei $\Omega=\langle C,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
 \[\begin{grammar}
   e \in \Exp
   \is \id
-  \al f(e_1,\ldots,e_n) & n \in \N
+  \al \zeta(e_1,\ldots,e_n) & n \in \N
   \al \Lambda\id:\tau.e
   \nl
   \tau \in \Type
@@ -113,7 +286,7 @@ Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Progr
   }
   \and
   \inferrule[(Cons)]{%
-    \Omega \vdash f \div (\tau_1,\ldots,\tau_n)
+    \Omega \vdash \zeta \div (\tau_1,\ldots,\tau_n)
     \\
     \Omega \vdash e_1 \div \tau_1
     \\
@@ -121,7 +294,7 @@ Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Progr
     \\
     \Omega \vdash e_n \div \tau_n
   }{%
-    \Omega \vdash f(e_1,\ldots,e_n) \div \Void
+    \Omega \vdash \zeta(e_1,\ldots,e_n) \div \Void
   }
 \end{mathpar}
 
@@ -136,11 +309,9 @@ Sei $\Omega=\langle F,\arity \rangle$ eine Syntaxsignatur einer beliebigen Progr
 \[\begin{array}{rll}
   \sem{label}_S: & \Exp \pto F, \\
   & f(\vec{e}) \mapsto f \\
-%  & \Lambda\id:\tau.e \mapsto f & f = \sem{label}_S(e) \\
   \\\\
   \sem{child}_S: & \Exp \times \N \pto \Exp, \\
   & (f(e_1,\ldots,e_n),i) \mapsto e_i & 1 \le i \le n \\
-%  & (\Lambda\id:\tau.e,i) \mapsto e_i & e_i = \sem{child}_S(e,i) \\
   \\\\
   \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \to \Exp, \\
   & (f, e_1,\ldots,e_n) \mapsto f(e_1,\ldots,e_n) \\
@@ -213,7 +384,7 @@ Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
 \begin{lemma}
   F\"ur alle $f \in F$ und $\cl \in \Cl$ gilt:
   \begin{quote}
-  $f = \sem{label}_\Env(\cl)$ gdw. $f = \sem{label}_S(\tr(\cl))$.
+  $f = \sem{label}_\Env(\cl)$ gdw. $f = \sem{label}_S(\tr(\cl))$
   \end{quote}
 \end{lemma}
 
@@ -233,7 +404,7 @@ Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
 
   \item $\cl = (e,\eta)$
 
-    \textbf{TODO}
+    Es gilt $\sem{label}_S(e) = \sem{label}_S(\tr(e,\eta))$, also klar.
 
   \item $\cl = f(\cl_1,\ldots,\cl_n)$
 
@@ -241,5 +412,43 @@ Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
 
   \end{itemize}
 \end{proof}
+
+\begin{lemma}
+  F\"ur alle $\cl,\cl' \in \Cl$ und $i \in \N$ gilt:
+  \begin{quote}
+    $\cl' = \sem{child}_\Env(\cl,i)$ gdw. $\tr(\cl') = \sem{child}_S(\tr(\cl),i)$
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  \textbf{TODO}
+\end{proof}
+
+\begin{lemma}
+  F\"ur alle $n \in \N$, $f \in F$ und $\cl_1,\ldots,\cl_n \in \Cl$ gilt:
+  \begin{quote}
+    $\tr(\sem{compose_n}_\Env(f,\cl_1,\ldots,\cl_n)) = \sem{compose_n}_S(f,\tr(\cl_1),\ldots,\tr(\cl_n))$
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Offensichtlich.
+\end{proof}
+
+\begin{lemma}
+  F\"ur alle $\cl,\cl',\cl''\in\Cl$ gilt:
+  \begin{quote}
+    $\cl'' = \sem{subst}_\Env(\cl',\cl)$ gdw. $\tr(\cl'') = \sem{subst}_S(\tr(\cl'),\tr(\cl))$
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  \textbf{TODO}
+\end{proof}
+
+
+\subsection*{Patterns}
+
+
 
 \end{document}
