@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,a4paper,draft]{article}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -122,70 +122,72 @@ vom Typ $\langle \rangle$.
 
 \subsection*{Pattern und Terme}
 
-F\"ur jeden Typ $\tau$ sei $\Var^\tau$ eine (unendliche) Menge von \emph{$\tau$-Variablen}
-$X^\tau$, und $\Var = \bigcup_{\tau}\Var^\tau$ die Menge aller \emph{Variablen}.
+Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
 Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$ und $\Term(\Psi)$ aller
 \emph{$\Psi$-Terme} $t$ sind definiert durch die folgende kontextfreie Grammatik:
 \[\begin{grammar}
   \pi \in \Pat(\Psi)
   \is \any
-  \al \pi \as X^\tau
+  \al \pi \as X
   \al \zeta(\pi_1,\ldots,\pi_n)
   \nl
   t \in \Term(\Psi)
-  \is X^\tau
+  \is X
   \al t \langle t_1,\ldots,t_n \rangle & n \ge 1
   \al \zeta(t_1,\ldots,t_n)
   \nl
 \end{grammar}\]
-Ein \emph{Typurteil f\"ur $\Psi$-Pattern} ist eine Formel der Gestalt $\tj{\pi}{\tau}$. Ein
+Eine \emph{Typumgebung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
+Ein \emph{Typurteil f\"ur $\Psi$-Pattern} ist eine Formel der Gestalt $\Tj{\Gamma}{\pi}{\tau}$. Ein
 derartiges Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
 l"a"st:
 \begin{mathpar}
   \inferrule[(Any)]{%
   }{%
-    \tj{\any}{\tau}
+    \Tj{\Gamma}{\any}{\tau}
   }%
   \and
   \inferrule[(As)]{%
-    \tj{\pi}{\tau} \\
+    \Tj{\Gamma}{\pi}{\tau} \\
+    \Gamma(X) = \tau
   }{%
-    \tj{\pi \as X^\tau}{\tau}
+    \Tj{\Gamma}{\pi \as X}{\tau}
   }%
   \and
   \inferrule[(Cons)]{%
     \delta(\zeta)=\tau_1 \ldots \tau_n \\
-    \tj{\pi_i}{\tau_i} \\
+    \Tj{\Gamma}{\pi_i}{\tau_i} \\
     \tau_i \preceq k \\
     i=1,\ldots,n
   }{%
-    \tj{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}
+    \Tj{\Gamma}{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}
   }%
 \end{mathpar}
-Ein \emph{Typurteil f\"ur $\Psi$-Terme} ist eine Formel der Gestalt $\tj{t}{\tau}$, und
+Ein \emph{Typurteil f\"ur $\Psi$-Terme} ist eine Formel der Gestalt $\Tj{\Gamma}{t}{\tau}$, und
 hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
 \begin{mathpar}
   \inferrule[(Var)]{%
+    \Gamma(X) = \tau
   }{%
-    \tj{X^\tau}{\tau}
+    \Tj{\Gamma}{X}{\tau}
   }%
   \and
   \inferrule[(Cons)]{%
     \delta(\zeta)=\tau_1 \ldots \tau_n \\
-    \tj{t_i}{\tau_i} \\
+    \Tj{\Gamma}{t_i}{\tau_i} \\
     \tau_i \preceq k \\
     i=1,\ldots,n
   }{%
-    \tj{\zeta(t_1,\ldots,t_n)}{\langle \rangle}
+    \Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}
   }%
   \and
   \inferrule[(App)]{%
-    \tj{t}{\langle\tau_1,\ldots,\tau_n\rangle} \\
-    \tj{t_i}{\tau_i} \\
+    \Tj{\Gamma}{t}{\langle\tau_1,\ldots,\tau_n\rangle} \\
+    \Tj{\Gamma}{t_i}{\tau_i} \\
     \tau_i \preceq k \\
     i=1,\ldots,n
   }{%
-    \tj{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
+    \Tj{\Gamma}{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
   }%
 \end{mathpar}
 
@@ -194,12 +196,46 @@ hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
 
 Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdot}_D)$, bestehend aus
 \begin{itemize}
-\item einer nicht-leeren Menge $D$,
-\item $\sem{\App_n}_D: D \times \underbrace{D \times \ldots \times D}_n \pto D$
-\item $\sem{\Child_n^i}_D: D \pto D$
-\item $\sem{\Compose_n}_D: \zeta \times \underbrace{D \times \ldots \times D}_n \pto D$
-\item $\sem{\Label}_D: D \pto \zeta$
+\item einer nicht-leeren \emph{Tr\"agermenge $D$}, und
+\item einer \emph{Funktionsbelegung $\sem{\cdot}_D$}, welche den (Familien von) Funktionszeichen
+  $\App_n$ $(n \ge 1)$, $\Child_n^i$ $(n \ge i \ge 1)$, $\Compose_n$ $(n \ge 0)$ und $\Label$ Funktionen
+  nach folgendem Schema zuordnet:
+  \[\begin{array}{ll}
+    \sem{\App_n}_D: D \times \underbrace{D \times \ldots \times D}_n \pto D &
+    \sem{\Child_n^i}_D: D \pto D \\
+    \sem{\Compose_n}_D: \zeta \times \underbrace{D \times \ldots \times D}_n \pto D &
+    \sem{\Label}_D: D \pto \zeta \\
+  \end{array}\]
 \end{itemize}
+
+\[\begin{array}{rcl}
+  D\sem{\Tj{\Gamma}{\any}{\tau}}\,\varrho
+  &=& D
+  \\
+  D\sem{\Tj{\Gamma}{\pi \as X}{\tau}}\,\varrho
+  &=& \{d \in D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho \mid d = \varrho(X) \}
+  \\
+  D\sem{\Tj{\Gamma}{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}}\,\varrho
+  &=& \{ d \in D \mid \sem{\Label}_D(d) = \zeta \text{ und} \\
+  && \quad \sem{\Child_n^i}_D(d) = D\sem{\Tj{\Gamma}{\pi_i}{\tau_i}}\,\varrho \\
+  && \quad \text{f\"ur $i=1,\ldots,n$} \}
+  \\
+\end{array}\]
+
+\[\begin{array}{rcl}
+  D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho
+  &=& \varrho(X)
+  \\
+  D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
+  &=& \sem{\App_n}_D(d, d_1, \ldots, d_n) \\
+  & \multicolumn{2}{l}{\text{mit } d = D\sem{\Tj{\Gamma}{t}{\langle\tau_1,\ldots,\tau_n\rangle}}\,\varrho} \\
+  & \multicolumn{2}{l}{\text{und } d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho \text{ f\"ur $i=1,\ldots,n$}}
+  \\
+  D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho
+  &=& \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) \\
+  & \multicolumn{2}{l}{\text{mit } d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho \text{ f\"ur $i=1,\ldots,n$}}
+  \\
+\end{array}\]
 
 
 \clearpage
