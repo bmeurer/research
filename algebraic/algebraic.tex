@@ -196,7 +196,7 @@ hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
 
 Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdot}_D)$, bestehend aus
 \begin{itemize}
-\item einer nicht-leeren \emph{Tr\"agermenge $D$}, und
+\item einer nicht-leeren \emph{Tr\"agermenge $D$} mit Teilmengen $D^\tau \subseteq D$ f\"ur alle $\tau \in \Type$, und
 \item einer \emph{Funktionsbelegung $\sem{\cdot}_D$}, welche den (Familien von) Funktionszeichen
   $\App_n$ $(n \ge 1)$, $\Child_n^i$ $(n \ge i \ge 1)$, $\Compose_n$ $(n \ge 0)$ und $\Label$ Funktionen
   nach folgendem Schema zuordnet:
@@ -207,7 +207,30 @@ Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdo
     \sem{\Label}_D: D \pto \zeta \\
   \end{array}\]
 \end{itemize}
+Eine Implementierung $\mathcal{D}$ hei"st \emph{g\"ultig}, wenn gilt:
+\begin{enumerate}
+\item Wenn $d_0 \in D^{\langle \tau_1,\ldots,\tau_n \rangle}$ und $d_i \in D^{\tau_i}$ f\"ur $i=1,\ldots,n$,
+  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\App_n}_D(d_0,d_1,\ldots,d_n)$.
+\item Wenn $\delta(\zeta) = \tau_1\ldots\tau_n$ und $d_i \in D^{\tau_i}$ f\"ur $i=1,\ldots,n$,
+  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$
+  und $\zeta = \sem{\Label}_D(d)$.
+\item Wenn $\delta(\zeta) = \tau_1\ldots\tau_n$, $d \in D^{\langle \rangle}$ und $\zeta = \sem{\Label}_D(d)$, dann
+  existieren $d_1 \in D^{\tau_1},\ldots,d_n \in D^{\tau_n}$, so dass $\sem{\Child_n^i}_D(d) = d_i$ f\"ur $i=1,\ldots,n$.
+\end{enumerate}
+Wir identifizieren $\mathcal{D}$ mit $D$.
 
+\subsection*{Semantik von Patterns und Termen}
+
+Eine \emph{$D$-Belegung} ist eine partielle, endliche Abbildung $\varrho: \Var \pto D$. Eine Belegung
+$\varrho$ hei"st \emph{g"ultig bzgl. einer Typumgebung $\Gamma$}, geschrieben $\Gamma \vdash \varrho$,
+wenn gilt:
+\begin{enumerate}
+\item $\dom(\Gamma) = \dom(\varrho)$
+\item $\varrho(X) \in D^{\Gamma(X)}$ f"ur alle $X \in \dom(\Gamma)$
+\end{enumerate}
+Gelte $\Gamma \vdash \varrho$.
+Jedem g"ultigen Typurteil $\Tj{\Gamma}{\pi}{\tau}$ wird wie folgt induktiv
+eine Semantik $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho \subseteq D$ zugeordnet:
 \[\begin{array}{rcl}
   D\sem{\Tj{\Gamma}{\any}{\tau}}\,\varrho
   &=& D
@@ -221,7 +244,8 @@ Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdo
   && \quad \text{f\"ur $i=1,\ldots,n$} \}
   \\
 \end{array}\]
-
+Ebenso wird jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
+eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho \in D$ zugeordnet:
 \[\begin{array}{rcl}
   D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho
   &=& \varrho(X)
@@ -237,61 +261,44 @@ Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdo
   \\
 \end{array}\]
 
+\subsection*{"Aquivalenz}
 
-\clearpage
-
-
-\subsection*{Algebraische Grundlagen}
-
-Sei $\Sigma = \langle S, \mathcal{F} \rangle$ mit 
-$S = \{\nstyle{exp},\nstyle{label},\nstyle{nat}\}$ und $F$
-\[\begin{array}{rl}
-label:& \nstyle{exp} \to \nstyle{label}\\
-child:& \nstyle{exp} \times \nstyle{nat} \to \nstyle{exp}\\
-compose_n:& \nstyle{label} \times \underbrace{\nstyle{exp} \times \ldots \times \nstyle{exp}}_n \to \nstyle{exp}\\
-subst:& \nstyle{exp} \times \nstyle{exp} \to \nstyle{exp}\\
-\end{array}\]
-
-
-\subsection*{Kurt}
-
-Die Menge $\sstyle{BS}$ aller \emph{Bindungsspezifikationen} $bs$ sei definiert durch
-\[\begin{grammar}
-bs
-\is \nstyle{Dynamic}
-\al \nstyle{Static}\,i \quad (i \in \N)
-\end{grammar}\]
-und die Menge $\sstyle{BT}$ aller \emph{Bindungstypen} durch
-\[\begin{grammar}
-bt \is (bs_1,\ldots,bs_n) \quad (n \in \N)
-\end{grammar}\]
-Eine \emph{Syntaxsignatur} $\Omega$ besteht aus einer Menge $F$ von \emph{Funktionszeichen} $f$
-und einer Funktion
-\[
-\arity: F \to \bigcup_{n\in\N}\sstyle{BT}^n
-\]
-wobei f\"ur jedes $f \in F$ gilt: Wenn $\arity(f) = (bt_1,\ldots,bt_n)$ und
-$\nstyle{Static}\,i$ in einem der $bt_j$ vorkommt, dann ist $i \in \{1,\ldots,n\}$.
-
-Durch eine Syntaxsignatur $\Omega$ wird die abstrakte Synta einer Programmiersprache
-festgelegt: Die Mengen $\Exp^{bt}_\Omega$ aller \emph{Ausdr\"ucke $e$} vom
-Typ $bt$ sind induktiv definiert durch:
+\begin{definition}["Aquivalenz von Implementierungen]
+  Seien $D$ und $E$ $\Psi$-Implementierungen und $\Delta \subseteq D \times E$. $D$ und $E$ hei"sen
+  \emph{$\Delta$-"aquivalent}, wenn gilt:
+  \begin{enumerate}
+  \item Wenn $(d_0,e_0),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ und $\sem{\App_n}_D(d_0,d_1,\ldots,d_n) = d$
+    dann ex. $e \in E$ mit $(d,e) \in \Delta$ und $\sem{\App_n}_E(e_0,e_1,\ldots,e_n) = e$.
+  \item Wenn $(d_0,e_0),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ und $\sem{\App_n}_E(e_0,e_1,\ldots,e_n) = e$
+    dann ex. $d \in D$ mit $(d,e) \in \Delta$ und $\sem{\App_n}_D(d_0,d_1,\ldots,d_n) = d$.
+  \item Wenn $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ und $\sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) = d$
+    dann ex. $e \in E$ mit $(d,e) \in \Delta$ und $\sem{\Compose_n}_E(\zeta,e_1,\ldots,e_n) = e$.
+  \item Wenn $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ und $\sem{\Compose_n}_E(\zeta,e_1,\ldots,e_n) = e$
+    dann ex. $d \in D$ mit $(d,e) \in \Delta$ und $\sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) = d$.
+  \item \textbf{TODO} $\ldots$
+  \end{enumerate}
+\end{definition}
+Seien $D$ und $E$ $\Delta$-"aquivalent. Zwei Teilmengen $D' \subseteq D$ und $E' \subseteq E$ hei"sen 
+$\Delta$-"aquivalent, geschrieben $D' \sim_\Delta E'$, wenn gilt:
 \begin{enumerate}
-\item $\id \in \Exp^{()}_\Omega$ f\"ur alle $\id \in \Id$.
-\item Wenn $\arity(f)=(bt_1,\ldots,bt_n)$ und $e_i \in \Exp^{bt_i}_\Omega$ f\"ur $i=1,\ldots,n$,
-  dann ist $f(e_1,\ldots,e_n) \in \Exp^{()}_\Omega$.
-\item Wenn $e \in \Exp^{()}_\Omega$, dann ist $\Lambda \vec{\id}:\vec{bs}.e \in \Exp^{(\vec{bs})}_\Omega$.
+\item Zu jedem $d \in D'$ existiert ein $e \in E'$ so dass $(d,e) \in \Delta$.
+\item Zu jedem $e \in E'$ existiert ein $d \in D'$ so dass $(d,e) \in \Delta$.
 \end{enumerate}
-$\free(e)$ ist wie \"ublich definiert; $e$ hei"st \emph{abgeschlossen} wenn $\free(e) = \emptyset$.
-Ein \emph{Programm} ist ein abgeschlossener Ausdruck vom Typ $()$.
 
-Jeder Ausdruck $e$ wird als markierter Baum mit Markierungen der Form $\id$, $f$ oder
-$\Lambda \id_1:bs_1,\ldots,\id_n:bs_n$ aufgefasst. Durch Bindungsspezifikationen der
-Form $\nstyle{Static}\,i$ wird aus diesem Baum ein Graph. $\graph(e)$ entsteht aus
-$e$ indem man (induktiv) f\"ur jeden Teilbaum der Form $f(e_1,\ldots,e_n)$ und
-f\"ur $i=1,\ldots,n$ Folgendes durchf\"uhrt: Wenn $e_i = \Lambda \vec{\id}:\vec{bs}.e'$
-und $bs_j = \nstyle{Static}\,k$, dann wird jedes freie Vorkommen von $\id_j$ in $e'$
-durch einen Pointer auf $e_k$ ersetzt.
+\begin{lemma}
+  Seien $D$, $E$ $\Delta$-"aquivalente $\Psi$-Implementierungen, und seien
+  $\varrho_D$, $\varrho_E$ $\Delta$-"aquivalente Belegungen mit $\Gamma \vdash \varrho_D$
+  und $\Gamma \vdash \varrho_E$.
+  \begin{enumerate}
+  \item Wenn $\Tj{\Gamma}{\pi}{\tau}$, dann
+    $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_D \sim_\Delta E\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_E$.
+  \item Wenn $\Tj{\Gamma}{t}{\tau}$, dann
+    $(D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D,E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E) \in \Delta$.
+  \end{enumerate}
+\end{lemma}
+
+
+\cleardoublepage
 
 
 \subsection*{Substitutionsmodell}
