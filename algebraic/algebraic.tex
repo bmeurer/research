@@ -127,8 +127,9 @@ vom Typ $\langle \rangle$.
 \subsection*{Pattern und Terme}
 
 Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
-Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$ und $\Term(\Psi)$ aller
-\emph{$\Psi$-Terme} $t$ sind definiert durch die folgende kontextfreie Grammatik:
+Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$, $\Term(\Psi)$ aller
+\emph{$\Psi$-Terme} $t$ und $\Matching(\Psi)$ aller \emph{$\Psi$-(Pattern-)Matchings}
+$m$ sind definiert durch die folgende kontextfreie Grammatik:
 \[\begin{grammar}
   \pi \in \Pat(\Psi)
   \is \any
@@ -139,6 +140,10 @@ Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$ und $\Term(\Psi)$ alle
   \is X
   \al t \langle t_1,\ldots,t_n \rangle & n \ge 1
   \al \zeta(t_1,\ldots,t_n)
+  \nl
+  m \in \Matching(\Psi)
+  \is \pi_1,\ldots,\pi_n \Uparrow t & n \ge 1
+  \al \pi_1,\ldots,\pi_n \Downarrow t & n \ge 1
   \nl
 \end{grammar}\]
 Eine \emph{Typumgebung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
@@ -192,6 +197,27 @@ hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
     i=1,\ldots,n
   }{%
     \Tj{\Gamma}{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
+  }%
+\end{mathpar}
+Ein \emph{Typurteil f\"ur $\Psi$-Matchings} ist eine Formel der Gestalt $\Gamma \vdash m$, und
+hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
+\begin{mathpar}
+  \inferrule[(Arg)]{%
+    \Tj{\Gamma}{\pi_1}{\langle \rangle} \\
+    \ldots \\
+    \Tj{\Gamma}{\pi_n}{\langle \rangle} \\
+    \Tj{\Gamma}{t}{\langle \rangle}
+  }{%
+    \Gamma \vdash \pi_1,\ldots,\pi_n \Uparrow t
+  }%
+  \and
+  \inferrule[(Res)]{%
+    \Tj{\Gamma}{\pi_1}{\langle \rangle} \\
+    \ldots \\
+    \Tj{\Gamma}{\pi_n}{\langle \rangle} \\
+    \Tj{\Gamma}{t}{\langle \rangle}
+  }{%
+    \Gamma \vdash \pi_1,\ldots,\pi_n \Downarrow t
   }%
 \end{mathpar}
 
@@ -250,7 +276,7 @@ eine Semantik $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho \subseteq D$ zugeordnet:
   && \quad \text{f\"ur $i=1,\ldots,n$} \}
   \\
 \end{array}\]
-Ebenso wird jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
+Ebenso wird jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wie folgt induktiv
 eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho \in D$ zugeordnet:
 \[\begin{array}{rcl}
   D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho
@@ -265,6 +291,15 @@ eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho \in D$ zugeordnet:
   &=& \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) \\
   & \multicolumn{2}{l}{\text{mit } d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho \text{ f\"ur $i=1,\ldots,n$}}
   \\
+\end{array}\]
+Und jedem g"ultigen Typurteil $\Gamma \vdash m$ wird wie folgt induktiv
+eine Semantik $D\sem{\Gamma \vdash m} \subseteq \bigcup_{n \ge 1} D^n \times \{\Uparrow,\Downarrow\} \times D$
+zugeordnet:
+\[\begin{array}{rcl}
+  D\sem{\Gamma \vdash \pi_1,\ldots,\pi_n \Uparrow t}
+  &=& \{ (d_1,\ldots,d_n,\Uparrow,d) \mid \text{ex. $\varrho \in \Assn(\Gamma)$ mit} \\
+  && \quad d_i \in D\sem{\Tj{\Gamma}{\pi_i}{\langle \rangle}}\,\varrho \text{ f"ur $i=1,\ldots,n$} \\
+  && \quad d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho \} \\
 \end{array}\]
 
 \begin{lemma}[Wohldefiniertheit der Semantik] \label{lem:Wohldefiniertheit_der_Semantik}
