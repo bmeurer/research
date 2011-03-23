@@ -35,6 +35,7 @@
 
 \DeclareMathOperator{\as}{\textbf{as}}
 \newcommand{\any}{\textbf{any}}
+\newcommand{\match}[3]{\textbf{match}\,{#1}\,\textbf{with}\,{#2}\,\textbf{in}\,{#3}}
 
 \newcommand{\tj}[2]{{#1}\div{#2}}
 \newcommand{\Tj}[3]{{#1}\vdash{#2}\div{#3}}
@@ -124,54 +125,20 @@ wenn $\free(e) = \emptyset$. Ein \emph{Programm} ist ein abgeschlossener Ausdruc
 vom Typ $\langle \rangle$.
 
 
-\subsection*{Pattern und Terme}
+\subsection*{Terme}
 
 Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
-Die Mengen $\Pat(\Psi)$ aller \emph{$\Psi$-Pattern} $\pi$, $\Term(\Psi)$ aller
-\emph{$\Psi$-Terme} $t$ und $\Matching(\Psi)$ aller \emph{$\Psi$-(Pattern-)Matchings}
-$m$ sind definiert durch die folgende kontextfreie Grammatik:
+Die Menge $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ ist definiert durch die
+folgende kontextfreie Grammatik:
 \[\begin{grammar}
-  \pi \in \Pat(\Psi)
-  \is \any
-  \al \pi \as X
-  \al \zeta(\pi_1,\ldots,\pi_n)
-  \nl
   t \in \Term(\Psi)
   \is X
   \al t \langle t_1,\ldots,t_n \rangle & n \ge 1
   \al \zeta(t_1,\ldots,t_n)
-  \nl
-  m \in \Matching(\Psi)
-  \is \pi_1,\ldots,\pi_n \Uparrow t & n \ge 1
-  \al \pi_1,\ldots,\pi_n \Downarrow t & n \ge 1
+  \al \match{t}{\zeta(X_1,\ldots,X_n)}{t'}
   \nl
 \end{grammar}\]
-Eine \emph{Typumgebung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
-Ein \emph{Typurteil f\"ur $\Psi$-Pattern} ist eine Formel der Gestalt $\Tj{\Gamma}{\pi}{\tau}$. Ein
-derartiges Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
-l"a"st:
-\begin{mathpar}
-  \inferrule[(Any)]{%
-  }{%
-    \Tj{\Gamma}{\any}{\tau}
-  }%
-  \and
-  \inferrule[(As)]{%
-    \Tj{\Gamma}{\pi}{\tau} \\
-    \Gamma(X) = \tau
-  }{%
-    \Tj{\Gamma}{\pi \as X}{\tau}
-  }%
-  \and
-  \inferrule[(Cons)]{%
-    \delta(\zeta)=\tau_1 \ldots \tau_n \\
-    \Tj{\Gamma}{\pi_i}{\tau_i} \\
-    \tau_i \preceq n \\
-    i=1,\ldots,n
-  }{%
-    \Tj{\Gamma}{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}
-  }%
-\end{mathpar}
+Eine \emph{Typbelegung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
 Ein \emph{Typurteil f\"ur $\Psi$-Terme} ist eine Formel der Gestalt $\Tj{\Gamma}{t}{\tau}$, und
 hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
 \begin{mathpar}
@@ -198,26 +165,13 @@ hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
   }{%
     \Tj{\Gamma}{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
   }%
-\end{mathpar}
-Ein \emph{Typurteil f\"ur $\Psi$-Matchings} ist eine Formel der Gestalt $\Gamma \vdash m$, und
-hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
-\begin{mathpar}
-  \inferrule[(Arg)]{%
-    \Tj{\Gamma}{\pi_1}{\langle \rangle} \\
-    \ldots \\
-    \Tj{\Gamma}{\pi_n}{\langle \rangle} \\
-    \Tj{\Gamma}{t}{\langle \rangle}
-  }{%
-    \Gamma \vdash \pi_1,\ldots,\pi_n \Uparrow t
-  }%
   \and
-  \inferrule[(Res)]{%
-    \Tj{\Gamma}{\pi_1}{\langle \rangle} \\
-    \ldots \\
-    \Tj{\Gamma}{\pi_n}{\langle \rangle} \\
-    \Tj{\Gamma}{t}{\langle \rangle}
+  \inferrule[(Match)]{%
+    \Tj{\Gamma}{t}{\langle \rangle} \\
+    \delta(\zeta)=\tau_1 \ldots \tau_n \\
+    \Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}
   }{%
-    \Gamma \vdash \pi_1,\ldots,\pi_n \Downarrow t
+    \Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}
   }%
 \end{mathpar}
 
@@ -243,72 +197,53 @@ Eine Implementierung $\mathcal{D}$ hei"st \emph{g\"ultig}, wenn gilt:
 \item Wenn $d_0 \in D^{\langle \sigma_1,\ldots,\sigma_n \rangle}$ und $d_i \in D^{\langle \rangle}$ f\"ur $i=1,\ldots,n$,
   dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\App_n}_D(d_0,d_1,\ldots,d_n)$.
 \item Wenn $\delta(\zeta) = \tau_1\ldots\tau_n$ und $d_i \in D^{\tau_i}$ f\"ur $i=1,\ldots,n$,
-  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$
-  und $\zeta = \sem{\Label}_D(d)$.
+  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$.
 \item Wenn $\delta(\zeta) = \tau_1\ldots\tau_n$, $d \in D^{\langle \rangle}$ und $\zeta = \sem{\Label}_D(d)$, dann
   existieren $d_1 \in D^{\tau_1},\ldots,d_n \in D^{\tau_n}$, so dass $\sem{\Child_n^i}_D(d) = d_i$ f\"ur $i=1,\ldots,n$.
 \end{enumerate}
 Wir identifizieren $\mathcal{D}$ mit $D$.
 
-\subsection*{Semantik von Patterns und Termen}
+\subsection*{Semantik von Termen}
 
 Eine \emph{$D$-Belegung} ist eine partielle, endliche Abbildung $\varrho: \Var \pto D$. Eine Belegung
-$\varrho$ hei"st \emph{g"ultig bzgl. einer Typumgebung $\Gamma$}, geschrieben $\Gamma \vdash \varrho$,
+$\varrho$ hei"st \emph{g"ultig bzgl. einer Typbelegung $\Gamma$}, geschrieben $\Gamma \vdash \varrho$,
 wenn gilt:
 \begin{enumerate}
 \item $\dom(\Gamma) = \dom(\varrho)$
 \item $\varrho(X) \in D^{\Gamma(X)}$ f"ur alle $X \in \dom(\Gamma)$
 \end{enumerate}
 Die Menge aller g"ultigen Belegungen bzgl. $\Gamma$ bezeichnen wir mit $\Assn(\Gamma)$.
-Sei im Folgenden $\varrho \in \Assn(\Gamma)$.
-Jedem g"ultigen Typurteil $\Tj{\Gamma}{\pi}{\tau}$ wird wie folgt induktiv
-eine Semantik $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho \subseteq D$ zugeordnet:
-\[\begin{array}{rcl}
-  D\sem{\Tj{\Gamma}{\any}{\tau}}\,\varrho
-  &=& D^\tau
-  \\
-  D\sem{\Tj{\Gamma}{\pi \as X}{\tau}}\,\varrho
-  &=& \{d \in D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho \mid d = \varrho(X) \}
-  \\
-  D\sem{\Tj{\Gamma}{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}}\,\varrho
-  &=& \{ d \in D^{\langle \rangle} \mid \sem{\Label}_D(d) = \zeta \text{ und} \\
-  && \quad \sem{\Child_n^i}_D(d) = D\sem{\Tj{\Gamma}{\pi_i}{\tau_i}}\,\varrho \\
-  && \quad \text{f\"ur $i=1,\ldots,n$} \}
-  \\
-\end{array}\]
-Ebenso wird jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wie folgt induktiv
-eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho \in D$ zugeordnet:
-\[\begin{array}{rcl}
-  D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho
-  &=& \varrho(X)
-  \\
-  D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
-  &=& \sem{\App_n}_D(d, d_1, \ldots, d_n) \\
-  & \multicolumn{2}{l}{\text{mit } d = D\sem{\Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle}}\,\varrho} \\
-  & \multicolumn{2}{l}{\text{und } d_i = D\sem{\Tj{\Gamma}{t_i}{\langle \rangle}}\,\varrho \text{ f\"ur $i=1,\ldots,n$}}
-  \\
-  D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho
-  &=& \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) \\
-  & \multicolumn{2}{l}{\text{mit } d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho \text{ f\"ur $i=1,\ldots,n$}}
-  \\
-\end{array}\]
-Und jedem g"ultigen Typurteil $\Gamma \vdash m$ wird wie folgt induktiv
-eine Semantik $D\sem{\Gamma \vdash m} \subseteq \bigcup_{n \ge 1} D^n \times \{\Uparrow,\Downarrow\} \times D$
-zugeordnet:
-\[\begin{array}{rcl}
-  D\sem{\Gamma \vdash \pi_1,\ldots,\pi_n \Uparrow t}
-  &=& \{ (d_1,\ldots,d_n,\Uparrow,d) \mid \text{ex. $\varrho \in \Assn(\Gamma)$ mit} \\
-  && \quad d_i \in D\sem{\Tj{\Gamma}{\pi_i}{\langle \rangle}}\,\varrho \text{ f"ur $i=1,\ldots,n$} \\
-  && \quad d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho \} \\
-\end{array}\]
+\begin{lemma}
+  Wenn $\Gamma \vdash \varrho$ und $d \in D^\tau$, dann $\Gamma[\tau/X] \vdash \varrho[d/X]$.
+\end{lemma}
+\begin{proof}
+  Trivial.
+\end{proof}
+Jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
+eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(\Gamma) \pto D$ zugeordnet:
+\begin{itemize}
+\item $D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho = \varrho(X)$
+\item $D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
+  = \sem{\App_n}_D(d, d_1, \ldots, d_n)$ \\
+  falls $d = D\sem{\Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle}}\,\varrho$ \\
+  und $d_i = D\sem{\Tj{\Gamma}{t_i}{\langle \rangle}}\,\varrho$ f\"ur $i=1,\ldots,n$
+\item $D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho
+  = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$ \\
+  falls $d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho$ f\"ur $i=1,\ldots,n$
+\item $D\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho
+  = d'$ \\
+  falls $d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho$, \\
+  $\sem{\Label}_D(d) = \zeta$, $d_i = \sem{\Child_n^i}_D(d)$ f"ur $i=1,\ldots,n$, \\
+  und $d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr)$
+\end{itemize}
 
 \begin{lemma}[Wohldefiniertheit der Semantik] \label{lem:Wohldefiniertheit_der_Semantik}
-  Sei $D$ eine g"ultige Implementierung, und $\varrho \in \Assn(\Gamma)$.
+  Sei $D$ eine g"ultige Implementierung und $\varrho \in \Assn(\Gamma)$.
+  Wenn $\Tj{\Gamma}{t}{\tau}$, dann gilt:
   \begin{enumerate}
-  \item Zu jedem $\Tj{\Gamma}{\pi}{\tau}$ ex. genau ein $D' \subseteq D^\tau$ mit
-    $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho = D'$.
-  \item Zu jedem $\Tj{\Gamma}{t}{\tau}$ ex. genau ein $d \in D^\tau$ mit
-    $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$.
+  \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$, dann $d \in D^\tau$.
+  \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$ und $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d'$,
+    dann $d = d'$.
   \end{enumerate}
 \end{lemma}
 
@@ -318,17 +253,10 @@ zugeordnet:
 
 \subsection*{"Aquivalenz}
 
-Seien $D$ und $E$ $\Psi$-Implementierungen. Zwei Teilmengen $D' \subseteq D$ und $E' \subseteq E$
-hei"sen \emph{$\Delta$-"aquivalent}, geschrieben $D' \sim_\Delta E'$, wenn gilt:
-\begin{enumerate}
-\item Zu jedem $d \in D'$ existiert ein $e \in E'$ so dass $(d,e) \in \Delta$.
-\item Zu jedem $e \in E'$ existiert ein $d \in D'$ so dass $(d,e) \in \Delta$.
-\end{enumerate}
-
 \begin{definition}["Aquivalenz von Implementierungen] \label{def:Aequivalenz_von_Implementierungen}
   Seien $D$ und $E$ $\Psi$-Implementierungen und $\Delta \subseteq D \times E$. $D$ und $E$ hei"sen
-  \emph{$\Delta$-"aquivalent}, geschrieben $D \sim_\Delta E$, wenn \[D^\tau \sim_\Delta E^\tau\] f"ur
-  alle $\tau \in \Type$ und f"ur alle $(\hat{d},\hat{e}),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ gilt:
+  \emph{$\Delta$-"aquivalent}, geschrieben $D \sim_\Delta E$ und f"ur alle
+  $(\hat{d},\hat{e}),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ gilt:
   \begin{enumerate}
   \item Wenn $\sem{\App_n}_D(\hat{d},d_1,\ldots,d_n) = d$ und $\sem{\App_n}_E(\hat{e},e_1,\ldots,e_n) = e$,
     dann $(d,e) \in \Delta$.
@@ -349,291 +277,312 @@ geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
 \begin{lemma}
   Seien $D$, $E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen,
   und $\varrho_D \sim_\Delta \varrho_E$ mit $\Gamma \vdash \varrho_D$ und $\Gamma \vdash \varrho_E$.
+  Wenn $\Tj{\Gamma}{t}{\tau}$, dann gilt genau eine der folgenden Aussagen:
   \begin{enumerate}
-  \item Wenn $\Tj{\Gamma}{\pi}{\tau}$, dann
-    $D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_D \sim_\Delta E\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_E$.
-  \item Wenn $\Tj{\Gamma}{t}{\tau}$, dann
-    $(D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D,E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E) \in \Delta$.
+  \item
+    $\bigl( D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D, E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E \bigr) \in \Delta$
+  \item
+    $\bigl( D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D \bigr) \not\in D$
+    und $\bigl( E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E \bigr) \not\in E$
   \end{enumerate}
-\end{lemma}
-
-\begin{proof} \
-  \begin{enumerate}
-  \item Via Induktion "uber die L"ange der Herleitung des Typurteils $\Tj{\Gamma}{\pi}{\tau}$ und
-    Fallunterscheidung nach der zuletzt angewendeten Regel:
-    \begin{itemize}
-    \item $\Tj{\Gamma}{\any}{\tau}$ mit \textsc{(Any)}
-
-      Klar, denn nach Voraussetzung gilt $D^\tau \sim_\Delta E^\tau$ f"ur alle $\tau \in \Type$.
-
-    \item $\Tj{\Gamma}{\pi \as X}{\tau}$ mit \textsc{(As)}
-
-      Nach Lemma~\ref{lem:Wohldefiniertheit_der_Semantik} ex. $D'' \subseteq D' \subseteq D^\tau$ und
-      $E'' \subseteq E' \subseteq E^\tau$ mit
-      \begin{mathpar}
-        D\sem{\Tj{\Gamma}{\pi \as X}{\tau}}\,\varrho_D = D''
-        \and
-        D\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_D = D'
-        \and
-        E\sem{\Tj{\Gamma}{\pi \as X}{\tau}}\,\varrho_E = E''
-        \and
-        E\sem{\Tj{\Gamma}{\pi}{\tau}}\,\varrho_E = E'
-      \end{mathpar}
-      und nach I.V. gilt $D' \sim_\Delta E'$.
-
-    \item $\Tj{\Gamma}{\zeta(\pi_1,\ldots,\pi_n)}{\langle \rangle}$ mit \textsc{(Cons)}
-
-      \textbf{TODO}
-    \end{itemize}
-
-  \item Via Induktion "uber die L"ange der Herleitung des Typurteils $\Tj{\Gamma}{t}{\tau}$
-    Fallunterscheidung nach der zuletzt angewendeten Regel:
-    \begin{itemize}
-    \item $\Tj{\Gamma}{X}{\tau}$ mit \textsc{(Var)}
-
-      Trivial.
-
-    \item $\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}$ mit \textsc{(App)}
-
-      Nach Lemma~\ref{lem:Wohldefiniertheit_der_Semantik} ex. $d \in D^{\langle \sigma_1,\ldots,\sigma_n \rangle}$,
-      $d_1,\ldots,d_n \in D^{\langle \rangle}$, $e \in E^{\langle \sigma_1,\ldots,\sigma_n \rangle}$ und
-      $e_1,\ldots,e_n \in E^{\langle \rangle}$ mit
-      \begin{mathpar}
-        d = D\sem{\Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle}}\,\varrho_D
-        \and
-        d_i = D\sem{\Tj{\Gamma}{t_i}{\langle \rangle}}\,\varrho_D
-        \and
-        e = E\sem{\Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle}}\,\varrho_E
-        \and
-        e_i = E\sem{\Tj{\Gamma}{t_i}{\langle \rangle}}\,\varrho_E
-      \end{mathpar}
-      und nach I.V. gilt $(d_0,e_0) \in \Delta$ und $(d_i,e_i) \in \Delta$ f"ur $i=1,\ldots,n$.
-      Nach Lemma~\ref{lem:Wohldefiniertheit_der_Semantik} ex. weiterhin
-      $\hat{d} \in D^{\langle \rangle}$ und $\hat{e} \in E^{\langle \rangle}$ so dass
-      \begin{mathpar}
-        \hat{d}
-        = D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho_D
-        = \sem{App_n}_D(d,d_1,\ldots,d_n)
-        \and
-        \hat{e}
-        = E\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho_E
-        = \sem{App_n}_E(e,e_1,\ldots,e_n)
-      \end{mathpar}
-      und mit Definition~\ref{def:Aequivalenz_von_Implementierungen} folgt daraus die Behauptung
-      $(\hat{d},\hat{e}) \in \Delta$.
-
-    \item $\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}$ mit \textsc{(Cons)}
-
-      Analog zum Fall der \textsc{(App)} Regel.
-    \end{itemize}
-  \end{enumerate}
-\end{proof}
-
-
-\cleardoublepage
-
-\noindent
-\textcolor{red}{
-\rule{\textwidth}{2pt}
-\vspace*{10pt}
-\begin{center}
-\mbox{\Huge\sf Obsolete}
-\end{center}
-\vspace*{10pt}
-\rule{\textwidth}{2pt}
-}
-
-\subsection*{Substitutionsmodell}
-
-Sei $\Omega=\langle C,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
-\[\begin{grammar}
-  e \in \Exp
-  \is \id
-  \al \zeta(e_1,\ldots,e_n) & n \in \N
-  \al \Lambda\id:\tau.e
-  \nl
-  \tau \in \Type
-  \is \Void
-  \al \Dynamic
-  \al \Static{n} & n \in \N
-\end{grammar}\]
-
-\begin{mathpar}
-  \inferrule[(Id)]{%
-  }{%
-    \Omega \vdash \id \div \Void
-  }
-  \and
-  \inferrule[(Bind)]{%
-    \Omega \vdash e \div \Void
-  }{%
-    \Omega \vdash \Lambda\id:\tau.e \div \tau
-  }
-  \and
-  \inferrule[(Cons)]{%
-    \Omega \vdash \zeta \div (\tau_1,\ldots,\tau_n)
-    \\
-    \Omega \vdash e_1 \div \tau_1
-    \\
-    \ldots
-    \\
-    \Omega \vdash e_n \div \tau_n
-  }{%
-    \Omega \vdash \zeta(e_1,\ldots,e_n) \div \Void
-  }
-\end{mathpar}
-
-\subsubsection*{Algebra}
-
-\begin{itemize}
-\item $\sem{\nstyle{exp}}_S = \Exp$
-\item $\sem{\nstyle{label}}_S = F$
-\item $\sem{\nstyle{nat}}_S = \N$
-\end{itemize}
-
-\[\begin{array}{rll}
-  \sem{label}_S: & \Exp \pto F, \\
-  & f(\vec{e}) \mapsto f \\
-  \\\\
-  \sem{child}_S: & \Exp \times \N \pto \Exp, \\
-  & (f(e_1,\ldots,e_n),i) \mapsto e_i & 1 \le i \le n \\
-  \\\\
-  \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \to \Exp, \\
-  & (f, e_1,\ldots,e_n) \mapsto f(e_1,\ldots,e_n) \\
-  \\\\
-  \sem{subst}_S: & \Exp \times \Exp \pto \Exp, \\
-  & (\Lambda\id:\tau.e',e) \mapsto e'[e/\id] \\
-\end{array}\]
-
-
-\subsection*{Umgebungsmodell}
-
-Seien $\Cl$ und $\Env$ wie folgt induktiv definiert:
-\[\begin{grammar}
-  \eta \in \Env
-  \is \varepsilon
-  \al \id:\cl;\eta
-  \nl
-  \cl \in \Cl
-  \is (e,\eta)
-  \al f(\cl_1,\ldots,\cl_n)
-\end{grammar}\]
-$\dom(\eta)$ und $\eta(\id)$ sind wie folgt induktiv definiert:
-\[\begin{array}{rcl}
-  \dom(\varepsilon) &=& \emptyset \\
-  \dom(\id:\cl;\eta) &=& \{\id\} \cup \dom(\eta) \\
-  \\
-  (\id:\cl;\eta)(\id) &=& \cl \\
-  (\id':\cl';\eta)(\id) &=& \eta(\id) \\
-\end{array}\]
-
-\subsubsection*{Algebra}
-
-\begin{itemize}
-\item $\sem{\nstyle{exp}}_\Env = \Cl$
-\item $\sem{\nstyle{label}}_\Env = F$
-\item $\sem{\nstyle{nat}}_\Env = \N$
-\end{itemize}
-
-\[\begin{array}{rll}
-  \sem{label}_\Env: & \Cl \pto F, \\
-  & (\id,\eta) \mapsto f & f = \sem{label}_\Env(\cl) \wedge \cl = \eta(\id) \\
-  & (e,\eta) \mapsto f & f = \sem{label}_S(e) \\
-  & f(\vec{\cl}) \mapsto f \\
-  \\\\
-  \sem{child}_\Env: & \Cl \times \N \pto \Cl, \\
-  & ((\id,\eta),i) \mapsto \cl_i & \cl_i = \sem{child}_\Env(\cl, i) \wedge \cl = \eta(\id) \\
-  & ((e,\eta),i) \mapsto (e_i,\eta) & e_i = \sem{child}_S(e,i) \\
-  & f(\vec{\cl}) \mapsto \cl_i & 1 \le i \le n \\
-  \\\\
-  \sem{compose_n}_\Env: & \multicolumn{2}{l}{F \times \underbrace{\Cl \times \ldots \times \Cl}_n \to \Cl,} \\
-  & \multicolumn{2}{l}{(f,\vec{\cl}) \mapsto f(\vec{\cl})} \\
-  \\\\
-  \sem{subst}_\Env: & \multicolumn{2}{l}{\Cl \times \Cl \pto \Cl,} \\
-  & \multicolumn{2}{l}{((\Lambda\id:\tau.e,\eta),\cl) \mapsto (e,\id:\cl;\eta)}
-\end{array}\]
-
-
-\subsection*{Zusammenhang}
-
-Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
-\[\begin{array}{rcll}
-  \tr(e,\eta)
-  &=& e[\eta(\id_i)/\id_i]^{i=1 \ldots n}
-  & \dom(\eta) = \{\id_1,\ldots,\id_n\}
-  \\
-  \tr(f(\cl_1,\ldots,\cl_n))
-  &=& f(\tr(\cl_1),\ldots,\tr(\cl_n))
-\end{array}\]
-
-\begin{lemma}
-  F\"ur alle $f \in F$ und $\cl \in \Cl$ gilt:
-  \begin{quote}
-  $f = \sem{label}_\Env(\cl)$ gdw. $f = \sem{label}_S(\tr(\cl))$
-  \end{quote}
 \end{lemma}
 
 \begin{proof}
-  Via Induktion \"uber $\cl$:
+  Via Induktion "uber die L"ange der Herleitung des Typurteils $\Tj{\Gamma}{t}{\tau}$ und Fallunterscheidung
+  nach der zuletzt angewandten Typregel:
   \begin{itemize}
-  \item $\cl = (\id,\eta)$
+  \item $\Tj{\Gamma}{X}{\tau}$ mit \textsc{(Var)}
 
-    Wenn $\id \not\in \dom(\eta)$, dann sind beide undefiniert.
+    Klar, denn $\bigl(\varrho_D(X), \varrho_E(X)\bigr) \in \Delta$ nach Voraussetzung.
 
-    Wenn $\id \in \dom(\eta)$, dann ex. $\cl' = \eta(\id)$, und nach I.V. gilt
-    \begin{quote}
-      $f = \sem{label}_\Env(\cl')$ gdw. $f = \sem{label}_S(\tr(\cl'))$.
-    \end{quote}
-    Es gilt $\sem{label}_\Env(\cl) = \sem{label}_\Env(\cl')$ und
-    $\tr(\cl) = \tr(\cl')$, also folgt die Behauptung.
+  \item $\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\tau}$ mit \textsc{(Cons)}
 
-  \item $\cl = (e,\eta)$
+    Dann gilt $\delta(\zeta) = \tau_1 \ldots \tau_n$ und $\Tj{\Gamma}{t_i}{\tau_i}$ 
+    f"ur $i=1,\ldots,n$. Nach I.V. gilt die Behauptung f"ur jedes $\Tj{\Gamma}{t_i}{\tau_i}$.
+    Angenommen es ex. $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ mit
+    \begin{mathpar}
+      D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_D = d_i
+      \and
+      E\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_E = e_i
+    \end{mathpar}
+    f"ur $i=1,\ldots,n$, dann folgt wegen Lemma~\ref{lem:Wohldefiniertheit_der_Semantik}, dass
+    $d_i \in D^{\tau_i}$ und $e_i \in E^{\tau_i}$
+    f"ur $i=1,\ldots,n$, und da $D$ nach Voraussetzung g"ultig ist, existieren dar"uberhinaus
+    $d \in D^{\langle \rangle}$ und $e \in E^{\langle \rangle}$ mit
+    \begin{mathpar}
+      d
+      = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)
+      = D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_D
+      \and
+      e
+      = \sem{\Compose_n}_E(\zeta,e_1,\ldots,e_n)
+      = E\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_E
+    \end{mathpar}
+    und gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen} folgt $(d,e) \in \Delta$.
 
-    Es gilt $\sem{label}_S(e) = \sem{label}_S(\tr(e,\eta))$, also klar.
+    Gilt andererseits
+    $\bigl(D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_D\bigr) \not\in D$
+    und
+    $\bigl(E\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_E\bigr) \not\in E$
+    f"ur mindestens ein $i \in \{1,\ldots,n\}$, so folgt unmittelbar, dass auch
+    \begin{mathpar}
+      \bigl(D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_D\bigr) \not\in D
+      \and
+      \bigl(E\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_E\bigr) \not\in E
+    \end{mathpar}
+    gilt.
 
-  \item $\cl = f(\cl_1,\ldots,\cl_n)$
+  \item $\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\tau}$ mit \textsc{(App)}
 
-    Trivial.
+    Analog zum vorangegangenen Fall der \textsc{(Cons)} Regel.
 
+  \item $\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}$ mit \textsc{(Match)}
+
+    Dann gilt $\Tj{\Gamma}{t}{\langle \rangle}$, $\delta(\zeta) = \tau_1 \ldots \tau_n$
+    und $\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}$. Nach I.V. gilt die Behauptung
+    f"ur $\Tj{\Gamma}{t}{\langle \rangle}$. Angenommen ex. $(d,e) \in \Delta$ mit
+    \begin{mathpar}
+      d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho_D
+      \and
+      e = E\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho_E
+    \end{mathpar}
+    dann gilt $d \in D^{\langle \rangle}$ und $e \in E^{\langle \rangle}$
+    wegen Lemma~\ref{lem:Wohldefiniertheit_der_Semantik}. Nehmen wir weiterhin an, dass
+    $\sem{Label}_D(d) = \zeta$, dann gilt gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen}
+    auch $\sem{Label}_E(e) = \zeta$. Da $D$ nach Voraussetzung g"ultig ist, ex.
+    $d_1 \in D^{\tau_1},\ldots,d_n \in D^{\tau_n}$ und $e_1 \in E^{\tau_1},\ldots,e_n \in E^{\tau_n}$, so dass
+    \begin{mathpar}
+      d_i = \sem{\Child_n^i}_D(d)
+      \and
+      e_i = \sem{\Child_n^i}_E(e)
+    \end{mathpar}
+    f"ur $i=1,\ldots,n$. Wiederum wg. Definition~\ref{def:Aequivalenz_von_Implementierungen} folgt
+    daraus $(d_i,e_i) \in \Delta$ f"ur $i=1,\ldots,n$, also gilt insbesondere
+    \begin{mathpar}
+      \bigl(\varrho_D[d_1/X_1]\ldots[d_n/X_n]\bigr)
+      \sim_\Delta
+      \bigl(\varrho_E[e_1/X_1]\ldots[e_n/X_n]\bigr)
+    \end{mathpar}
+    und nach I.V. gilt die Behauptung auch f"ur $\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}$.
+    Angenommen ex. $(d',e')\in\Delta$ mit
+    \begin{mathpar}
+      d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho_D[d_1/X_1]\ldots[d_n/X_n]\bigr)
+      \and
+      e' = E\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho_E[e_1/X_1]\ldots[e_n/X_n]\bigr)
+    \end{mathpar}
+    dann folgt unmittelbar die Behauptung.
+
+    Trifft eine der obigen Annahmen nicht zu, gilt trivialerweise
+    \begin{mathpar}
+      \bigl(D\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho_D\bigr) \not\in D
+      \and
+      \bigl(E\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho_E\bigr) \not\in E
+    \end{mathpar}
+    was zu zeigen war.
   \end{itemize}
 \end{proof}
 
-\begin{lemma}
-  F\"ur alle $\cl,\cl' \in \Cl$ und $i \in \N$ gilt:
-  \begin{quote}
-    $\cl' = \sem{child}_\Env(\cl,i)$ gdw. $\tr(\cl') = \sem{child}_S(\tr(\cl),i)$
-  \end{quote}
-\end{lemma}
 
-\begin{proof}
-  \textbf{TODO}
-\end{proof}
+% \cleardoublepage
 
-\begin{lemma}
-  F\"ur alle $n \in \N$, $f \in F$ und $\cl_1,\ldots,\cl_n \in \Cl$ gilt:
-  \begin{quote}
-    $\tr(\sem{compose_n}_\Env(f,\cl_1,\ldots,\cl_n)) = \sem{compose_n}_S(f,\tr(\cl_1),\ldots,\tr(\cl_n))$
-  \end{quote}
-\end{lemma}
+% \noindent
+% \textcolor{red}{
+% \rule{\textwidth}{2pt}
+% \vspace*{10pt}
+% \begin{center}
+% \mbox{\Huge\sf Obsolete}
+% \end{center}
+% \vspace*{10pt}
+% \rule{\textwidth}{2pt}
+% }
 
-\begin{proof}
-  Offensichtlich.
-\end{proof}
+% \subsection*{Substitutionsmodell}
 
-\begin{lemma}
-  F\"ur alle $\cl,\cl',\cl''\in\Cl$ gilt:
-  \begin{quote}
-    $\cl'' = \sem{subst}_\Env(\cl',\cl)$ gdw. $\tr(\cl'') = \sem{subst}_S(\tr(\cl'),\tr(\cl))$
-  \end{quote}
-\end{lemma}
+% Sei $\Omega=\langle C,\arity \rangle$ eine Syntaxsignatur einer beliebigen Programmiersprache.
+% \[\begin{grammar}
+%   e \in \Exp
+%   \is \id
+%   \al \zeta(e_1,\ldots,e_n) & n \in \N
+%   \al \Lambda\id:\tau.e
+%   \nl
+%   \tau \in \Type
+%   \is \Void
+%   \al \Dynamic
+%   \al \Static{n} & n \in \N
+% \end{grammar}\]
 
-\begin{proof}
-  \textbf{TODO}
-\end{proof}
+% \begin{mathpar}
+%   \inferrule[(Id)]{%
+%   }{%
+%     \Omega \vdash \id \div \Void
+%   }
+%   \and
+%   \inferrule[(Bind)]{%
+%     \Omega \vdash e \div \Void
+%   }{%
+%     \Omega \vdash \Lambda\id:\tau.e \div \tau
+%   }
+%   \and
+%   \inferrule[(Cons)]{%
+%     \Omega \vdash \zeta \div (\tau_1,\ldots,\tau_n)
+%     \\
+%     \Omega \vdash e_1 \div \tau_1
+%     \\
+%     \ldots
+%     \\
+%     \Omega \vdash e_n \div \tau_n
+%   }{%
+%     \Omega \vdash \zeta(e_1,\ldots,e_n) \div \Void
+%   }
+% \end{mathpar}
+
+% \subsubsection*{Algebra}
+
+% \begin{itemize}
+% \item $\sem{\nstyle{exp}}_S = \Exp$
+% \item $\sem{\nstyle{label}}_S = F$
+% \item $\sem{\nstyle{nat}}_S = \N$
+% \end{itemize}
+
+% \[\begin{array}{rll}
+%   \sem{label}_S: & \Exp \pto F, \\
+%   & f(\vec{e}) \mapsto f \\
+%   \\\\
+%   \sem{child}_S: & \Exp \times \N \pto \Exp, \\
+%   & (f(e_1,\ldots,e_n),i) \mapsto e_i & 1 \le i \le n \\
+%   \\\\
+%   \sem{compose_n}_S: & F \times \underbrace{\Exp \times \ldots \times \Exp}_n \to \Exp, \\
+%   & (f, e_1,\ldots,e_n) \mapsto f(e_1,\ldots,e_n) \\
+%   \\\\
+%   \sem{subst}_S: & \Exp \times \Exp \pto \Exp, \\
+%   & (\Lambda\id:\tau.e',e) \mapsto e'[e/\id] \\
+% \end{array}\]
 
 
-\subsection*{Patterns}
+% \subsection*{Umgebungsmodell}
 
+% Seien $\Cl$ und $\Env$ wie folgt induktiv definiert:
+% \[\begin{grammar}
+%   \eta \in \Env
+%   \is \varepsilon
+%   \al \id:\cl;\eta
+%   \nl
+%   \cl \in \Cl
+%   \is (e,\eta)
+%   \al f(\cl_1,\ldots,\cl_n)
+% \end{grammar}\]
+% $\dom(\eta)$ und $\eta(\id)$ sind wie folgt induktiv definiert:
+% \[\begin{array}{rcl}
+%   \dom(\varepsilon) &=& \emptyset \\
+%   \dom(\id:\cl;\eta) &=& \{\id\} \cup \dom(\eta) \\
+%   \\
+%   (\id:\cl;\eta)(\id) &=& \cl \\
+%   (\id':\cl';\eta)(\id) &=& \eta(\id) \\
+% \end{array}\]
+
+% \subsubsection*{Algebra}
+
+% \begin{itemize}
+% \item $\sem{\nstyle{exp}}_\Env = \Cl$
+% \item $\sem{\nstyle{label}}_\Env = F$
+% \item $\sem{\nstyle{nat}}_\Env = \N$
+% \end{itemize}
+
+% \[\begin{array}{rll}
+%   \sem{label}_\Env: & \Cl \pto F, \\
+%   & (\id,\eta) \mapsto f & f = \sem{label}_\Env(\cl) \wedge \cl = \eta(\id) \\
+%   & (e,\eta) \mapsto f & f = \sem{label}_S(e) \\
+%   & f(\vec{\cl}) \mapsto f \\
+%   \\\\
+%   \sem{child}_\Env: & \Cl \times \N \pto \Cl, \\
+%   & ((\id,\eta),i) \mapsto \cl_i & \cl_i = \sem{child}_\Env(\cl, i) \wedge \cl = \eta(\id) \\
+%   & ((e,\eta),i) \mapsto (e_i,\eta) & e_i = \sem{child}_S(e,i) \\
+%   & f(\vec{\cl}) \mapsto \cl_i & 1 \le i \le n \\
+%   \\\\
+%   \sem{compose_n}_\Env: & \multicolumn{2}{l}{F \times \underbrace{\Cl \times \ldots \times \Cl}_n \to \Cl,} \\
+%   & \multicolumn{2}{l}{(f,\vec{\cl}) \mapsto f(\vec{\cl})} \\
+%   \\\\
+%   \sem{subst}_\Env: & \multicolumn{2}{l}{\Cl \times \Cl \pto \Cl,} \\
+%   & \multicolumn{2}{l}{((\Lambda\id:\tau.e,\eta),\cl) \mapsto (e,\id:\cl;\eta)}
+% \end{array}\]
+
+
+% \subsection*{Zusammenhang}
+
+% Die \"Ubersetzungsfunktion $\tr:\Cl\to\Exp$ ist wie folgt induktiv definiert:
+% \[\begin{array}{rcll}
+%   \tr(e,\eta)
+%   &=& e[\eta(\id_i)/\id_i]^{i=1 \ldots n}
+%   & \dom(\eta) = \{\id_1,\ldots,\id_n\}
+%   \\
+%   \tr(f(\cl_1,\ldots,\cl_n))
+%   &=& f(\tr(\cl_1),\ldots,\tr(\cl_n))
+% \end{array}\]
+
+% \begin{lemma}
+%   F\"ur alle $f \in F$ und $\cl \in \Cl$ gilt:
+%   \begin{quote}
+%   $f = \sem{label}_\Env(\cl)$ gdw. $f = \sem{label}_S(\tr(\cl))$
+%   \end{quote}
+% \end{lemma}
+
+% \begin{proof}
+%   Via Induktion \"uber $\cl$:
+%   \begin{itemize}
+%   \item $\cl = (\id,\eta)$
+
+%     Wenn $\id \not\in \dom(\eta)$, dann sind beide undefiniert.
+
+%     Wenn $\id \in \dom(\eta)$, dann ex. $\cl' = \eta(\id)$, und nach I.V. gilt
+%     \begin{quote}
+%       $f = \sem{label}_\Env(\cl')$ gdw. $f = \sem{label}_S(\tr(\cl'))$.
+%     \end{quote}
+%     Es gilt $\sem{label}_\Env(\cl) = \sem{label}_\Env(\cl')$ und
+%     $\tr(\cl) = \tr(\cl')$, also folgt die Behauptung.
+
+%   \item $\cl = (e,\eta)$
+
+%     Es gilt $\sem{label}_S(e) = \sem{label}_S(\tr(e,\eta))$, also klar.
+
+%   \item $\cl = f(\cl_1,\ldots,\cl_n)$
+
+%     Trivial.
+
+%   \end{itemize}
+% \end{proof}
+
+% \begin{lemma}
+%   F\"ur alle $\cl,\cl' \in \Cl$ und $i \in \N$ gilt:
+%   \begin{quote}
+%     $\cl' = \sem{child}_\Env(\cl,i)$ gdw. $\tr(\cl') = \sem{child}_S(\tr(\cl),i)$
+%   \end{quote}
+% \end{lemma}
+
+% \begin{proof}
+%   \textbf{TODO}
+% \end{proof}
+
+% \begin{lemma}
+%   F\"ur alle $n \in \N$, $f \in F$ und $\cl_1,\ldots,\cl_n \in \Cl$ gilt:
+%   \begin{quote}
+%     $\tr(\sem{compose_n}_\Env(f,\cl_1,\ldots,\cl_n)) = \sem{compose_n}_S(f,\tr(\cl_1),\ldots,\tr(\cl_n))$
+%   \end{quote}
+% \end{lemma}
+
+% \begin{proof}
+%   Offensichtlich.
+% \end{proof}
+
+% \begin{lemma}
+%   F\"ur alle $\cl,\cl',\cl''\in\Cl$ gilt:
+%   \begin{quote}
+%     $\cl'' = \sem{subst}_\Env(\cl',\cl)$ gdw. $\tr(\cl'') = \sem{subst}_S(\tr(\cl'),\tr(\cl))$
+%   \end{quote}
+% \end{lemma}
+
+% \begin{proof}
+%   \textbf{TODO}
+% \end{proof}
 
 
 \end{document}
