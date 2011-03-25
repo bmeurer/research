@@ -141,7 +141,7 @@ vom Typ $\langle \rangle$.
 
 Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
 Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Action(\Psi)$ aller
-\emph{$\Psi$-Aktionen} $\alpha$ sind definiert durch die folgende kontextfreie Grammatik:
+\emph{$\Psi$-Aktionen} $\alpha$ sind definiert durch die folgende kontextfreie Grammatik
 \[\begin{grammar}
   t \in \Term(\Psi)
   \is X
@@ -154,6 +154,7 @@ Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Action(\Psi)$ aller
   \al X_1,\ldots,X_n \Downarrow t & n \ge 1
   \nl
 \end{grammar}\]
+wobei vorausgesetzt wird, dass die $X_1,\ldots,X_n$ paarweise verschieden sind.
 Eine \emph{Typbelegung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
 Ein \emph{Typurteil f"ur $\Psi$-Terme} ist eine Formel der Gestalt $\Tj{\Gamma}{t}{\tau}$, und
 hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
@@ -190,19 +191,18 @@ hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
     \Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}
   }%
 \end{mathpar}
-Ein \emph{Typurteil f"ur $\Psi$-Aktionen} ist eine Formel der Gestalt $\Gamma \vdash \alpha$,
-und hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
+Eine Aktion $\alpha$ hei"st \emph{g"ultig}, wenn gilt:
 \begin{mathpar}
   \inferrule[(Arg)]{%
-    \Tj{\Gamma[\langle \rangle/X_1]\ldots[\langle \rangle/X_n]}{t}{\langle\rangle}
+    \Tj{[X_1:\langle \rangle,\ldots,X_n:\langle \rangle]}{t}{\langle\rangle}
   }{%
-    \Gamma \vdash X_1,\ldots,X_n \Uparrow t
+    X_1,\ldots,X_n \Uparrow t
   }%
   \and
   \inferrule[(Res)]{%
-    \Tj{\Gamma[\langle \rangle/X_1]\ldots[\langle \rangle/X_n]}{t}{\langle\rangle}
+    \Tj{[X_1:\langle \rangle,\ldots,X_n:\langle \rangle]}{t}{\langle\rangle}
   }{%
-    \Gamma \vdash X_1,\ldots,X_n \Downarrow t
+    X_1,\ldots,X_n \Downarrow t
   }%
 \end{mathpar}
 
@@ -243,7 +243,7 @@ wenn gilt:
 \item $\dom(\Gamma) = \dom(\varrho)$
 \item $\varrho(X) \in D^{\Gamma(X)}$ f"ur alle $X \in \dom(\Gamma)$
 \end{enumerate}
-Die Menge aller g"ultigen Belegungen bzgl. $\Gamma$ bezeichnen wir mit $\Assn(\Gamma)$.
+Die Menge aller g"ultigen Belegungen f"ur $D$ bzgl. $\Gamma$ bezeichnen wir mit $\Assn(D,\Gamma)$.
 \begin{lemma}
   Wenn $\Gamma \vdash \varrho$ und $d \in D^\tau$, dann $\Gamma[\tau/X] \vdash \varrho[d/X]$.
 \end{lemma}
@@ -251,7 +251,7 @@ Die Menge aller g"ultigen Belegungen bzgl. $\Gamma$ bezeichnen wir mit $\Assn(\G
   Trivial.
 \end{proof}
 Jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
-eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(\Gamma) \pto D$ zugeordnet:
+eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(D,\Gamma) \pto D$ zugeordnet:
 \begin{itemize}
 \item $D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho = \varrho(X)$
 \item $D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
@@ -267,27 +267,25 @@ eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(\Gamma) \pto D$ zugeordnet:
   $\sem{\Label}_D(d) = \zeta$, $d_i = \sem{\Child_n^i}_D(d)$ f"ur $i=1,\ldots,n$, \\
   und $d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr)$
 \end{itemize}
-Jedem g"ultigen Typurteil f"ur Aktionen $\Gamma \vdash \alpha$ wird wie folgt eine Semantik
-$D\sem{\Gamma \vdash \alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times D$ zugeordnet:
+Jeder g"ultigen Aktion $\alpha$ wird wie folgt eine Semantik
+$D\sem{\alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times D$ zugeordnet:
 \begin{itemize}
-\item $D\sem{\Gamma \vdash X_1,\ldots,X_n \Uparrow t} \\
+\item $D\sem{X_1,\ldots,X_n \Uparrow t} \\
   =
-  \{(d_1,\ldots,d_n,\Uparrow,d) \mid 
-    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ und ex. $\varrho \in \Assn(\Gamma)$ mit } \\
-    \hspace*{17pt} D\sem{\Tj{\Gamma[\langle \rangle/X_1]\ldots[\langle \rangle/X_n]}{t}{\langle \rangle}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr) = d
+  \{(d_1,\ldots,d_n,\Uparrow,D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n) \mid
+    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ }
   \}$
-\item $D\sem{\Gamma \vdash X_1,\ldots,X_n \Downarrow t} \\
+\item $D\sem{X_1,\ldots,X_n \Downarrow t} \\
   =
-  \{(d_1,\ldots,d_n,\Downarrow,d) \mid 
-    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ und ex. $\varrho \in \Assn(\Gamma)$ mit } \\
-    \hspace*{17pt} D\sem{\Tj{\Gamma[\langle \rangle/X_1]\ldots[\langle \rangle/X_n]}{t}{\langle \rangle}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr) = d
+  \{(d_1,\ldots,d_n,\Downarrow,D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n) \mid
+    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ }
   \}$
 \end{itemize}
 
 \begin{lemma}[Wohldefiniertheit der Semantik] \label{lem:Wohldefiniertheit_der_Semantik}
   Sei $D$ eine g"ultige Implementierung.
   \begin{enumerate}
-  \item Wenn $\Tj{\Gamma}{t}{\tau}$ und $\varrho \in \Assn(\Gamma)$, dann gilt:
+  \item Wenn $\Tj{\Gamma}{t}{\tau}$ und $\varrho \in \Assn(D,\Gamma)$, dann gilt:
     \begin{enumerate}
     \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$, dann $d \in D^\tau$.
     \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$ und $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d'$,
@@ -296,9 +294,9 @@ $D\sem{\Gamma \vdash \alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times
 
   \item Wenn $\Gamma \vdash \alpha$, dann gilt:
     \begin{enumerate}
-    \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\Gamma \vdash \alpha}$,
+    \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$,
       dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
-    \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\Gamma \vdash \alpha}$,
+    \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$,
       dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
     \end{enumerate}
   \end{enumerate}
@@ -312,8 +310,9 @@ $D\sem{\Gamma \vdash \alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times
 
 \begin{definition}["Aquivalenz von Implementierungen] \label{def:Aequivalenz_von_Implementierungen}
   Seien $D$ und $E$ $\Psi$-Implementierungen und $\Delta \subseteq D \times E$. $D$ und $E$ hei"sen
-  \emph{$\Delta$-"aquivalent}, geschrieben $D \sim_\Delta E$ und f"ur alle
-  $(\hat{d},\hat{e}),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ gilt:
+  \emph{$\Delta$-"aquivalent}, geschrieben $D \sim_\Delta E$, wenn $d \in D^\tau$ gdw. $e \in E^\tau$
+  f"ur alle $(d,e) \in \Delta$ und $\tau \in \Type$,
+  und f"ur alle $(\hat{d},\hat{e}),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ gilt:
   \begin{enumerate}
   \item Wenn $\sem{\App_n}_D(\hat{d},d_1,\ldots,d_n) = d$ und $\sem{\App_n}_E(\hat{e},e_1,\ldots,e_n) = e$,
     dann $(d,e) \in \Delta$.
@@ -331,7 +330,7 @@ geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
 \item $\bigl(\varrho_D(X),\varrho_E(X)\bigr) \in \Delta$ f"ur alle $X \in \dom(\varrho_D)$
 \end{enumerate}
 
-\begin{lemma}
+\begin{lemma} \label{lem:Aequivalenz_von_Termen}
   Seien $D$, $E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen,
   und $\varrho_D \sim_\Delta \varrho_E$ mit $\Gamma \vdash \varrho_D$ und $\Gamma \vdash \varrho_E$.
   Wenn $\Tj{\Gamma}{t}{\tau}$, dann gilt genau eine der folgenden Aussagen:
@@ -437,6 +436,32 @@ geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
     \end{mathpar}
     was zu zeigen war.
   \end{itemize}
+\end{proof}
+
+\begin{lemma} \label{lem:Aequivalenz_von_Aktionen}
+  Seien $D, E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen, $\alpha$ eine
+  g"ultige Aktion, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
+  \begin{enumerate}
+  \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
+  \item Wenn $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$.
+  \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{\alpha}$.
+  \item Wenn $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{\alpha}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Wir beweisen beispielhaft die erste Behauptung, die "ubrigen folgen analog.
+  Hier muss $\alpha$ von der Form $X_1,\ldots,X_n \Uparrow t$ sein, und nach Voraussetzung
+  gilt $d_1,\ldots,d_n \in D^{\langle \rangle}$ und
+  $d = D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n$.
+  Gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen} gilt $e_1,\ldots,e_n \in E^{\langle \rangle}$
+  und wegen Lemma~\ref{lem:Aequivalenz_von_Termen} ex. $e \in E$, so dass
+  $(d,e) \in \Delta$ mit $e = E\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:e_i]_{i=1}^n$.
+  Also gilt insbesondere $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
 \end{proof}
 
 \end{document}
