@@ -99,49 +99,12 @@ Eine \emph{Syntaxsignatur} $\Psi = \langle \mathcal{C}, \delta \rangle$ besteht
 aus einer Menge $\mathcal{C}$ von \emph{Konstruktoren} $\zeta$ und einer
 (totalen) Funktion $\delta: \mathcal{C} \to \Type^*$, welche jedem Konstruktor
 eine Stelligkeit und damit verbundene Bindungstypen zuordnet.
-Sei $\Id$ eine (unendliche) Menge von \emph{Bezeichnern} $\id$.
-Die Menge $\Exp(\Psi)$ aller $\Psi$-Ausdr\"ucke $e$ ist definiert durch:
-\[\begin{grammar}
-  e \in \Exp(\Psi)
-  \is \id & \id \in \Id
-  \al \zeta(e_1,\ldots,e_n) & \zeta \in \mathcal{C}
-  \al \Lambda \id_1:\sigma_1,\ldots,\id_n:\sigma_n.e & n \ge 1
-  \nl
-\end{grammar}\]
-Ein \emph{Typurteil f\"ur $\Psi$-Ausdr\"ucke} ist eine Formel der Gestalt $\tj{e}{\tau}$. Ein solches
-Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
-l"a"st:
-\begin{mathpar}
-  \inferrule[(Id)]{%
-  }{%
-    \tj{\id}{\langle \rangle}
-  }%
-  \and
-  \inferrule[(Bind)]{%
-    \tj{e}{\langle \rangle}
-  }{%
-    \tj{\Lambda\id_1:\sigma_1,\ldots,\id_n:\sigma_n.e}{\langle \sigma_1,\ldots,\sigma_n \rangle}
-  }%
-  \and
-  \inferrule[(Cons)]{%
-    \delta(\zeta)=(\tau_1,\ldots,\tau_n) \\
-    \tj{e_i}{\tau_i} \\
-    \tau_i \preceq n \\
-    i=1,\ldots,n
-  }{%
-    \tj{\zeta(e_1,\ldots,e_n)}{\langle \rangle}
-  }%
-\end{mathpar}
-$\free(e)$ ist wie \"ublich definiert; ein Ausdruck $e$ hei"st \emph{abgeschlossen},
-wenn $\free(e) = \emptyset$. Ein \emph{Programm} ist ein abgeschlossener Ausdruck
-vom Typ $\langle \rangle$.
 
-
-\subsection*{Terme und Aktionen}
+\subsection*{Terme und Regeln}
 
 Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
-Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Action(\Psi)$ aller
-\emph{$\Psi$-Aktionen} $\alpha$ sind definiert durch die folgende kontextfreie Grammatik
+Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Case(\Psi)$ aller
+\emph{$\Psi$-F"alle} $\alpha$ sind definiert durch die folgende kontextfreie Grammatik
 \[\begin{grammar}
   t \in \Term(\Psi)
   \is X
@@ -149,12 +112,15 @@ Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Action(\Psi)$ aller
   \al \zeta(t_1,\ldots,t_n)
   \al \match{t}{\zeta(X_1,\ldots,X_n)}{t'}
   \nl
-  \alpha \in \Action(\Psi)
+  \alpha \in \Case(\Psi)
   \is X_1,\ldots,X_n \Uparrow t & n \ge 1
   \al X_1,\ldots,X_n \Downarrow t & n \ge 1
   \nl
 \end{grammar}\]
 wobei vorausgesetzt wird, dass die $X_1,\ldots,X_n$ paarweise verschieden sind.
+Eine \emph{$\Psi$-Regelspezifikation} $r$ ist eine (mglw. unendliche)
+Menge von $\Psi$-F"allen.
+
 Eine \emph{Typbelegung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
 Ein \emph{Typurteil f"ur $\Psi$-Terme} ist eine Formel der Gestalt $\Tj{\Gamma}{t}{\tau}$, und
 hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
@@ -191,7 +157,7 @@ hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
     \Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}
   }%
 \end{mathpar}
-Eine Aktion $\alpha$ hei"st \emph{g"ultig}, wenn gilt:
+Ein Fall $\alpha$ hei"st \emph{g"ultig}, wenn gilt:
 \begin{mathpar}
   \inferrule[(Arg)]{%
     \Tj{[X_1:\langle \rangle,\ldots,X_n:\langle \rangle]}{t}{\langle\rangle}
@@ -205,6 +171,8 @@ Eine Aktion $\alpha$ hei"st \emph{g"ultig}, wenn gilt:
     X_1,\ldots,X_n \Downarrow t
   }%
 \end{mathpar}
+Und eine Regelspezifikation $r$ hei"st \emph{g"ultig}, wenn alle $\alpha \in r$
+g"ultig sind.
 
 
 \section*{Semantik}
@@ -234,7 +202,7 @@ Eine Implementierung $\mathcal{D}$ hei"st \emph{g\"ultig}, wenn gilt:
 \end{enumerate}
 Wir identifizieren $\mathcal{D}$ mit $D$.
 
-\subsection*{Semantik von Termen und Aktionen}
+\subsection*{Semantik von Termen und F"allen}
 
 Eine \emph{$D$-Belegung} ist eine partielle, endliche Abbildung $\varrho: \Var \pto D$. Eine Belegung
 $\varrho$ hei"st \emph{g"ultig bzgl. einer Typbelegung $\Gamma$}, geschrieben $\Gamma \vdash \varrho$,
@@ -243,7 +211,7 @@ wenn gilt:
 \item $\dom(\Gamma) = \dom(\varrho)$
 \item $\varrho(X) \in D^{\Gamma(X)}$ f"ur alle $X \in \dom(\Gamma)$
 \end{enumerate}
-Die Menge aller g"ultigen Belegungen f"ur $D$ bzgl. $\Gamma$ bezeichnen wir mit $\Assn(D,\Gamma)$.
+Die Menge aller g"ultigen Belegungen bzgl. $\Gamma$ bezeichnen wir mit $\Assn(\Gamma)$.
 \begin{lemma}
   Wenn $\Gamma \vdash \varrho$ und $d \in D^\tau$, dann $\Gamma[\tau/X] \vdash \varrho[d/X]$.
 \end{lemma}
@@ -251,7 +219,7 @@ Die Menge aller g"ultigen Belegungen f"ur $D$ bzgl. $\Gamma$ bezeichnen wir mit 
   Trivial.
 \end{proof}
 Jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
-eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(D,\Gamma) \pto D$ zugeordnet:
+eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(\Gamma) \pto D$ zugeordnet:
 \begin{itemize}
 \item $D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho = \varrho(X)$
 \item $D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
@@ -267,7 +235,7 @@ eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(D,\Gamma) \pto D$ zugeordnet:
   $\sem{\Label}_D(d) = \zeta$, $d_i = \sem{\Child_n^i}_D(d)$ f"ur $i=1,\ldots,n$, \\
   und $d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr)$
 \end{itemize}
-Jeder g"ultigen Aktion $\alpha$ wird wie folgt eine Semantik
+Jedem g"ultigen Fall $\alpha$ wird wie folgt eine Semantik
 $D\sem{\alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times D$ zugeordnet:
 \begin{itemize}
 \item $D\sem{X_1,\ldots,X_n \Uparrow t} \\
@@ -281,22 +249,32 @@ $D\sem{\alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times D$ zugeordnet
     \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ }
   \}$
 \end{itemize}
+Analog wird jeder g"ultigen Regelspezifikation $r$ eine Semantik $D\sem{r} = \bigcup_{\alpha\in r}D\sem{\alpha}$
+zugeordnet.
 
 \begin{lemma}[Wohldefiniertheit der Semantik] \label{lem:Wohldefiniertheit_der_Semantik}
   Sei $D$ eine g"ultige Implementierung.
   \begin{enumerate}
-  \item Wenn $\Tj{\Gamma}{t}{\tau}$ und $\varrho \in \Assn(D,\Gamma)$, dann gilt:
+  \item Wenn $\Tj{\Gamma}{t}{\tau}$ und $\varrho \in \Assn(\Gamma)$, dann gilt:
     \begin{enumerate}
     \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$, dann $d \in D^\tau$.
     \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$ und $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d'$,
       dann $d = d'$.
     \end{enumerate}
 
-  \item Wenn $\Gamma \vdash \alpha$, dann gilt:
+  \item Wenn $\alpha$ g"ultig ist, dann gilt:
     \begin{enumerate}
     \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$,
       dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
     \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \end{enumerate}
+
+  \item Wenn $r$ g"ultig ist, dann gilt:
+    \begin{enumerate}
+    \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$,
       dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
     \end{enumerate}
   \end{enumerate}
@@ -438,9 +416,9 @@ geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
   \end{itemize}
 \end{proof}
 
-\begin{lemma} \label{lem:Aequivalenz_von_Aktionen}
-  Seien $D, E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen, $\alpha$ eine
-  g"ultige Aktion, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
+\begin{lemma} \label{lem:Aequivalenz_von_Faellen}
+  Seien $D, E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen, $\alpha$ ein
+  g"ultiger Fall, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
   \begin{enumerate}
   \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$, dann ex. $e \in E$ so dass
     $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
@@ -463,5 +441,68 @@ geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
   $(d,e) \in \Delta$ mit $e = E\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:e_i]_{i=1}^n$.
   Also gilt insbesondere $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
 \end{proof}
+
+\begin{lemma} \label{lem:Aqeuivalenz_von_Regeln}
+  Seien $D,E$ g"ultige $\Delta$-"aquivalente $\Psi$-Implementierungen, $r$ eine
+  g"ultige Regelspezifikation, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
+  \begin{enumerate}
+  \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{r}$.
+  \item Wenn $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{r}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$.
+  \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{r}$.
+  \item Wenn $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{r}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Trivial.
+\end{proof}
+
+
+\section*{Anwendung: Subst.- $\leadsto$ Umgeb.-Modell}
+
+Sei $\Psi$ eine beliebige Syntaxsignatur, und $\Id$ eine (unendliche) Menge von
+\emph{Bezeichnern} $\id$. Die Menge $\Exp(\Psi)$ aller $\Psi$-Ausdr\"ucke $e$
+ist definiert durch:
+\[\begin{grammar}
+  e \in \Exp(\Psi)
+  \is \id
+  \al \zeta(e_1,\ldots,e_n)
+  \al \Lambda \id_1:\sigma_1,\ldots,\id_n:\sigma_n.e & n \ge 1
+  \nl
+\end{grammar}\]
+Ein \emph{Typurteil f\"ur $\Psi$-Ausdr\"ucke} ist eine Formel der Gestalt $\tj{e}{\tau}$. Ein solches
+Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule[(Id)]{%
+  }{%
+    \tj{\id}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(Bind)]{%
+    \tj{e}{\langle \rangle}
+  }{%
+    \tj{\Lambda\id_1:\sigma_1,\ldots,\id_n:\sigma_n.e}{\langle \sigma_1,\ldots,\sigma_n \rangle}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=(\tau_1,\ldots,\tau_n) \\
+    \tj{e_i}{\tau_i} \\
+    \tau_i \preceq n \\
+    i=1,\ldots,n
+  }{%
+    \tj{\zeta(e_1,\ldots,e_n)}{\langle \rangle}
+  }%
+\end{mathpar}
+$\free(e)$ ist wie \"ublich definiert; ein Ausdruck $e$ hei"st \emph{abgeschlossen},
+wenn $\free(e) = \emptyset$. Ein \emph{Programm} ist ein abgeschlossener Ausdruck
+vom Typ $\langle \rangle$.
+
+\subsection*{Substitutionsmodell}
+
 
 \end{document}
