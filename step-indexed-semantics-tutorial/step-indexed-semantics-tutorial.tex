@@ -1,0 +1,268 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathpartir}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+
+\newcommand{\abort}{\ensuremath{\mathsf{abort}}}
+\newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
+\newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+\newcommand{\Nat}{\ensuremath{\mathsf{Nat}}}
+
+\DeclareMathOperator{\dom}{dom}
+
+\begin{document}
+
+\author{Benedikt Meurer}
+\date{\today}
+\title{Foundational safety proofs using\\big-step operational semantics}
+\maketitle
+
+
+\section{The language and its big-step semantics}
+\label{sec:The_language_and_its_big_step_semantics}
+
+The language we consider in this paper is the pure $\lambda$-calculus extended with constants,
+the simplest functional language that exhibits run-time errors (closed terms that ``go
+wrong''). Its syntax is as follows: \\[3mm]
+\begin{tabular}{lrcl}
+  Variables: & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
+  Constants: & $c$ & $::=$ & $\mathsf{0} \mid \mathsf{1} \mid \ldots$ \\
+  Terms: & $a,b$ & $::=$ & $c \mid x \mid \abstr{x}{a} \mid \app{a}{b}$ \\
+\end{tabular} \\[3mm]
+We write $a[x \mapsto b]$ for the capture-avoiding substitution of $b$ for all unbound occurrences
+of $x$ in $a$. A term $v$ is a \emph{value} if it is a constant $c$ or a closed term of the form
+$\abstr{x}{a}$. A \emph{result} $r$ is either a value $v$ or the special token $\abort$, which is
+used to indicate abortion due to a run-time error.
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(Val)]{%
+    }{%
+      v \Rightarrow v
+    }%
+    \and
+    \inferrule[(App)]{%
+      a_1 \Rightarrow \abstr{x}{b} \\
+      a_2 \Rightarrow v_2 \\
+      b[x \mapsto v_2] \Rightarrow v
+    }{%
+      \app{a_1}{a_2} \Rightarrow v
+    }%
+    \and
+    \inferrule[(App-Abort)]{%
+      a_1 \Rightarrow c
+    }{%
+      \app{a_1}{a_2} \Rightarrow \abort
+    }%
+    \and
+    \inferrule[(App-Abort-1)]{%
+      a_1 \Rightarrow \abort
+    }{%
+      \app{a_1}{a_2} \Rightarrow \abort
+    }%
+    \and
+    \inferrule[(App-Abort-2)]{%
+      a_1 \Rightarrow \abstr{x}{b} \\
+      a_2 \Rightarrow \abort
+    }{%
+      \app{a_1}{a_2} \Rightarrow \abort
+    }%
+    \and
+    \inferrule[(App-Abort-2)]{%
+      a_1 \Rightarrow \abstr{x}{b} \\
+      a_2 \Rightarrow v_2 \\
+      b[x \mapsto v_2] \Rightarrow \abort
+    }{%
+      \app{a_1}{a_2} \Rightarrow \abort
+    }%
+  \end{mathpar}
+  \caption{Big-step inference rules}
+  \label{fig:Big_step_inference_rules}
+\end{figure}
+
+The standard call-by-value semantics with explicit abortion in big-step style for this language
+is defined by the inference rules in figure~\ref{fig:Big_step_inference_rules}, interpreted inductively.
+More precisely, the relation $a \Rightarrow r$ (read: ``$a$ evaluates to $r$'') holds iff
+it is the conclusion of a finite derivation tree built from the given rules. A conclusion
+$a \Rightarrow \abort$ indicates that the evaluation got stuck due to a run-time error.
+
+
+\section{Semantic types}
+\label{sec:Semantic_types}
+
+\begin{definition} \label{def:Types}
+  A \emph{type} is a set $\tau$ of values. A term $a$ is of type $\tau$, denoted by $a : \tau$,
+  if $a$ is closed and $a \Downarrow r$ implies $r \in \tau$ for all results $r$.
+\end{definition}
+
+Intuitively, $a : \tau$ means that $a$ diverges or evaluates to a value of type $\tau$. Note that
+for a value $v$ the statements $v : \tau$ and $v \in \tau$ are equivalent.
+We can now specify the semantic types.
+\[\begin{array}{rcl}
+  \bot &\equiv& \emptyset \\
+  \top &\equiv& \{ v \mid \text{$v$ is a value} \} \\
+  \Nat &\equiv& \{ \mathsf{0},\mathsf{1},\ldots \} \\
+  \tau \to \tau' &\equiv& \{ \abstr{x}{e} \mid \text{$e[v/x] : \tau'$ for every $v \in \tau$} \} \\
+\end{array}\]
+
+\begin{definition} \label{def:Typing}
+  A \emph{type environment} is a mapping $\Gamma$ from variables to types. A \emph{value environment} 
+  (also known as ground substitution) is a mapping $\gamma$ from variables to values. We write
+  $\gamma : \Gamma$ if $\dom(\gamma) = \dom(\Gamma)$ and $\gamma(x) : \Gamma(x)$ for every $x \in \dom(\gamma)$.
+  We write $\Gamma \models a : \tau$ if $\gamma(a) : \tau$ for every $\gamma : \Gamma$, where $\gamma(a)$
+  is the result of replacing the free variables of $a$ with their values under $\gamma$.
+\end{definition}
+
+Given these definitions, we can now prove the usual ``typability implies safety'' theorem.
+Using our semantic types, this is almost trivial.
+
+\begin{theorem}[Safety]
+  If $\emptyset \models a : \tau$, then $a \not\Rightarrow \abort$.
+\end{theorem}
+
+\begin{proof}
+  Immediate consequence of definitions \ref{def:Types} and \ref{def:Typing}.
+\end{proof}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(T-Var)]{%
+    }{%
+      \Gamma \models x : \Gamma(x)
+    }%
+    \and
+    \inferrule[(T-Abs)]{%
+      \Gamma[x \mapsto \tau] \models a : \tau'
+    }{%
+      \Gamma \models \abstr{x}{a} : \tau \to \tau'
+    }%
+    \\
+    \inferrule[(T-Const)]{%
+    }{%
+      \Gamma \models c : \Nat
+    }%
+    \and
+    \inferrule[(T-App)]{%
+      \Gamma \models a : \tau \to \tau' \\
+      \Gamma \models b : \tau
+    }{%
+      \Gamma \models \app{a}{b} : \tau'
+    }%
+  \end{mathpar}
+  \caption{Semantic typing lemmata}
+  \label{fig:Semantic_typing_lemmata}
+\end{figure}
+
+
+
+% \section{Call-by-name}
+% \label{sec:call_by_name}
+
+% Let $x,y,z,\ldots$ range over some (infinite) set of variables. The syntax of pure
+% lambda expressions is defined by the following grammar:
+% \[\begin{array}{rcl}
+%   e &::=& x \mid \abstr{x}{e} \mid \app{e_1}{e_2}
+% \end{array}\]
+% An expression $v$ is a \emph{value} if it is a closed expression of the form $\abstr{x}{e}$.
+% The small-step semantics is given in figure~\ref{fig:Call_by_name_semantics}. We use the
+% usual convention of $e \to^k e'$ to refer to a chain of $k \ge 0$ steps $e_0 \to e_1 \to \ldots \to e_k$,
+% where $e$ is $e_0$ and $e'$ is $e_k$. We write $e \to^* e'$ if $e \to^k e'$ for some $k \ge 0$.
+% \begin{figure}[htb]
+%   \centering
+%   \begin{mathpar}
+%     \inferrule[(App-Left)]{%
+%       e_1 \to e_1'
+%     }{%
+%       \app{e_1}{e_2} \to \app{e_1'}{e_2}
+%     }%
+%     \and
+%     \inferrule[(Beta)]{%
+%     }{%
+%       \app{(\abstr{x}{e_1})}{e_2} \to e_2[e_1 / x]
+%     }%
+%   \end{mathpar}
+%   \caption{Call-by-name semantics}
+%   \label{fig:Call_by_name_semantics}
+% \end{figure}
+% An expression $e$ is \emph{safe for $k$ steps}, if whenever $e$ reduces to an irreducible expression
+% $e'$ in $j < k$ steps, then $e'$ is a value. An expression $e$ is called \emph{safe} if it is safe
+% for all $k \ge 0$.
+
+% \begin{definition} \label{def:Types}
+%   A \emph{type} is a set $\tau$ of pairs $\langle k,v \rangle$ where $k \ge 0$ and $v$ is a value,
+%   and the set $\tau$ is such that if $\langle k,v \rangle \in \tau$ and $0 \le j \le k$ then
+%   $\langle j,v \rangle \in \tau$. We write $e :_k \tau$ if $e$ is closed and safe for $k$ steps, and
+%   if whenever $e \to^j v$ for some value $v$ and $j < k$ we have $\langle k-j,v \rangle \in \tau$.
+%   We write $e : \tau$ if $e :_k \tau$ for every $k \ge 0$.
+% \end{definition}
+
+% Intuitively, $e :_k \tau$ means that $e$ behaves like an element of $\tau$ for $k$ steps of computation.
+% Note that if $e :_k \tau$ and $0 \le j \le k$ then $e :_j \tau$. Also, for a value $v$ and $k > 0$, the
+% statements $v :_k \tau$ and $\langle k,v \rangle \in \tau$ are equivalent.
+
+% \[\begin{array}{rcl}
+%   \bot &\equiv& \emptyset \\
+%   \top &\equiv& \{\langle k,v \rangle \mid k \ge 0\} \\
+%   \tau \to \tau' &\equiv& \{\langle k,\abstr{x}{e} \rangle \mid \forall j < k.\,\forall v.\, \langle j,v \rangle \in \tau \Rightarrow e[v/x] :_j \tau'\}
+% \end{array}\]
+
+% \begin{lemma}
+%   If $\tau$ and $\tau'$ are types then $\tau \to \tau'$ is also a type.
+% \end{lemma}
+
+% \begin{proof}
+%   By the definition of $\to$ it is obvious that $\tau \to \tau'$ is closed under decreasing index.
+% \end{proof}
+
+% \begin{definition} \label{def:Typing}
+%   A \emph{type environment} is a mapping from variables to types. A \emph{value environment} is a mapping
+%   from variables to values. For any type environment $\Sigma$ and value environment $\sigma$ we write
+%   $\sigma :_k \Sigma$ if $dom(\sigma) = dom(\Sigma)$ and for every $x \in dom(\sigma)$ we have
+%   $\sigma(x) :_k \Sigma(x)$. We write $\Sigma \models_k e : \tau$ to denote that
+%   $\sigma(e) :_k \tau$ for every $\sigma :_k \Sigma$, where $\sigma(e)$ is the result of replacing the
+%   free variables in $e$ with their values in $\sigma$. We write $\Sigma \models e : \tau$ if 
+%   $\Sigma \models_k e : \tau$ for all $k \ge 0$. We write $\models e : \tau$ instead of
+%   $\emptyset \models e : \tau$.
+% \end{definition}
+
+% We now observe that definitions \ref{def:Types} and \ref{def:Typing} immediately imply the following.
+% \begin{lemma}
+%   If $\models e : \tau$ then $e$ is safe.
+% \end{lemma}
+
+% \begin{figure}[htb]
+%   \centering
+%   \begin{mathpar}
+%     \inferrule[(Var)]{%
+%     }{%
+%       \Sigma \models x : \Sigma(x)
+%     }%
+%     \and
+%     \inferrule[(Abstr)]{%
+%       \Sigma[x \mapsto \tau] \models e : \tau'
+%     }{%
+%       \Sigma \models \abstr{x}{e} : \tau \to \tau'
+%     }%
+%     \and
+%     \inferrule[(App)]{%
+%       \Sigma \models e_1 : \tau \to \tau' \\
+%       \Sigma \models e_2 : \tau
+%     }{%
+%       \Sigma \models \app{e_1}{e_2} : \tau'
+%     }%
+%   \end{mathpar}
+%   \caption{Typing lemmata}
+%   \label{fig:Typing_lemmata}
+% \end{figure}
+
+\end{document}
