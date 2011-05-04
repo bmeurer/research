@@ -26,12 +26,16 @@
 \maketitle
 
 
+Foundational proofs rely only on the operational semantics of the language and the axioms of
+the higher-order logic (or any other suitable logic that may be used to encode the proofs)
+
+
 \section{The language and its big-step semantics}
 \label{sec:The_language_and_its_big_step_semantics}
 
-The language we consider in this paper is the pure $\lambda$-calculus extended with constants,
-the simplest functional language that exhibits run-time errors (closed terms that ``go
-wrong''). Its syntax is as follows: \\[3mm]
+The language we consider in this section is the pure $\lambda$-calculus extended with constants,
+the simplest functional language that exhibits run-time errors (closed terms that ``go wrong'').
+Its syntax is as follows: \\[3mm]
 \begin{tabular}{lrcl}
   Variables: & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
   Constants: & $c$ & $::=$ & $\mathsf{0} \mid \mathsf{1} \mid \ldots$ \\
@@ -77,7 +81,7 @@ used to indicate abortion due to a run-time error.
       \app{a_1}{a_2} \Rightarrow \abort
     }%
     \and
-    \inferrule[(App-Abort-2)]{%
+    \inferrule[(App-Abort-3)]{%
       a_1 \Rightarrow \abstr{x}{b} \\
       a_2 \Rightarrow v_2 \\
       b[x \mapsto v_2] \Rightarrow \abort
@@ -111,13 +115,13 @@ We can now specify the semantic types.
   \bot &\equiv& \emptyset \\
   \top &\equiv& \{ v \mid \text{$v$ is a value} \} \\
   \Nat &\equiv& \{ \mathsf{0},\mathsf{1},\ldots \} \\
-  \tau \to \tau' &\equiv& \{ \abstr{x}{e} \mid \text{$e[v/x] : \tau'$ for every $v \in \tau$} \} \\
+  \tau \to \tau' &\equiv& \{ \abstr{x}{a} \mid \text{$a[v/x] : \tau'$ for every $v \in \tau$} \} \\
 \end{array}\]
 
 \begin{definition} \label{def:Typing}
-  A \emph{type environment} is a mapping $\Gamma$ from variables to types. A \emph{value environment} 
-  (also known as ground substitution) is a mapping $\gamma$ from variables to values. We write
-  $\gamma : \Gamma$ if $\dom(\gamma) = \dom(\Gamma)$ and $\gamma(x) : \Gamma(x)$ for every $x \in \dom(\gamma)$.
+  A \emph{type environment} is a mapping $\Gamma$ from variables to types. A \emph{value environment}
+  (ground substitution) is a mapping $\gamma$ from variables to values. We write $\gamma : \Gamma$ if
+  $\dom(\gamma) = \dom(\Gamma)$ and $\gamma(x) : \Gamma(x)$ for every $x \in \dom(\gamma)$.
   We write $\Gamma \models a : \tau$ if $\gamma(a) : \tau$ for every $\gamma : \Gamma$, where $\gamma(a)$
   is the result of replacing the free variables of $a$ with their values under $\gamma$.
 \end{definition}
@@ -141,15 +145,15 @@ Using our semantic types, this is almost trivial.
       \Gamma \models x : \Gamma(x)
     }%
     \and
+    \inferrule[(T-Const)]{%
+    }{%
+      \Gamma \models c : \Nat
+    }%
+    \and
     \inferrule[(T-Abs)]{%
       \Gamma[x \mapsto \tau] \models a : \tau'
     }{%
       \Gamma \models \abstr{x}{a} : \tau \to \tau'
-    }%
-    \\
-    \inferrule[(T-Const)]{%
-    }{%
-      \Gamma \models c : \Nat
     }%
     \and
     \inferrule[(T-App)]{%
@@ -163,106 +167,47 @@ Using our semantic types, this is almost trivial.
   \label{fig:Semantic_typing_lemmata}
 \end{figure}
 
+The remainder of this section is devoted to proving the semantic typing lemmata in
+figure~\ref{fig:Semantic_typing_lemmata}. Each of these lemmata states that if
+certain instances of the relation $\models$ hold, then certain other instances hold.
+Note that $\models$ can be viewed as a three place relation where $\Gamma \models a : \tau$
+means that the relation $\models$ holds on the type environment $\Gamma$, the term $a$, and
+the type $\tau$. Once we have proved these lemmata, they can be used in the same manner as
+the standard typing rules to prove statements of the form $\Gamma \models a : \tau$.
 
+We now consider each of the typing lemmata in figure~\ref{fig:Semantic_typing_lemmata}. Note
+that there is a typing lemma for every syntactic case in the grammar of terms. The lemma
+\textsc{(T-Var)}, stating that $\Gamma \models x : \Gamma(x)$ holds, follows immediately from
+the definition of $\models$. The fact that $\Nat$ is a type, and the lemma \textsc{(T-Const)},
+stating that $\Gamma \models c : \Nat$, both follow directly from the definition of $\Nat$.
+It remains for us to show that the lemmata for applications and lambda terms hold.
+First we observe that $\tau \to \tau'$ is always a type.
 
-% \section{Call-by-name}
-% \label{sec:call_by_name}
+\begin{lemma}[Abstraction]
+  Let $\Gamma$ be a type environment, let $\tau$ and $\tau'$ be types, and let
+  $\Gamma[x \mapsto \tau]$ be the type environment that is identical to
+  $\Gamma$ except that it maps $x$ to $\tau$. If $\Gamma[x \mapsto \tau] \models a : \tau'$,
+  then $\Gamma \models \abstr{x}{a} : \tau \to \tau'$.
+\end{lemma}
 
-% Let $x,y,z,\ldots$ range over some (infinite) set of variables. The syntax of pure
-% lambda expressions is defined by the following grammar:
-% \[\begin{array}{rcl}
-%   e &::=& x \mid \abstr{x}{e} \mid \app{e_1}{e_2}
-% \end{array}\]
-% An expression $v$ is a \emph{value} if it is a closed expression of the form $\abstr{x}{e}$.
-% The small-step semantics is given in figure~\ref{fig:Call_by_name_semantics}. We use the
-% usual convention of $e \to^k e'$ to refer to a chain of $k \ge 0$ steps $e_0 \to e_1 \to \ldots \to e_k$,
-% where $e$ is $e_0$ and $e'$ is $e_k$. We write $e \to^* e'$ if $e \to^k e'$ for some $k \ge 0$.
-% \begin{figure}[htb]
-%   \centering
-%   \begin{mathpar}
-%     \inferrule[(App-Left)]{%
-%       e_1 \to e_1'
-%     }{%
-%       \app{e_1}{e_2} \to \app{e_1'}{e_2}
-%     }%
-%     \and
-%     \inferrule[(Beta)]{%
-%     }{%
-%       \app{(\abstr{x}{e_1})}{e_2} \to e_2[e_1 / x]
-%     }%
-%   \end{mathpar}
-%   \caption{Call-by-name semantics}
-%   \label{fig:Call_by_name_semantics}
-% \end{figure}
-% An expression $e$ is \emph{safe for $k$ steps}, if whenever $e$ reduces to an irreducible expression
-% $e'$ in $j < k$ steps, then $e'$ is a value. An expression $e$ is called \emph{safe} if it is safe
-% for all $k \ge 0$.
+\begin{proof}
+  Let $\gamma : \Gamma$. $\gamma(\abstr{x}{a}) \Rightarrow r$ implies $r = \gamma(\abstr{x}{a})$.
+  $\Gamma[x \mapsto \tau] \models a : \tau'$ implies $(\gamma[x \mapsto v])(a) \in \tau'$ for
+  every $v \in \tau$. Hence we have $\gamma(\abstr{x}{a}) \in \tau \to \tau'$ by definition of $\to$.
+\end{proof}
 
-% \begin{definition} \label{def:Types}
-%   A \emph{type} is a set $\tau$ of pairs $\langle k,v \rangle$ where $k \ge 0$ and $v$ is a value,
-%   and the set $\tau$ is such that if $\langle k,v \rangle \in \tau$ and $0 \le j \le k$ then
-%   $\langle j,v \rangle \in \tau$. We write $e :_k \tau$ if $e$ is closed and safe for $k$ steps, and
-%   if whenever $e \to^j v$ for some value $v$ and $j < k$ we have $\langle k-j,v \rangle \in \tau$.
-%   We write $e : \tau$ if $e :_k \tau$ for every $k \ge 0$.
-% \end{definition}
+\begin{lemma}[Application]
+  Let $\Gamma$ be a type environment, and let $\tau$ and $\tau'$ be types.
+  If $\Gamma \models a_1 : \tau \to \tau'$ and $\Gamma \models a_2 : \tau$,
+  then $\Gamma \models \app{a_1}{a_2} : \tau'$.
+\end{lemma}
 
-% Intuitively, $e :_k \tau$ means that $e$ behaves like an element of $\tau$ for $k$ steps of computation.
-% Note that if $e :_k \tau$ and $0 \le j \le k$ then $e :_j \tau$. Also, for a value $v$ and $k > 0$, the
-% statements $v :_k \tau$ and $\langle k,v \rangle \in \tau$ are equivalent.
-
-% \[\begin{array}{rcl}
-%   \bot &\equiv& \emptyset \\
-%   \top &\equiv& \{\langle k,v \rangle \mid k \ge 0\} \\
-%   \tau \to \tau' &\equiv& \{\langle k,\abstr{x}{e} \rangle \mid \forall j < k.\,\forall v.\, \langle j,v \rangle \in \tau \Rightarrow e[v/x] :_j \tau'\}
-% \end{array}\]
-
-% \begin{lemma}
-%   If $\tau$ and $\tau'$ are types then $\tau \to \tau'$ is also a type.
-% \end{lemma}
-
-% \begin{proof}
-%   By the definition of $\to$ it is obvious that $\tau \to \tau'$ is closed under decreasing index.
-% \end{proof}
-
-% \begin{definition} \label{def:Typing}
-%   A \emph{type environment} is a mapping from variables to types. A \emph{value environment} is a mapping
-%   from variables to values. For any type environment $\Sigma$ and value environment $\sigma$ we write
-%   $\sigma :_k \Sigma$ if $dom(\sigma) = dom(\Sigma)$ and for every $x \in dom(\sigma)$ we have
-%   $\sigma(x) :_k \Sigma(x)$. We write $\Sigma \models_k e : \tau$ to denote that
-%   $\sigma(e) :_k \tau$ for every $\sigma :_k \Sigma$, where $\sigma(e)$ is the result of replacing the
-%   free variables in $e$ with their values in $\sigma$. We write $\Sigma \models e : \tau$ if 
-%   $\Sigma \models_k e : \tau$ for all $k \ge 0$. We write $\models e : \tau$ instead of
-%   $\emptyset \models e : \tau$.
-% \end{definition}
-
-% We now observe that definitions \ref{def:Types} and \ref{def:Typing} immediately imply the following.
-% \begin{lemma}
-%   If $\models e : \tau$ then $e$ is safe.
-% \end{lemma}
-
-% \begin{figure}[htb]
-%   \centering
-%   \begin{mathpar}
-%     \inferrule[(Var)]{%
-%     }{%
-%       \Sigma \models x : \Sigma(x)
-%     }%
-%     \and
-%     \inferrule[(Abstr)]{%
-%       \Sigma[x \mapsto \tau] \models e : \tau'
-%     }{%
-%       \Sigma \models \abstr{x}{e} : \tau \to \tau'
-%     }%
-%     \and
-%     \inferrule[(App)]{%
-%       \Sigma \models e_1 : \tau \to \tau' \\
-%       \Sigma \models e_2 : \tau
-%     }{%
-%       \Sigma \models \app{e_1}{e_2} : \tau'
-%     }%
-%   \end{mathpar}
-%   \caption{Typing lemmata}
-%   \label{fig:Typing_lemmata}
-% \end{figure}
+\begin{proof}
+  Let $\gamma : \Gamma$ and $\gamma(\app{a_1}{a_2}) \Rightarrow r$. Then there has to be some $r_1$
+  such that $\gamma(a_1) \Rightarrow r_1$. Since $\gamma(a_1) : \tau \to \tau'$ we have
+  $r_1 = \abstr{x}{b} \in \tau \to \tau'$. Then there is also some $r_2$ such that $\gamma(a_2) \Rightarrow r_2$,
+  with $r_2 \in \tau$ since $\gamma(a_2) : \tau$. This requires $b[x \mapsto r_2] \Rightarrow r$,
+  and since $b[x \mapsto r_2] : \tau'$ by definition of $\to$, we conclude $r \in \tau'$.
+\end{proof}
 
 \end{document}
