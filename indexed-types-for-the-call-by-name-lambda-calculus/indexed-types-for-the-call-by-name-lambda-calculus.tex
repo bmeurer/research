@@ -3,6 +3,14 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{color}
+\usepackage[english]{babel}
+\usepackage[colorlinks=false,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
 \usepackage{mathpartir}
 
 \theoremstyle{definition}
@@ -249,36 +257,20 @@ whether or not $a :_k \tau$, it suffices to show $b :_j \tau$ for all terms $b$ 
   for every type $\tau$ and every index $k \ge 0$.
 \end{definition}
 
-\begin{lemma} \label{lem:Approx_F}
-  If $F$ well founded and $j \le k$, then
-  $\floor{F^j\left(\tau\right)}_j = \floor{F^k\left(\tau\right)}_j$.
-\end{lemma}
-
-\begin{proof}
-  \textbf{TODO}
-\end{proof}
-
-\begin{theorem}
-  If $F$ is a well founded functional, then $\mu F$ is a type.
-\end{theorem}
-
-\begin{proof}
-  We must show that $\mu F$ is closed under decreasing index. Therefore, let $\pair{k,v} \in \mu F$
-  and $j < k$. Then we have $\pair{k,v} \in F^{k+1}(\bot)$ by definition of $\mu F$, and
-  $\pair{j,v} \in F^{k+1}(\bot)$ by definition~\ref{def:Type}. By definition~\ref{def:Approximation}
-  and lemma~\ref{lem:Approx_F} we gain
-  $F^{k+1}(\bot) = \floor{F^{k+1}\left(\bot\right)}_{j+1} = \floor{F^{j+1}\left(\bot\right)}_{j+1} = F^{j+1}(\bot)$,
-  and using the definition of $\mu F$ we conclude $\pair{j,v} \in \mu F$.
-\end{proof}
-
 \begin{lemma}
-  $\floor{\mu F}_k = \floor{F \left(\mu F\right)}_k$ for every well founded $F$ and $k \ge 0$.
+  For every well founded functional $F$ and $j, k$ with $0 \le j \le k$ we have:
+  \begin{enumerate}
+  \item $\floor{F^j\left(\tau\right)}_j = \floor{F^k\left(\tau\right)}_j$
+  \item $\mu F$ is a type
+  \item $\floor{\mu F}_k = \floor{F \left(\mu F\right)}_k$
+  \end{enumerate}
 \end{lemma}
 
-Now we can finally get to the interesting theorem which states that the
-semantic typing lemmata in figure~\ref{fig:Semantic_typing_lemmata} hold
-for any well founded functional $F$.
-\begin{theorem}
+\begin{proof}
+  See the paper of Appel and McAllester \cite{Appel01} for the proof.
+\end{proof}
+
+\begin{theorem} \label{thm:Well_founded_fixpoint}
   If $F$ is a well founded functional, then $\mu F = F(\mu F)$.
 \end{theorem}
 
@@ -287,5 +279,14 @@ for any well founded functional $F$.
   iff $\pair{k,v} \in \floor{F \left(\mu F\right)}_{k+1}$ iff
   $\pair{k,v} \in F \left(\mu F\right)$.
 \end{proof}
+
+Theorem~\ref{thm:Well_founded_fixpoint} states that the semantic typing
+lemmata in figure~\ref{fig:Semantic_typing_lemmata} hold for any well
+founded functional $F$.
+
+
+\bibliographystyle{alpha}
+\bibliography{citations}
+
 
 \end{document}
