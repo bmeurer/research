@@ -8,13 +8,15 @@
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 \theoremstyle{plain}
-\newtheorem{lemma}{Lemma}
-\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{theorem}[definition]{Theorem}
 
 \newcommand{\abort}{\ensuremath{\mathsf{abort}}}
 \newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
 \newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
 \newcommand{\Nat}{\ensuremath{\mathsf{Nat}}}
+\newcommand{\pair}[1]{\ensuremath{\langle{#1}\rangle}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor{#1}\right\rfloor}}
 
 \DeclareMathOperator{\dom}{dom}
 
@@ -24,5 +26,266 @@
 \date{\today}
 \title{Indexed Types for the\\Call-by-Name Lambda Calculus}
 \maketitle
+
+\begin{abstract}
+  TODO
+\end{abstract}
+
+
+\section{The language and its big-step semantics}
+\label{sec:The_language_and_its_big_step_semantics}
+
+
+The language we consider in this section is the pure $\lambda$-calculus extended with constants,
+the simplest functional language that exhibits run-time errors (closed terms that ``go wrong'').
+Its syntax is shown in figure~\ref{fig:Basic_syntax}.
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{lrcl}
+    Variables: & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
+    Constants: & $c$ & $::=$ & $\mathsf{0} \mid \mathsf{1} \mid \ldots$ \\
+    Terms: & $a,b$ & $::=$ & $c \mid x \mid \abstr{x}{a} \mid \app{a}{b}$
+  \end{tabular}
+  \caption{Basic syntax}
+  \label{fig:Basic_syntax}
+\end{figure}
+We write $a[x \mapsto b]$ for the capture-avoiding substitution of $b$ for all unbound occurrences
+of $x$ in $a$. A term $v$ is a \emph{value} if it is a constant $c$ or a closed term of the form
+$\abstr{x}{a}$.
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule{
+    }{
+      \app{(\abstr{x}{a})}{b} \to a[x \mapsto b]
+    }
+    \and
+    \inferrule{
+      a \to a'
+    }{
+      \app{a}{b} \to \app{a'}{b}
+    }
+  \end{mathpar}
+  \caption{Small step semantics}
+  \label{fig:Small_step_semantics}
+\end{figure}
+
+The small step semantics, as shown in figure~\ref{fig:Small_step_semantics}, is entirely conventional.
+We write $a_0 \to^k a_k$ to mean that there exists a sequence of $k$ steps of the form
+$a_0 \to a_1 \to \ldots \to a_k$. We write $a \to^* b$ if $a \to^k b$ for some $k \ge 0$. We say that
+\emph{$a$ is safe for $k$ steps} if for any sequence $a \to^j b$ of $j < k$ steps, either $b$ is a value
+or there is some $b'$ such that $b \to b'$. Note that any term is safe for $0$ steps. A term $a$ is called
+\emph{safe} it is safe for every $k \ge 0$.
+
+
+\section{Semantic types}
+\label{sec:Semantic_types}
+
+
+\begin{definition} \label{def:Type}
+  A \emph{type} is a set $\tau$ of pairs of the form $\pair{k,v}$ where $k \ge 0$ and $v$ is a value, and
+  where the set $\tau$ is such that whenever $\pair{k,v} \in \tau$ and $0 \le j \le k$ then $\pair{j,v} \in \tau$.
+  For any term $a$ and type $\tau$ we write $a :_k \tau$ if $a$ is closed and whenever $a \to^j b$ for some
+  irreducible term $b$ and some $j < k$ we have $\pair{k-j,b} \in \tau$.
+\end{definition}
+
+Intuitively, $a :_k \tau$ means that $a$ behaves like an element of $\tau$ for $k$ steps of computation. Note
+that if $a :_k \tau$ and $0 \le j \le k$ then $a :_j \tau$. Also, for a value $v$ and $k > 0$, the statements
+$v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalent.
+
+\begin{figure}[htb]
+  \centering
+  $\begin{array}{rcl}
+    \bot &\equiv& \emptyset \\
+    \top &\equiv& \{ \pair{k,v} \mid k \ge 0 \} \\
+    \Nat &\equiv& \{ \pair{k,c} \mid k \ge 0 \} \\
+    \tau \to \tau' &\equiv& \{ \pair{k,\abstr{x}{a}} \mid \forall j < k \forall b.\, b :_j \tau \Longrightarrow a[x \mapsto b] :_j \tau' \} \\
+    \mu F &\equiv& \{ \pair{k,v} \mid \pair{k,v} \in F^{k+1}(\bot) \}
+  \end{array}$
+  \caption{Semantic types}
+  \label{fig:Semantic_types}
+\end{figure}
+
+\begin{definition} \label{def:Typing}
+  A \emph{type environment} is a mapping $\Gamma$ from lambda calculus variables to types. A
+  \emph{ground substitution} is a mapping $\gamma$ from lambda calculus variables to terms. For
+  any type environment $\Gamma$ and ground substitution $\gamma$ we write $\gamma :_k \Gamma$ if
+  $\dom(\gamma) = \dom(\Gamma)$ and $\gamma(x) :_k \Gamma(x)$ for every $x \in \dom(\gamma)$. We
+  write $\Gamma \models_k a : \tau$ if $\gamma(a) :_k \tau$ for every $\gamma :_k \Gamma$,
+  where $\gamma(a)$ is the result of replacing the unbound variables in $a$ with their terms under
+  $\gamma$. We write $\Gamma \models a : \tau$ if $\Gamma \models_k a : \tau$ for every $k \ge 0$.
+\end{definition}
+
+We now observe that the following ``typability implies safety'' theorem is an immediate
+consequence of definitions \ref{def:Type} and \ref{def:Typing}.
+\begin{theorem}
+  If $\emptyset \models a : \tau$, then $a$ is safe.
+\end{theorem}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule{
+    }{
+      \Gamma \models x : \Gamma(x)
+    }
+    \and
+    \inferrule{
+    }{
+      \Gamma \models c : \Nat
+    }
+    \and
+    \inferrule{
+      \Gamma \models a : \tau \to \tau' \\
+      \Gamma \models b : \tau
+    }{
+      \Gamma \models \app{a}{b} : \tau'
+    }
+    \and
+    \inferrule{
+      \Gamma[x \mapsto \tau] \models a : \tau'
+    }{
+      \Gamma \models \abstr{x}{a} : \tau \to \tau'
+    }
+    \and
+    \inferrule{
+      \Gamma \models a : F(\mu F)
+    }{
+      \Gamma \models a : \mu F
+    }
+    \and
+    \inferrule{
+      \Gamma \models a : \mu F
+    }{
+      \Gamma \models a : F(\mu F)
+    }
+  \end{mathpar}
+  \caption{Semantic typing lemmata}
+  \label{fig:Semantic_typing_lemmata}
+\end{figure}
+
+We now consider each of the semantic typing lemmata in figure~\ref{fig:Semantic_typing_lemmata}.
+Note that there is a typing lemma for each case in the grammar of lambda terms plus two ruws
+for the type constructor $\mu$. The lemma for variables, stating $\Gamma \models x : \Gamma(x)$,
+follows directly from the definition of $\models$. The fact that $\Nat$ is a type, and the
+typing lemma $\Gamma \models c : \Nat$, both follow immediately from the definition of $\Nat$.
+We now consider the lemmata for applications and lambda terms. First we have the following
+lemma which follows immediately from the definition of $\to$.
+\begin{lemma}
+  If $\tau$ and $\tau'$ are types then $\tau \to \tau'$ is also a type.
+\end{lemma}
+
+\begin{proof}
+  By definition of $\to$ it is obvious that $\tau \to \tau'$ is closed
+  under decreasing index.
+\end{proof}
+
+\begin{lemma} \label{lem:Application}
+  If $a_1 :_k \tau \to \tau'$ and $a_2 :_k \tau$, then $\app{a_1}{a_2} :_k \tau'$.
+\end{lemma}
+
+\begin{proof}
+  Since $a_1 :_k \tau \to \tau'$ and $a_2 :_k \tau$ we have that both $a_1$ and $a_2$ are closed,
+  and if $a_1$ generates an irreducible term in less than $k$ steps, that term must be a lambda
+  term. Hence, the application $\app{a_1}{a_2}$ either reduces for $k$ steps without any top-level
+  $\beta$-reduction, or there must be a lambda term $\abstr{x}{b}$ such that
+  $\app{a_1}{a_2} \to^j \app{(\abstr{x}{b})}{a_2}$ for some $j < k$.
+
+  In the first case we know that $\app{a_1}{a_2}$ is closed, and does not generate an irreducible
+  term in less than $k$ steps, and hence $\app{a_1}{a_2} :_k \tau'$.
+
+  In the second case we have $a_2 :_{k-(j+1)} \tau$ by closure under decreasing index, and
+  definition~\ref{def:Type} implies that $\pair{k-j,\abstr{x}{b}} \in \tau \to \tau'$.
+  $b[x \mapsto a_2] :_{k-(j+1)} \tau'$ follows by definition of $\to$. But now we have
+  $\app{a_1}{a_2} \to^{j+1} b[x \mapsto a_2]$ and $b[x \mapsto a_2] :_{k-(j+1)} \tau$, and
+  we can conclude $\app{a_1}{a_2} :_k \tau'$.
+\end{proof}
+
+\begin{theorem}[Application] \label{thm:Application}
+  Let $\Gamma$ be a type environment, let $a_1$ and $a_2$ be (possibly open) terms, and let
+  $\tau$ and $\tau'$ be types. Whenever $\Gamma \models a_1 : \tau \to \tau'$ and $\Gamma \models a_2 : \tau$,
+  then $\Gamma \models \app{a_1}{a_2} : \tau'$.
+\end{theorem}
+
+\begin{proof}
+  Let $k \ge 0$. By lemma~\ref{lem:Application} we have
+  $\gamma(\app{a_1}{a_2}) :_k \tau'$ for every $\gamma$, whenever $\gamma :_k \Gamma$,
+  $\gamma(a_1) :_k \tau \to \tau'$ and $\gamma(a_2) :_k \tau$. Hence, we conclude
+  $\Gamma \models_k \app{a_1}{a_2} : \tau'$ (for every $k \ge 0$).
+\end{proof}
+
+\begin{theorem}[Abstraction] \label{thm:Abstraction}
+  Let $\Gamma$ be a type environment, let $\tau$ and $\tau'$ be types, and let $\Gamma[x \mapsto \tau]$
+  be the type environment that is identical to $\Gamma$ except that it maps $x$ to $\tau$. If
+  $\Gamma[x \mapsto \tau] \models a : \tau'$, then $\Gamma \models \abstr{x}{a} : \tau \to \tau'$.
+\end{theorem}
+
+\begin{proof}
+  Let $k \ge 0$, $b$ be a closed term with $b :_k \tau$, and $\gamma$ be a ground substitution such
+  that $\gamma :_k \Gamma$. Then $\gamma[x \mapsto b] :_k \Gamma[x \mapsto \tau]$, and since
+  $(\gamma[x \mapsto b])(a) :_k \tau'$ and $b$ is closed, we also have $\gamma(a[x \mapsto b]) :_j \tau'$
+  and $b :_j \tau$ for every $j < k$. This implies $\pair{k,\gamma(\abstr{x}{a})} \in \tau \to \tau'$,
+  and since $\gamma(\abstr{x}{a})$ is obviously also closed, we conclude $\gamma(\abstr{x}{a}) :_k \tau \to \tau'$
+  (for every $k \ge 0$ and $\gamma :_k \Gamma$).
+\end{proof}
+
+We will prove that the typing lemmata for $\mu$ hold in the case where $F$ is \emph{well founded} and
+that all non-trivial type constructors built from type constants and $\to$ are well founded.
+
+\begin{definition} \label{def:Approximation}
+  The \emph{$k$-approximation} of a set $\tau$ is the subset $\floor{\tau}_k$ of its elements
+  whose index is less than $k$:
+  \[ \floor{\tau}_k = \{ \pair{j,v} \mid j < k \wedge \pair{j,v} \in \tau \} \]
+\end{definition}
+
+Obviously $\floor{\tau}_k$ is a type whenever $\tau$ is a type. We now define a notion of well founded
+functional. Intuitively, a recursive definition of a type $\tau$ is well founded if, in order to determine
+whether or not $a :_k \tau$, it suffices to show $b :_j \tau$ for all terms $b$ and indices $j < k$.
+
+\begin{definition}
+  A \emph{well founded functional} is a function $F$ from types to types such that
+  $\floor{F\left(\tau\right)}_{k+1} = \floor{F\left(\floor{\tau}_k\right)}_{k+1}$
+  for every type $\tau$ and every index $k \ge 0$.
+\end{definition}
+
+\begin{lemma} \label{lem:Approx_F}
+  If $F$ well founded and $j \le k$, then
+  $\floor{F^j\left(\tau\right)}_j = \floor{F^k\left(\tau\right)}_j$.
+\end{lemma}
+
+\begin{proof}
+  \textbf{TODO}
+\end{proof}
+
+\begin{theorem}
+  If $F$ is a well founded functional, then $\mu F$ is a type.
+\end{theorem}
+
+\begin{proof}
+  We must show that $\mu F$ is closed under decreasing index. Therefore, let $\pair{k,v} \in \mu F$
+  and $j < k$. Then we have $\pair{k,v} \in F^{k+1}(\bot)$ by definition of $\mu F$, and
+  $\pair{j,v} \in F^{k+1}(\bot)$ by definition~\ref{def:Type}. By definition~\ref{def:Approximation}
+  and lemma~\ref{lem:Approx_F} we gain
+  $F^{k+1}(\bot) = \floor{F^{k+1}\left(\bot\right)}_{j+1} = \floor{F^{j+1}\left(\bot\right)}_{j+1} = F^{j+1}(\bot)$,
+  and using the definition of $\mu F$ we conclude $\pair{j,v} \in \mu F$.
+\end{proof}
+
+\begin{lemma}
+  $\floor{\mu F}_k = \floor{F \left(\mu F\right)}_k$ for every well founded $F$ and $k \ge 0$.
+\end{lemma}
+
+Now we can finally get to the interesting theorem which states that the
+semantic typing lemmata in figure~\ref{fig:Semantic_typing_lemmata} hold
+for any well founded functional $F$.
+\begin{theorem}
+  If $F$ is a well founded functional, then $\mu F = F(\mu F)$.
+\end{theorem}
+
+\begin{proof}
+  We have that $\pair{k,v} \in \mu F$ iff $\pair{k,v} \in \floor{\mu F}_{k+1}$
+  iff $\pair{k,v} \in \floor{F \left(\mu F\right)}_{k+1}$ iff
+  $\pair{k,v} \in F \left(\mu F\right)$.
+\end{proof}
 
 \end{document}
