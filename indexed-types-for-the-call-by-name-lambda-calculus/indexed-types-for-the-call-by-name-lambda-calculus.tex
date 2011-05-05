@@ -22,6 +22,7 @@
 \newcommand{\abort}{\ensuremath{\mathsf{abort}}}
 \newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
 \newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+\newcommand{\fix}[1]{\ensuremath{\mathsf{fix}\,{#1}}}
 \newcommand{\Nat}{\ensuremath{\mathsf{Nat}}}
 \newcommand{\pair}[1]{\ensuremath{\langle{#1}\rangle}}
 \newcommand{\floor}[1]{\ensuremath{\left\lfloor{#1}\right\rfloor}}
@@ -40,11 +41,11 @@
 \end{abstract}
 
 
-\section{The language and its big-step semantics}
-\label{sec:The_language_and_its_big_step_semantics}
+\section{The language and its small step semantics}
+\label{sec:The_language_and_its_small_step_semantics}
 
 
-The language we consider in this section is the pure $\lambda$-calculus extended with constants,
+The language we consider in this paper is the pure $\lambda$-calculus extended with constants,
 the simplest functional language that exhibits run-time errors (closed terms that ``go wrong'').
 Its syntax is shown in figure~\ref{fig:Basic_syntax}.
 \begin{figure}[htb]
@@ -78,9 +79,8 @@ $\abstr{x}{a}$.
   \caption{Small step semantics}
   \label{fig:Small_step_semantics}
 \end{figure}
-
-The small step semantics, as shown in figure~\ref{fig:Small_step_semantics}, is entirely conventional.
-We write $a_0 \to^k a_k$ to mean that there exists a sequence of $k$ steps of the form
+The call-by-name semantics, as shown in small-step style in figure~\ref{fig:Small_step_semantics}, is
+entirely conventional. We write $a_0 \to^k a_k$ to mean that there exists a sequence of $k$ steps of the form
 $a_0 \to a_1 \to \ldots \to a_k$. We write $a \to^* b$ if $a \to^k b$ for some $k \ge 0$. We say that
 \emph{$a$ is safe for $k$ steps} if for any sequence $a \to^j b$ of $j < k$ steps, either $b$ is a value
 or there is some $b'$ such that $b \to b'$. Note that any term is safe for $0$ steps. A term $a$ is called
@@ -92,15 +92,15 @@ or there is some $b'$ such that $b \to b'$. Note that any term is safe for $0$ s
 
 
 \begin{definition} \label{def:Type}
-  A \emph{type} is a set $\tau$ of pairs of the form $\pair{k,v}$ where $k \ge 0$ and $v$ is a value, and
-  where the set $\tau$ is such that whenever $\pair{k,v} \in \tau$ and $0 \le j \le k$ then $\pair{j,v} \in \tau$.
-  For any term $a$ and type $\tau$ we write $a :_k \tau$ if $a$ is closed and whenever $a \to^j b$ for some
-  irreducible term $b$ and some $j < k$ we have $\pair{k-j,b} \in \tau$.
+  A \emph{type} is a set $\tau$ of pairs $\pair{k,v}$ where $k \ge 0$ and $v$ is a value, and where the
+  set $\tau$ is such that, whenever $\pair{k,v} \in \tau$ and $0 \le j \le k$, then $\pair{j,v} \in \tau$.
+  For any term $a$ and type $\tau$ we write $a :_k \tau$ if $a$ is closed, and if $a \to^j b$ for some
+  irreducible term $b$ and $j < k$ implies $\pair{k-j,b} \in \tau$.
 \end{definition}
 
-Intuitively, $a :_k \tau$ means that $a$ behaves like an element of $\tau$ for $k$ steps of computation. Note
-that if $a :_k \tau$ and $0 \le j \le k$ then $a :_j \tau$. Also, for a value $v$ and $k > 0$, the statements
-$v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalent.
+Intuitively, $a :_k \tau$ means that the closed term $a$ behaves like an element of $\tau$ for $k$ steps
+of computation. Note that if $a :_k \tau$ and $0 \le j \le k$ then $a :_j \tau$. Also, for a value $v$
+and $k > 0$, the statements $v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalent.
 
 \begin{figure}[htb]
   \centering
@@ -190,7 +190,7 @@ lemma which follows immediately from the definition of $\to$.
 \end{proof}
 
 \begin{lemma} \label{lem:Application}
-  If $a_1 :_k \tau \to \tau'$ and $a_2 :_k \tau$, then $\app{a_1}{a_2} :_k \tau'$.
+  If $a_1 :_k \tau \to \tau'$ and $a_2 :_k \tau$, then $(\app{a_1}{a_2}) :_k \tau'$.
 \end{lemma}
 
 \begin{proof}
@@ -283,6 +283,62 @@ whether or not $a :_k \tau$, it suffices to show $b :_j \tau$ for all terms $b$ 
 Theorem~\ref{thm:Well_founded_fixpoint} states that the semantic typing
 lemmata in figure~\ref{fig:Semantic_typing_lemmata} hold for any well
 founded functional $F$.
+
+
+\section{General recursion}
+\label{sec:General_recursion}
+
+As mentioned by Appel and McAllester \cite{Appel01}, indexed types can also be used to simplify
+the semantic treatment of the fixed point rule to type recursive functions in the
+simply typed lambda calculus (without recursive types). Using the generalized framework
+presented in this paper, we are able to provide a direct soundness proof of the fixed
+point rule, which avoids any use of semantic domains, term orders, or monotonocity.
+
+In this paper we consider the standard fixed point combinator for the call-by-name
+lambda calculus.
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    a,b ::= \ldots \mid \fix{a}
+    \and
+    \inferrule{
+    }{
+      \fix{a} \to \app{a}{(\fix{a})}
+    }
+    \and
+    \inferrule{
+      \Gamma \models a : \tau \to \tau
+    }{
+      \Gamma \models \fix{a} : \tau
+    }
+  \end{mathpar}
+  \caption{General recursion}
+  \label{fig:General_recursion}
+\end{figure}
+Figure~\ref{fig:General_recursion} highlights the necessary changes to the syntax of terms
+and the small step semantics, and presents the new semantic typing lemma for the fixed point
+combinator.
+
+\begin{lemma}
+  If $a :_k \tau \to \tau$, then $(\fix{a}) :_k \tau$.
+\end{lemma}
+
+\begin{proof}
+  By induction on $k$. Since $a :_k \tau \to \tau$ implies $a :_j \tau \to \tau$ for every $j < k$,
+  we also have $(\fix{a}) :_j \tau$ for every $j < k$ by induction hypothesis, and using lemma~\ref{lem:Application}
+  we also have $(\app{a}{(\fix{a})}) :_j \tau$. Of course, $(\fix{a})$ is closed if $a$ is closed.
+  So assume that there is some irreducible term $b$ and some $j < k$ such that $(\fix{a}) \to^j b$.
+  This implies $j > 0$ and $(\fix{a}) \to \app{a}{(\fix{a})} \to^{j-1} b$, and since
+  $(\app{a}{(\fix{a})}) :_{j-1} \tau$ we have $\pair{k-j,b} \in \tau$. Hence, we conclude
+  $(\fix{a}) :_k \tau$.
+\end{proof}
+
+This leads directly to the following theorem, stating the soundness of the typing lemma
+for the fixed point combinator as shown in figure~\ref{fig:General_recursion}.
+
+\begin{theorem}[General recursion]
+  If $\Gamma \models a : \tau \to \tau$, then $\Gamma \models \fix{a} : \tau$.
+\end{theorem}
 
 
 \bibliographystyle{alpha}
