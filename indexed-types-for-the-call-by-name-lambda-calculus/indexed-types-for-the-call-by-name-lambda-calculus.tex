@@ -31,9 +31,15 @@
 
 \begin{document}
 
-\author{Benedikt Meurer}
-\date{\today}
-\title{Indexed Types for the\\Call-by-Name Lambda Calculus}
+\author{%
+  Benedikt Meurer\\
+  Compilerbau und Softwareanalyse\\
+  Universit\"at Siegen\\
+  D-57072 Siegen, Germany\\
+  \url{meurer@informatik.uni-siegen.de}
+}
+\date{}
+\title{A Step-indexed Semantic Model of Types\\for the Call-by-Name Lambda Calculus}
 \maketitle
 
 \begin{abstract}
@@ -41,7 +47,30 @@
 \end{abstract}
 
 
-\section{The language and its small step semantics}
+\section{Introduction}
+\label{sec:Introduction}
+
+
+TODO
+
+
+\section{Related work}
+\label{sec:Related_work}
+
+
+Appel et al. introduced step-indexed models in the context of foundational proof carrying code \cite{Appel00}.
+While they were primarily interested in low-level languages, they also applied their technique to a pure
+call-by-value $\lambda$-calculus with recursive types \cite{Appel01}. Our work generalizes the framework
+by Appel et al. to call-by-name by generalizing ground substitutions to terms instead of just values.
+
+Ahmed et al. successfully extended the step-indexed models introduced by Appel et al. to general references
+and impredicative polymorphism \cite{Ahmed04,Ahmed02}. Hritcu et al. further extended it to object types,
+subtyping and bounded quantified types \cite{Hritcu07,Hritcu09}. They also indirectly considered the
+call-by-name $\lambda$-calculus using its well-known encoding in the $\varsigma$-calculus \cite{AbadiCardelli96},
+including an encoding of the fixed point combinator \cite{Fisher94}.
+
+
+\section{The language and its small-step semantics}
 \label{sec:The_language_and_its_small_step_semantics}
 
 
@@ -61,7 +90,6 @@ Its syntax is shown in figure~\ref{fig:Basic_syntax}.
 We write $a[x \mapsto b]$ for the capture-avoiding substitution of $b$ for all unbound occurrences
 of $x$ in $a$. A term $v$ is a \emph{value} if it is a constant $c$ or a closed term of the form
 $\abstr{x}{a}$.
-
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
@@ -76,11 +104,11 @@ $\abstr{x}{a}$.
       \app{a}{b} \to \app{a'}{b}
     }
   \end{mathpar}
-  \caption{Small step semantics}
+  \caption{Small-step semantics}
   \label{fig:Small_step_semantics}
 \end{figure}
-The call-by-name semantics, as shown in small-step style in figure~\ref{fig:Small_step_semantics}, is
-entirely conventional. We write $a_0 \to^k a_k$ to mean that there exists a sequence of $k$ steps of the form
+The call-by-name semantics, as shown in small-step style in figure~\ref{fig:Small_step_semantics}, is entirely
+conventional \cite{Pierce02}. We write $a_0 \to^k a_k$ if there exists a sequence of $k$ steps such that
 $a_0 \to a_1 \to \ldots \to a_k$. We write $a \to^* b$ if $a \to^k b$ for some $k \ge 0$. We say that
 \emph{$a$ is safe for $k$ steps} if for any sequence $a \to^j b$ of $j < k$ steps, either $b$ is a value
 or there is some $b'$ such that $b \to b'$. Note that any term is safe for $0$ steps. A term $a$ is called
@@ -91,30 +119,19 @@ or there is some $b'$ such that $b \to b'$. Note that any term is safe for $0$ s
 \label{sec:Semantic_types}
 
 
+In this section we construct the methods for proving that a given term is safe in the call-by-name
+$\lambda$-calculus, using a simplified type system without recursive types. The semantic approach
+taken here considers types as sets of values rather than syntactic type expressions.
 \begin{definition} \label{def:Type}
   A \emph{type} is a set $\tau$ of pairs $\pair{k,v}$ where $k \ge 0$ and $v$ is a value, and where the
   set $\tau$ is such that, whenever $\pair{k,v} \in \tau$ and $0 \le j \le k$, then $\pair{j,v} \in \tau$.
-  For any term $a$ and type $\tau$ we write $a :_k \tau$ if $a$ is closed, and if $a \to^j b$ for some
-  irreducible term $b$ and $j < k$ implies $\pair{k-j,b} \in \tau$.
+  For any term $a$ and type $\tau$ we write $a :_k \tau$ if $a$ is closed, and if, whenever $a \to^j b$ for some
+  irreducible term $b$ and $j < k$, then $\pair{k-j,b} \in \tau$.
 \end{definition}
-
 Intuitively, $a :_k \tau$ means that the closed term $a$ behaves like an element of $\tau$ for $k$ steps
-of computation. Note that if $a :_k \tau$ and $0 \le j \le k$ then $a :_j \tau$. Also, for a value $v$
-and $k > 0$, the statements $v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalent.
-
-\begin{figure}[htb]
-  \centering
-  $\begin{array}{rcl}
-    \bot &\equiv& \emptyset \\
-    \top &\equiv& \{ \pair{k,v} \mid k \ge 0 \} \\
-    \Nat &\equiv& \{ \pair{k,c} \mid k \ge 0 \} \\
-    \tau \to \tau' &\equiv& \{ \pair{k,\abstr{x}{a}} \mid \forall j < k \forall b.\, b :_j \tau \Longrightarrow a[x \mapsto b] :_j \tau' \} \\
-    \mu F &\equiv& \{ \pair{k,v} \mid \pair{k,v} \in F^{k+1}(\bot) \}
-  \end{array}$
-  \caption{Semantic types}
-  \label{fig:Semantic_types}
-\end{figure}
-
+of computation. That is, $k$ computation steps do not suffice to prove that $a$ does not terminate with
+a value of type $\tau$. Note that if $a :_k \tau$ and $0 \le j \le k$ then $a :_j \tau$. Also, for a value
+$v$ and $k > 0$, the statements $v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalent.
 \begin{definition} \label{def:Typing}
   A \emph{type environment} is a mapping $\Gamma$ from lambda calculus variables to types. A
   \emph{ground substitution} is a mapping $\gamma$ from lambda calculus variables to terms. For
@@ -124,16 +141,28 @@ and $k > 0$, the statements $v :_k \tau$ and $\pair{k,v} \in \tau$ are equivalen
   where $\gamma(a)$ is the result of replacing the unbound variables in $a$ with their terms under
   $\gamma$. We write $\Gamma \models a : \tau$ if $\Gamma \models_k a : \tau$ for every $k \ge 0$.
 \end{definition}
-
-We now observe that the following ``typability implies safety'' theorem is an immediate
-consequence of definitions \ref{def:Type} and \ref{def:Typing}.
+Note that $\Gamma \models a : \tau$ can be viewed as a three place relation that holds on the
+type environment $\Gamma$, the term $a$, and the type $\tau$. Utilizing this typing relation
+we can express static typing rules, which operate on terms with unbound variables. But first
+we observe that the safety theorem (typability implies safety) is an immediate consequence
+of definitions \ref{def:Type} and \ref{def:Typing} now, whereas in a syntactic type theory
+it is at least tedious to prove.
 \begin{theorem}
   If $\emptyset \models a : \tau$, then $a$ is safe.
 \end{theorem}
-
+We can now construct semantic types and appropriate typing lemmata to derive true judgements of the
+form $\Gamma \models a : \tau$. Figure~\ref{fig:Semantic_types} gives types and typing lemmata for
+the simply typed $\lambda$-calculus.
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
+    \begin{array}{rcl}
+      \bot &\equiv& \emptyset \\
+      \top &\equiv& \{ \pair{k,v} \mid k \ge 0 \} \\
+      \Nat &\equiv& \{ \pair{k,c} \mid k \ge 0 \} \\
+      \tau \to \tau' &\equiv& \{ \pair{k,\abstr{x}{a}} \mid \forall j < k \forall b.\, b :_j \tau \Longrightarrow a[x \mapsto b] :_j \tau' \} \\
+    \end{array}
+    \\
     \inferrule{
     }{
       \Gamma \models x : \Gamma(x)
@@ -143,7 +172,7 @@ consequence of definitions \ref{def:Type} and \ref{def:Typing}.
     }{
       \Gamma \models c : \Nat
     }
-    \and
+    \\
     \inferrule{
       \Gamma \models a : \tau \to \tau' \\
       \Gamma \models b : \tau
@@ -156,30 +185,17 @@ consequence of definitions \ref{def:Type} and \ref{def:Typing}.
     }{
       \Gamma \models \abstr{x}{a} : \tau \to \tau'
     }
-    \and
-    \inferrule{
-      \Gamma \models a : F(\mu F)
-    }{
-      \Gamma \models a : \mu F
-    }
-    \and
-    \inferrule{
-      \Gamma \models a : \mu F
-    }{
-      \Gamma \models a : F(\mu F)
-    }
   \end{mathpar}
-  \caption{Semantic typing lemmata}
-  \label{fig:Semantic_typing_lemmata}
+  \caption{Semantic types}
+  \label{fig:Semantic_types}
 \end{figure}
-
-We now consider each of the semantic typing lemmata in figure~\ref{fig:Semantic_typing_lemmata}.
-Note that there is a typing lemma for each case in the grammar of lambda terms plus two ruws
-for the type constructor $\mu$. The lemma for variables, stating $\Gamma \models x : \Gamma(x)$,
-follows directly from the definition of $\models$. The fact that $\Nat$ is a type, and the
-typing lemma $\Gamma \models c : \Nat$, both follow immediately from the definition of $\Nat$.
-We now consider the lemmata for applications and lambda terms. First we have the following
-lemma which follows immediately from the definition of $\to$.
+The remainder of this section is devoted to proving the soundness of these lemmata.
+Note that there is a typing lemma for each case in the grammar of lambda terms.
+The lemma for variables, stating $\Gamma \models x : \Gamma(x)$, follows directly from the definition of
+$\models$. The fact that $\Nat$ is a type, and $\Gamma \models c : \Nat$,
+both follow immediately from the definition of $\Nat$. We now consider the lemmata for
+applications and lambda terms. First we have the following lemma which follows immediately
+from the definition of $\to$.
 \begin{lemma}
   If $\tau$ and $\tau'$ are types then $\tau \to \tau'$ is also a type.
 \end{lemma}
@@ -200,7 +216,7 @@ lemma which follows immediately from the definition of $\to$.
   $\beta$-reduction, or there must be a lambda term $\abstr{x}{b}$ such that
   $\app{a_1}{a_2} \to^j \app{(\abstr{x}{b})}{a_2}$ for some $j < k$.
 
-  In the first case we know that $\app{a_1}{a_2}$ is closed, and does not generate an irreducible
+  In the first case, we know that $\app{a_1}{a_2}$ is closed, and does not generate an irreducible
   term in less than $k$ steps, and hence $\app{a_1}{a_2} :_k \tau'$.
 
   In the second case we have $a_2 :_{k-(j+1)} \tau$ by closure under decreasing index, and
@@ -238,13 +254,48 @@ lemma which follows immediately from the definition of $\to$.
   (for every $k \ge 0$ and $\gamma :_k \Gamma$).
 \end{proof}
 
-We will prove that the typing lemmata for $\mu$ hold in the case where $F$ is \emph{well founded} and
-that all non-trivial type constructors built from type constants and $\to$ are well founded.
+
+\section{Recursive types}
+\label{sec:Recursive_types}
+
+
+Recursive types were one of the main motivations behind the model of Appel et al. \cite{Appel01}, and
+their results apply here, therefore we do not go into much detail. Figure~\ref{fig:Recursive_types}
+shows the recursion type operator $\mu$, which computes a candidate fixed point of a function $F$
+from types to types by repeatedly applying the function to $\bot$, and the two typing lemmata
+for recursive types.
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \begin{array}{rcl}
+      \mu F &\equiv& \{ \pair{k,v} \mid \pair{k,v} \in F^{k+1}(\bot) \} \\
+    \end{array}
+    \\
+    \inferrule{
+      \Gamma \models a : F(\mu F)
+    }{
+      \Gamma \models a : \mu F
+    }
+    \and
+    \inferrule{
+      \Gamma \models a : \mu F
+    }{
+      \Gamma \models a : F(\mu F)
+    }
+  \end{mathpar}
+  \caption{Recursive types}
+  \label{fig:Recursive_types}
+\end{figure}
+We will prove that the typing lemmata in figure~\ref{fig:Recursive_types} hold in the case where
+$F$ is \emph{well founded}. This is achieved by proving $\mu F = F(\mu F)$ for every
+well founded $F$, essentially proving that our recursive types are actually equi-recursive types,
+in contrast to iso-recursive types where $\mu F$ is only isomorphic to $F(\mu F)$ via
+\textsf{roll} and \textsf{unroll} constructs on terms \cite{AbadiFiore96,Crary99}.
 
 \begin{definition} \label{def:Approximation}
-  The \emph{$k$-approximation} of a set $\tau$ is the subset $\floor{\tau}_k$ of its elements
-  whose index is less than $k$:
+  The \emph{$k$-approximation} of a set $\tau$ is the subset
   \[ \floor{\tau}_k = \{ \pair{j,v} \mid j < k \wedge \pair{j,v} \in \tau \} \]
+  of its elements whose index is less than $k$.
 \end{definition}
 
 Obviously $\floor{\tau}_k$ is a type whenever $\tau$ is a type. We now define a notion of well founded
@@ -280,22 +331,17 @@ whether or not $a :_k \tau$, it suffices to show $b :_j \tau$ for all terms $b$ 
   $\pair{k,v} \in F \left(\mu F\right)$.
 \end{proof}
 
-Theorem~\ref{thm:Well_founded_fixpoint} states that the semantic typing
-lemmata in figure~\ref{fig:Semantic_typing_lemmata} hold for any well
-founded functional $F$.
-
 
 \section{General recursion}
 \label{sec:General_recursion}
 
-As mentioned by Appel and McAllester \cite{Appel01}, indexed types can also be used to simplify
-the semantic treatment of the fixed point rule to type recursive functions in the
-simply typed lambda calculus (without recursive types). Using the generalized framework
-presented in this paper, we are able to provide a direct soundness proof of the fixed
-point rule, which avoids any use of semantic domains, term orders, or monotonocity.
 
-In this paper we consider the standard fixed point combinator for the call-by-name
-lambda calculus.
+As mentioned by Appel et al. \cite{Appel01} indexed types can also be used to simplify the semantic treatment of the
+fixed point rule to type recursive functions in the simply typed lambda calculus (without recursive types). Using the
+generalized framework presented in section~\ref{sec:Semantic_types}, we are able to provide a direct soundness proof
+of the fixed point rule, which avoids any use of semantic domains, term orders, or monotonocity.
+
+We consider the standard fixed point combinator for the call-by-name lambda calculus.
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
@@ -316,7 +362,7 @@ lambda calculus.
   \label{fig:General_recursion}
 \end{figure}
 Figure~\ref{fig:General_recursion} highlights the necessary changes to the syntax of terms
-and the small step semantics, and presents the new semantic typing lemma for the fixed point
+and the small-step semantics, and presents the new semantic typing lemma for the fixed point
 combinator.
 
 \begin{lemma}
@@ -333,15 +379,22 @@ combinator.
   $(\fix{a}) :_k \tau$.
 \end{proof}
 
-This leads directly to the following theorem, stating the soundness of the typing lemma
-for the fixed point combinator as shown in figure~\ref{fig:General_recursion}.
+This leads immediately to the following theorem, stating the soundness of the typing lemma
+for the call-by-name fixed point combinator as shown in figure~\ref{fig:General_recursion}.
 
 \begin{theorem}[General recursion]
   If $\Gamma \models a : \tau \to \tau$, then $\Gamma \models \fix{a} : \tau$.
 \end{theorem}
 
 
-\bibliographystyle{alpha}
+\section{Conclusion}
+\label{sec:Conclusion}
+
+
+TODO
+
+
+\bibliographystyle{abbrv}
 \bibliography{citations}
 
 
