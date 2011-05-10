@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper,draft]{article}
+\documentclass[10pt,a4paper,draft,twocolumn]{article}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -39,7 +39,10 @@
   \url{meurer@informatik.uni-siegen.de}
 }
 \date{}
-\title{A Step-indexed Semantic Model of Types\\for the Call-by-Name Lambda Calculus}
+\title{
+  A Step-indexed Semantic Model of Types\\
+  for the Call-by-Name Lambda Calculus
+}
 \maketitle
 
 \begin{abstract}
@@ -153,7 +156,7 @@ it is at least tedious to prove.
 We can now construct semantic types and appropriate typing lemmata to derive true judgements of the
 form $\Gamma \models a : \tau$. Figure~\ref{fig:Semantic_types} gives types and typing lemmata for
 the simply typed $\lambda$-calculus.
-\begin{figure}[htb]
+\begin{figure*}[htb]
   \centering
   \begin{mathpar}
     \begin{array}{rcl}
@@ -188,7 +191,7 @@ the simply typed $\lambda$-calculus.
   \end{mathpar}
   \caption{Semantic types}
   \label{fig:Semantic_types}
-\end{figure}
+\end{figure*}
 The remainder of this section is devoted to proving the soundness of these lemmata.
 Note that there is a typing lemma for each case in the grammar of lambda terms.
 The lemma for variables, stating $\Gamma \models x : \Gamma(x)$, follows directly from the definition of
@@ -309,9 +312,8 @@ whether or not $a :_k \tau$, it suffices to show $b :_j \tau$ for all terms $b$ 
 \end{definition}
 
 \begin{lemma}
-  For every well founded functional $F$ and $j, k$ with $0 \le j \le k$ we have:
+  For every well founded functional $F$ and every $k \ge 0$ we have:
   \begin{enumerate}
-  \item $\floor{F^j\left(\tau\right)}_j = \floor{F^k\left(\tau\right)}_j$
   \item $\mu F$ is a type
   \item $\floor{\mu F}_k = \floor{F \left(\mu F\right)}_k$
   \end{enumerate}
@@ -340,9 +342,7 @@ As mentioned by Appel et al. \cite{Appel01} indexed types can also be used to si
 fixed point rule to type recursive functions in the simply typed lambda calculus (without recursive types). Using the
 generalized framework presented in section~\ref{sec:Semantic_types}, we are able to provide a direct soundness proof
 of the fixed point rule, which avoids any use of semantic domains, term orders, or monotonocity.
-
-We consider the standard fixed point combinator for the call-by-name lambda calculus.
-\begin{figure}[htb]
+\begin{figure*}[htb]
   \centering
   \begin{mathpar}
     a,b ::= \ldots \mid \fix{a}
@@ -360,7 +360,9 @@ We consider the standard fixed point combinator for the call-by-name lambda calc
   \end{mathpar}
   \caption{General recursion}
   \label{fig:General_recursion}
-\end{figure}
+\end{figure*}
+
+We consider the standard fixed point combinator for the call-by-name lambda calculus.
 Figure~\ref{fig:General_recursion} highlights the necessary changes to the syntax of terms
 and the small-step semantics, and presents the new semantic typing lemma for the fixed point
 combinator.
@@ -391,10 +393,12 @@ for the call-by-name fixed point combinator as shown in figure~\ref{fig:General_
 \label{sec:Conclusion}
 
 
-TODO
+We have presented a step-indexed model for the call-by-name lambda calculus, and used it to
+prove the safety of a type system with recursive types. We also proved safety of general
+recursion in our framework.
 
 
-\bibliographystyle{abbrv}
+\bibliographystyle{habbrv}
 \bibliography{citations}
 
 
