@@ -47,9 +47,9 @@
 
 \begin{abstract}
   Step-indexed semantic models of types were proposed as an alternative to purely syntactic
-  safety proofs using subject reduction. Building on work by Ahmed, Appel and others, we
+  safety proofs using subject-reduction. Building on work by Ahmed, Appel and others, we
   introduce a generalized step-indexed model for the call-by-name lambda calculus. We also
-  show how to prove type safety of general recursion in our generalized step-indexed model.
+  show how to prove type safety of general recursion in our call-by-name model.
 \end{abstract}
 
 
@@ -57,11 +57,21 @@
 \label{sec:Introduction}
 
 
-TODO
+Until recently, the most common way to prove type safety was by a purely syntactic proof
+technique called subject-reduction, which was adapted from combinatory logic by Wright
+and Felleisen \cite{Wright94}. One shows that each step of computation preserves
+typability (preservation) and that typable states are safe (progress).
+
+This is not the only way though. Type safety can also be proved with respect to a semantic model. The
+semantic approach used in this paper avoids formalizing syntactic type expressions. Instead, one defines 
+types as sets of semantic values. Using a technique called \emph{step-indexing}, one then relates terms
+to these semantic types, and proves that typability implies safety. Instead of formalizing syntactic
+typing judgements, one states typing lemmata and proves their soundness with respect to the semantic
+model.
 
 
-\section{Related work}
-\label{sec:Related_work}
+\paragraph{Related work}
+\label{par:Related_work}
 
 
 Appel et al. introduced step-indexed models in the context of foundational proof carrying code \cite{Appel00}.
@@ -74,6 +84,17 @@ and impredicative polymorphism \cite{Ahmed04,Ahmed02}. Hritcu et al. further ext
 subtyping and bounded quantified types \cite{Hritcu07,Hritcu09}. They also indirectly considered the
 call-by-name $\lambda$-calculus using its well-known encoding in the $\varsigma$-calculus \cite{AbadiCardelli96},
 including an encoding of the fixed point combinator \cite{Fisher94}.
+
+
+\paragraph{Outline}
+\label{par:Outline}
+
+
+In section~\ref{sec:The_language_and_its_small_step_semantics} we present the syntax and small step
+semantics of the programming language. Section~\ref{sec:Semantic_types} introduces semantic types
+and typing lemmata for the simply typed $\lambda$-calculus, which is extended with recursive types in
+section~\ref{sec:Recursive_types}, while section~\ref{sec:General_recursion} considers general recursion
+in the simply typed $\lambda$-calculus.
 
 
 \section{The language and its small-step semantics}
