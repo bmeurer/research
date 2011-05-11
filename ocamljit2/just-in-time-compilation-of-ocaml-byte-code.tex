@@ -33,7 +33,7 @@
   Benedikt Meurer\\
   Compilerbau und Softwareanalyse\\
   Universit\"at Siegen\\
-  D-57072 Siegen, Germany\\
+  D-57068 Siegen, Germany\\
   \url{meurer@informatik.uni-siegen.de}
 }
 \date{}
@@ -153,7 +153,7 @@ the offset of the generated native code relative to the base address
 during closure application or return -- this offset is read from the instruction
 opcode, \texttt{caml\_jit\_code\_end} is added to it, and a jump to the resulting
 address is performed. The trampoline code for x86 -- shown in
-figure~\ref{figure:Byte_code_trampoline_x86} -- is therefore quite similar to
+Figure~\ref{figure:Byte_code_trampoline_x86} -- is therefore quite similar to
 the trampoline code for x86-64 (\texttt{\%ecx} contains the address of the
 byte-code to execute and \texttt{\%edx} is a temporary register).
 
@@ -173,7 +173,7 @@ jmpl *%edx
 Adapting the on-demand compilation driver was also straight-forward, due to
 the similarities of the x86 and x86-64 architectures. It was merely a matter
 of adding a x86 byte-code compile trampoline -- shown in
-figure~\ref{figure:Byte_code_compile_trampoline_x86} -- which is slightly longer
+Figure~\ref{figure:Byte_code_compile_trampoline_x86} -- which is slightly longer
 than its x86-64 counterpart, because the C calling convention \cite{SCO97Abi386}
 requires all parameters to be passed on the C stack.
 
@@ -257,7 +257,7 @@ memory, we divide the region into smaller parts, called native code \emph{chunks
 and generate code to these chunks. Every byte-code segment has an associated list of
 chunks, allocated from the large memory region, now called \emph{chunk pool},
 which contain the generated code for the given byte-code segment, as shown
-in figure~\ref{figure:Byte_code_segments_and_native_code_chunks}.
+in Figure~\ref{figure:Byte_code_segments_and_native_code_chunks}.
 
 Every segment starts out with an empty list of chunks. As soon as on-demand compilation
 triggers for the segment, a new chunk is allocated from the chunk pool and native
