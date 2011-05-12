@@ -246,7 +246,7 @@ Let $\T = (\Sigma,\phi,\psi,\leadsto)$ be a transition system. The semantic mode
 $\Pi$ is a type system for $\T$ if it is a type system for $A$ and there are sets $\Sigma^\pi$ for
 every $\pi \in \Pi$ such that $\sigma \in \Sigma^\pi$ whenever $a \in A^\pi$ and $\phi(a) = \sigma$.
 Now we can formalize the usual safety theorem, which is proved using preservation and progress
-theorems.
+theorems (Wright and Felleisen \cite{Wright94}).
 
 \begin{theorem}
   A transition system $\T = (\Sigma,\phi,\psi,\leadsto)$ is safe if the following two properties hold:
@@ -319,15 +319,20 @@ $\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
   Let $\R \subseteq \Rules(A,B)$. Then \mbox{$\M\left(\R\right) = \M\left(\T\left(\R\right)\right)$}.
 \end{theorem}
 
+\begin{proof}
+  TODO
+\end{proof}
+
 
 \section{Conclusion}
 \label{sec:Conclusion}
 
 
-TODO
+Related work by Leroy and Grall \cite{LeroyGrall09} on coinductive determinstic big-step operational
+semantics. TODO
 
 
 \bibliographystyle{elsarticle-num}
-\bibliography{bibliography}
+\bibliography{citations}
 
 \end{document}
