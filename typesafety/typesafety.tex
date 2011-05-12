@@ -18,6 +18,10 @@
 \newtheorem{lemma}[definition]{Lemma}
 \newproof{proof}{Proof}
 
+\newcommand{\M}{\ensuremath{\mathcal{M}}}
+\newcommand{\R}{\ensuremath{\mathcal{R}}}
+\newcommand{\T}{\ensuremath{\mathcal{T}}}
+
 \newcommand{\Rules}{\ensuremath{\mathit{Rules}}}
 \newcommand{\States}{\ensuremath{\mathit{States}}}
 
@@ -75,7 +79,6 @@ TODO
 \section{Recursion systems}
 \label{sec:Recursion_systems}
 
-\newcommand{\M}{\ensuremath{\mathcal{M}}}
 
 A \emph{semantic model} $\M$ is a triple $(A,B,\Rightarrow)$, where $A$ and $B$ are disjoint sets
 and \mbox{$\Rightarrow~\subseteq A \times B_\bot^\top$} with $B_\bot^\top = B \uplus \{\bot,\top\}$. The $a \in A$
@@ -85,39 +88,6 @@ are called \emph{arguments} and the $b \in B$ are called \emph{results}.
   A semantic model $\M = (A,B,\Rightarrow)$ is called \emph{deterministic}, if for every $a \in A$
   there is at most one $r \in B_\bot^\top$ such that $a \Rightarrow r$.
 \end{definition}
-
-% A \emph{transition system} $\mathcal{T}$ is a tuple $(\Sigma, \phi, \psi, \vdash)$ where
-% \begin{itemize}
-% \item $\Sigma$ is a non-empty set of \emph{states} $\sigma$,
-% \item $\phi: A \pto \Sigma$ is the \emph{input function},
-% \item $\psi: \Sigma \pto B$ is the \emph{output function}, and
-% \item $\vdash\, \subseteq \Sigma \times \Sigma$ is the \emph{transition relation}.
-% \end{itemize}
-% The elements of $A_0 = \dom(\phi)$ are called \emph{initial arguments}.
-
-% Given a transition system $\mathcal{T} = (\Sigma,\phi,\psi,\vdash)$. A \emph{computation} is a
-% maximal, finite or infinite, sequence of steps $\phi(a) = \sigma_1 \vdash \sigma_2 \vdash \ldots$. A
-% computation for $a \in A_0$
-% \begin{itemize}
-% \item \emph{terminates with $b \in B$}, if the sequence ends with a state $\sigma$, such that $\psi(\sigma) = b$,
-% \item \emph{diverges}, if the sequence is infinite, or
-% \item \emph{gets stuck}, otherwise.
-% \end{itemize}
-
-% \begin{definition} \label{def:Semantic_model_of_transition_system}
-%   For every transition system $\mathcal{T}$, a semantic model
-%   \mbox{$\mathcal{M}_{\mathcal{T}} = (A,B,\Rightarrow_{\mathcal{T}})$} can be defined by:
-%   \[\begin{array}{lcl}
-%     a \Rightarrow_{\mathcal{T}} b
-%     & \mbox{iff} & \mbox{$a$ has a computation that terminates with $b$} \\
-%     a \Rightarrow_{\mathcal{T}} \bot
-%     & \mbox{iff} & \mbox{$a$ has a diverging computation} \\
-%     a \Rightarrow_{\mathcal{T}} \top
-%     & \mbox{iff} & \mbox{$a$ has a computation that gets stuck} \\
-%   \end{array}\]
-% \end{definition}
-
-\newcommand{\R}{\ensuremath{\mathcal{R}}}
 
 A \emph{recursion rule on $A$ and $B$} is a relation $R \subseteq A \times B^* \times (A \uplus B)$, the set
 of all such rules is denoted by $\Rules(A,B)$. Each set of recursion rules \mbox{$\R \subseteq \Rules(A,B)$} forms a
@@ -174,45 +144,13 @@ and \mbox{$\Uparrow_\R~\subseteq A \times \{\bot\}$} is coinductively defined by
   }
 \end{mathpar}
 
-% Every \emph{recursion system} $S \subseteq \Rules(A,B)$ gives rise to a \emph{naive transition system}
-% $\mathcal{T}(S) = (\States(S),\phi_S,\psi_S,\vdash_S)$, where
-% \begin{itemize}
-% \item $\States(S) = (A \times S \cup B)^*(A \uplus B)$,
-% \item $\phi_S: A \to \States(S), a \mapsto a$,
-% \item $\psi_S: \States(S) \pto B, b \mapsto b$, and
-% \item $\vdash_S\, \subseteq \States(S) \times \States(S)$ is the smallest relation closed under the following
-%   inference rules:
-%   \begin{mathpar}
-%     \inferrule[(AA)]{%
-%       (a,\varepsilon,a') \in R \in S
-%     }{%
-%       wa \vdash_S w(a,R) a'
-%     }%
-%     \and
-%     \inferrule[(AB)]{%
-%       (a,\varepsilon,b) \in R \in S
-%     }{%
-%       wa \vdash_S wb
-%     }%
-%     \and
-%     \inferrule[(BA)]{%
-%       (a,b_1 \ldots b_n,a') \in R \in S
-%     }{%
-%       w(a,R)b_1 \ldots b_n \vdash_S w(a,R) b_1 \ldots b_n a'
-%     }%
-%     \and
-%     \inferrule[(BB)]{%
-%       (a,b_1 \ldots b_n,b) \in R \in S
-%     }{%
-%       w(a,R)b_1 \ldots b_n \vdash_S wb
-%     }%
-%   \end{mathpar}
-% \end{itemize}
-
 
 \section{Safety}
 \label{sec:Safety}
 
+
+A \emph{type system} for $A$ consists of a set $\Pi$ of types $\pi$ and sets $A^\pi \subseteq A$
+of well-typed arguments of type $\pi$ for all $\pi \in \Pi$.
 
 \begin{definition} \label{def:Safety}
   A semantic model $\mathcal{M} = (A,B,\Rightarrow)$ is \emph{safe} with respect to
@@ -241,15 +179,16 @@ respect to $\Pi$.
   A recursion system $\R$ is safe with respect to $\Pi$, if the following two properties 
   hold for every $R \in \R$, $a \in A^\pi$ and $b_1,\ldots,b_n \in B$ with $n \ge 0$:
   \begin{description}[labelindent=\parindent,style=nextline]
+  \item[Local Preservation]
+
+    If \mbox{$R \vdash (a,b_1 \ldots b_n)$} and \mbox{$(a,b_1 \ldots b_n,a') \in R$} for
+    some $a' \in A$, then there is some $\pi' \in \Pi$ such that $a' \in A^{\pi'}$.
+
   \item[Local Progress]
 
     If \mbox{$R \vdash (a,b_1 \ldots b_n)$}, then \mbox{$(a,b_1 \ldots b_n,x) \in R$} for
     some \mbox{$x \in A \uplus B$}
 
-  \item[Local Preservation]
-
-    If \mbox{$R \vdash (a,b_1 \ldots b_n)$} and \mbox{$(a,b_1 \ldots b_n,a') \in R$} for
-    some $a' \in A$, then there is some $\pi' \in \Pi$ such that $a' \in A^{\pi'}$.
   \end{description}
 \end{theorem}
 
@@ -274,6 +213,111 @@ respect to $\Pi$.
     
   \end{description}
 \end{proof}
+
+
+\section{Relation with transition systems}
+\label{sec:Relation_with_transition_systems}
+
+
+A \emph{transition system} $\T$ is a tuple $(\Sigma, \phi, \psi, \leadsto)$ where
+\begin{itemize}
+\item $\Sigma$ is a non-empty set of \emph{states} $\sigma$,
+\item $\phi: A \pto \Sigma$ is the \emph{input function},
+\item $\psi: \Sigma \pto B$ is the \emph{output function}, and
+\item $\leadsto~\subseteq \Sigma \times \Sigma$ is the \emph{transition relation}.
+\end{itemize}
+The elements of $A_0 = \dom(\phi)$ are called \emph{initial arguments}.
+We write \mbox{$\sigma_0 \leadsto^n \sigma_n$} if there exists a sequence of $n$ steps
+such that \mbox{$\sigma_0 \leadsto \sigma_1 \leadsto \ldots \leadsto \sigma_n$}. We
+write \mbox{$\sigma \leadsto^* \sigma'$} if \mbox{$\sigma \leadsto^n \sigma'$} for some
+\mbox{$n \ge 0$}.
+
+Let $\T = (\Sigma,\phi,\psi,\leadsto)$ be a transition system. The semantic model
+\mbox{$\M(\T) = (A,B,\Rightarrow_\T)$} of $\T$ is defined by:
+\[\begin{array}{ll}
+  a \Rightarrow_\T b
+  & \mbox{iff $\phi(a) = \sigma \leadsto^* \sigma'$ and $\psi(\sigma') = b$} \\
+  a \Rightarrow_\T \top
+  & \mbox{iff $\phi(a) = \sigma \leadsto^* \sigma' \not\leadsto$ and $\sigma' \not\in\dom(\psi)$} \\
+  a \Rightarrow_\T \bot
+  & \mbox{iff there is an infinite sequence $\phi(a) = \sigma_0 \leadsto \sigma_1 \leadsto \ldots$} \\
+\end{array}\]
+
+$\Pi$ is a type system for $\T$ if it is a type system for $A$ and there are sets $\Sigma^\pi$ for
+every $\pi \in \Pi$ such that $\sigma \in \Sigma^\pi$ whenever $a \in A^\pi$ and $\phi(a) = \sigma$.
+Now we can formalize the usual safety theorem, which is proved using preservation and progress
+theorems.
+
+\begin{theorem}
+  A transition system $\T = (\Sigma,\phi,\psi,\leadsto)$ is safe if the following two properties hold:
+  \begin{description}[labelindent=\parindent,style=nextline]
+  \item[Preservation] 
+
+    If $\sigma \in \Sigma^\pi$ and $\sigma \leadsto \sigma'$, then $\sigma' \in \Sigma^\pi$.
+
+  \item[Progress] 
+
+    If \mbox{$\sigma \in \Sigma^\pi$}, then \mbox{$\sigma \in \dom(\psi)$} or there is some
+    \mbox{$\sigma' \in \Sigma$} such that \mbox{$\sigma \leadsto \sigma'$}.
+    
+  \end{description}
+\end{theorem}
+
+\begin{proof}
+  Assume that there is some $a \in A^\pi$ such that \mbox{$\phi(a) = \sigma \leadsto^* \sigma'$}.
+  By \textbf{Preservation} we have $\sigma' \in \Sigma^\pi$ and by \textbf{Progress} we have either
+  $\sigma' \in \dom(\psi)$ or there is some $\sigma''$ such that $\sigma' \leadsto \sigma''$,
+  hence $a \not\Rightarrow_\T \top$.
+\end{proof}
+
+Every \emph{recursion system} $\R \subseteq \Rules(A,B)$ gives rise to a \emph{naive transition system}
+$\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
+\begin{itemize}
+\item $\States(\R) = (A \times \R \cup B)^*(A \uplus B)$,
+\item $\phi_\R: A \to \States(\R), a \mapsto a$,
+\item $\psi_\R: \States(\R) \pto B, b \mapsto b$, and
+\item $\leadsto_\R~\subseteq \States(\R) \times \States(\R)$ is the smallest relation closed under the following
+  inference rules in Figure~\ref{fig:Naive_transition_rules}.
+\end{itemize}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \irulesingle[(AA)]{%
+      R \in \R \\
+      (a,\varepsilon,a') \in R
+    }{%
+      wa \leadsto_\R w(a,R) a'
+    }%
+    \and
+    \irulesingle[(AB)]{%
+      R \in \R \\
+      (a,\varepsilon,b) \in R
+    }{%
+      wa \leadsto_\R wb
+    }%
+    \and
+    \irulesingle[(BA)]{%
+      R \in \R \\
+      (a,b_1 \ldots b_n,a') \in R
+    }{%
+      w(a,R)b_1 \ldots b_n \leadsto_\R w(a,R) b_1 \ldots b_n a'
+    }%
+    \and
+    \irulesingle[(BB)]{%
+      R \in \R \\
+      (a,b_1 \ldots b_n,b) \in R
+    }{%
+      w(a,R)b_1 \ldots b_n \leadsto_\R wb
+    }%
+  \end{mathpar}
+  \caption{Naive transition rules}
+  \label{fig:Naive_transition_rules}
+\end{figure}
+
+\begin{theorem}
+  Let $\R \subseteq \Rules(A,B)$. Then \mbox{$\M\left(\R\right) = \M\left(\T\left(\R\right)\right)$}.
+\end{theorem}
 
 
 \section{Conclusion}
