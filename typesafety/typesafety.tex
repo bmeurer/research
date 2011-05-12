@@ -1,0 +1,289 @@
+\documentclass[a4paper,final,preprint,sort&compress]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage[colorlinks=false,%
+            pdfkeywords={},%
+            pdftitle={A Step-indexed Semantic Model of Types for the Call-by-Name Lambda Calculus},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{mathpartir}
+
+\newdefinition{definition}{Definition}
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{lemma}[definition]{Lemma}
+\newproof{proof}{Proof}
+
+\newcommand{\Rules}{\ensuremath{\mathit{Rules}}}
+\newcommand{\States}{\ensuremath{\mathit{States}}}
+
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\pto}{\hookrightarrow}
+
+\def \irulesinglefraction#1#2{\hbox{$\begin{array}{@{}c@{}}
+    #1 \\[-1.2ex]
+    \hrulefill \\
+    #2
+  \end{array}$}}
+\def \iruledoublefraction#1#2{\hbox{$\begin{array}{@{}c@{}}
+    #1 \\[-1.2ex]
+    \hrulefill \\[-2.35ex]
+    \hrulefill \\
+    #2
+  \end{array}$}}
+\newcommand{\irulesingle}[3][]{\inferrule*[right={#1},myfraction=\irulesinglefraction]{#2}{#3}}
+\newcommand{\iruledouble}[3][]{\inferrule*[right={#1},myfraction=\iruledoublefraction]{#2}{#3}}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Type-safe recursion systems}
+
+\author[fnt]{Jan Thomas K\"olzer}
+\ead{jan.koelzer@student.uni-siegen.de}
+\author[cus]{Benedikt Meurer\corref{cor1}}
+\ead{meurer@informatik.uni-siegen.de}
+\author[cus]{Kurt Sieber}
+\ead{sieber@informatik.uni-siegen.de}
+\cortext[cor1]{Corresponding author}
+\address[fnt]{Naturwissenschaftlich-Technische Fakult\"at, Universit\"at Siegen, D-57068 Siegen, Germany}
+\address[cus]{Compilerbau und Softwareanalyse, Universit\"at Siegen, D-57068 Siegen, Germany}
+
+\begin{abstract}
+  TODO
+\end{abstract}
+
+\begin{keyword}
+  TODO
+\end{keyword}
+
+\end{frontmatter}
+
+
+\section{Introduction}
+\label{sec:Introduction}
+
+
+TODO
+
+
+\section{Recursion systems}
+\label{sec:Recursion_systems}
+
+\newcommand{\M}{\ensuremath{\mathcal{M}}}
+
+A \emph{semantic model} $\M$ is a triple $(A,B,\Rightarrow)$, where $A$ and $B$ are disjoint sets
+and \mbox{$\Rightarrow~\subseteq A \times B_\bot^\top$} with $B_\bot^\top = B \uplus \{\bot,\top\}$. The $a \in A$
+are called \emph{arguments} and the $b \in B$ are called \emph{results}.
+
+\begin{definition}
+  A semantic model $\M = (A,B,\Rightarrow)$ is called \emph{deterministic}, if for every $a \in A$
+  there is at most one $r \in B_\bot^\top$ such that $a \Rightarrow r$.
+\end{definition}
+
+% A \emph{transition system} $\mathcal{T}$ is a tuple $(\Sigma, \phi, \psi, \vdash)$ where
+% \begin{itemize}
+% \item $\Sigma$ is a non-empty set of \emph{states} $\sigma$,
+% \item $\phi: A \pto \Sigma$ is the \emph{input function},
+% \item $\psi: \Sigma \pto B$ is the \emph{output function}, and
+% \item $\vdash\, \subseteq \Sigma \times \Sigma$ is the \emph{transition relation}.
+% \end{itemize}
+% The elements of $A_0 = \dom(\phi)$ are called \emph{initial arguments}.
+
+% Given a transition system $\mathcal{T} = (\Sigma,\phi,\psi,\vdash)$. A \emph{computation} is a
+% maximal, finite or infinite, sequence of steps $\phi(a) = \sigma_1 \vdash \sigma_2 \vdash \ldots$. A
+% computation for $a \in A_0$
+% \begin{itemize}
+% \item \emph{terminates with $b \in B$}, if the sequence ends with a state $\sigma$, such that $\psi(\sigma) = b$,
+% \item \emph{diverges}, if the sequence is infinite, or
+% \item \emph{gets stuck}, otherwise.
+% \end{itemize}
+
+% \begin{definition} \label{def:Semantic_model_of_transition_system}
+%   For every transition system $\mathcal{T}$, a semantic model
+%   \mbox{$\mathcal{M}_{\mathcal{T}} = (A,B,\Rightarrow_{\mathcal{T}})$} can be defined by:
+%   \[\begin{array}{lcl}
+%     a \Rightarrow_{\mathcal{T}} b
+%     & \mbox{iff} & \mbox{$a$ has a computation that terminates with $b$} \\
+%     a \Rightarrow_{\mathcal{T}} \bot
+%     & \mbox{iff} & \mbox{$a$ has a diverging computation} \\
+%     a \Rightarrow_{\mathcal{T}} \top
+%     & \mbox{iff} & \mbox{$a$ has a computation that gets stuck} \\
+%   \end{array}\]
+% \end{definition}
+
+\newcommand{\R}{\ensuremath{\mathcal{R}}}
+
+A \emph{recursion rule on $A$ and $B$} is a relation $R \subseteq A \times B^* \times (A \uplus B)$, the set
+of all such rules is denoted by $\Rules(A,B)$. Each set of recursion rules \mbox{$\R \subseteq \Rules(A,B)$} forms a
+\emph{recursion system}.
+
+Every \emph{recursion system} $\R \subseteq \Rules(A,B)$ gives raise to a semantic model
+\mbox{$\M(\R) = (A,B,\Rightarrow_\R)$}, where $\Rightarrow_\R$ is the disjoint union of
+$\Downarrow_\R$ and $\Uparrow_\R$. 
+\mbox{$\Downarrow_\R~\subseteq A \times B^\top$} is inductively defined by:
+\begin{mathpar}
+  \irulesingle[(Res)]{
+    R \in \R \\
+    R \vdash (a,b_1 \ldots b_n) \\
+    (a,b_1 \ldots b_n,b) \in R
+  }{
+    a \Downarrow_\R b
+  }
+  \and
+  \irulesingle[(Err-1)]{
+    \forall R \in \R, x \in A \uplus B: (a,\varepsilon,x) \not\in R
+  }{
+    a \Downarrow_\R \top
+  }
+  \and
+  \irulesingle[(Err-2)]{
+    R \in \R \\
+    R \vdash (a,b_1 \ldots b_{n+1}) \\
+    \forall x \in A \uplus B: (a,b_1 \ldots b_{n+1},x) \not\in R
+  }{
+    a \Downarrow_\R \top
+  }
+  \and
+  \irulesingle[(Err-3)]{
+    R \in \R \\
+    R \vdash (a,b_1 \ldots b_n) \\
+    (a,b_1 \ldots b_n,a') \in R \\
+    a' \Downarrow_\R \top
+  }{
+    a \Downarrow_\R \top
+  }
+\end{mathpar}
+where we say that $b_1,\ldots,b_n$ are \emph{temporary results for $a$ with respect to $R$}, written
+$R \vdash (a,b_1 \ldots b_n)$, if there are $a_1,\ldots,a_n$ such that for every
+$i = 1,\ldots,n$ we have $a_i \Downarrow_\R b_i$ and $(a,b_1 \ldots b_{i-1},a_i) \in R$,
+and \mbox{$\Uparrow_\R~\subseteq A \times \{\bot\}$} is coinductively defined by:
+\begin{mathpar}
+  \iruledouble[(Div)]{
+    R \in \R \\
+    R \vdash (a,b_1 \ldots b_n) \\
+    (a,b_1 \ldots b_n,a') \in R \\
+    a' \Uparrow_\R \bot
+  }{
+    a \Uparrow_\R \bot
+  }
+\end{mathpar}
+
+% Every \emph{recursion system} $S \subseteq \Rules(A,B)$ gives rise to a \emph{naive transition system}
+% $\mathcal{T}(S) = (\States(S),\phi_S,\psi_S,\vdash_S)$, where
+% \begin{itemize}
+% \item $\States(S) = (A \times S \cup B)^*(A \uplus B)$,
+% \item $\phi_S: A \to \States(S), a \mapsto a$,
+% \item $\psi_S: \States(S) \pto B, b \mapsto b$, and
+% \item $\vdash_S\, \subseteq \States(S) \times \States(S)$ is the smallest relation closed under the following
+%   inference rules:
+%   \begin{mathpar}
+%     \inferrule[(AA)]{%
+%       (a,\varepsilon,a') \in R \in S
+%     }{%
+%       wa \vdash_S w(a,R) a'
+%     }%
+%     \and
+%     \inferrule[(AB)]{%
+%       (a,\varepsilon,b) \in R \in S
+%     }{%
+%       wa \vdash_S wb
+%     }%
+%     \and
+%     \inferrule[(BA)]{%
+%       (a,b_1 \ldots b_n,a') \in R \in S
+%     }{%
+%       w(a,R)b_1 \ldots b_n \vdash_S w(a,R) b_1 \ldots b_n a'
+%     }%
+%     \and
+%     \inferrule[(BB)]{%
+%       (a,b_1 \ldots b_n,b) \in R \in S
+%     }{%
+%       w(a,R)b_1 \ldots b_n \vdash_S wb
+%     }%
+%   \end{mathpar}
+% \end{itemize}
+
+
+\section{Safety}
+\label{sec:Safety}
+
+
+\begin{definition} \label{def:Safety}
+  A semantic model $\mathcal{M} = (A,B,\Rightarrow)$ is \emph{safe} with respect to
+  some type system $\Pi$, if for every type $\pi \in \Pi$ there is no $a \in A^\pi$ such that
+  $a \Rightarrow \top$.
+\end{definition}
+
+% A transition system $\mathcal{T}$ is safe with respect to $\Pi$ if $\mathcal{M}_{\mathcal{T}}$
+% is safe with respect to $\Pi$.
+A recursion system $\R$ is safe with respect to $\Pi$ if $\M(\R)$ is safe with
+respect to $\Pi$.
+
+% \begin{lemma}
+%   A transition system $\mathcal{T} = (\Sigma, \phi, \psi, \vdash)$ is safe with respect to
+%   some type system $\Pi$ if, whenever $\pi \in \Pi$, $a \in A^\pi$ and $\sigma \in \Sigma$
+%   with $\phi(a) \vdash^* \sigma$, then either $\sigma \in \dom(\psi)$ or there is some
+%   $\sigma' \in \Sigma$ such that $\sigma \vdash \sigma'$.
+% \end{lemma}
+
+% \begin{proof}
+%   Immediate consequence of definition \ref{def:Semantic_model_of_transition_system}
+%   and \ref{def:Safety}.
+% \end{proof}
+
+\begin{theorem}[Safety]
+  A recursion system $\R$ is safe with respect to $\Pi$, if the following two properties 
+  hold for every $R \in \R$, $a \in A^\pi$ and $b_1,\ldots,b_n \in B$ with $n \ge 0$:
+  \begin{description}[labelindent=\parindent,style=nextline]
+  \item[Local Progress]
+
+    If \mbox{$R \vdash (a,b_1 \ldots b_n)$}, then \mbox{$(a,b_1 \ldots b_n,x) \in R$} for
+    some \mbox{$x \in A \uplus B$}
+
+  \item[Local Preservation]
+
+    If \mbox{$R \vdash (a,b_1 \ldots b_n)$} and \mbox{$(a,b_1 \ldots b_n,a') \in R$} for
+    some $a' \in A$, then there is some $\pi' \in \Pi$ such that $a' \in A^{\pi'}$.
+  \end{description}
+\end{theorem}
+
+\begin{proof}
+  Assume that $a \Downarrow_\R \top$ holds. By induction on the derivation of $a \Downarrow_\R \top$ and
+  case analysis on the inference rule:
+  \begin{description}[font=\sc,labelindent=\parindent,style=nextline]
+  \item[(Err-1)]
+
+    Then there is no \mbox{$x \in A \uplus B$} such that \mbox{$(a,\varepsilon,x) \in R$},
+    contrary to \textbf{Local Progress}.
+
+  \item[(Err-2)]
+
+    Then there is no \mbox{$x \in A \uplus B$} such that \mbox{$(a,b_1 \ldots b_{n+1},x) \in R$},
+    contrary to \textbf{Local Progress}.
+
+  \item[(Err-3)]
+
+    By \textbf{Local Preservation} there is some $\pi'$ such that $a' \in A^{\pi'}$, and the result
+    follows by induction hypothesis.
+    
+  \end{description}
+\end{proof}
+
+
+\section{Conclusion}
+\label{sec:Conclusion}
+
+
+TODO
+
+
+\bibliographystyle{elsarticle-num}
+\bibliography{bibliography}
+
+\end{document}
