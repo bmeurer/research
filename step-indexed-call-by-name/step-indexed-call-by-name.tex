@@ -100,7 +100,7 @@ in the simply typed $\lambda$-calculus.
 
 The language we consider in this paper is the pure $\lambda$-calculus extended with constants,
 the simplest functional language that exhibits run-time errors (closed terms that ``go wrong'').
-Its syntax is shown in figure~\ref{fig:Basic_syntax}.
+Its syntax is shown in Figure~\ref{fig:Basic_syntax}.
 \begin{figure}[htb]
   \centering
   \begin{tabular}{lrcl}
@@ -132,7 +132,7 @@ $\abstr{x}{a}$.
   \label{fig:Small_step_semantics}
 \end{figure}
 
-The operational semantics, as shown in small-step style in figure~\ref{fig:Small_step_semantics},
+The operational semantics, as shown in small-step style in Figure~\ref{fig:Small_step_semantics},
 is entirely conventional \cite{Pierce02}. We write \mbox{$a_0 \to^k a_k$} if there exists a sequence of $k$ 
 steps such that \mbox{$a_0 \to a_1 \to \ldots \to a_k$}. We write \mbox{$a \to^* b$} if \mbox{$a \to^k b$}
 for some \mbox{$k \ge 0$}. We say that \emph{$a$ is safe for $k$ steps} if for any sequence \mbox{$a \to^j b$}
@@ -190,7 +190,7 @@ form \mbox{$\Gamma \models a : \tau$}.
   \caption{Semantic types}
   \label{fig:Semantic_types}
 \end{figure}
-Figure~\ref{fig:Semantic_types} gives the types and figure~\ref{fig:Semantic_typing_lemmata} gives the
+Figure~\ref{fig:Semantic_types} gives the types and Figure~\ref{fig:Semantic_typing_lemmata} gives the
 typing lemmata for the simply typed $\lambda$-calculus.
 The remainder of this section is devoted to proving the soundness of these lemmata.
 \begin{figure}[htb]
@@ -252,7 +252,7 @@ from the definition of $\to$.
   term in less than $k$ steps, and hence \mbox{$\app{a_1}{a_2} :_k \tau'$}.
 
   Otherwise we have \mbox{$a_2 :_{k-(j+1)} \tau$} by closure under decreasing index, and
-  \mbox{$\pair{k-j,\abstr{x}{b}} \in \tau \to \tau'$} by definition~\ref{def:Type}.
+  \mbox{$\pair{k-j,\abstr{x}{b}} \in \tau \to \tau'$} by Definition~\ref{def:Type}.
   \mbox{$b[x \mapsto a_2] :_{k-(j+1)} \tau'$} follows by definition of $\to$. But now we have
   \mbox{$\app{a_1}{a_2} \to^{j+1} b[x \mapsto a_2]$} and \mbox{$b[x \mapsto a_2] :_{k-(j+1)} \tau$}, and
   we can conclude $\app{a_1}{a_2} :_k \tau'$.
@@ -265,7 +265,7 @@ from the definition of $\to$.
 \end{theorem}
 
 \begin{proof}
-  By lemma~\ref{lem:Application} we have \mbox{$\gamma(\app{a_1}{a_2}) :_k \tau'$} for every $k \ge 0$
+  By Lemma~\ref{lem:Application} we have \mbox{$\gamma(\app{a_1}{a_2}) :_k \tau'$} for every $k \ge 0$
   and $\gamma$, whenever \mbox{$\gamma :_k \Gamma$},
   \mbox{$\gamma(a_1) :_k \tau \to \tau'$} and \mbox{$\gamma(a_2) :_k \tau$}. Hence, we conclude
   \mbox{$\Gamma \models \app{a_1}{a_2} :_k \tau'$} (for every $k \ge 0$).
@@ -321,7 +321,7 @@ for recursive types.
   \label{fig:Recursive_types}
 \end{figure}
 
-We will show that the typing lemmata in figure~\ref{fig:Recursive_types} hold in the case where
+We will show that the typing lemmata in Figure~\ref{fig:Recursive_types} hold in the case where
 $F$ is \emph{well founded}. This is achieved by proving $\mu F = F(\mu F)$ for every
 well founded $F$, essentially proving that our recursive types are actually equi-recursive types,
 in contrast to iso-recursive types where $\mu F$ is only isomorphic to $F(\mu F)$ via
@@ -389,7 +389,7 @@ monotonocity.
 
 We consider the standard fixed point operator \cite{Pierce02}, written $\fix{a}$, for the
 call-by-name lambda calculus. The small step rule and the new typing lemma is shown in
-figure~\ref{fig:General_recursion}. The remainder of this section is devoted to proving the
+Figure~\ref{fig:General_recursion}. The remainder of this section is devoted to proving the
 soundness of the semantic typing lemma.
 
 \begin{lemma}
@@ -399,7 +399,7 @@ soundness of the semantic typing lemma.
 \begin{proof}
   By induction on $k$. Since \mbox{$a :_k \tau \to \tau$} implies \mbox{$a :_j \tau \to \tau$} for every
   \mbox{$j < k$}, we also have \mbox{$(\fix{a}) :_j \tau$} for every \mbox{$j < k$} by induction hypothesis, and using
-  lemma~\ref{lem:Application} we also have \mbox{$(\app{a}{(\fix{a})}) :_j \tau$}. Of course,
+  Lemma~\ref{lem:Application} we also have \mbox{$(\app{a}{(\fix{a})}) :_j \tau$}. Of course,
   \mbox{$(\fix{a})$} is closed whenever $a$ is closed. So assume that there is some irreducible term
   $b$ and some \mbox{$j < k$} such that \mbox{$(\fix{a}) \to^j b$}.
   This implies \mbox{$j > 0$} and \mbox{$(\fix{a}) \to \app{a}{(\fix{a})} \to^{j-1} b$}, and since
@@ -408,7 +408,7 @@ soundness of the semantic typing lemma.
 \end{proof}
 
 This leads immediately to the following theorem, stating the soundness of the typing lemma
-for the call-by-name fixed point operator as shown in figure~\ref{fig:General_recursion}.
+for the call-by-name fixed point operator as shown in Figure~\ref{fig:General_recursion}.
 
 \begin{theorem}[General recursion]
   Let $\Gamma$ be a type environment, let $a$ be a term, and let $\tau$ be a type.
