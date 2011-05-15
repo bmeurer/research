@@ -1,9 +1,8 @@
 \documentclass[10pt,a4paper,final,twocolumn]{article}
 
-\usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage[english]{babel}
+\usepackage{bmeurer}
 \usepackage{color}
 \usepackage[colorlinks=false,%
             pdfkeywords={},%
@@ -26,8 +25,6 @@
 \newcommand{\Nat}{\ensuremath{\mathsf{Nat}}}
 \newcommand{\pair}[1]{\ensuremath{\langle{#1}\rangle}}
 \newcommand{\floor}[1]{\ensuremath{\left\lfloor{#1}\right\rfloor}}
-
-\DeclareMathOperator{\dom}{dom}
 
 \begin{document}
 
@@ -59,7 +56,7 @@
 
 Until recently, the most common way to prove type safety was by a purely syntactic proof
 technique called subject-reduction, which was adapted from combinatory logic by Wright
-and Felleisen \cite{Wright94}. One shows that each step of computation preserves
+and Felleisen \cite{WrightFelleisen94}. One shows that each step of computation preserves
 typability (preservation) and that typable states are safe (progress).
 
 This is not the only way though. Type safety can also be proved with respect to a semantic model. The
@@ -74,14 +71,14 @@ model.
 \label{par:Related_work}
 
 
-Appel et al. introduced step-indexed models in the context of foundational proof carrying code \cite{Appel00}.
+Appel \ETAL introduced step-indexed models in the context of foundational proof carrying code \cite{AppelFelty00}.
 While they were primarily interested in low-level languages, they also applied their technique to a pure
-call-by-value $\lambda$-calculus with recursive types \cite{Appel01}. Our work generalizes the framework
-by Appel et al. to call-by-name by generalizing ground substitutions to terms instead of just values.
+call-by-value $\lambda$-calculus with recursive types \cite{AppelMcAllester01}. Our work generalizes the framework
+by Appel \ETAL to call-by-name by generalizing ground substitutions to terms instead of just values.
 
-Ahmed et al. successfully extended the step-indexed models introduced by Appel et al. to general references
-and impredicative polymorphism \cite{Ahmed04,Ahmed02}. Hritcu et al. further extended it to object types,
-subtyping and bounded quantified types \cite{Hritcu07,Hritcu09}. They also indirectly considered the
+Ahmed \ETAL successfully extended the step-indexed models introduced by Appel \ETAL to general references
+and impredicative polymorphism \cite{Ahmed04,AhmedAppelVirga02}. Hritcu \ETAL further extended it to object types,
+subtyping and bounded quantified types \cite{Hritcu07,HritcuSchwinghammer09}. They also indirectly considered the
 call-by-name $\lambda$-calculus using its well-known encoding in the $\varsigma$-calculus \cite{AbadiCardelli96},
 including an encoding of the fixed point combinator \cite{Fisher94}.
 
@@ -296,7 +293,7 @@ from the definition of $\to$.
 \label{sec:Recursive_types}
 
 
-Recursive types were one of the main motivations behind the model of Appel et al. \cite{Appel01}, and
+Recursive types were one of the main motivations behind the model of Appel \ETAL \cite{AppelMcAllester01}, and
 their results apply here, therefore we do not go into much detail. Figure~\ref{fig:Recursive_types}
 shows the recursion type operator $\mu$, which computes a candidate fixed point of a function $F$
 from types to types by repeatedly applying the function to $\bot$, and the two typing lemmata
@@ -359,15 +356,16 @@ whether or not \mbox{$a :_k \tau$}, it suffices to show \mbox{$b :_j \tau$} for 
   If $F$ is a well founded functional, then $\mu F = F(\mu F)$.
 \end{theorem}
 
-See the paper of Appel and McAllester \cite{Appel01} for the proof sketch.
+See the paper of Appel and McAllester \cite{AppelMcAllester01} for the proof sketch.
 
 
 \section{General recursion}
 \label{sec:General_recursion}
 
 
-As mentioned by Appel et al. \cite{Appel01}, step-indexed types can also be used to simplify the semantic treatment
-of the fixed point rule to type recursive functions in the simply typed $\lambda$-calculus (without recursive types).
+As mentioned by Appel \ETAL \cite{AppelMcAllester01}, step-indexed types can also be used to simplify the semantic
+treatment of the fixed point rule to type recursive functions in the simply typed $\lambda$-calculus (without
+recursive types).
 Using the generalized framework presented in section~\ref{sec:Semantic_types}, we are able to provide a direct,
 semantic soundness proof of the fixed point rule, which avoids any use of semantic domains, term orders, or
 monotonocity.
