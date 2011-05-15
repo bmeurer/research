@@ -1,8 +1,7 @@
 \documentclass[a4paper,draft,preprint,sort&compress]{elsarticle}
 
-\usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage[english]{babel}
+\usepackage{bmeurer}
 \usepackage{color}
 \usepackage{enumitem}
 \usepackage[colorlinks=false,%
@@ -24,9 +23,6 @@
 
 \newcommand{\Rules}{\ensuremath{\mathit{Rules}}}
 \newcommand{\States}{\ensuremath{\mathit{States}}}
-
-\DeclareMathOperator{\dom}{dom}
-\DeclareMathOperator{\pto}{\hookrightarrow}
 
 \def \irulesinglefraction#1#2{\hbox{$\begin{array}{@{}c@{}}
     #1 \\[-1.2ex]
@@ -258,7 +254,7 @@ A transition system $\T$ is called safe with respect to $\Pi$ if $\M(\T)$ is saf
 $\Pi$ is a type system for $\T$ if it is a type system for $A$ and there are sets $\Sigma^\pi$ for
 every $\pi \in \Pi$ such that $\sigma \in \Sigma^\pi$ whenever $a \in A^\pi$ and $\phi(a) = \sigma$.
 Now we can formalize the usual safety theorem, which is proved using preservation and progress
-theorems (Wright and Felleisen \cite{Wright94}).
+theorems (Wright and Felleisen \cite{WrightFelleisen94}).
 
 \begin{theorem}
   A transition system $\T = (\Sigma,\phi,\psi,\leadsto)$ is safe with respect to $\Pi$
@@ -337,12 +333,69 @@ $\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
 \end{proof}
 
 
+\section{Related work}
+\label{sec:Related_work}
+
+
+\paragraph{Big-step semantics}
+
+The traditional approach to prove type safety using big-step operational semantics works by
+providing additional inductive inference rules to define a predicate $a \Rightarrow \mathit{wrong}$
+\cite{Tofte87}. One then proves that \mbox{$\neg(a \Rightarrow \mathit{wrong})$} whenever $a$ is
+well-typed. Our approach can be seen as a generalization of the traditional approach: One no longer
+needs to provide extra rules to define \mbox{$a \Rightarrow \mathit{wrong}$}, as these are derived from
+the definition of the recursion system, and so there is no longer a risk that the rules for
+\mbox{$a \Rightarrow \mathit{wrong}$} are incomplete and miss some cases of ``going wrong''.
+
+Cousot and Cousot \cite{CousotCousot92}, and later Leroy \ETAL \cite{LeroyGrall09},
+proposed two approaches to enable safety proofs using big-step semantics based on
+coinductive definitions and proofs: the first complements the normal inductive big-step
+evaluation rules for finite evaluations with coinductive big-step rules describing diverging
+evaluations; the second -- called coevaluation -- simply interprets coinductively the normal
+big-step evaluation rules, thus enabling them to describe both terminating and non-terminating
+evaluations.
+Both approaches do not work for non-determinstic big-step semantics; the
+coevaluation approach is more elegant and simpler, but fails for interesting type systems.
+
+Following up on \cite{CousotCousot92}, Cousot and Cousot recently introduced bi-inductive
+semantics \cite{CousotCousot07} and applied it to the call-by-value $\lambda$-calculus.
+Bi-inductive semantics are defined in terms of smallest fixed points with respect to a
+non-standard ordering. This approach captures both terminating and diverging evaluations
+using a common set of inference rules. They start from a big-step trace semantics and
+systematically derive the other semantics (big-step and small-step) by abstracton.
+\textbf{TODO:} How does their approach relate to our approach? Their approach should
+work with non-determinism, right?
+
+
+\paragraph{Small-step semantics}
+
+Until recently, the most common way to prove type safety was by a syntactic proof
+technique, based on small-step semantics, which was adopted from combinatory
+logic by Wright and Felleisen \cite{WrightFelleisen94}. One shows that each step of
+computation preserves typability (\emph{preservation} or \emph{subject reduction})
+and that typable states are safe (\emph{progress}) \cite{Pierce02}.
+
+Later Appel \ETAL introduced step-indexed semantic models in the context of
+foundational proof-carrying code \cite{AppelFelty00}, and applied their technique
+to prove type safety of a pure $\lambda$-calculus with recursive types
+\cite{AppelMcAllester01}. Ahmed \ETAL successfully extended this technique to
+general references and impredicative polymorphmism \cite{AhmedAppelVirga02,Ahmed04},
+and Hritcu \ETAL further extended it with object types and subtyping
+\cite{Hritcu07,HritcuSchwinghammer09}.
+
+Both the subject-reduction approach as well as the later semantic approaches
+can be extended to handle fairly complex type systems \cite{Pierce02}, and also play well with
+non-determinstic operational semantics, which is due to the fact that they are
+based on small-step operational semantics. This is great for low-level languages,
+where small-step operational semantics is the natural choice to describe the
+system, but does not always provide the best option for higher-level languages.
+
+
 \section{Conclusion}
 \label{sec:Conclusion}
 
 
-Related work by Leroy and Grall \cite{LeroyGrall09} on coinductive determinstic big-step operational
-semantics. TODO
+TODO
 
 
 \bibliographystyle{elsarticle-num}
