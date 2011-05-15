@@ -1,4 +1,4 @@
-\documentclass[a4paper,final,preprint,sort&compress]{elsarticle}
+\documentclass[a4paper,draft,preprint,sort&compress]{elsarticle}
 
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -85,8 +85,8 @@ and \mbox{$\Rightarrow~\subseteq A \times B_\bot^\top$} with $B_\bot^\top = B \u
 are called \emph{arguments} and the $b \in B$ are called \emph{results}.
 
 \begin{definition}
-  A semantic model $\M = (A,B,\Rightarrow)$ is called \emph{deterministic}, if for every $a \in A$
-  there is at most one $r \in B_\bot^\top$ such that $a \Rightarrow r$.
+  A semantic model $\M = (A,B,\Rightarrow)$ is called \emph{deterministic}, if $\Rightarrow$ is a function.
+%  for every $a \in A$ there is at most one $r \in B_\bot^\top$ such that $a \Rightarrow r$.
 \end{definition}
 
 A \emph{recursion rule on $A$ and $B$} is a relation $R \subseteq A \times B^* \times (A \uplus B)$, the set
@@ -96,53 +96,65 @@ of all such rules is denoted by $\Rules(A,B)$. Each set of recursion rules \mbox
 Every \emph{recursion system} $\R \subseteq \Rules(A,B)$ gives raise to a semantic model
 \mbox{$\M(\R) = (A,B,\Rightarrow_\R)$}, where $\Rightarrow_\R$ is the disjoint union of
 $\Downarrow_\R$ and $\Uparrow_\R$. 
-\mbox{$\Downarrow_\R~\subseteq A \times B^\top$} is inductively defined by:
-\begin{mathpar}
-  \irulesingle[(Res)]{
-    R \in \R \\
-    R \vdash (a,b_1 \ldots b_n) \\
-    (a,b_1 \ldots b_n,b) \in R
-  }{
-    a \Downarrow_\R b
-  }
-  \and
-  \irulesingle[(Err-1)]{
-    \forall R \in \R, x \in A \uplus B: (a,\varepsilon,x) \not\in R
-  }{
-    a \Downarrow_\R \top
-  }
-  \and
-  \irulesingle[(Err-2)]{
-    R \in \R \\
-    R \vdash (a,b_1 \ldots b_{n+1}) \\
-    \forall x \in A \uplus B: (a,b_1 \ldots b_{n+1},x) \not\in R
-  }{
-    a \Downarrow_\R \top
-  }
-  \and
-  \irulesingle[(Err-3)]{
-    R \in \R \\
-    R \vdash (a,b_1 \ldots b_n) \\
-    (a,b_1 \ldots b_n,a') \in R \\
-    a' \Downarrow_\R \top
-  }{
-    a \Downarrow_\R \top
-  }
-\end{mathpar}
+\mbox{$\Downarrow_\R~\subseteq A \times B^\top$} is inductively defined by the inference
+rules in Figure~\ref{fig:Inductive_inference_rules},
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \irulesingle[(Res)]{
+      R \in \R \\
+      R \vdash (a,b_1 \ldots b_n) \\
+      (a,b_1 \ldots b_n,b) \in R
+    }{
+      a \Downarrow_\R b
+    }
+    \and
+    \irulesingle[(Err-1)]{
+      \forall R \in \R, x \in A \uplus B: (a,\varepsilon,x) \not\in R
+    }{
+      a \Downarrow_\R \top
+    }
+    \and
+    \irulesingle[(Err-2)]{
+      R \in \R \\
+      R \vdash (a,b_1 \ldots b_{n+1}) \\
+      \forall x \in A \uplus B: (a,b_1 \ldots b_{n+1},x) \not\in R
+    }{
+      a \Downarrow_\R \top
+    }
+    \and
+    \irulesingle[(Err-3)]{
+      R \in \R \\
+      R \vdash (a,b_1 \ldots b_n) \\
+      (a,b_1 \ldots b_n,a') \in R \\
+      a' \Downarrow_\R \top
+    }{
+      a \Downarrow_\R \top
+    }
+  \end{mathpar}
+  \caption{Inductive inference rules}
+  \label{fig:Inductive_inference_rules}
+\end{figure}
 where we say that $b_1,\ldots,b_n$ are \emph{temporary results for $a$ with respect to $R$}, written
 $R \vdash (a,b_1 \ldots b_n)$, if there are $a_1,\ldots,a_n$ such that for every
 $i = 1,\ldots,n$ we have $a_i \Downarrow_\R b_i$ and $(a,b_1 \ldots b_{i-1},a_i) \in R$,
-and \mbox{$\Uparrow_\R~\subseteq A \times \{\bot\}$} is coinductively defined by:
-\begin{mathpar}
-  \iruledouble[(Div)]{
-    R \in \R \\
-    R \vdash (a,b_1 \ldots b_n) \\
-    (a,b_1 \ldots b_n,a') \in R \\
-    a' \Uparrow_\R \bot
-  }{
-    a \Uparrow_\R \bot
-  }
-\end{mathpar}
+and \mbox{$\Uparrow_\R~\subseteq A \times \{\bot\}$} is coinductively defined by the
+inference rule in Figure~\ref{fig:Coinductive_inference_rules}.
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \iruledouble[(Div)]{
+      R \in \R \\
+      R \vdash (a,b_1 \ldots b_n) \\
+      (a,b_1 \ldots b_n,a') \in R \\
+      a' \Uparrow_\R \bot
+    }{
+      a \Uparrow_\R \bot
+    }
+  \end{mathpar}
+  \caption{Coinductive inference rules}
+  \label{fig:Coinductive_inference_rules}
+\end{figure}
 
 
 \section{Safety}
@@ -153,14 +165,12 @@ A \emph{type system} for $A$ consists of a set $\Pi$ of types $\pi$ and sets $A^
 of well-typed arguments of type $\pi$ for all $\pi \in \Pi$.
 
 \begin{definition} \label{def:Safety}
-  A semantic model $\mathcal{M} = (A,B,\Rightarrow)$ is \emph{safe} with respect to
+  A semantic model $\mathcal{M} = (A,B,\Rightarrow)$ is called \emph{safe} with respect to
   some type system $\Pi$, if for every type $\pi \in \Pi$ there is no $a \in A^\pi$ such that
   $a \Rightarrow \top$.
 \end{definition}
 
-% A transition system $\mathcal{T}$ is safe with respect to $\Pi$ if $\mathcal{M}_{\mathcal{T}}$
-% is safe with respect to $\Pi$.
-A recursion system $\R$ is safe with respect to $\Pi$ if $\M(\R)$ is safe with
+A recursion system $\R$ is called safe with respect to $\Pi$ if $\M(\R)$ is safe with
 respect to $\Pi$.
 
 % \begin{lemma}
@@ -243,13 +253,16 @@ Let $\T = (\Sigma,\phi,\psi,\leadsto)$ be a transition system. The semantic mode
   & \mbox{iff there is an infinite sequence $\phi(a) = \sigma_0 \leadsto \sigma_1 \leadsto \ldots$} \\
 \end{array}\]
 
+A transition system $\T$ is called safe with respect to $\Pi$ if $\M(\T)$ is safe with respect to $\Pi$.
+
 $\Pi$ is a type system for $\T$ if it is a type system for $A$ and there are sets $\Sigma^\pi$ for
 every $\pi \in \Pi$ such that $\sigma \in \Sigma^\pi$ whenever $a \in A^\pi$ and $\phi(a) = \sigma$.
 Now we can formalize the usual safety theorem, which is proved using preservation and progress
 theorems (Wright and Felleisen \cite{Wright94}).
 
 \begin{theorem}
-  A transition system $\T = (\Sigma,\phi,\psi,\leadsto)$ is safe if the following two properties hold:
+  A transition system $\T = (\Sigma,\phi,\psi,\leadsto)$ is safe with respect to $\Pi$
+  if the following two properties hold:
   \begin{description}[labelindent=\parindent,style=nextline]
   \item[Preservation] 
 
