@@ -373,7 +373,13 @@ Until recently, the most common way to prove type safety was by a syntactic proo
 technique, based on small-step semantics, which was adopted from combinatory
 logic by Wright and Felleisen \cite{WrightFelleisen94}. One shows that each step of
 computation preserves typability (\emph{preservation} or \emph{subject reduction})
-and that typable states are safe (\emph{progress}) \cite{Pierce02}.
+and that typable states are safe (\emph{progress}). There are
+languages where these properties do not hold, but which can nevertheless be
+considered type-safe. For example, if one formalizes the operational semantics
+of Java in small-step style \cite{FlattKrishnamurthiFelleisen98,IgarashiPierceWadler01},
+type preservation in its standard form fails. This is
+not a defect in the language, but rather an artifact of the formalization, which
+disappears, for example, in big-step operational semantics \cite{Pierce02}.
 
 Later Appel \ETAL introduced step-indexed semantic models in the context of
 foundational proof-carrying code \cite{AppelFelty00}, and applied their technique
