@@ -17,6 +17,9 @@
 \newtheorem{lemma}[definition]{Lemma}
 \newproof{proof}{Proof}
 
+\newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
+\newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+
 \newcommand{\M}{\ensuremath{\mathcal{M}}}
 \newcommand{\R}{\ensuremath{\mathcal{R}}}
 \newcommand{\T}{\ensuremath{\mathcal{T}}}
@@ -93,7 +96,7 @@ Every \emph{recursion system} $\R \subseteq \Rules(A,B)$ gives raise to a semant
 \mbox{$\M(\R) = (A,B,\Rightarrow_\R)$}, where $\Rightarrow_\R$ is the disjoint union of
 $\Downarrow_\R$ and $\Uparrow_\R$. 
 \mbox{$\Downarrow_\R~\subseteq A \times B^\top$} is inductively defined by the inference
-rules in Figure~\ref{fig:Inductive_inference_rules},
+rules in Figure~\ref{fig:Inductive_meta_rules},
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
@@ -128,14 +131,14 @@ rules in Figure~\ref{fig:Inductive_inference_rules},
       a \Downarrow_\R \top
     }
   \end{mathpar}
-  \caption{Inductive inference rules}
-  \label{fig:Inductive_inference_rules}
+  \caption{Inductive meta rules}
+  \label{fig:Inductive_meta_rules}
 \end{figure}
 where we say that $b_1,\ldots,b_n$ are \emph{temporary results for $a$ with respect to $R$}, written
 $R \vdash (a,b_1 \ldots b_n)$, if there are $a_1,\ldots,a_n$ such that for every
 $i = 1,\ldots,n$ we have $a_i \Downarrow_\R b_i$ and $(a,b_1 \ldots b_{i-1},a_i) \in R$,
 and \mbox{$\Uparrow_\R~\subseteq A \times \{\bot\}$} is coinductively defined by the
-inference rule in Figure~\ref{fig:Coinductive_inference_rules}.
+meta rule in Figure~\ref{fig:Coinductive_meta_rules}.
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
@@ -148,9 +151,120 @@ inference rule in Figure~\ref{fig:Coinductive_inference_rules}.
       a \Uparrow_\R \bot
     }
   \end{mathpar}
-  \caption{Coinductive inference rules}
-  \label{fig:Coinductive_inference_rules}
+  \caption{Coinductive meta rules}
+  \label{fig:Coinductive_meta_rules}
 \end{figure}
+
+In the sense of Cousot and Cousot \cite{CousotCousot92}, and later Ibraheem \ETAL \cite{IbraheemSchmidt98},
+the rules \textsc{(Res)}, \textsc{(Err-1)}, \textsc{(Err-2)} and \textsc{(Err-3)} can be interpreted
+as meta rules for constructing \emph{positive rules}, used to describe convergent derivations, for a given
+recursion rule $R$, while \textsc{(Div)} can be interpreted as a meta rule for constructing \emph{negative rules},
+used to describe divergent derivations. Our framework, however, is strictly more expressive, since we have
+positive rules not only for terminating evaluations, but also for evaluations that ``go wrong'', which allows
+us to also work with inherently non-determinstic natural semantics.
+
+Following Ibraheem \ETAL we define an \emph{L-attributed} big-step semantics rule scheme \cite{IbraheemSchmidt98}
+as follows. A scheme of the form
+\begin{mathpar}
+  \irulesingle{
+    a_1 \Rightarrow b_1 \\
+    a_2 \Rightarrow b_2 \\
+    \ldots \\
+    a_n \Rightarrow b_n
+  }{
+    a \Rightarrow b
+  }
+\end{mathpar}
+is L-attributed if
+\begin{itemize}
+\item the value of each $a_i$ is a function of $a$ and those $b_j$ such that $j < i$, and
+\item the value of $b$ is a function of $a$ and $b_1,\ldots,b_n$.
+\end{itemize}
+But now, instead of interpreting the L-attributed big-step semantics rule scheme above as an
+inductive definition of a relation $a \Rightarrow b$, we interpret a rule of the form
+\begin{mathpar}
+  \irulesingle[(R)]{
+    a_1 \Rightarrow b_1 \\
+    a_2 \Rightarrow b_2 \\
+    \ldots \\
+    a_n \Rightarrow b_n
+  }{
+    a \Rightarrow b
+  }
+\end{mathpar}
+as a definition for the recursion rule
+\[\begin{array}{rcl}
+  \textsc{R} &=& \{(a,b_1 \ldots b_n,b)\} \\
+  &\cup& \{(a,b_1 \ldots b_{i-1},a_i) \mid 1 \le i \le n\}
+\end{array}\]
+within a recursion system. This way, we are able to describe evaluations that terminate,
+evaluations that ``go wrong'', as well as diverging evaluations, at once, without the
+need to give extra rules for evaluations that ``go wrong'' or diverging evaluations.
+
+For example, consider the following standard, L-attributed evaluation rule for $\beta$
+reduction in a pure call-by-name $\lambda$-calculus.
+\begin{mathpar}
+  \irulesingle[($\beta$)]{
+    e_1 \Rightarrow \abstr{x}{e} \\
+    e[x \mapsto e_2] \Rightarrow v
+  }{
+    \app{e_1}{e_2} \Rightarrow v
+  }
+\end{mathpar}
+This defines the following recursion rule
+\[\begin{array}{rcl}
+  \beta &=& \{ (\app{e_1}{e_2}, \varepsilon, e_1) \} \\
+  &\cup& \{ (\app{e_1}{e_2},\abstr{x}{e},e[x \mapsto e_2]) \} \\
+  &\cup& \{ (\app{e_1}{e_2},\abstr{x}{e} \cdot v,v) \} \\
+\end{array}\]
+and using the meta rules, we derive the actual rules shown in Figure~\ref{fig:Example_beta_rules},
+where \textsc{($\beta$-Err-2)} can be omitted if there are no values other than $\lambda$ terms.
+\begin{figure*}[htb]
+  \centering
+  \begin{mathpar}
+    \irulesingle[($\beta$-Res)]{
+      e_1 \Downarrow \abstr{x}{e} \\
+      e[x \mapsto e_2] \Downarrow v
+    }{
+      \app{e_1}{e_2} \Downarrow v
+    }
+    \and
+    \irulesingle[($\beta$-Err-2)]{
+      e_1 \Downarrow v \\
+      v \ne \abstr{x}{e}
+    }{
+      \app{e_1}{e_2} \Downarrow \top
+    }
+    \and
+    \irulesingle[($\beta$-Err-3-1)]{
+      e_1 \Downarrow \top
+    }{
+      \app{e_1}{e_2} \Downarrow \top
+    }
+    \and
+    \irulesingle[($\beta$-Err-3-2)]{
+      e_1 \Downarrow \abstr{x}{e} \\
+      e[x \mapsto e_2] \Downarrow \top
+    }{
+      \app{e_1}{e_2} \Downarrow \top
+    }
+    \and
+    \iruledouble[($\beta$-Div-1)]{
+      e_1 \Uparrow \bot
+    }{
+      \app{e_1}{e_2} \Uparrow \bot
+    }
+    \and
+    \iruledouble[($\beta$-Div-2)]{
+      e_1 \Downarrow \abstr{x}{e} \\
+      e[x \mapsto e_2] \Uparrow \bot
+    }{
+      \app{e_1}{e_2} \Uparrow \bot
+    }
+  \end{mathpar}
+  \caption{Example $\beta$ rules}
+  \label{fig:Example_beta_rules}
+\end{figure*}
 
 
 \section{Safety}
@@ -343,7 +457,9 @@ providing additional inductive inference rules to define a predicate $a \Rightar
 well-typed. Our approach can be seen as a generalization of the traditional approach: One no longer
 needs to provide extra rules to define \mbox{$a \Rightarrow \mathit{wrong}$}, as these are derived from
 the definition of the recursion system, and so there is no longer a risk that the rules for
-\mbox{$a \Rightarrow \mathit{wrong}$} are incomplete and miss some cases of ``going wrong''.
+\mbox{$a \Rightarrow \mathit{wrong}$} are incomplete and miss some cases of ``going wrong''. Also
+the type safety proof is somewhat easier, since one does not even need to consider the
+rules for \mbox{$a \Rightarrow \mathit{wrong}$}.
 
 Cousot and Cousot \cite{CousotCousot92}, and later Leroy \ETAL \cite{LeroyGrall09},
 proposed two approaches to enable safety proofs using big-step semantics based on
@@ -363,6 +479,14 @@ using a common set of inference rules. They start from a big-step trace semantic
 systematically derive the other semantics (big-step and small-step) by abstracton.
 \TODO{How does their approach relate to our approach? Their approach
 should work with non-determinism, right?}
+
+Ibraheem and Schmidt, also following up on \cite{CousotCousot92}, used \emph{positive} and
+\emph{negative} rules to describe \emph{convergent} and \emph{divergent} derivations respectively
+\cite{IbraheemSchmidt98}. This is similar to how construct the semantic model for
+a set of recursion rules, but our scheme is strictly more powerful, since we construct positive
+rules not only for evaluations that terminate, but also for evaluations that ``go wrong''. This
+way we are able to identify the safe evaluations, that do not go wrong, whether the recursion
+system is determinstic or not.
 
 
 \paragraph{Small-step semantics}
