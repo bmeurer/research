@@ -350,7 +350,8 @@ The elements of $A_0 = \dom(\phi)$ are called \emph{initial arguments}.
 We write \mbox{$\sigma_0 \leadsto^n \sigma_n$} if there exists a sequence of $n$ steps
 such that \mbox{$\sigma_0 \leadsto \sigma_1 \leadsto \ldots \leadsto \sigma_n$}. We
 write \mbox{$\sigma \leadsto^* \sigma'$} if \mbox{$\sigma \leadsto^n \sigma'$} for some
-\mbox{$n \ge 0$}.
+\mbox{$n \ge 0$}. We write \mbox{$\sigma \not\leadsto$} if \mbox{$\sigma \not\leadsto \sigma'$}
+for every \mbox{$\sigma' \in \Sigma$}.
 
 Let $\T = (\Sigma,\phi,\psi,\leadsto)$ be a transition system. The semantic model
 \mbox{$\M(\T) = (A,B,\Rightarrow_\T)$} of $\T$ is defined by:
@@ -396,12 +397,13 @@ theorems (Wright and Felleisen \cite{WrightFelleisen94}).
 Every \emph{recursion system} $\R \subseteq \Rules(A,B)$ gives rise to a \emph{naive transition system}
 $\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
 \begin{itemize}
-\item $\States(\R) = (A \times \R \cup B)^*(A \uplus B)$,
+\item $\States(\R) = (A \uplus B \uplus \R)^*(A \uplus B)$,
 \item $\phi_\R: A \to \States(\R), a \mapsto a$,
 \item $\psi_\R: \States(\R) \pto B, b \mapsto b$, and
 \item $\leadsto_\R~\subseteq \States(\R) \times \States(\R)$ is the smallest relation closed under the following
   inference rules in Figure~\ref{fig:Naive_transition_rules}.
 \end{itemize}
+It is easy to see that $\T(\R)$ is well-defined.
 
 \begin{figure}[htb]
   \centering
@@ -410,7 +412,7 @@ $\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
       R \in \R \\
       (a,\varepsilon,a') \in R
     }{%
-      wa \leadsto_\R w(a,R) a'
+      wa \leadsto_\R waR a'
     }%
     \and
     \irulesingle[(AB)]{%
@@ -424,25 +426,79 @@ $\T(\R) = (\States(\R),\phi_\R,\psi_\R,\leadsto_\R)$, where
       R \in \R \\
       (a,b_1 \ldots b_n,a') \in R
     }{%
-      w(a,R)b_1 \ldots b_n \leadsto_\R w(a,R) b_1 \ldots b_n a'
+      waRb_1 \ldots b_n \leadsto_\R waR b_1 \ldots b_n a'
     }%
     \and
     \irulesingle[(BB)]{%
       R \in \R \\
       (a,b_1 \ldots b_n,b) \in R
     }{%
-      w(a,R)b_1 \ldots b_n \leadsto_\R wb
+      waRb_1 \ldots b_n \leadsto_\R wb
     }%
   \end{mathpar}
   \caption{Naive transition rules}
   \label{fig:Naive_transition_rules}
 \end{figure}
 
+\begin{lemma} \label{lem:Soundness1} \
+  \begin{enumerate}[label=\normalfont\textbf{\alph{enumi}.}]
+  \item If \mbox{$a \Downarrow b$}, then \mbox{$wa \leadsto^* wb$}.
+  \item If \mbox{$a \Downarrow \top$}, then there is some $w'$ such that \mbox{$wa \leadsto^* w' \not\leadsto$}
+    and \mbox{$w' \not\in B$}.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  \textbf{a.} is a straight-forward induction on the derivation of \mbox{$a \Downarrow b$}, while
+  \textbf{b.} works by induction on the derivation of \mbox{$a \Downarrow \top$} utilizing the result
+  of \textbf{a.} for \textsc{(Err-2)} and \textsc{(Err-3)}.
+\end{proof}
+
+The opposite direction is somewhat more involved.
+
+\begin{lemma} \label{lem:Soundness3}
+  \mbox{$\hat{w}\hat{a} \leadsto^n \hat{w}wb$}, then
+  \mbox{$\hat{w}\hat{a} \leadsto^m \hat{w}wa$} and \mbox{$a \Downarrow b$}
+  for some $a \in A$ and \mbox{$m < n$}.
+\end{lemma}
+
+\begin{proof}
+  By induction on $n$.
+  \begin{description}
+  \item[$n=1$] 
+
+    Then we have \mbox{$\hat{w}\hat{a} \leadsto \hat{w}b$} with \textsc{(AB)}, hence
+    $w = \varepsilon$, $a = \hat{a}$ and there is some $R$ such that \mbox{$(a,\varepsilon,b) \in R$}.
+    So we can conclude $a \Downarrow b$.
+
+  \item[$n > 1$]
+
+    Then there are $a \in A$, $k \ge 1$, $b_1,\ldots,b_k \in B$ and $R \in \R$ such that
+    \mbox{$\hat{w}\hat{a} \leadsto^{n-1} \hat{w}waRb_1 \ldots b_k \leadsto \hat{w}b$}
+    with \textsc{(BB)}, hence \mbox{$(a,b_1 \ldots b_k,b) \in R$}.
+
+    By induction on $k$, utilizing \textsc{(BA)} and our induction hypothesis on $n$, we have
+    \mbox{$a_1,\ldots,a_k \in A$}, \mbox{$m_1 < \ldots < m_k < n$} such that
+    \begin{itemize}
+    \item $\hat{w}\hat{a} \leadsto^{m_i} \hat{w}waRb_1 \ldots b_{i-1}a_i$, and
+    \item $(a,b_1 \ldots b_{i-1},a_i) \in R$
+    \end{itemize}
+    for $i = 1,\ldots,k$. So we have \mbox{$a \Downarrow b$} and there must be some \mbox{$m < n$}
+    such that \mbox{$\hat{w}\hat{a} \leadsto^m \hat{w}wa \leadsto \hat{w}waR$} with \textsc{(AA)}.
+    
+  \end{description}
+\end{proof}
+
 \begin{theorem}
-  Let $\R \subseteq \Rules(A,B)$. Then \mbox{$\M\left(\R\right) = \M\left(\T\left(\R\right)\right)$}.
+  Let \mbox{$\R \subseteq \Rules(A,B)$}. Then \mbox{$\M\left(\R\right) = \M\left(\T\left(\R\right)\right)$}.
 \end{theorem}
 
-\TODO{Proof}
+\begin{proof}
+  By Lemma~\ref{lem:Soundness1}\textbf{a.} and Lemma~\ref{lem:Soundness3} we have
+  \mbox{$a \Downarrow_\R b$} iff \mbox{$a \leadsto^*_\R b$}.
+\end{proof}
+
+\TODO{Finish proof}
 
 
 \section{Related work}
