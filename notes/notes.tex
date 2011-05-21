@@ -122,7 +122,7 @@ $\mathcal{U}$-markierter Baum $t$, so dass:
 \label{sec:Semantische_Modelle}
 
 \begin{definition}[Semantisches Modell]
-  Seien $A$ und $B$ beliebige disjunkte Mengen.
+  Seien $A$ und $B$ beliebige Mengen.
   Ein \emph{semantisches Modell} $\mathcal{M}$ ist ein Tripel $\bigl(A, B, \Rightarrow\bigr)$,
   geschrieben $\mathcal{M}: A \Rightarrow B$, mit \mbox{$\Rightarrow\ \subseteq A \times B^\infty_{\textsf{err}}$}
   und $B^\infty_{\textsf{err}} = B \uplus \{\infty,\textsf{err}\}$.
@@ -180,6 +180,23 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
     & \text{gdw.} &
     \text{ex. unendliche Folge $\phi(a) = \sigma_0 \rightarrow \sigma_1 \rightarrow \ldots$}
   \end{array}\]
+\end{definition}
+
+
+%%%
+%%% Rekursionssysteme
+%%%
+
+\section{Rekursionssysteme}
+\label{sec:Rekursionssysteme}
+
+\begin{definition}
+  Seien $A$ und $B$ disjunkte Mengen.
+  Eine \emph{Rekursionsregel "uber $A$ und $B$} ist eine Relation
+  \mbox{$R \subseteq A \times B^* \times (A \cup B)$}, die Menge aller Rekursionsregeln
+  "uber $A$ und $B$ bezeichnen wir mit \mbox{$\mathit{Rules}(A,B)$}.
+  Jede solche Menge von Rekursionsregeln \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$}
+  bezeichnen wir als \emph{Rekursionssystem}.
 \end{definition}
 
 
