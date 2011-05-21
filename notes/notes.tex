@@ -5,23 +5,55 @@
 \usepackage{ngerman}
 \usepackage[standard,thmmarks]{ntheorem}
 
+\DeclareMathOperator{\parent}{\mathit{parent}}
+
 \begin{document}
 
 
 %%%
 %%% Baeume
 %%%
+
 \section{B"aume}
 \label{sec:Baeume}
 
-\begin{definition}
-  
+Basierend auf Loeckx \ETAL \cite[S.~43]{DBLP:books/teu/LoeckxMW86} definieren
+wir Baumbereiche und B"aume wie folgt:
+
+\begin{definition} \
+  \begin{enumerate}
+  \item Die partielle Funktion \mbox{$\parent:\N^* \pto \N^*$} ist definiert durch
+    \begin{equation*}
+      \parent(w) = 
+      \begin{cases}
+        v
+        & \text{falls $w = v \cdot n$ mit $v \in \N^*$ und $n \in \N$,} \\
+        \text{undefiniert}
+        & \text{falls $w = \varepsilon$.}
+      \end{cases}
+    \end{equation*}
+
+  \item Ein \emph{Baumbereich} $D$ ist eine endliche Teilmenge von $\N^*$, welche
+    abgeschlossen ist unter der Funktion $\parent$, d.h. \mbox{$\parent(D) \subseteq D$}.
+    Die Elemente eines Baumbereichs hei"sen \emph{Knoten}.
+
+  \item Sei $S$ eine beliebige Menge. Ein \emph{$S$-markierter Baum} (oder kurz \emph{Baum})
+    ist ein Paar \mbox{$(D,b)$}, wobei $D$ ein Baumbereich ist, und $b$ eine Abbildung
+    \mbox{$b:D \to S$}. Die Abbildung $b$ hei"st die \emph{Beschriftung} des
+    Baumes und $D$ sein \emph{Definitionsbereich}.
+    Wir identifizieren "ublicherweise einen Baum $(D,b)$ mit seiner Beschriftung $b$.
+  \end{enumerate}
 \end{definition}
+Wir werden die folgenden gebr"auchlichen Sprechweisen verwenden: Das Element
+\mbox{$\varepsilon \in \N^*$} hei"st \emph{Wurzel}. Wenn $v = \parent(w)$, dann
+ist $w$ \emph{Kind} von $v$. Die Anzahl der Kinder eines Knoten hei"st
+\emph{Grad} des Knoten. Ein Knoten ohne Kinder hei"st \emph{Blatt}.
 
 
 %%%
 %%% Kalkuele
 %%%
+
 \section{Kalk"ule}
 \label{sec:Kalkuele}
 
@@ -110,6 +142,12 @@ wenn $\multimap$ eine Abbildung ist. Ein Argument \mbox{$a \in A$} hei"st \emph{
 um nachzuweisen, dass $a$ sicher ist.
 
 
+%%%
+%%% Literatur
+%%%
+
+\bibliographystyle{alphadin}
+\bibliography{citations}
 
 
 \end{document}
