@@ -1,0 +1,38 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bmeurer}[2011/05/20 v. 0.1 A personal LaTeX package (aka style)]
+
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amstext}
+\RequirePackage{xspace}
+
+
+%%%%%%%%%%%%%%%%%%%%
+%% Math operators %%
+%%%%%%%%%%%%%%%%%%%%
+\DeclareMathOperator{\powerset}{\wp}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\pto}{\hookrightarrow}
+
+
+%%%%%%%%%%%%%%%%%
+%%% Math sets %%%
+%%%%%%%%%%%%%%%%%
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Common abbreviations %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\ETAL}{\textit{et al.}\xspace}
+\newcommand{\ETC}{\textit{etc.}\xspace}
+\newcommand{\IE}{\textit{i.~e.}\xspace}
+
+
+%%%%%%%%%%
+%% Misc %%
+%%%%%%%%%%
+\newcommand{\SIDE}[1]{\-\marginpar[\raggedleft\footnotesize #1]{\raggedright\footnotesize #1}}
+\newcommand{\TODO}[1]{\paragraph {\color{red}\small{\tt #1}}\SIDE{\color{red}\bf TODO}}
+\newcommand{\TODOX}[1]{\paragraph {\color{red}\small{\tt TODO: #1}}}
