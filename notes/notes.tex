@@ -123,23 +123,64 @@ $\mathcal{U}$-markierter Baum $t$, so dass:
 
 \begin{definition}[Semantisches Modell]
   Seien $A$ und $B$ beliebige disjunkte Mengen.
-  Ein \emph{semantisches Modell} $\mathcal{M}$ ist ein Tripel $\bigl(A, B, \multimap\bigr)$,
-  geschrieben $\mathcal{M}: A \multimap B$, mit \mbox{$\multimap\ \subseteq A \times B^\infty_{\textsf{err}}$}
+  Ein \emph{semantisches Modell} $\mathcal{M}$ ist ein Tripel $\bigl(A, B, \Rightarrow\bigr)$,
+  geschrieben $\mathcal{M}: A \Rightarrow B$, mit \mbox{$\Rightarrow\ \subseteq A \times B^\infty_{\textsf{err}}$}
   und $B^\infty_{\textsf{err}} = B \uplus \{\infty,\textsf{err}\}$.
 \end{definition}
-
 Wir bezeichnen die Elemente $a \in A$ als \emph{Argumente}, und die Elemente $b \in B$
-als \emph{Resultate}. Bzgl. $\mathcal{M}: A \multimap B$ sagen wir
+als \emph{Resultate}. Bzgl. $\mathcal{M}: A \Rightarrow B$ sagen wir
 \begin{itemize}
-\item \emph{$a$ terminiert mit $b$} wenn $a \multimap b$,
-\item \emph{$a$ divergiert} wenn $a \multimap \infty$, und
-\item \emph{$a$ f"uhrt zu einem Laufzeitfehler} wenn $a \multimap \textsf{err}$.
+\item \emph{$a$ terminiert mit $b$} wenn $a \Rightarrow b$,
+\item \emph{$a$ divergiert} wenn $a \Rightarrow \infty$, und
+\item \emph{$a$ f"uhrt zu einem Laufzeitfehler} wenn $a \Rightarrow \textsf{err}$.
 \end{itemize}
-Wir sagen ein solches semantisches Modell \mbox{$\mathcal{M}: A \multimap B$} ist \emph{deterministisch},
-wenn $\multimap$ eine Abbildung ist. Ein Argument \mbox{$a \in A$} hei"st \emph{sicher} wenn
-\mbox{$a \not\multimap \textsf{err}$}. In einem deterministischen semantischen Modell gen"ugt es
-\mbox{$a \multimap \infty$} oder \mbox{$a \multimap b$} f"ur ein beliebiges \mbox{$b \in B$} zu zeigen,
+Wir sagen ein solches semantisches Modell \mbox{$\mathcal{M}: A \Rightarrow B$} ist \emph{deterministisch},
+wenn $\Rightarrow$ eine Abbildung ist. Ein Argument \mbox{$a \in A$} hei"st \emph{sicher} wenn
+\mbox{$a \not\Rightarrow \textsf{err}$}. In einem deterministischen semantischen Modell gen"ugt es
+\mbox{$a \Rightarrow \infty$} oder \mbox{$a \Rightarrow b$} f"ur ein beliebiges \mbox{$b \in B$} zu zeigen,
 um nachzuweisen, dass $a$ sicher ist.
+
+
+%%%
+%%% Transitionssysteme
+%%%
+
+\section{Transitionssysteme}
+\label{sec:Transitionssysteme}
+
+\begin{definition}[Transitionssystem]
+  Seien $A$ und $B$ beliebige Mengen.
+  Ein \emph{Transitionssystem} $\mathcal{T}$ ist ein Quadrupel \mbox{$(\Sigma,\phi,\psi,\rightarrow)$} mit
+  \begin{itemize}
+  \item einer nicht-leeren Menge $\Sigma$ von \emph{Zust"anden} $\sigma$,
+  \item einer \emph{Eingabefunktion} \mbox{$\phi:A \pto \Sigma$},
+  \item einer \emph{Ausgabefunktion} \mbox{$\psi:\Sigma \pto B$}, und
+  \item einer \emph{Transitionsrelation} $\rightarrow\ \subseteq \Sigma \times \Sigma$.
+  \end{itemize}
+\end{definition}
+Die Elemente $A_0 = \dom(\phi)$ hei"sen \emph{initiale Argumente}. Wir schreiben
+\mbox{$\sigma_0 \rightarrow^n \sigma_n$} wenn eine Folge von $n$ Schritten existiert,
+so dass \mbox{$\sigma_i \rightarrow \sigma_{i+1}$} f"ur $0 \le i < n$, und wir schreiben
+\mbox{$\sigma \rightarrow^* \sigma'$} wenn ein $n \in \N$ existiert, so dass
+\mbox{$\sigma \rightarrow^n \sigma'$}. Weiter schreiben wir \mbox{$\sigma \not\rightarrow$}
+wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sigma'$}.
+
+\begin{definition}
+  Durch jedes Transitionssystem \mbox{$\mathcal{T} = (\Sigma,\phi,\psi,\rightarrow)$} ist ein
+  semantisches Modell \mbox{$\mathcal{M}_{\mathcal{T}} = (A,B,\Rightarrow_{\mathcal{T}})$} definiert,
+  mit
+  \[\begin{array}{lcl}
+    a \Rightarrow_{\mathcal{T}} b
+    & \text{gdw.} &
+    \text{$\phi(a) = \sigma \rightarrow^* \sigma'$ und $\psi(\sigma') = b$} \\
+    a \Rightarrow_{\mathcal{T}} \textsf{err}
+    & \text{gdw.} &
+    \text{$\phi(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\sigma' \not\in \dom(\psi)$} \\
+    a \Rightarrow_{\mathcal{T}} \infty
+    & \text{gdw.} &
+    \text{ex. unendliche Folge $\phi(a) = \sigma_0 \rightarrow \sigma_1 \rightarrow \ldots$}
+  \end{array}\]
+\end{definition}
 
 
 %%%
