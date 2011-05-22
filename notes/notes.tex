@@ -2,6 +2,7 @@
 
 \usepackage{bmeurer}
 \usepackage{hyperref}
+\usepackage{mathpartir}
 \usepackage{ngerman}
 \usepackage[standard,thmmarks]{ntheorem}
 
@@ -172,7 +173,7 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
   \[\begin{array}{lcl}
     a \Rightarrow_{\mathcal{T}} b
     & \text{gdw.} &
-    \text{$\phi(a) = \sigma \rightarrow^* \sigma'$ und $\psi(\sigma') = b$} \\
+    \text{$\phi(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\psi(\sigma') = b$} \\
     a \Rightarrow_{\mathcal{T}} \textsf{err}
     & \text{gdw.} &
     \text{$\phi(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\sigma' \not\in \dom(\psi)$} \\
@@ -198,6 +199,58 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
   Jede solche Menge von Rekursionsregeln \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$}
   bezeichnen wir als \emph{Rekursionssystem}.
 \end{definition}
+
+
+%%%
+%%% Stacksemantik
+%%%
+
+\subsection{Stacksemantik}
+\label{sec:Stacksemantik}
+
+Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a"st
+sich ein naives Transistionssystem \mbox{$\mathcal{T}_{\mathcal{R}} =
+  (\Sigma_{\mathcal{R}},\phi_{\mathcal{R}},\psi_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
+in Form einer \emph{Stacksemantik} definieren durch
+\begin{itemize}
+\item $\Sigma_{\mathcal{R}} = (A \uplus B \uplus \mathcal{R})^*(A \uplus B)$,
+\item $\phi:_{\mathcal{R}}: A \to \Sigma_{\mathcal{R}}, a \mapsto a$,
+\item $\psi:_{\mathcal{R}}: \Sigma_{\mathcal{R}} \pto B, b \mapsto b$, und
+\item $\rightarrow_{\mathcal{R}}\ \subseteq \Sigma_{\mathcal{R}} \times \Sigma_{\mathcal{R}}$ ist die kleinste
+  Relation, welche abgeschlossen ist unter Anwendung der Regeln in Abbildung~\ref{fig:Stacksemantik}.
+\end{itemize}
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(AA)]{
+      R \in \mathcal{R} \\
+      (a,\varepsilon,a') \in R
+    }{
+      wa \rightarrow_{\mathcal{R}} waRa'
+    }
+    \and
+    \inferrule[(AB)]{
+      R \in \mathcal{R} \\
+      (a,\varepsilon,b) \in R
+    }{
+      wa \rightarrow_{\mathcal{R}} wb
+    }
+    \and
+    \inferrule[(BA)]{
+      (a,b_1 \ldots b_n,a') \in R
+    }{
+      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} waR b_1 \ldots b_na'
+    }
+    \and
+    \inferrule[(BB)]{
+      (a,b_1 \ldots b_n,b) \in R
+    }{
+      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} wb
+    }
+  \end{mathpar}
+  \caption{Stacksemantik}
+  \label{fig:Stacksemantik}
+\end{figure}
 
 
 %%%
