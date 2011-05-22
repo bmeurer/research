@@ -126,19 +126,19 @@ $\mathcal{U}$-markierter Baum $t$, so dass:
 \begin{definition}[Semantisches Modell]
   Seien $A$ und $B$ beliebige Mengen.
   Ein \emph{semantisches Modell} $\mathcal{M}$ ist ein Tripel $\bigl(A, B, \Rightarrow\bigr)$,
-  geschrieben $\mathcal{M}: A \Rightarrow B$, mit \mbox{$\Rightarrow\ \subseteq A \times B^\infty_{\textsf{err}}$}
-  und $B^\infty_{\textsf{err}} = B \uplus \{\infty,\textsf{err}\}$.
+  geschrieben $\mathcal{M}: A \Rightarrow B$, mit \mbox{$\Rightarrow\ \subseteq A \times B^\infty_{\mathsf{err}}$}
+  und $B^\infty_{\mathsf{err}} = B \uplus \{\infty,\mathsf{err}\}$.
 \end{definition}
 Wir bezeichnen die Elemente $a \in A$ als \emph{Argumente}, und die Elemente $b \in B$
 als \emph{Resultate}. Bzgl. $\mathcal{M}: A \Rightarrow B$ sagen wir
 \begin{itemize}
 \item \emph{$a$ terminiert mit $b$} wenn $a \Rightarrow b$,
 \item \emph{$a$ divergiert} wenn $a \Rightarrow \infty$, und
-\item \emph{$a$ f"uhrt zu einem Laufzeitfehler} wenn $a \Rightarrow \textsf{err}$.
+\item \emph{$a$ f"uhrt zu einem Laufzeitfehler} wenn $a \Rightarrow \mathsf{err}$.
 \end{itemize}
 Wir sagen ein solches semantisches Modell \mbox{$\mathcal{M}: A \Rightarrow B$} ist \emph{deterministisch},
 wenn $\Rightarrow$ eine Abbildung ist. Ein Argument \mbox{$a \in A$} hei"st \emph{sicher} wenn
-\mbox{$a \not\Rightarrow \textsf{err}$}. In einem deterministischen semantischen Modell gen"ugt es
+\mbox{$a \not\Rightarrow \mathsf{err}$}. In einem deterministischen semantischen Modell gen"ugt es
 \mbox{$a \Rightarrow \infty$} oder \mbox{$a \Rightarrow b$} f"ur ein beliebiges \mbox{$b \in B$} zu zeigen,
 um nachzuweisen, dass $a$ sicher ist.
 
@@ -175,7 +175,7 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
     a \Rightarrow_{\mathcal{T}} b
     & \text{gdw.} &
     \text{$\phi(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\psi(\sigma') = b$} \\
-    a \Rightarrow_{\mathcal{T}} \textsf{err}
+    a \Rightarrow_{\mathcal{T}} \mathsf{err}
     & \text{gdw.} &
     \text{$\phi(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\sigma' \not\in \dom(\psi)$} \\
     a \Rightarrow_{\mathcal{T}} \infty
@@ -214,8 +214,8 @@ Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a
 in Form einer \emph{Stacksemantik} definieren durch
 \begin{itemize}
 \item $\Sigma_{\mathcal{R}} = (A \cup B \cup \mathcal{R})^+$,
-\item $\phi:_{\mathcal{R}}: A \to \Sigma_{\mathcal{R}}, a \mapsto a$,
-\item $\psi:_{\mathcal{R}}: \Sigma_{\mathcal{R}} \pto B, b \mapsto b$, und
+\item $\phi_{\mathcal{R}}: A \to \Sigma_{\mathcal{R}}, a \mapsto a$,
+\item $\psi_{\mathcal{R}}: \Sigma_{\mathcal{R}} \pto B, b \mapsto b$, und
 \item $\rightarrow_{\mathcal{R}}\ \subseteq \Sigma_{\mathcal{R}} \times \Sigma_{\mathcal{R}}$ ist die kleinste
   Relation, welche abgeschlossen ist unter Anwendung der Regeln in Abbildung~\ref{fig:Stacksemantik}.
 \end{itemize}
@@ -229,13 +229,13 @@ in Form einer \emph{Stacksemantik} definieren durch
       wa \rightarrow_{\mathcal{R}} waR
     }
     \and
-    \inferrule[(Result)]{
+    \inferrule[(Reduce)]{
       (a,b_1 \ldots b_n,b) \in R
     }{
       waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} wb
     }
     \and
-    \inferrule[(Argument)]{
+    \inferrule[(Produce)]{
       (a,b_1 \ldots b_n,a') \in R
     }{
       waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} waR b_1 \ldots b_na'
@@ -244,6 +244,40 @@ in Form einer \emph{Stacksemantik} definieren durch
   \caption{Stacksemantik}
   \label{fig:Stacksemantik}
 \end{figure}
+Die Regeln in Abbildung~\ref{fig:Stacksemantik} sind weitesgehend selbsterkl"arend: Befindet
+sich ein Argument $a$ zuoberst auf dem Stack, so kann durch \textsc{(Select)} eine
+passende Rekursionsregel \mbox{$R \in \mathcal{R}$} ausgew"ahlt werden. Befindet sich zuoberst
+ein Stackframe, d.h. ein Argument $a$ mitsamt einer zuvor ausgew"ahlten Regel $R$ und ggfs.\xspace
+bereits vorhandenen Zwischenresultaten \mbox{$b_1,\ldots,b_n$}, zuoberst auf dem Stack, so
+kann entweder mit \textsc{(Produce)} ein weiteres Argument $a'$ erzeugt werden, sofern $R$ dies
+zul"asst, oder mit \textsc{(Reduce)} der komplette Stackframe durch ein Resultat $b$ ersetzt
+werden, wiederum ausgehend davon, dass $R$ dies zul"asst.
+
+Die beiden nachfolgenden Korollare heben den Zusammenhang zwischen Rekursionsregeln
+und dem Steckenbleiben der Stacksemantik hervor. Sie sind triviale Folgerungen der
+Definition der Stacksemantik.
+\begin{corollary}
+  Wenn \mbox{$a \Rightarrow_{\mathcal{T}_{\mathcal{R}}} \mathsf{err}$},
+  dann ex. \mbox{$w \in \Sigma_{\mathcal{R}}$}, so dass
+  \begin{enumerate}
+  \item \mbox{$a \rightarrow_{\mathcal{R}}^* wa'$} und \mbox{$(a',\varepsilon,x) \not\in R$}
+    f"ur alle \mbox{$R \in \mathcal{R}$} und \mbox{$x \in A \cup B$}, oder
+  \item \mbox{$a \rightarrow_{\mathcal{R}}^* wa'Rb_1 \ldots b_n$} und
+    \mbox{$(a',b_1 \ldots b_n,x) \not\in R$} f"ur alle \mbox{$x \in A \cup B$}.
+  \end{enumerate}
+\end{corollary}
+
+\begin{corollary}
+  Sei \mbox{$w \in \Sigma_{\mathcal{R}}$}. Wenn
+  \begin{enumerate}
+  \item \mbox{$(a',\varepsilon,x) \not\in R$} f"ur alle \mbox{$R \in \mathcal{R}$}
+    und \mbox{$x \in A \cup B$}, oder
+  \item \mbox{$wa' \rightarrow_{\mathcal{R}}^* wa'Rb_1 \ldots b_n$} und
+    \mbox{$(a',b_1 \ldots b_n, x) \not\in R$} f"ur alle \mbox{$x \in A \cup B$},
+  \end{enumerate}
+  dann gilt \mbox{$a \Rightarrow_{\mathcal{T}_{\mathcal{R}}} \mathsf{err}$} f"ur alle
+  \mbox{$a \in A$} mit \mbox{$a \rightarrow_{\mathcal{R}}^* wa'$}.
+\end{corollary}
 
 
 %%%
@@ -286,13 +320,13 @@ Lemma:
   \[\begin{array}{rcll}
     wa
     & \rightarrow_{\mathcal{R}}   & waR               & \text{mit \textsc{(Select)}} \\
-    & \rightarrow_{\mathcal{R}}^* & waRb_1 \ldots b_n & \text{mit \textsc{(Argument)} und I.V.} \\
-    & \rightarrow_{\mathcal{R}}   & wb                & \text{mit \textsc{(Result)}} \\
+    & \rightarrow_{\mathcal{R}}^* & waRb_1 \ldots b_n & \text{mit \textsc{(Produce)} und I.V.} \\
+    & \rightarrow_{\mathcal{R}}   & wb                & \text{mit \textsc{(Reduce)}} \\
   \end{array}\]
   was zu zeigen war.
 \end{proof}
 
-Die ``genau dann''-Richtung ist etwas aufwendiger zu beweisen. Die grunds"atzliche Idee dabei
+Die ``genau dann''-Richtung ist etwas aufwendiger zu beweisen. Die grund\-s"atzliche Idee dabei
 ist, dass sich f"ur jede Berechungsfolge \mbox{$a' \rightarrow_{\mathcal{R}}^* wb$} ein big step
 \mbox{$a \Downarrow_{\mathcal{R}} b$} abspalten l"a"st, der die Berechung f"ur $b$ beschreibt, ausgehend
 von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal wie folgt aus:
@@ -303,11 +337,11 @@ von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal w
 
 \begin{proof}
   Via Induktion "uber $k$.
-  Der letzte "Ubergangsschritt kann nur mit \textsc{(Result)} aus \mbox{$waRb_1 \ldots b_n$}
-  mit \mbox{$a \in A$}, \mbox{$R \in \mathcal{R}$} und \mbox{$(a,b_1 \ldots b_n,b) \in R$}
+  Der letzte "Ubergangsschritt kann nur mit \textsc{(Reduce)} aus \mbox{$waRb_1 \ldots b_n$}
+  mit \mbox{$n \in \N$}, \mbox{$a \in A$}, \mbox{$R \in \mathcal{R}$} und \mbox{$(a,b_1 \ldots b_n,b) \in R$}
   hergeleitet worden sein.
 
-  Mittels geschachtelter Induktion "uber $n$ folgern wir unter Ber"ucksichtigung von \textsc{(Argument)},
+  Mittels geschachtelter Induktion "uber $n$ folgern wir unter Ber"ucksichtigung von \textsc{(Produce)},
   dass \mbox{$l_1,\ldots,l_n \in \N$} und \mbox{$a_1,\ldots,a_n \in A$} existieren, so dass
   \mbox{$l_1 < \ldots l_n < k$}, \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$}, \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
   und \mbox{$a' \rightarrow_{\mathcal{R}}^{l_i} waRb_1 \ldots b_{i-1}$} f"ur \mbox{$i=1,\ldots,n$}.
