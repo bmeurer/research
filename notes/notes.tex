@@ -73,7 +73,7 @@ ist $w$ \emph{Kind} von $v$. Die Anzahl der Kinder eines Knoten hei"st
 \label{sec:Kalkuele}
 
 \begin{definition}[Kalk"ul]
-  Ein \emph{Kalk"ul} $\mathcal{K} = (\mathcal{U}, \mathcal{R})$ besteht aus
+  Ein \emph{Kalk"ul} \mbox{$\mathcal{K} = (\mathcal{U}, \mathcal{R})$} besteht aus
   \begin{enumerate}
   \item einer Formelmenge $\mathcal{U}$, dem \emph{Universum}, und
   \item einer entscheidbaren Relation $\mathcal{R} \subseteq \mathcal{U}^+$, der \emph{Ableitungsrelation}.
@@ -81,9 +81,9 @@ ist $w$ \emph{Kind} von $v$. Die Anzahl der Kinder eines Knoten hei"st
 \end{definition}
 Zu jedem Kalk"ul $\mathcal{K}$ l"asst sich eine Funktion
 \mbox{$\mathcal{F}:\powerset(\mathcal{U}) \to \powerset(\mathcal{U})$} definieren durch
-\[\begin{array}{rcl}
-\mathcal{F}(X) &=& \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
-\end{array}\]
+\begin{equation*}
+\mathcal{F}(X) = \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
+\end{equation*}
 $\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset(\mathcal{U})$, d.h. es
 existiert
 \begin{itemize}
@@ -363,6 +363,70 @@ von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal w
   \mbox{$a' \rightarrow_{\mathcal{R}}^l wa \rightarrow_{\mathcal{R}} waR$} mit \textsc{(Select)}. Und selbstverst"andlich
   existiert dann auch ein big step $a \Downarrow_{\mathcal{R}} b$.
 \end{proof}
+
+
+%%%
+%%% Mehrsortige Algebren
+%%%
+
+\section{Mehrsortige Algebren}
+\label{sec:Mehrsortige_Algebren}
+
+Basierend auf \cite{DBLP:journals/jacm/GoguenTWW77,DBLP:books/sp/EhrigM85} definieren wir die grundlegende
+Konzepte f"ur \emph{Mehrsortige Algebren} (many-sorted algebras). F"ur jede beliebige Menge $S$ sagen wir, dass
+$X$ eine \emph{$S$-sortige Menge} ist, wenn es sich um eine durch $S$ indizierte Familie von Mengen handelt,
+also $\{X_s\}_{s \in S}$.
+
+\begin{definition}[Signatur]
+  Eine \emph{Signatur} $\Sigma$ ist ein Paar \mbox{$(S,F)$} mit einer Menge $S$ von \emph{Sorten} und einer
+  Menge $F$ von \emph{Funktionssymbolen} zusammen mit einer Abbildung \mbox{$\mathbf{type}:F \to S^* \times S$},
+  welche jedem Funktionssymbole einen \emph{Typ} bzw. eine \emph{Funktionalit"at} zuordnet.
+  Wir schreiben abk"urzend \mbox{$f:s_1 \times \ldots \times s_n \to s$} wenn
+  \mbox{$\mathbf{type}(f) = (s_1 \ldots s_n,s)$}.
+\end{definition}
+
+Sei im Folgenden \mbox{$\Sigma = (S,F)$} eine beliebige Signatur.
+
+\begin{definition}
+  Sei $X$ eine $S$-sortige Menge von Variablen. F"ur jede Sorte $s \in S$ ist die
+  Menge $T_\Sigma(X)_s$ aller Terme der Sorte $s$, die h"ochstens Variablen aus $X$
+  enthalten, definiert als die kleinste Menge f"ur die gilt:
+  \begin{enumerate}
+  \item \mbox{$X_s \subseteq T_\Sigma(X)_s$}
+  \item Wenn \mbox{$f \in F$}, \mbox{$f:s_1 \times \ldots \times s_n \to s$}, und
+    \mbox{$t_i \in T_\Sigma(X)_{s_i}$} f"ur \mbox{$i=1,\ldots,n$}, dann
+    \mbox{$f(t_1,\ldots,t_n) \in T_\Sigma(X)_s$}.
+  \end{enumerate}
+  Diese Mengen bilden die Familie der Mengen \mbox{$\{T_\Sigma(X)_s\}_{s \in S}$},
+  die wir mit \mbox{$T_\Sigma(X)$} bezeichnen.
+\end{definition}
+
+\begin{definition}[$\Sigma$-Algebra]
+  Eine \emph{$\Sigma$-Algebra} $\mathcal{A}$ besteht aus einer $S$-sortigen Familie von nicht-leeren
+  \emph{Tr"agermengen} \mbox{$\{A_s\}_{s \in S}$} und einer totalen Funktion
+  \mbox{$f^{\mathcal{A}}: A_{s_1} \times \ldots \times A_{s_n} \to A_s$} f"ur jedes
+  \mbox{$f \in F$} mit \mbox{$f:s_1 \times \ldots \times s_n \to s$}.
+\end{definition}
+
+\begin{definition}
+  Ein \emph{$\Sigma$-Homomorphismus \mbox{$h:\mathcal{A} \to \mathcal{B}$}}
+  zwischen zwei $\Sigma$-Algebren $\mathcal{A}$ und $\mathcal{B}$ ist eine
+  Familie von Abbildungen \mbox{$\{h_s:A_s \to B_s\}_{s \in S}$}, so dass
+  \begin{equation*}
+    h_s(f^{\mathcal{A}}(a_1,\ldots,a_n)) = f^{\mathcal{B}}(h_{s_1}(a_1),\ldots,h_{s_n}(a_n))
+  \end{equation*}
+  f"ur alle $a_1 \in A_{s_1},\ldots,a_n \in A_{s_n}$ und $f \in F$ mit 
+  \mbox{$f:s_1 \times \ldots \times s_n \to s$} gilt.
+\end{definition}
+
+Ein bijektiver $\Sigma$-Homomorphismus wird als \emph{$\Sigma$-Isomorphismus} bezeichnet.
+Zwei $\Sigma$-Algebren $\mathcal{A}$ und $\mathcal{B}$ hei"sen \emph{isomorph}, geschrieben
+\mbox{$\mathcal{A} \cong \mathcal{B}$}, wenn zwischen ihnen ein $\Sigma$-Isomorphismus
+existiert.
+
+Sei $X$ eine $S$-sortige Menge von Variablen, und $\mathcal{A}$ eine $\Sigma$-Algebra. Eine
+Abbildung \mbox{$I: X \to \mathcal{A}$} hei"st \emph{Belegung}, wenn
+\mbox{$I(X_s) \subseteq A_s$} f"ur alle \mbox{$s \in S$}.
 
 
 %%%
