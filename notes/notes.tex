@@ -213,7 +213,7 @@ Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a
 \mbox{$\mathcal{T}_{\mathcal{R}} = (\Sigma_{\mathcal{R}},\phi_{\mathcal{R}},\psi_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
 in Form einer \emph{Stacksemantik} definieren durch
 \begin{itemize}
-\item $\Sigma_{\mathcal{R}} = (A \uplus B \uplus \mathcal{R})^*(A \uplus B)$,
+\item $\Sigma_{\mathcal{R}} = (A \cup B \cup \mathcal{R})^+$,
 \item $\phi:_{\mathcal{R}}: A \to \Sigma_{\mathcal{R}}, a \mapsto a$,
 \item $\psi:_{\mathcal{R}}: \Sigma_{\mathcal{R}} \pto B, b \mapsto b$, und
 \item $\rightarrow_{\mathcal{R}}\ \subseteq \Sigma_{\mathcal{R}} \times \Sigma_{\mathcal{R}}$ ist die kleinste
@@ -222,30 +222,23 @@ in Form einer \emph{Stacksemantik} definieren durch
 \begin{figure}[htb]
   \centering
   \begin{mathpar}
-    \inferrule[(AA)]{
+    \inferrule[(Select)]{
       R \in \mathcal{R} \\
-      (a,\varepsilon,a') \in R
+      (a,\varepsilon,x) \in R
     }{
-      wa \rightarrow_{\mathcal{R}} waRa'
+      wa \rightarrow_{\mathcal{R}} waR
     }
     \and
-    \inferrule[(AB)]{
-      R \in \mathcal{R} \\
-      (a,\varepsilon,b) \in R
-    }{
-      wa \rightarrow_{\mathcal{R}} wb
-    }
-    \and
-    \inferrule[(BA)]{
-      (a,b_1 \ldots b_n,a') \in R
-    }{
-      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} waR b_1 \ldots b_na'
-    }
-    \and
-    \inferrule[(BB)]{
+    \inferrule[(Result)]{
       (a,b_1 \ldots b_n,b) \in R
     }{
       waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} wb
+    }
+    \and
+    \inferrule[(Argument)]{
+      (a,b_1 \ldots b_n,a') \in R
+    }{
+      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} waR b_1 \ldots b_na'
     }
   \end{mathpar}
   \caption{Stacksemantik}
@@ -289,22 +282,12 @@ Lemma:
   \mbox{$a_1,\ldots,a_n \in A$} und \mbox{$b_1,\ldots,b_n \in B$}, so dass
   \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
   f"ur \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,b) \in R$}.
-  F"ur \mbox{$n = 0$} folgt die Behauptung unmittelbar mit \textsc{(AB)}. Ansonsten gilt
+  Dann gilt
   \[\begin{array}{rcll}
     wa
-    & \rightarrow_{\mathcal{R}}
-    & waRa_1
-    & \text{mit \textsc{(AA)}} \\
-    & \rightarrow_{\mathcal{R}}^*
-    & waRb_1
-    & \text{mit I.V.} \\
-    & \vdots & \\
-    & \rightarrow_{\mathcal{R}}^*
-    & waRb_1 \ldots b_n
-    & \text{mit \textsc{(BA)} und I.V.} \\
-    & \rightarrow_{\mathcal{R}}
-    & wb
-    & \text{mit \textsc{(BB)}} \\
+    & \rightarrow_{\mathcal{R}}   & waR               & \text{mit \textsc{(Select)}} \\
+    & \rightarrow_{\mathcal{R}}^* & waRb_1 \ldots b_n & \text{mit \textsc{(Argument)} und I.V.} \\
+    & \rightarrow_{\mathcal{R}}   & wb                & \text{mit \textsc{(Result)}} \\
   \end{array}\]
   was zu zeigen war.
 \end{proof}
@@ -312,11 +295,27 @@ Lemma:
 Die ``genau dann''-Richtung ist etwas aufwendiger zu beweisen. Die grunds"atzliche Idee dabei
 ist, dass sich f"ur jede Berechungsfolge \mbox{$a' \rightarrow_{\mathcal{R}}^* wb$} ein big step
 \mbox{$a \Downarrow_{\mathcal{R}} b$} abspalten l"a"st, der die Berechung f"ur $b$ beschreibt, ausgehend
-von einem $a$, dass zuvor berechnet worden sein muss. Das sieht dann formal wie folgt aus:
+von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal wie folgt aus:
 \begin{lemma}
-  Wenn \mbox{$a' \rightarrow_{\mathcal{R}}^k wb$}, dann ex. \mbox{$i \in \N$} und \mbox{$a \in A$}, so dass
-  \mbox{$i < k$}, \mbox{$a \Downarrow_{\mathcal{R}} b$} und \mbox{$a' \rightarrow_{\mathcal{R}}^i wa$}.
+  Wenn \mbox{$a' \rightarrow_{\mathcal{R}}^k wb$}, dann ex. \mbox{$l \in \N$} und \mbox{$a \in A$}, so dass
+  \mbox{$l < k$}, \mbox{$a \Downarrow_{\mathcal{R}} b$} und \mbox{$a' \rightarrow_{\mathcal{R}}^l wa$}.
 \end{lemma}
+
+\begin{proof}
+  Via Induktion "uber $k$.
+  Der letzte "Ubergangsschritt kann nur mit \textsc{(Result)} aus \mbox{$waRb_1 \ldots b_n$}
+  mit \mbox{$a \in A$}, \mbox{$R \in \mathcal{R}$} und \mbox{$(a,b_1 \ldots b_n,b) \in R$}
+  hergeleitet worden sein.
+
+  Mittels geschachtelter Induktion "uber $n$ folgern wir unter Ber"ucksichtigung von \textsc{(Argument)},
+  dass \mbox{$l_1,\ldots,l_n \in \N$} und \mbox{$a_1,\ldots,a_n \in A$} existieren, so dass
+  \mbox{$l_1 < \ldots l_n < k$}, \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$}, \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
+  und \mbox{$a' \rightarrow_{\mathcal{R}}^{l_i} waRb_1 \ldots b_{i-1}$} f"ur \mbox{$i=1,\ldots,n$}.
+
+  Also existiert trivialerweise auch ein \mbox{$l \in \N$}, so dass \mbox{$l < l_1 < \ldots < l_n < k$} und
+  \mbox{$a' \rightarrow_{\mathcal{R}}^l wa \rightarrow_{\mathcal{R}} waR$} mit \textsc{(Select)}. Und selbstverst"andlich
+  existiert dann auch ein big step $a \Downarrow_{\mathcal{R}} b$.
+\end{proof}
 
 
 %%%
