@@ -7,6 +7,7 @@
 \usepackage{ngerman}
 \usepackage[standard,thmmarks]{ntheorem}
 
+\DeclareMathOperator{\brother}{\mathit{brother}}
 \DeclareMathOperator{\parent}{\mathit{parent}}
 
 \begin{document}
@@ -19,24 +20,36 @@
 \section{B"aume}
 \label{sec:Baeume}
 
-Basierend auf Loeckx \ETAL \cite[S.~43]{DBLP:books/teu/LoeckxMW86} definieren
-wir Baumbereiche und B"aume wie folgt:
+Analog zu
+\cite{DBLP:journals/jacm/Rosen73,DBLP:journals/jacm/GoguenTWW77,DBLP:journals/tcs/Courcelle83,DBLP:books/teu/LoeckxMW86}
+definieren wir Baumbereiche und B"aume wie folgt:
 
-\begin{definition} \
+\begin{definition}[Baumbereich, Baum] \
   \begin{enumerate}
-  \item Die partielle Funktion \mbox{$\parent:\N^* \pto \N^*$} ist definiert durch
+  \item Die partielle Funktion \mbox{$\parent:\N_+^* \pto \N_+^*$} ist definiert durch
     \begin{equation*}
       \parent(w) = 
       \begin{cases}
         v
-        & \text{falls $w = v \cdot n$ mit $v \in \N^*$ und $n \in \N$,} \\
+        & \text{falls $w = v.n$ mit $v \in \N_+^*$, $n \in \N_+$}, \\
         \text{undefiniert}
-        & \text{falls $w = \varepsilon$.}
+        & \text{falls $w = \varepsilon$},
+      \end{cases}
+    \end{equation*}
+    und die partielle Funktion \mbox{$\brother:\N_+^* \pto \N_+^*$} ist definiert durch
+    \begin{equation*}
+      \brother(w) =
+      \begin{cases}
+        v.n
+        & \text{falls $w = v.(n+1)$ mit $v \in \N_+^*$, $n \in \N_+$}, \\
+        \text{undefiniert}
+        & \text{sonst}.
       \end{cases}
     \end{equation*}
 
-  \item Ein \emph{Baumbereich} $D$ ist eine endliche Teilmenge von $\N^*$, welche
-    abgeschlossen ist unter der Funktion $\parent$, d.h. \mbox{$\parent(D) \subseteq D$}.
+  \item Ein \emph{Baumbereich} $D$ ist eine endliche Teilmenge von $\N_+^*$, welche
+    abgeschlossen ist unter den Funktionen $\parent$ und $\brother$, d.h. es gilt
+    \mbox{$\parent(D) \subseteq D$} und \mbox{$\brother(D) \subseteq D$}.
     Die Elemente eines Baumbereichs hei"sen \emph{Knoten}.
 
   \item Sei $S$ eine beliebige Menge. Ein \emph{$S$-markierter Baum} (oder kurz \emph{Baum})
@@ -47,7 +60,7 @@ wir Baumbereiche und B"aume wie folgt:
   \end{enumerate}
 \end{definition}
 Wir werden die folgenden gebr"auchlichen Sprechweisen verwenden: Das Element
-\mbox{$\varepsilon \in \N^*$} hei"st \emph{Wurzel}. Wenn $v = \parent(w)$, dann
+\mbox{$\varepsilon \in \N_+^*$} hei"st \emph{Wurzel}. Wenn $v = \parent(w)$, dann
 ist $w$ \emph{Kind} von $v$. Die Anzahl der Kinder eines Knoten hei"st
 \emph{Grad} des Knoten. Ein Knoten ohne Kinder hei"st \emph{Blatt}.
 
@@ -81,7 +94,7 @@ Ein \emph{$\mathcal{K}$-Ableitungsbaum} f"ur eine Formel $u \in \mathcal{U}$ ist
 $\mathcal{U}$-markierter Baum $t$, so dass:
 \begin{enumerate}
 \item $t(\varepsilon) = u$, und
-\item $(t(k \cdot 1),\ldots,t(k \cdot n),t(k)) \in \mathcal{R}$ f"ur jeden Knoten $k$ mit den Kindern $k \cdot 1,\ldots,k \cdot n$.
+\item $(t(k.1),\ldots,t(k.n),t(k)) \in \mathcal{R}$ f"ur jeden Knoten $k$ mit den Kindern $k.1,\ldots,k.n$.
 \end{enumerate}
 
 \begin{theorem} \
@@ -102,7 +115,7 @@ $\mathcal{U}$-markierter Baum $t$, so dass:
       $w \in \mathcal{F}(X)$. D.h. $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
       $u \in X \subseteq \nu \mathcal{F}$.
     \item[``$\Leftarrow$'']
-      Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N^* \pto \nu\mathcal{F}$ induktiv definiert
+      Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N_+^* \pto \nu\mathcal{F}$ induktiv definiert
       durch:
       \begin{itemize}
       \item $(\varepsilon,u) \in t$
@@ -209,7 +222,7 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
 \subsection{Stacksemantik}
 \label{sec:Stacksemantik}
 
-Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a"st sich ein naives Transistionssystem
+Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"asst sich ein naives Transistionssystem
 \mbox{$\mathcal{T}_{\mathcal{R}} = (\Sigma_{\mathcal{R}},\phi_{\mathcal{R}},\psi_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
 in Form einer \emph{Stacksemantik} definieren durch
 \begin{itemize}
