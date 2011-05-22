@@ -1,6 +1,7 @@
 \documentclass[12pt,a4paper,final]{article}
 
 \usepackage{bmeurer}
+\usepackage{german}
 \usepackage{hyperref}
 \usepackage{mathpartir}
 \usepackage{ngerman}
@@ -208,9 +209,8 @@ wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sig
 \subsection{Stacksemantik}
 \label{sec:Stacksemantik}
 
-Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a"st
-sich ein naives Transistionssystem \mbox{$\mathcal{T}_{\mathcal{R}} =
-  (\Sigma_{\mathcal{R}},\phi_{\mathcal{R}},\psi_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
+Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"a"st sich ein naives Transistionssystem
+\mbox{$\mathcal{T}_{\mathcal{R}} = (\Sigma_{\mathcal{R}},\phi_{\mathcal{R}},\psi_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
 in Form einer \emph{Stacksemantik} definieren durch
 \begin{itemize}
 \item $\Sigma_{\mathcal{R}} = (A \uplus B \uplus \mathcal{R})^*(A \uplus B)$,
@@ -251,6 +251,72 @@ in Form einer \emph{Stacksemantik} definieren durch
   \caption{Stacksemantik}
   \label{fig:Stacksemantik}
 \end{figure}
+
+
+%%%
+%%% Rekursionssysteme und big steps
+%%%
+
+\subsection{Rekursionssysteme und big steps}
+\label{sec:Rekursionssysteme_und_big_steps}
+
+Durch jedes Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} ist auch
+eine naive, rein induktive big step Semantik in Form einer Relation
+\mbox{$\Downarrow_{\mathcal{R}}\ \subseteq A \times B$} definiert.
+\begin{definition}
+  \mbox{$\Downarrow_{\mathcal{R}}$} ist die kleinste Relation "uber $A \times B$, so dass gilt:
+  \begin{quote}
+    Wenn $R \in \mathcal{R}$, $(a,b_1 \ldots b_{i-1},a_i) \in R$ und $a_i \Downarrow_{\mathcal{R}} b_i$
+    f"ur $i=1,\ldots,n$ und $n \in \N$, und $(a,b_1 \ldots b_n,b) \in R$, dann gilt auch
+    $a \Downarrow_{\mathcal{R}} b$.
+  \end{quote}
+\end{definition}
+Offensichtlich gilt folgender Zusammenhang zwischen den obigen big steps und der Stacksemantik
+aus Abschnitt~\ref{sec:Stacksemantik}.
+\begin{theorem}
+  Sei \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$}. Dann gilt:
+ \mbox{$a \rightarrow_{\mathcal{R}}^* b$} gdw. \mbox{$a \Downarrow_{\mathcal{R}} b$}.
+\end{theorem}
+Die ``wenn''-Richtung folgt trivialerweise als Spezialfall \mbox{$w = \varepsilon$} aus nachfolgendem
+Lemma:
+\begin{lemma}
+  Wenn \mbox{$a \Downarrow_{\mathcal{R}} b$}, dann \mbox{$wa \rightarrow_{\mathcal{R}}^* wb$}.
+\end{lemma}
+
+\begin{proof}
+  Via Induktion "uber die L"ange der Herleitung des big steps \mbox{$a \Downarrow_{\mathcal{R}} b$}.
+  Nach Voraussetzung existieren also \mbox{$R \in \mathcal{R}$}, \mbox{$n \in \N$} sowie
+  \mbox{$a_1,\ldots,a_n \in A$} und \mbox{$b_1,\ldots,b_n \in B$}, so dass
+  \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
+  f"ur \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,b) \in R$}.
+  F"ur \mbox{$n = 0$} folgt die Behauptung unmittelbar mit \textsc{(AB)}. Ansonsten gilt
+  \[\begin{array}{rcll}
+    wa
+    & \rightarrow_{\mathcal{R}}
+    & waRa_1
+    & \text{mit \textsc{(AA)}} \\
+    & \rightarrow_{\mathcal{R}}^*
+    & waRb_1
+    & \text{mit I.V.} \\
+    & \vdots & \\
+    & \rightarrow_{\mathcal{R}}^*
+    & waRb_1 \ldots b_n
+    & \text{mit \textsc{(BA)} und I.V.} \\
+    & \rightarrow_{\mathcal{R}}
+    & wb
+    & \text{mit \textsc{(BB)}} \\
+  \end{array}\]
+  was zu zeigen war.
+\end{proof}
+
+Die ``genau dann''-Richtung ist etwas aufwendiger zu beweisen. Die grunds"atzliche Idee dabei
+ist, dass sich f"ur jede Berechungsfolge \mbox{$a' \rightarrow_{\mathcal{R}}^* wb$} ein big step
+\mbox{$a \Downarrow_{\mathcal{R}} b$} abspalten l"a"st, der die Berechung f"ur $b$ beschreibt, ausgehend
+von einem $a$, dass zuvor berechnet worden sein muss. Das sieht dann formal wie folgt aus:
+\begin{lemma}
+  Wenn \mbox{$a' \rightarrow_{\mathcal{R}}^k wb$}, dann ex. \mbox{$i \in \N$} und \mbox{$a \in A$}, so dass
+  \mbox{$i < k$}, \mbox{$a \Downarrow_{\mathcal{R}} b$} und \mbox{$a' \rightarrow_{\mathcal{R}}^i wa$}.
+\end{lemma}
 
 
 %%%
