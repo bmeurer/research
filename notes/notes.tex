@@ -50,7 +50,7 @@ definieren wir Baumbereiche und B"aume wie folgt:
     \end{equation*}
 
   \item Ein \emph{Baumbereich} $D$ ist eine endliche Teilmenge von $\N_+^*$, welche
-    abgeschlossen ist unter den Funktionen $\parent$ und $\brother$, d.h. es gilt
+    abgeschlossen ist unter den Funktionen $\parent$ und $\brother$, d.h.\xspace es gilt
     \mbox{$\parent(D) \subseteq D$} und \mbox{$\brother(D) \subseteq D$}.
     Die Elemente eines Baumbereichs hei"sen \emph{Knoten}.
 
@@ -86,7 +86,7 @@ Zu jedem Kalk"ul $\mathcal{K}$ l"asst sich eine Funktion
 \begin{equation*}
 \mathcal{F}(X) = \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
 \end{equation*}
-$\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset(\mathcal{U})$, d.h. es
+$\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset(\mathcal{U})$, d.h.\xspace es
 existiert
 \begin{itemize}
 \item ein kleinster Fixpunkt $\mu\mathcal{F} = \bigcup_{n\in\N}\mathcal{F}^n(\emptyset)$, und
@@ -114,7 +114,7 @@ $\mathcal{U}$-markierter Baum $t$, so dass:
     \item[``$\Rightarrow$'']
       Sei $X$ die Menge der Markierungen, dann ist $u \in X$ und f"ur jedes $w \in X$ ex.
       $w_1,\ldots,w_n \in X$ mit $(w_1 \ldots w_n\,w) \in \mathcal{R}$, also
-      $w \in \mathcal{F}(X)$. D.h. $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
+      $w \in \mathcal{F}(X)$. D.h.\xspace $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
       $u \in X \subseteq \nu \mathcal{F}$.
     \item[``$\Leftarrow$'']
       Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N_+^* \pto \nu\mathcal{F}$ induktiv definiert
@@ -262,13 +262,13 @@ in Form einer \emph{Stacksemantik} definieren durch
 Die Regeln in Abbildung~\ref{fig:Stacksemantik} sind weitesgehend selbsterkl"arend: Befindet
 sich ein Argument $a$ zuoberst auf dem Stack, so kann durch \textsc{(Select)} eine
 passende Rekursionsregel \mbox{$R \in \mathcal{R}$} ausgew"ahlt werden. Befindet sich zuoberst
-ein Stackframe, d.h. ein Argument $a$ mitsamt einer zuvor ausgew"ahlten Regel $R$ und ggfs.\xspace
+ein Stackframe, d.h.\xspace ein Argument $a$ mitsamt einer zuvor ausgew"ahlten Regel $R$ und ggfs.\xspace
 bereits vorhandenen Zwischenresultaten \mbox{$b_1,\ldots,b_n$}, zuoberst auf dem Stack, so
 kann entweder mit \textsc{(Produce)} ein weiteres Argument $a'$ erzeugt werden, sofern $R$ dies
 zul"asst, oder mit \textsc{(Reduce)} der komplette Stackframe durch ein Resultat $b$ ersetzt
 werden, wiederum ausgehend davon, dass $R$ dies zul"asst.
 
-Die so definierte Stacksemantik ist in gewissem Sinne ``lokal'', d.h. der n"achste "Ubergangsschritt
+Die so definierte Stacksemantik ist in gewissem Sinne ``lokal'', d.h.\xspace der n"achste "Ubergangsschritt
 h"angt nur von einem bestimmten Bereich oben auf dem Stack ab, und der "ubrige Stackinhalt darunter
 spielt daf"ur keine Rolle. Dieser Sachverhalt wird im folgenden Lemma verdeutlicht.
 \begin{lemma}[Lokalit"at]
@@ -393,42 +393,39 @@ von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal w
 \label{sec:Typsichere_Rekursionssysteme}
 
 Ein \emph{Typsystem} f"ur ein semantisches Modell \mbox{$\mathcal{M} = (A,B,\Rightarrow)$}
-ist ein Tupel \mbox{$(C,T,\cdot\vdash\cdot:\cdot)$} bestehend aus
+ist ein Paar \mbox{$(T,(A_\tau)_{\tau \in T})$} bestehend aus
 \begin{itemize}
-\item einer geordneten Menge \mbox{$(C,\sqsubseteq_C)$} von \emph{Typkontexten} $\zeta$,
 \item einer Menge $T$ von \emph{Typen} $\tau$, und
-\item einer Relation \mbox{$\zeta\vdash a:\tau$} von (g"ultigen) \emph{Typurteilen}.
+\item einer Familie \mbox{$(A_\tau)_{\tau \in T}$} von Mengen \mbox{$A_\tau \subseteq A$},
+  deren Elemente wir Argumente vom Typ $\tau$ nennen.
 \end{itemize}
-Wir identifizieren ein Typsystem mit seiner Menge von Typen, d.h. wir schreiben $T$ f"ur obiges
+Wir identifizieren ein Typsystem mit seiner Menge von Typen, d.h.\xspace wir schreiben $T$ f"ur obiges
 Typsystem.
 
 \begin{definition}[Typsicherheit]
-  Ein semantisches Modell \mbox{$\mathcal{M} = (A,B,\Rightarrow)$} hei"st \emph{typsicher} bzgl.
-  eines Typsystems \mbox{$(C,T,\cdot\vdash\cdot:\cdot)$} f"ur $\mathcal{M}$, wenn gilt:
-  \begin{quote}
-    \mbox{$\zeta \vdash a : \tau$} impliziert \mbox{$\neg(a \Rightarrow \mathsf{err})$}
-    f"ur alle \mbox{$\zeta \in C$}, \mbox{$a \in A$} und \mbox{$\tau \in T$}.
-  \end{quote}
+  Ein semantisches Modell \mbox{$\mathcal{M} = (A,B,\Rightarrow)$} hei"st \emph{typsicher} bzgl.\xspace
+  eines Typsystems $T$ f"ur $\mathcal{M}$, wenn \mbox{$\neg(a \Rightarrow \mathsf{err})$} f"ur
+  alle \mbox{$a \in A_\tau$} mit \mbox{$\tau \in T$}.
 \end{definition}
 
 Zum Beweis der Typsicherheit eines Rekursionssystems $\mathcal{R}$ gen"ugt es, unabh"angig von
-der konkreten Semantik, zwei ``lokale Eigenschaften'' "uber die Rekursionsregeln bzgl. des
-Typsystems zu beweisen, wie das folgende Meta-Theorem nahelegt:
+der konkreten Semantik des Rekursionssystems, zwei ``lokale Eigenschaften'' "uber die Rekursionsregeln
+bzgl.\xspace des Typsystems zu beweisen, wie das folgende Meta-Theorem nahelegt:
 
 \begin{theorem}[Typsicherheit]
   Sei \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} ein Rekursionssystem und
-  \mbox{$(C,T,\cdot\vdash\cdot:\cdot)$} ein Typsystem f"ur \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$}.
-  \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$} ist typsicher bzgl. $T$, wenn die folgenden beiden Eigenschaften
-  gelten:
+  \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$} ist typsicher bzgl.\xspace
+  eines Typsystems $T$ f"ur \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$}, wenn
+  die folgenden beiden Eigenschaften gelten:
   \begin{description}[labelindent=\parindent,style=nextline]
   \item[Local Preservation] 
-    Wenn \mbox{$\zeta \vdash a : \tau$},
+    Wenn \mbox{$a \in A^\tau$},
     \mbox{$a_i \rightarrow_{\mathcal{R}}^* b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$} f"ur
-    \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,a') \in R$}, dann ex. \mbox{$\zeta' \in C$} und
-    \mbox{$\tau' \in T$}, so dass \mbox{$\zeta \sqsubseteq \zeta'$} und \mbox{$\zeta' \vdash a' : \tau'$}.
+    \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,a') \in R$}, dann ex. \mbox{$\tau' \in T$},
+    so dass \mbox{$a' \in A^{\tau'}$}.
     
   \item[Local Progress]
-    Wenn \mbox{$\zeta \vdash a : \tau$},
+    Wenn \mbox{$a \in A^\tau$},
     \mbox{$a_i \rightarrow_{\mathcal{R}}^* b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$} f"ur
     \mbox{$i=1,\ldots,n$}, dann ex. \mbox{$a \in A \cup B$} so dass \mbox{$(a,b_1 \ldots b_n,x) \in R$}.
   \end{description}
