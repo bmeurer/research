@@ -142,7 +142,7 @@ loop:	SWAPINIT(a, es);
 	vecswap(a, pb - r, r);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
-	if ((r = (pb - pa) / es) != 0) {
+	if ((r = (pb - pa) / es) > 1) {
 		if (level) {
 			dispatch_queue_t queue = dispatch_get_context(group);
 			dispatch_group_async(group, queue, ^(void) {

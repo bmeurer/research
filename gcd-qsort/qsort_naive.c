@@ -137,8 +137,8 @@ loop:	SWAPINIT(a, es);
 	vecswap(a, pb - r, r);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
-	if ((r = pb - pa) > es)
-		qsort_naive(a, r / es, es, cmp);
+	if ((r = (pb - pa) / es) > 1)
+		qsort_naive(a, r, es, cmp);
 	if ((r = pd - pc) > es) {
 		a = pn - r;
 		n = r / es;

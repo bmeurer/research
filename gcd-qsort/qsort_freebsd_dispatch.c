@@ -59,13 +59,14 @@ static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #include <sys/cdefs.h>
 /*__FBSDID("$FreeBSD: src/lib/libc/stdlib/qsort.c,v 1.15 2008/01/14 09:21:34 das Exp $");*/
 
+#include <sys/types.h>
+#include <sys/sysctl.h>
+
+#include <dispatch/dispatch.h>
+
 #include <stdlib.h>
 
-#ifdef I_AM_QSORT_R
-typedef int		 cmp_t(void *, const void *, const void *);
-#else
 typedef int		 cmp_t(const void *, const void *);
-#endif
 static inline char	*med3(char *, char *, char *, cmp_t *, void *);
 static inline void	 swapfunc(char *, char *, int, int);
 
@@ -109,17 +110,10 @@ swapfunc(a, b, n, swaptype)
 
 #define vecswap(a, b, n) 	if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-#ifdef I_AM_QSORT_R
-#define	CMP(t, x, y) (cmp((t), (x), (y)))
-#else
 #define	CMP(t, x, y) (cmp((x), (y)))
-#endif
 
 static inline char *
 med3(char *a, char *b, char *c, cmp_t *cmp, void *thunk
-#ifndef I_AM_QSORT_R
-__unused
-#endif
 )
 {
 	return CMP(thunk, a, b) < 0 ?
@@ -127,14 +121,9 @@ __unused
               :(CMP(thunk, b, c) > 0 ? b : (CMP(thunk, a, c) < 0 ? a : c ));
 }
 
-#ifdef I_AM_QSORT_R
-void
-qsort_freebsd_r(void *a, size_t n, size_t es, void *thunk, cmp_t *cmp)
-#else
 #define thunk NULL
-void
-qsort_freebsd(void *a, size_t n, size_t es, cmp_t *cmp)
-#endif
+static void
+qsort_internal(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_group_t group, unsigned level)
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
 	size_t d, r;
@@ -152,17 +141,15 @@ loop:	SWAPINIT(a, es);
 		return;
 	}
 	pm = (char *)a + (n / 2) * es;
-	if (n > 7) {
-		pl = a;
-		pn = (char *)a + (n - 1) * es;
-		if (n > 40) {
-			d = (n / 8) * es;
-			pl = med3(pl, pl + d, pl + 2 * d, cmp, thunk);
-			pm = med3(pm - d, pm, pm + d, cmp, thunk);
-			pn = med3(pn - 2 * d, pn - d, pn, cmp, thunk);
-		}
-		pm = med3(pl, pm, pn, cmp, thunk);
+	pl = a;
+	pn = (char *)a + (n - 1) * es;
+	if (n > 40) {
+		d = (n / 8) * es;
+		pl = med3(pl, pl + d, pl + 2 * d, cmp, thunk);
+		pm = med3(pm - d, pm, pm + d, cmp, thunk);
+		pn = med3(pn - 2 * d, pn - d, pn, cmp, thunk);
 	}
+	pm = med3(pl, pm, pn, cmp, thunk);
 	swap(a, pm);
 	pa = pb = (char *)a + es;
 
@@ -205,18 +192,38 @@ loop:	SWAPINIT(a, es);
 	vecswap(a, pb - r, r);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
-	if ((r = pb - pa) > es)
-#ifdef I_AM_QSORT_R
-		qsort_freebsd_r(a, r / es, es, thunk, cmp);
-#else
-		qsort_freebsd(a, r / es, es, cmp);
-#endif
+	if ((r = (pb - pa) / es) > 1) {
+		if (level) {
+			dispatch_queue_t queue = dispatch_get_context(group);
+			dispatch_group_async(group, queue, ^(void) {
+				qsort_internal(a, r, es, cmp, group, level - 1);
+			});
+		}
+		else {
+			qsort_internal(a, r, es, cmp, group, 0);
+		}
+	}
 	if ((r = pd - pc) > es) {
 		/* Iterate rather than recurse to save stack space */
 		a = pn - r;
 		n = r / es;
 		goto loop;
 	}
-/*		qsort(pn - r, r / es, es, cmp);*/
+}
+
+void
+qsort_freebsd_dispatch(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_queue_t queue)
+{
+	dispatch_group_t group = NULL;
+	uint32_t level = 0;
+
+	size_t sizeofLevel = sizeof(level);
+	sysctlbyname("hw.activecpu", &level, &sizeofLevel, NULL, 0);
+	
+	group = dispatch_group_create();
+	dispatch_set_context(group, queue);
+	qsort_internal(a, n, es, cmp, group, level);
+	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+	dispatch_release(group);
 }
 
