@@ -33,6 +33,8 @@
 
 #include <arpa/inet.h>
 
+#include <dispatch/dispatch.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +44,7 @@ typedef int	cmp_t(const void *, const void *);
 typedef void	sort_t(void *, size_t, size_t, cmp_t *);
 extern void	qsort_freebsd(void *a, size_t n, size_t es, cmp_t *cmp);
 extern void	qsort_naive(void *a, size_t n, size_t es, cmp_t *cmp);
+extern void	qsort_naive_dispatch(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_queue_t queue);
 
 static void
 random_longs(void *a, size_t n)
@@ -98,6 +101,12 @@ test_sort(void *a, size_t n, size_t es, cmp_t *cmp, sort_t *sort)
 }
 
 static void
+qsort_naive_high(void *a, size_t n, size_t es, cmp_t *cmp)
+{
+	qsort_naive_dispatch(a, n, es, cmp, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
+}
+
+static void
 test_sorts(const char *name, void *a, size_t n, size_t es, cmp_t *cmp)
 {
 	void *b;
@@ -111,12 +120,16 @@ test_sorts(const char *name, void *a, size_t n, size_t es, cmp_t *cmp)
 	memcpy(b, a, n * es);
 	uint64_t t_naive = test_sort(b, n, es, cmp, qsort_naive);
 
+	memcpy(b, a, n * es);
+	uint64_t t_naive_high = test_sort(b, n, es, cmp, qsort_naive_high);
+
 	free(b);
 
 	asprintf(&s, "%s/%ld", name, (long)n);
-	printf("%-24s %6ldms %6ldms\n", s,
+	printf("%-24s %6ldms %6ldms %6ldms\n", s,
 			(long)(t_freebsd / 1000),
-			(long)(t_naive / 1000));
+			(long)(t_naive / 1000),
+			(long)(t_naive_high / 1000));
 	free(s);
 }
 
@@ -231,7 +244,7 @@ main(int argc, char *argv[])
 {
 	srandomdev();
 
-	printf("%-24s %8s %8s\n\n", "", "freebsd", "naive");
+	printf("%-24s %8s %8s %8s\n\n", "", "freebsd", "naive", "naive/h");
 
 	test_integer(1000 * 1000);
 	test_string(1000 * 1000);
