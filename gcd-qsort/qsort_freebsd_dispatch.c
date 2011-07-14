@@ -121,9 +121,11 @@ med3(char *a, char *b, char *c, cmp_t *cmp, void *thunk
               :(CMP(thunk, b, c) > 0 ? b : (CMP(thunk, a, c) < 0 ? a : c ));
 }
 
+#define THRESHOLD 1024
+
 #define thunk NULL
 static void
-qsort_internal(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_group_t group, unsigned level)
+qsort_internal(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_group_t group)
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
 	size_t d, r;
@@ -193,14 +195,15 @@ loop:	SWAPINIT(a, es);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = (pb - pa) / es) > 1) {
-		if (level) {
-			dispatch_queue_t queue = dispatch_get_context(group);
-			dispatch_group_async(group, queue, ^(void) {
-				qsort_internal(a, r, es, cmp, group, level - 1);
+		if (r > THRESHOLD) {
+			dispatch_group_async(group,
+					     dispatch_get_context(group),
+					     ^(void) {
+				qsort_internal(a, r, es, cmp, group);
 			});
 		}
 		else {
-			qsort_internal(a, r, es, cmp, group, 0);
+			qsort_internal(a, r, es, cmp, group);
 		}
 	}
 	if ((r = pd - pc) > es) {
@@ -214,15 +217,11 @@ loop:	SWAPINIT(a, es);
 void
 qsort_freebsd_dispatch(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_queue_t queue)
 {
-	dispatch_group_t group = NULL;
-	uint32_t level = 0;
+	dispatch_group_t group;
 
-	size_t sizeofLevel = sizeof(level);
-	sysctlbyname("hw.activecpu", &level, &sizeofLevel, NULL, 0);
-	
 	group = dispatch_group_create();
 	dispatch_set_context(group, queue);
-	qsort_internal(a, n, es, cmp, group, level);
+	qsort_internal(a, n, es, cmp, group);
 	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
 	dispatch_release(group);
 }
