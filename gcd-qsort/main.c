@@ -25,6 +25,14 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#endif
+
+#include <arpa/inet.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,8 +40,37 @@
 
 typedef int	cmp_t(const void *, const void *);
 typedef void	sort_t(void *, size_t, size_t, cmp_t *);
+extern void	qsort_freebsd(void *a, size_t n, size_t es, cmp_t *cmp);
 extern void	qsort_naive(void *a, size_t n, size_t es, cmp_t *cmp);
-static void	assert_sorted(void *a, size_t n, size_t es, cmp_t *cmp);
+
+static void
+random_longs(void *a, size_t n)
+{
+	long *p;
+
+	for (p = (long *)a; n > 0; --n)
+		*p++ = random();
+}
+
+static uint64_t
+tstamp(void)
+{
+#ifdef __APPLE__
+	return mach_absolute_time();
+#endif
+}
+
+static uint64_t
+tstamp_delta_us(uint64_t a, uint64_t b)
+{
+#ifdef __APPLE__
+	mach_timebase_info_data_t info;
+	mach_timebase_info(&info);
+	uint64_t delta = (a > b) ? a - b : b - a;
+	delta = (delta * info.numer) / info.denom;
+	return delta / 1000ull;
+#endif
+}
 
 static void
 assert_sorted(void *a, size_t n, size_t es, cmp_t *cmp)
@@ -50,11 +87,14 @@ assert_sorted(void *a, size_t n, size_t es, cmp_t *cmp)
 	}
 }
 
-static void
+static uint64_t
 test_sort(void *a, size_t n, size_t es, cmp_t *cmp, sort_t *sort)
 {
+	uint64_t t = tstamp();
 	sort(a, n, es, cmp);
+	t = tstamp_delta_us(t, tstamp());
 	assert_sorted(a, n, es, cmp);
+	return t;
 }
 
 static void
@@ -64,17 +104,24 @@ test_sorts(const char *name, void *a, size_t n, size_t es, cmp_t *cmp)
 	char *s;
 
 	b = calloc(n, es);
+
 	memcpy(b, a, n * es);
-	test_sort(b, n, es, cmp, qsort_naive);
+	uint64_t t_freebsd = test_sort(b, n, es, cmp, qsort_freebsd);
+
+	memcpy(b, a, n * es);
+	uint64_t t_naive = test_sort(b, n, es, cmp, qsort_naive);
+
 	free(b);
 
 	asprintf(&s, "%s/%ld", name, (long)n);
-	printf("%24s\n", s);
+	printf("%-24s %6ldms %6ldms\n", s,
+			(long)(t_freebsd / 1000),
+			(long)(t_naive / 1000));
 	free(s);
 }
 
 static int
-intcmp(const void *a, const void *b)
+icmp(const void *a, const void *b)
 {
 	return *(const int *)a - *(const int *)b;
 }
@@ -90,17 +137,91 @@ test_integer(size_t n)
 	/* Sorted integer array */
 	for (i = 0; i < n; ++i)
 		a[i] = (int)i;
-	test_sorts("i-sorted", a, n, sizeof(int), intcmp);
+	test_sorts("i-sorted", a, n, sizeof(int), icmp);
 
 	/* Reversed sorted integer array */
 	for (i = 0; i < n; ++i)
 		a[i] = (int)(n - i);
-	test_sorts("i-sorted-rev", a, n, sizeof(int), intcmp);
+	test_sorts("i-sorted-rev", a, n, sizeof(int), icmp);
 
 	/* Random integer array (TODO) */
 	for (i = 0; i < n; ++i)
 		a[i] = random();
-	test_sorts("i-random", a, n, sizeof(int), intcmp);
+	test_sorts("i-random", a, n, sizeof(int), icmp);
+
+	free(a);
+}
+
+static int
+scmp(const void *a, const void *b)
+{
+	return strcmp(*(const char **)a, *(const char **)b);
+}
+
+static void
+test_string(size_t n)
+{
+	char **a;
+	size_t i;
+
+	a = (char **)calloc(n, sizeof(char *));
+
+	/* Sorted string data */
+	for (i = 0; i < n; ++i)
+		asprintf(&a[i], "%08x", (unsigned)i);
+	test_sorts("s-sorted", a, n, sizeof(char *), scmp);
+	for (i = 0; i < n; ++i)
+		free(a[i]);
+
+	/* Reversed sorted chunk data */
+	for (i = 0; i < n; ++i)
+		asprintf(&a[i], "%08x", (unsigned)(n - i));
+	test_sorts("s-sorted-rev", a, n, sizeof(char *), scmp);
+	for (i = 0; i < n; ++i)
+		free(a[i]);
+
+	/* Random string data (TODO) */
+	for (i = 0; i < n; ++i)
+		asprintf(&a[i], "%08lx", random());
+	test_sorts("s-sorted-random", a, n, sizeof(char *), scmp);
+	for (i = 0; i < n; ++i)
+		free(a[i]);
+
+	free(a);
+}
+
+typedef union
+{
+	char c[4096];
+} chunk4k_t;
+
+static int
+ccmp(const void *a, const void *b)
+{
+	return memcmp((const chunk4k_t *)a, (const chunk4k_t *)b, sizeof(chunk4k_t));
+}
+
+static void
+test_4k(size_t n)
+{
+	chunk4k_t *a;
+	size_t i;
+
+	a = (chunk4k_t *)calloc(n, sizeof(chunk4k_t));
+
+	/* Sorted chunk data */
+	for (i = 0; i < n; ++i)
+		*(uint32_t *)(a + i) = htonl((uint32_t)i);
+	test_sorts("4k-sorted", a, n, sizeof(chunk4k_t), ccmp);
+
+	/* Reversed sorted chunk data */
+	for (i = 0; i < n; ++i)
+		*(uint32_t *)(a + i) = htonl((uint32_t)(n - i));
+	test_sorts("4k-sorted-rev", a, n, sizeof(chunk4k_t), ccmp);
+
+	/* Random chunk data (TODO) */
+	random_longs(a, (n * sizeof(chunk4k_t)) / sizeof(long));
+	test_sorts("4k-random", a, n, sizeof(chunk4k_t), ccmp);
 
 	free(a);
 }
@@ -110,8 +231,11 @@ main(int argc, char *argv[])
 {
 	srandomdev();
 
-	test_integer(1000);
+	printf("%-24s %8s %8s\n\n", "", "freebsd", "naive");
+
 	test_integer(1000 * 1000);
+	test_string(1000 * 1000);
+	test_4k(100 * 1000);
 
 	return EXIT_SUCCESS;
 }

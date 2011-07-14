@@ -118,7 +118,7 @@ loop:	SWAPINIT(a, es);
 			}
 			pb += es;
 		}
-		while (pb <= pc && (cmp_result = cmp(pc, a)) <= 0) {
+		while (pb <= pc && (cmp_result = cmp(pc, a)) >= 0) {
 			if (cmp_result == 0) {
 				swap(pc, pd);
 				pd -= es;
@@ -128,7 +128,7 @@ loop:	SWAPINIT(a, es);
 		if (pb > pc)
 			break;
 		swap(pb, pc);
-		pc += es;
+		pb += es;
 		pc -= es;
 	}
 

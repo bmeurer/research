@@ -107,7 +107,7 @@ qsort_r(void *a, size_t n, size_t es, void *thunk, cmp_t *cmp)
 #else
 #define thunk NULL
 void
-qsort(void *a, size_t n, size_t es, cmp_t *cmp)
+qsort_freebsd(void *a, size_t n, size_t es, cmp_t *cmp)
 #endif
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
