@@ -62,12 +62,14 @@ static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #include <sys/types.h>
 #include <sys/sysctl.h>
 
+#include <libkern/OSAtomic.h>
+
 #include <dispatch/dispatch.h>
 
 #include <stdlib.h>
 
 typedef int		 cmp_t(const void *, const void *);
-static inline char	*med3(char *, char *, char *, cmp_t *, void *);
+static inline char	*med3(char *, char *, char *, cmp_t *);
 static inline void	 swapfunc(char *, char *, int, int);
 
 #define min(a, b)	(a) < (b) ? a : b
@@ -110,34 +112,71 @@ swapfunc(a, b, n, swaptype)
 
 #define vecswap(a, b, n) 	if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-#define	CMP(t, x, y) (cmp((x), (y)))
-
 static inline char *
-med3(char *a, char *b, char *c, cmp_t *cmp, void *thunk
-)
+med3(char *a, char *b, char *c, cmp_t *cmp)
 {
-	return CMP(thunk, a, b) < 0 ?
-	       (CMP(thunk, b, c) < 0 ? b : (CMP(thunk, a, c) < 0 ? c : a ))
-              :(CMP(thunk, b, c) > 0 ? b : (CMP(thunk, a, c) < 0 ? a : c ));
+	return cmp(a, b) < 0 ?
+	       (cmp(b, c) < 0 ? b : (cmp(a, c) < 0 ? c : a ))
+              :(cmp(b, c) > 0 ? b : (cmp(a, c) < 0 ? a : c ));
 }
 
-#define THRESHOLD 1024
+typedef struct qsort_state
+{
+	dispatch_group_t group;
+	dispatch_queue_t queue;
+	cmp_t *cmp;
+	size_t es;
+	OSQueueHead cq;
+} qsort_state_t;
 
-#define thunk NULL
+typedef struct qsort_cont
+{
+	struct qsort_cont *next;
+	qsort_state_t *state;
+	void *a;
+	size_t n;
+} qsort_cont_t;
+
+#define THRESHOLD 512
+
+static void	qsort_invoke(void *context);
+static void	qsort_internal(void *a, size_t n, qsort_state_t *state);
+
 static void
-qsort_internal(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_group_t group)
+qsort_invoke(void *context)
+{
+	qsort_cont_t *c;
+	qsort_state_t *state;
+	void *a;
+	size_t n;
+
+	/* Grab the data from the continuation and release it */
+	c = (qsort_cont_t *)context;
+	state = c->state;
+	a = c->a;
+	n = c->n;
+	OSAtomicEnqueue(&state->cq, c, offsetof(qsort_cont_t, next));
+
+	qsort_internal(a, n, state);
+}
+
+static void
+qsort_internal(void *a, size_t n, qsort_state_t *state)
 {
 	char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
 	size_t d, r;
 	int cmp_result;
 	int swaptype, swap_cnt;
+	qsort_cont_t *c;
+	size_t es = state->es;
+	cmp_t *cmp = state->cmp;
 
 loop:	SWAPINIT(a, es);
 	swap_cnt = 0;
 	if (n < 7) {
 		for (pm = (char *)a + es; pm < (char *)a + n * es; pm += es)
 			for (pl = pm; 
-			     pl > (char *)a && CMP(thunk, pl - es, pl) > 0;
+			     pl > (char *)a && cmp(pl - es, pl) > 0;
 			     pl -= es)
 				swap(pl, pl - es);
 		return;
@@ -147,17 +186,17 @@ loop:	SWAPINIT(a, es);
 	pn = (char *)a + (n - 1) * es;
 	if (n > 40) {
 		d = (n / 8) * es;
-		pl = med3(pl, pl + d, pl + 2 * d, cmp, thunk);
-		pm = med3(pm - d, pm, pm + d, cmp, thunk);
-		pn = med3(pn - 2 * d, pn - d, pn, cmp, thunk);
+		pl = med3(pl, pl + d, pl + 2 * d, cmp);
+		pm = med3(pm - d, pm, pm + d, cmp);
+		pn = med3(pn - 2 * d, pn - d, pn, cmp);
 	}
-	pm = med3(pl, pm, pn, cmp, thunk);
+	pm = med3(pl, pm, pn, cmp);
 	swap(a, pm);
 	pa = pb = (char *)a + es;
 
 	pc = pd = (char *)a + (n - 1) * es;
 	for (;;) {
-		while (pb <= pc && (cmp_result = CMP(thunk, pb, a)) <= 0) {
+		while (pb <= pc && (cmp_result = cmp(pb, a)) <= 0) {
 			if (cmp_result == 0) {
 				swap_cnt = 1;
 				swap(pa, pb);
@@ -165,7 +204,7 @@ loop:	SWAPINIT(a, es);
 			}
 			pb += es;
 		}
-		while (pb <= pc && (cmp_result = CMP(thunk, pc, a)) >= 0) {
+		while (pb <= pc && (cmp_result = cmp(pc, a)) >= 0) {
 			if (cmp_result == 0) {
 				swap_cnt = 1;
 				swap(pc, pd);
@@ -183,7 +222,7 @@ loop:	SWAPINIT(a, es);
 	if (swap_cnt == 0) {  /* Switch to insertion sort */
 		for (pm = (char *)a + es; pm < (char *)a + n * es; pm += es)
 			for (pl = pm; 
-			     pl > (char *)a && CMP(thunk, pl - es, pl) > 0;
+			     pl > (char *)a && cmp(pl - es, pl) > 0;
 			     pl -= es)
 				swap(pl, pl - es);
 		return;
@@ -194,17 +233,16 @@ loop:	SWAPINIT(a, es);
 	vecswap(a, pb - r, r);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
-	if ((r = (pb - pa) / es) > 1) {
-		if (r > THRESHOLD) {
-			dispatch_group_async(group,
-					     dispatch_get_context(group),
-					     ^(void) {
-				qsort_internal(a, r, es, cmp, group);
-			});
-		}
-		else {
-			qsort_internal(a, r, es, cmp, group);
-		}
+	if ((r = (pb - pa) / es) > THRESHOLD
+	 && (c = OSAtomicDequeue(&state->cq, offsetof(qsort_cont_t, next)))) {
+		c->a = a;
+		c->n = r;
+		dispatch_group_async_f(state->group,
+				       state->queue,
+				       c, qsort_invoke);
+	}
+	else if (r > 1) {
+		qsort_internal(a, r, state);
 	}
 	if ((r = pd - pc) > es) {
 		/* Iterate rather than recurse to save stack space */
@@ -217,12 +255,30 @@ loop:	SWAPINIT(a, es);
 void
 qsort_freebsd_dispatch(void *a, size_t n, size_t es, cmp_t *cmp, dispatch_queue_t queue)
 {
-	dispatch_group_t group;
+	qsort_state_t state = {
+		.group = dispatch_group_create(),
+		.queue = queue,
+		.cmp = cmp,
+		.es = es,
+		.cq = OS_ATOMIC_QUEUE_INIT
+	};
 
-	group = dispatch_group_create();
-	dispatch_set_context(group, queue);
-	qsort_internal(a, n, es, cmp, group);
-	dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
-	dispatch_release(group);
+	uint32_t n_cont = 2; // TODO
+
+#ifdef __APPLE__
+	size_t szval = sizeof(n_cont);
+	sysctlbyname("hw.activecpu", &n_cont, &szval, NULL, 0);
+#endif
+
+	uint32_t i;
+	qsort_cont_t cont[n_cont];
+	for (i = 0; i < n_cont; ++i) {
+		cont[i].state = &state;
+		OSAtomicEnqueue(&state.cq, &cont[i],
+				offsetof(qsort_cont_t, next));
+	}
+	qsort_internal(a, n, &state);
+	dispatch_group_wait(state.group, DISPATCH_TIME_FOREVER);
+	dispatch_release(state.group);
 }
 
