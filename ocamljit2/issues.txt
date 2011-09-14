@@ -1,0 +1,21 @@
+Or use ocamlscript: http://martin.jambon.free.fr/ocamlscript.html
+
+ocamlscript is certainly a wonderful tool, for prototyping and
+otherwise.  It unfortunately doesn't help specifically with the "load
+a large file and do something with it" case.  A native-code toplevel
+allows you to keep the native code speed benefits and load the file
+only once.  Interactive experimentation on the file's data then
+doesn't require waiting for the data to be read in each time.
+
+-------------------------------------------------------------------------------
+
+OASIS generates a setup.ml that is interpreted using the toplevel.
+Maybe, a native toplevel can enhance the speed of this process (it takes
+less than 1 second to run).
+http://oasis.forge.ocamlcore.org
+
+Regards,
+Sylvain Le Gall
+
+-------------------------------------------------------------------------------
+
