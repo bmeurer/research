@@ -146,8 +146,62 @@ The byte code backend, which is used by the byte code compiler \texttt{ocamlc} a
 the byte code toplevel \texttt{ocaml}, basically turns the simplified lambda representation
 into an equivalent byte code program (see file \texttt{bytecomp/instruct.mli}), suitable for
 (a) direct execution by the byte code interpreter \texttt{ocamlrun} or (b) just-in-time
-compilation using either OCAMLJIT \cite{Starynkevitch04} or OCamlJIT2 \cite{Meurer10jit,Meurer10ocamljit}.
+compilation using either OCAMLJIT \cite{Starynkevitch04} or OCamlJIT2
+\cite{Meurer10jit,Meurer10ocamljit,Meurer11ocamljit2}.
 This is done by the \texttt{Emitcode} module (see file \texttt{bytecomp/emitcode.ml}).
+
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}[node distance=8mm,text height=1.5ex,text depth=.25ex]
+    \matrix[row sep={1.3cm,between origins}]
+    {
+      \node (start) {}; \\
+      \node[phase] (closure) {Closure conversion}; \\
+      \node[phase] (cmmgen) {C\,-\,- generation}; \\
+      \node[phase] (selection) {Instruction selection}; \\
+      \node[phase] (comballoc) {Alloc combining}; \\
+      \node[phase] (regalloc) {Register allocation}; \\
+      \node[phase] (linearize) {Linearization}; \\
+      \node[phase] (scheduling) {Instruction scheduling}; \\
+      \node (end) {}; \\
+    };
+    \draw[->] (start) -- node[right] {\tt Lambda} (closure);
+    \draw[->] (closure) -- node[right] {\tt Clambda} (cmmgen);
+    \draw[->] (cmmgen) -- node[right] {\tt Cmm} (selection);
+    \draw[->] (selection) -- node[right] {\tt Mach} (comballoc);
+    \draw[->] (comballoc) -- node[right] {\tt Mach} (regalloc);
+    \draw[->] (regalloc) -- node[right] {\tt Mach} (linearize);
+    \draw[->] (linearize) -- node[right] {\tt Linearize} (scheduling);
+    \draw[->] (scheduling) -- node[right] {\it native code} (end);
+  \end{tikzpicture}
+  \caption{Native code generation (\texttt{Asmgen} module)}
+  \label{fig:Native_code_generation}
+\end{figure}
+
+The native code backend, which is used by the optimizing native code compiler \texttt{ocamlopt}
+as well as the native toplevel \texttt{ocamlnat}, is shown in Figure~\ref{fig:Native_code_generation}.
+It takes the simplified lambda representation as input and starts by transforming it into a variant
+of the lambda representation (see file \texttt{asmcomp/clambda.mli}) with explicit closures and
+explicit direct/indirect function calls (see file \texttt{asmcomp/closure.ml}). This is then further
+processed and transformed into an equivalent representation in an internal dialect of \mbox{C\,-\,-}
+\cite{JonesR98,JonesRR99} (see files \texttt{asmcomp/cmm.mli} and \texttt{asmcomp/cmmgen.ml}).
+
+Afterwards the instruction selection phase (see file \texttt{asmcomp/selection.ml}) picks appropriate
+instructions for the target machine, transforming the \mbox{C\,-\,-} code into non-linear machine
+code (see file \texttt{asmcomp/mach.mli}). The next step attempts to combine multiple heap allocations
+within a basic block into a single heap allocation (see file \texttt{asmcomp/comballoc.ml}), prior to
+allocating and assigning physical registers to the virtual registers used in the machine code (see
+function \texttt{regalloc} in file \texttt{asmcomp/asmgen.ml}).
+The final phases linearize the machine code (see file \texttt{asmcomp/linearize.ml}) and perform
+instruction scheduling for better performance (see file \texttt{asmcomp/scheduling.ml}), yielding the
+final representation of the (linearized) machine code.
+
+The optimizing native code compiler \texttt{ocamlopt} writes the linearized machine code output of
+the \texttt{Asmgen} module to an assembly file in the appropriate format for the target platform (see
+file \texttt{asmcomp/emit.ml}), i.e. using AT\&T assembly syntax on Linux and Intel assembly syntax
+on Windows, and invokes the assembler from the system compiler toolchain, i.e. GNU \texttt{as} on Linux,
+to generate an object file. This object file can then be linked with other OCaml modules and C code into
+an executable binary or a dynamic library file.
 
 
 %% Conclusion
