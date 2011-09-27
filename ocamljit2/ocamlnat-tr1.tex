@@ -5,7 +5,7 @@
 \usepackage{color}
 \usepackage[colorlinks=false,%
             pdfkeywords={OCaml, Just In Time compilation, machine code generation},%
-            pdftitle={Towards a usable native toplevel for OCaml},%
+            pdftitle={Towards a native toplevel for OCaml},%
             pdfauthor={Marcell Fischbach, Benedikt Meurer},%
             pdfsubject={},%
             pdfdisplaydoctitle=true]{hyperref}
@@ -31,7 +31,7 @@
 \begin{document}
 
 \title{%
-  Towards a usable native toplevel for OCaml
+  Towards a native toplevel for OCaml
 }
 \author{%
   Marcell Fischbach\thanks{
@@ -80,18 +80,38 @@ For example, it cannot yet be used with multi-stage programming in MetaOCaml \ci
 the Coq proof assistant \cite{Bertot04,Coq10}, or the interactive toplevel \texttt{ocaml}.
 
 This paper presents our work on a new native OCaml toplevel, called \texttt{ocamlnat}, which is
-based on the native runtime and the compilation engine of the optimizing native code compiler.
+based on the native runtime, the compilation engine of the optimizing native code compiler and
+an earlier prototype implementation of a native toplevel by Alain Frisch.
 
-TODO
+The paper is organized as follows: Section~\ref{section:Motivation} motivates the need for a
+usable native OCaml toplevel. Section~\ref{section:Overview_of_the_OCaml_compilers} presents
+an overview of the OCaml compilers and Section~\ref{section:The_native_toplevel} describes the
+previous \texttt{ocamlnat} prototype which inspired our work, while
+Section~\ref{section:On_the_fly_code_generation} presents our work on \texttt{ocamlnat}.
+Performance measures are given in Section~\ref{section:Performance}.
+Section~\ref{section:Conclusion_and_further_work} concludes with possible directions for
+further work.
 
 
-%% Overview of the OCaml system
-\section{Overview of the OCaml system} \label{section:Overview_of_the_OCaml_system}
+%% Motivation
+\section{Motivation} \label{section:Motivation}
 
-This section gives a brief overview of the OCaml system. Additional details about the
-byte code compiler and runtime can be found in \cite{Leroy90}, \cite{Meurer10ocamljit}
-and \cite{Starynkevitch04}.
-Feel free to skip to \textbf{TODO} if you are already familiar with the details.
+\begin{enumerate}
+\item Speed
+\item Mirage \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}
+\item ocamlscript \cite{ocamlscript11}
+\item Memory Overhead
+\end{enumerate}
+
+\textbf{TODO}
+
+
+%% Overview of the OCaml compilers
+\section{Overview of the OCaml compilers} \label{section:Overview_of_the_OCaml_compilers}
+
+This section gives a brief overview of the OCaml compilers, covering both the byte code compiler
+\texttt{ocamlc} and the optimizing native code compiler \texttt{ocamlopt}.
+Feel free to skip to section~\ref{section:The_native_toplevel} if you are already familiar with the details.
 
 \begin{figure}[htb]
   \centering
@@ -149,6 +169,16 @@ into an equivalent byte code program (see file \texttt{bytecomp/instruct.mli}), 
 compilation using either OCAMLJIT \cite{Starynkevitch04} or OCamlJIT2
 \cite{Meurer10jit,Meurer10ocamljit,Meurer11ocamljit2}.
 This is done by the \texttt{Emitcode} module (see file \texttt{bytecomp/emitcode.ml}).
+Additional details about the byte code compiler and runtime can be found in \cite{Leroy90},
+\cite{Meurer10ocamljit} and \cite{Starynkevitch04}.
+
+The native code backend, which is used by the optimizing native code compiler \texttt{ocamlopt}
+as well as the native toplevel \texttt{ocamlnat}, is shown in Figure~\ref{fig:Native_code_generation}.
+It takes the simplified lambda representation as input and starts by transforming it into a variant
+of the lambda representation (see file \texttt{asmcomp/clambda.mli}) with explicit closures and
+explicit direct/indirect function calls (see file \texttt{asmcomp/closure.ml}). This is then further
+processed and transformed into an equivalent representation in an internal dialect of \mbox{C\,-\,-}
+\cite{JonesR98,JonesRR99} (see files \texttt{asmcomp/cmm.mli} and \texttt{asmcomp/cmmgen.ml}).
 
 \begin{figure}[htb]
   \centering
@@ -157,7 +187,7 @@ This is done by the \texttt{Emitcode} module (see file \texttt{bytecomp/emitcode
     {
       \node (start) {}; \\
       \node[phase] (closure) {Closure conversion}; \\
-      \node[phase] (cmmgen) {C\,-\,- generation}; \\
+      \node[phase] (cmmgen) {\mbox{C\,-\,-} generation}; \\
       \node[phase] (selection) {Instruction selection}; \\
       \node[phase] (comballoc) {Alloc combining}; \\
       \node[phase] (regalloc) {Register allocation}; \\
@@ -178,14 +208,6 @@ This is done by the \texttt{Emitcode} module (see file \texttt{bytecomp/emitcode
   \label{fig:Native_code_generation}
 \end{figure}
 
-The native code backend, which is used by the optimizing native code compiler \texttt{ocamlopt}
-as well as the native toplevel \texttt{ocamlnat}, is shown in Figure~\ref{fig:Native_code_generation}.
-It takes the simplified lambda representation as input and starts by transforming it into a variant
-of the lambda representation (see file \texttt{asmcomp/clambda.mli}) with explicit closures and
-explicit direct/indirect function calls (see file \texttt{asmcomp/closure.ml}). This is then further
-processed and transformed into an equivalent representation in an internal dialect of \mbox{C\,-\,-}
-\cite{JonesR98,JonesRR99} (see files \texttt{asmcomp/cmm.mli} and \texttt{asmcomp/cmmgen.ml}).
-
 Afterwards the instruction selection phase (see file \texttt{asmcomp/selection.ml}) picks appropriate
 instructions for the target machine, transforming the \mbox{C\,-\,-} code into non-linear machine
 code (see file \texttt{asmcomp/mach.mli}). The next step attempts to combine multiple heap allocations
@@ -204,14 +226,86 @@ to generate an object file. This object file can then be linked with other OCaml
 an executable binary or a dynamic library file.
 
 
-%% Conclusion
-\section{Conclusion} \label{section:Conclusion}
+%% The native toplevel
+\section{The native toplevel} \label{section:The_native_toplevel}
+
+In 2007 Alain Frisch added support for the \texttt{Dynlink} library to the native code compiler and
+runtime for some platforms, which was first made available as part of OCaml 3.11. This made it 
+possible to use the OCaml native code runtime with dynamically loaded plugins, which was previously
+limited with the byte code runtime. Besides various other improvements, this also made it possible
+to reuse the existing functionality of the optimizing native code compiler within the scope of a
+native toplevel.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}[node distance=8mm,text height=1.5ex,text depth=.25ex]
+    \matrix[row sep={1.3cm,between origins}]
+    {
+      \node (start) {}; \\
+      \node[phase] (compiler) {Native code compiler}; \\
+      \node[phase] (emit) {Native code emitter}; \\
+      \node[phase] (as) {Toolchain Assembler (\texttt{as})}; \\
+      \node[phase] (ld) {Toolchain Linker (\texttt{ld})}; \\
+      \node[phase] (rtld) {Runtime Linker}; \\
+      \node (end) {}; \\
+    };
+    \draw[->] (start) -- node[right] {\it OCaml phrase} (compiler);
+    \draw[->] (compiler) -- node[right] {\it native code} (emit);
+    \draw[->] (emit) -- node[right] {\it assembly file} (as);
+    \draw[->] (as) -- node[right] {\it object file} (ld);
+    \draw[->] (ld) -- node[right] {\it dynamic library file} (rtld);
+    \draw[->] (rtld) -- node[right] {\it executable code} (end);
+  \end{tikzpicture}
+  \caption{\texttt{ocamlnat} prototype}
+  \label{fig:ocamlnat_prototype}
+\end{figure}
+
+The initial proof-of-concept prototype of a native toplevel, called \texttt{ocamlnat} and developed
+by Alain Frisch, was since silently shipped with every OCaml release\footnote{It must be build
+explicitly using \texttt{make ocamlnat} after \texttt{make world} and \texttt{make opt}, and it
+is only available for targets that support the native \texttt{Dynlink} library.}.
+
+Figure~\ref{fig:ocamlnat_prototype} gives an overview of the internals of the \texttt{ocamlnat} prototype.
+It works by starting up the OCaml native runtime and then prompts the user for OCaml phrases to evaluate
+(just like the byte code toplevel \texttt{ocaml} does). Whenever the user enters a phrase, it is compiled
+to native code using the modules of the optimizing native code compiler (utilizing the frontend phases as
+shown in Figure~\ref{fig:Overview_of_the_OCaml_compilers} and the native backend phases as shown in
+Figure~\ref{fig:Native_code_generation}).
+
+This \emph{native code} is written to a temporary \emph{assembly file} by the Native code emitter, which
+is also part of \texttt{ocamlopt}. The \emph{assembly file} is then passed to the Toolchain Assembler to
+produce a temporary \emph{object file}. This \emph{object file} is afterwards turned into a \emph{dynamic
+library file} by the Toolchain Linker, and loaded into the native toplevel process using the Runtime Linker,
+yielding a memory area with the \emph{executable code} which is then executed.
+
+While this approach has the immediate benefit of requiring only a few hundred lines of glue code to turn
+the existing modules of the optimizing native code compiler and the native \texttt{Dynlink} library into
+a native toplevel, there are also various obvious drawbacks to the approach (preventing
+wide-spread adoption of \texttt{ocamlnat}):
+\begin{enumerate}
+\item Dependency on the system toolchain (as, ld).
+  Problematic for Mirage \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}.
+  \textbf{TODO}
+\item Latency of the external tools and the necessary I/O. \textbf{TODO}
+\item Left-over temporary files on (DLLs on Windows). \textbf{TODO}
+\item Unclear maintenance status. \textbf{TODO}
+\end{enumerate}
+
+
+%% On-the-fly code generation
+\section{On-the-fly code generation} \label{section:On_the_fly_code_generation}
 
 TODO
 
 
-%% Acknowlegdements
-\section*{Acknowledgements}
+%% Performance
+\section{Performance} \label{section:Performance}
+
+TODO
+
+
+%% Conclusion and further work
+\section{Conclusion and further work} \label{section:Conclusion_and_further_work}
 
 TODO
 
