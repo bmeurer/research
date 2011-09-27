@@ -45,13 +45,13 @@
 \section{Introduction}
 
 The \textsc{OCaml} \cite{Leroy10,Remy02} system is the main implementation of the Caml
-language\footnote{\url{http://caml.inria.fr/}}, featuring a powerful module system combined
+language \cite{Caml10}, featuring a powerful module system combined
 with a full-fledged object-oriented layer. It comes with an optimizing native code compiler
-\texttt{ocamlopt}, for high performance; a byte-code compiler \texttt{ocamlrun}, for
+\texttt{ocamlopt}, for high performance; a byte-code compiler \texttt{ocamlc}, for
 increased portability; and an interactive top-level \texttt{ocaml}, for experimentation and rapid
 development.
 
-\texttt{ocamlrun} and \texttt{ocaml} translate the source code into a sequence of byte-code 
+\texttt{ocamlc} and \texttt{ocaml} translate the source code into a sequence of byte-code 
 instructions for the \textsc{OCaml} virtual machine, which is based on the ZINC machine
 \cite{Leroy90} originally developed for Caml Light \cite{Leroy02}.
 The optimizing native code compiler \texttt{ocamlopt} produces fast machine code for
@@ -60,11 +60,11 @@ It cannot be used with multi-stage programming in \textsc{MetaOCaml} \cite{Taha0
 or the interactive top-level \texttt{ocaml}.
 
 This paper introduces \textsc{OCamlJit2}, a new open-source\footnote{The full source code
-is available from \url{http://gitorious.org/ocamljit2/} under the terms of the
-QPL and LGPL licenses.} implementation of the \textsc{OCaml} virtual machine, based
-on Just-In-Time native code generation. \textsc{OCamlJit2} is developed on
-64-bit Mac OS X 10.6, but should also run on Linux/amd64 and FreeBSD/amd64
-systems without modifications.
+is available from \url{https://github.com/bmeurer/ocamljit2} under the terms of the Q Public
+License and the GNU Library General Public License.} implementation of the \textsc{OCaml}
+virtual machine, based on Just-In-Time native code generation. \textsc{OCamlJit2} is developed
+on 64-bit Mac OS X 10.6, but should also run on Linux/amd64 and FreeBSD/amd64 systems without
+modifications.
 
 The paper is organized as follows: Section~\ref{section:Existing_systems} presents the
 existing systems, including the relevant parts of the \textsc{OCaml} implementation, and the
@@ -97,7 +97,7 @@ or a byte-code executable file. \texttt{ocamlc} also handles \texttt{*.c} source
 shared libraries (for external C functions invoked from \textsc{OCaml}) and also deals with
 byte-code library files \texttt{*.cma}. The byte-code executable files produced by \texttt{ocamlc}
 are interpreted by the \texttt{ocamlrun} program\footnote{Technically speaking, an \textsc{OCaml}
-  byte-code executable file is a \texttt{\#!/usr/bin/ocamlrun} Unix script, so \texttt{execve}
+  byte-code executable file is a \texttt{\#!/usr/local/bin/ocamlrun} Unix script, so \texttt{execve}
   of an \textsc{OCaml} byte-code executables invokes \texttt{ocamlrun}.} upon execution.
 
 The goal of the present work is to substitute the interpreter part of the \textsc{OCaml} runtime
@@ -137,9 +137,10 @@ a typed syntax tree (see file \texttt{typing/typedtree.mli}) as shown in Figure~
 \end{figure}
 
 From this typed syntax tree, the byte-code compiler generates a so called {\em lambda representation} (see
-file \texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} has a similar
-  representation (see file \texttt{asmcomp/clambda.mli}), which adds explicit direct or indirect calls and
-  closures.} as shown in Figure~\ref{figure:Lambda_representation}, inspired by
+file \texttt{bytecomp/lambda.mli})\footnote{The native code compiler \texttt{ocamlopt} uses the same
+  intermediate lambda representation, but also includes an additional representation (see file
+  \texttt{asmcomp/clambda.mli}), which adds explicit direct or indirect calls and closures.}
+as shown in Figure~\ref{figure:Lambda_representation}, inspired by
 the untyped call-by-value $\lambda$-calculus. This intermediate representation is not directly related to the
 source code, because source file positions and some names are lost at this stage, and does not contain any
 kind of explicit type information.
@@ -423,7 +424,7 @@ based on \textsc{LLVM}, we have measured significant compilation overhead; short
 programs (like \texttt{ocamlc} applied to a small to medium sized \texttt{*.ml} file)
 were three to four times slower than running the same program with the byte-code
 interpreter. Similar results were observed by other projects using \textsc{LLVM} for
-Just-In-Time compilation. For example, the Mono project\footnote{\url{http://www.mono-project.com}}
+Just-In-Time compilation. For example, the Mono project\footnote{\url{http://www.mono-project.com/}}
 reported impressive speedups for long running, computationally intensive applications,
 but at the cost of increased compilation time and memory usage.
 
