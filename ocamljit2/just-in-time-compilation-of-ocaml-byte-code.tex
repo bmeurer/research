@@ -53,11 +53,11 @@
 \section{Introduction}
 
 The \textsc{OCaml} system \cite{Leroy10,Remy02} is the main implementation of the
-\textsc{Caml} language, featuring a powerful module system combined with a full-fledged
+\textsc{Caml} language \cite{Caml10}, featuring a powerful module system combined with a full-fledged
 object-oriented layer. It comes with an optimizing native code compiler \texttt{ocamlopt},
 a byte-code compiler \texttt{ocamlc} with an associated runtime \texttt{ocamlrun}, and
 an interactive top-level \texttt{ocaml}.
-\textsc{OCamlJit} \cite{Starynkevitch04} and \textsc{OCamlJit2} \cite{Meurer10:OCamlJit2.0}
+\textsc{OCamlJit} \cite{Starynkevitch04} and \textsc{OCamlJit2} \cite{Meurer10ocamljit}
 provide Just-In-Time compilers for the byte-code used by \texttt{ocamlrun} and
 \texttt{ocaml}.
 
@@ -65,10 +65,10 @@ We describe a set of improvements that were applied to \textsc{OCamlJit2},
 including a new port to the x86 architecture\footnote{Also known als i386 or IA-32 architecture,
 but we prefer the vendor-neutral term.} and some interesting optimizations to further
 improve the execution speed of the JIT engine. \textsc{OCamlJit2} is open-source\footnote{The
-full source code is available from \url{http://gitorious.org/camljit2/} under the terms of
-the QPL and LGPL licenses.} and is verified to work with Linux/amd64, Linux/i386 and Mac OS X
-(64-bit Intel Macs only), but should also run on other Unix-like systems with x86 or x86-64
-processors.
+full source code is available from \url{https://github.com/bmeurer/camljit2/} under the terms of
+the Q Public License and the GNU Library General Public License.} and is verified to work with
+Linux/amd64, Linux/i386 and Mac OS X (64-bit Intel Macs only), but should also run on other
+Unix-like systems with x86 or x86-64 processors.
 
 The paper is organized as follows: Section~\ref{section:Existing_systems} mentions existing
 systems and relevant sources of information. Section~\ref{section:Improvements} describes
@@ -83,12 +83,12 @@ possible directions for further work.
 \section{Existing systems} \label{section:Existing_systems}
 
 The implementation of \textsc{OCamlJit2} described below is based on a previous
-prototype of \textsc{OCamlJit2} \cite{Meurer10:OCamlJit2.0}, and earlier work on
+prototype of \textsc{OCamlJit2} \cite{Meurer10ocamljit}, and earlier work on
 \textsc{OCamlJit} \cite{Starynkevitch04} and \textsc{OCaml} \cite{Leroy90,Leroy10,Leroy02,Remy02}.
 We assume that the reader is familiar with the internals of the \textsc{OCaml} byte-code
 and runtime, and the structure of the \textsc{OCamlJit} and \textsc{OCamlJit2} Just-In-Time
 compilers. An overview of the relevant parts of the \textsc{OCaml} virtual machine is given
-in both \cite{Meurer10:OCamlJit2.0} and \cite{Starynkevitch04}, while \cite{Remy02} provides
+in both \cite{Meurer10ocamljit} and \cite{Starynkevitch04}, while \cite{Remy02} provides
 the necessary insights on the \textsc{OCaml} language.
 
 
@@ -96,7 +96,7 @@ the necessary insights on the \textsc{OCaml} language.
 \section{Improvements} \label{section:Improvements}
 
 This section describes the improvements that were applied to the \textsc{OCamlJit2} prototype
-described in \cite{Meurer10:OCamlJit2.0}. This
+described in \cite{Meurer10ocamljit}. This
 includes the new x86 port (section~\ref{subsection:32_bit_support}), a simple native code managment
 strategy (section~\ref{subsection:Native_code_management}), as well as improvements
 in the implementation of floating-point primitives (section~\ref{subsection:Floating_point_optimizations}),
@@ -109,7 +109,7 @@ Readers only interested in the performance results may skip straight to section~
 as well as x86 processors (operating in protected mode). This section provides a brief
 overview of the mapping of the \textsc{OCaml} virtual machine to the x86
 architecture, especially the mapping of the virtual machine registers to the available
-physical registers. See \cite{Meurer10:OCamlJit2.0} for a description of the implementation
+physical registers. See \cite{Meurer10ocamljit} for a description of the implementation
 details of the x86-64 port.
 
 The x86 architecture \cite{Intel10Vol1} provides $8$ general purpose 32-bit registers
@@ -146,7 +146,7 @@ counterparts and the 64-bit opcodes with their 32-bit counterparts.
 
 \subsubsection{Address mapping and on-demand compilation}
 
-We use the existing scheme \cite{Meurer10:OCamlJit2.0} to map byte-code to native machine code address, which
+We use the existing scheme \cite{Meurer10ocamljit} to map byte-code to native machine code address, which
 replaces the instruction opcode word within the byte-code sequence with
 the offset of the generated native code relative to the base address
 \texttt{caml\_jit\_code\_end}. Whenever jumping to a byte-code address - i.e.
@@ -295,7 +295,7 @@ a boxed floating-point object in the heap for each and every floating-point valu
 the execution of the program. The byte-code interpreter \texttt{ocamlrun} however has to box every floating-point
 value, which is certainly slower than using the available floating-point registers, and
 also causes a non-negligible load on the garbage collector. Both \textsc{OCamlJit} and
-\textsc{OCamlJit2} (as described in \cite{Meurer10:OCamlJit2.0}) used the same strategy
+\textsc{OCamlJit2} (as described in \cite{Meurer10ocamljit}) used the same strategy
 as the byte-code interpreter, namely allocating a heap object for every floating-point
 value during the execution, but both JIT engines applied various peephole optimizations
 to avoid the overhead of calling the floating-point C primitives.
@@ -718,7 +718,7 @@ Mehrnush Afshar for their careful proof-reading.
 
 
 %% References
-\bibliographystyle{habbrv}
+\bibliographystyle{abbrv}
 \bibliography{citations}
 
 \end{document}
