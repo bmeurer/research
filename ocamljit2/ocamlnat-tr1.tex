@@ -64,7 +64,11 @@
 \maketitle
 
 \begin{abstract}
-  TODO
+  This paper presents the current state of our work on an interactive toplevel for the OCaml language
+  based on the optimizing native code compiler and runtime, that is up to 100 times faster
+  than the default OCaml toplevel, which is based on the byte code compiler and interpreter.
+  It uses Just-In-Time techniques to compile toplevel phrases to native code at runtime, and
+  currently works with various Unix-like systems powered by x86 or x86-64 processors.
 \end{abstract}
 
 
@@ -93,10 +97,10 @@ author's diploma thesis.} on a new native OCaml toplevel, called \texttt{ocamlna
 based on the native runtime, the compilation engine of the optimizing native code compiler and
 an earlier prototype implementation of a native toplevel by Alain Frisch. Our implementation
 currently supports x86 and x86-64 processors \cite{Amd09Vol1,Intel10Vol1} and should work with any
-POSIX compliant operating system supported by OCaml. It is verified to work with Mac OS X 10.6 and
-10.7, Debian GNU Linux 6.0 and above, and CentOS 5.6 and 5.7. The full source code
-is available from the \texttt{ocamljit-nat} branch of the \texttt{ocaml-experimental} Git
-repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
+POSIX compliant operating system supported by the OCaml native code compiler. It is verified to
+work with Mac OS X 10.6 and 10.7, Debian GNU Linux 6.0 and above, and CentOS 5.6 and 5.7. The
+full source code is available from the \texttt{ocamljit-nat} branch of the \texttt{ocaml-experimental}
+Git repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
 
 The paper is organized as follows: Section~\ref{section:Motivation} motivates the need for a
 usable native OCaml toplevel. Section~\ref{section:Overview_of_the_OCaml_compilers} presents
@@ -532,7 +536,7 @@ do not change very often during the OCaml development process.
         \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\bf\name};
       };
     \end{scope}
-    \begin{scope}[xshift=0cm,yshift=-4.4cm] % Intel Xeon E5520, CentOS 5.6 (amd64)
+    \begin{scope}[xshift=0cm,yshift=-4.4cm] % Intel Xeon E5520, CentOS 5.7 (amd64)
       \foreach \y in {1,...,4}  %Hilfslinien
       {
         \pgfmathtruncatemacro\ytext{\y * 6}
@@ -545,7 +549,7 @@ do not change very often during the OCaml development process.
       \draw (-0.1cm,0cm) -- (-0.1cm,2.2cm);  %Ordinate
       \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
       \draw (-0.1cm,2.2cm) -- (-0.2cm,2.2cm);  %oberes Ende der Ordinate
-      \node at (3.3cm, 2.5cm) {\small Intel Xeon E5520, CentOS 5.6 (amd64)};
+      \node at (3.3cm, 2.5cm) {\small Intel Xeon E5520, CentOS 5.7 (amd64)};
       \foreach \name/\x/\a/\b/\c in
       {
         almabench/0/2.994/4.641/4.793,
