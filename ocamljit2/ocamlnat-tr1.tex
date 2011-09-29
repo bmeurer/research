@@ -3,6 +3,7 @@
 \usepackage{amssymb}
 \usepackage[english]{babel}
 \usepackage{color}
+\usepackage{enumerate}
 \usepackage[colorlinks=false,%
             pdfkeywords={OCaml, Just In Time compilation, machine code generation},%
             pdftitle={Towards a native toplevel for OCaml},%
@@ -352,12 +353,12 @@ memory for the \texttt{data} section, copies the section contents to their final
 takes care of the relocations, and registers the global symbols. This is roughly what the Toolchain
 Linker and Runtime Linker do in the \texttt{ocamlnat} prototype.
 
-The code for the two phases is found in the \texttt{toplevel/jitaux.ml} file as well as
-\texttt{toplevel/amd64/jit.ml} for the x86-64 platform and \texttt{toplevel/i386/jit.ml} for the x86
-platform, plus a few lines of additional C code in \texttt{asmrun/natdynlink.c} and \texttt{asmrun/natjit.c}.
-At the time of this writing the changes for our new native toplevel with support for POSIX systems running
-on x86 and x86-64 account for approximately 2300 lines of C and OCaml code as shown in
-Figure~\ref{fig:Additional_lines_of_code_for_ocamlnat}.
+The code for the two phases is found in the \texttt{toplevel/jitaux.ml} file, which provides the common
+functionality for Just-in-Time code generation, as well as \texttt{toplevel/amd64/jit.ml} for the x86-64
+platform and \texttt{toplevel/i386/jit.ml} for the x86 platform, plus a few lines of additional C code in
+\texttt{asmrun/natdynlink.c} and \texttt{asmrun/natjit.c}. At the time of this writing the changes for our
+new native toplevel with support for x86 and x86-64 account for approximately 2300 lines of C and OCaml
+code as shown in Figure~\ref{fig:Additional_lines_of_code_for_ocamlnat}.
 
 \begin{figure}[htb]
   \centering
@@ -373,6 +374,21 @@ Figure~\ref{fig:Additional_lines_of_code_for_ocamlnat}.
   \caption{Additional lines of code for \texttt{ocamlnat}}
   \label{fig:Additional_lines_of_code_for_ocamlnat}
 \end{figure}
+
+We tried to keep the code as easy to maintain as possible. To achieve this goal we
+\begin{enumerate}[(a)]
+\item reused as much of the existing functionality as possible with respect to both the native code compiler and
+  its runtime,
+\item kept the amount of additional runtime support as low as possible (basically just an additional layer in
+  the global symbol management and a new entry point for the Just-in-Time code execution), and
+\item made the Just-in-Time Emitter (the \texttt{jit.ml} files in the \texttt{toplevel} subdirectories) look as
+  similar as possible to the Native Code Emitter (the \texttt{emit.mlp} files in the \texttt{asmcomp}
+  subdirectories).
+\end{enumerate}
+The last point is especially important as every change to the Native Code Emitters
+(\ie \texttt{asmcomp/amd64/emit.mlp}) must be reflected by an equivalent change to the appropriate
+Just-in-Time Emitter (\ie \texttt{toplevel/amd64/jit.ml}). Fortunately the Native Code Emitters usually
+do not change very often during the OCaml development process.
 
 
 %% Performance
