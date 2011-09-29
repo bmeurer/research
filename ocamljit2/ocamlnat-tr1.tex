@@ -33,6 +33,10 @@
   }
 }
 
+\definecolor{ocamljit2}{HTML}{FF0000}
+\definecolor{ocamlnatext}{HTML}{00FF00}
+\definecolor{ocamlnatjit}{HTML}{0000FF}
+
 \begin{document}
 
 \title{%
@@ -393,6 +397,163 @@ do not change very often during the OCaml development process.
 
 %% Performance
 \section{Performance} \label{section:Performance}
+
+\begin{figure*}[htb]
+  \centering
+  \footnotesize
+  \begin{tikzpicture}
+    \begin{scope}[xshift=0cm,yshift=0cm] % MacBook Pro Core i7, OS X 10.7 (amd64)
+      \foreach \y in {1,...,4}  %Hilfslinien
+      {
+        \pgfmathtruncatemacro\ytext{\y * 25}
+        \draw[gray!50, text=black] (-0.2 cm,\y * 0.5 cm) -- (6.6 cm,\y * 0.5 cm)
+        node at (-0.5 cm,\y * 0.5 cm) {\ytext x};  %Beschriftung
+      };
+      \draw (0cm,0cm) -- (6.6cm,0cm);  %Abzisse
+      \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+      \draw (6.6cm,0cm) -- (6.6cm,-0.1cm);  %rechtes Ende der Abzisse
+      \draw (-0.1cm,0cm) -- (-0.1cm,2.2cm);  %Ordinate
+      \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+      \draw (-0.1cm,2.2cm) -- (-0.2cm,2.2cm);  %oberes Ende der Ordinate
+      \node at (3.3cm, 2.5cm) {\small MacBook Pro Core i7, OS X 10.7 (amd64)};
+      \foreach \name/\x/\a/\b/\c in
+      {
+        almabench/0/9.531/17.447/18.770,
+        bdd/1/10.147/20.267/52.292,
+        boyer/2/11.351/10.169/15.206,
+        fft/3/8.323/25.330/32.869,
+        nucleic/4/10.931/11.022/53.481,
+        quicksort/5/21.714/50.833/83.298,
+        sieve/6/3.382/1.590/11.625,
+        soli/7/10.827/2.631/35.188,
+        sorts/8/11.370/8.299/17.767
+      }
+      {
+        \pgfmathsetmacro\xinc{0.2}
+        \pgfmathsetmacro\xoff{\x * 0.7 + \xinc}
+        \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.02 cm);
+        \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.02 cm);
+        \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.02 cm);
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+      };
+    \end{scope}
+    \begin{scope}[xshift=8cm,yshift=0cm] % iMac Core 2 Duo, OS X 10.7 (amd64)
+      \foreach \y in {1,...,4}  %Hilfslinien
+      {
+        \pgfmathtruncatemacro\ytext{\y * 25}
+        \draw[gray!50, text=black] (-0.2 cm,\y * 0.5 cm) -- (6.6 cm,\y * 0.5 cm)
+        node at (-0.5 cm,\y * 0.5 cm) {\ytext x};  %Beschriftung
+      };
+      \draw (0cm,0cm) -- (6.6cm,0cm);  %Abzisse
+      \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+      \draw (6.6cm,0cm) -- (6.6cm,-0.1cm);  %rechtes Ende der Abzisse
+      \draw (-0.1cm,0cm) -- (-0.1cm,2.2cm);  %Ordinate
+      \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+      \draw (-0.1cm,2.2cm) -- (-0.2cm,2.2cm);  %oberes Ende der Ordinate
+      \node at (3.3cm, 2.5cm) {\small iMac Core 2 Duo, OS X 10.7 (amd64)};
+      \foreach \name/\x/\a/\b/\c in
+      {
+        almabench/0/8.532/15.218/16.057,
+        bdd/1/14.959/21.358/54.515,
+        boyer/2/11.627/10.374/15.301,
+        fft/3/9.416/24.440/30.396,
+        nucleic/4/12.881/11.252/51.219,
+        quicksort/5/25.551/57.709/99.199,
+        sieve/6/3.360/1.690/12.042,
+        soli/7/11.811/2.801/32.370,
+        sorts/8/12.668/8.946/19.491
+      }
+      {
+        \pgfmathsetmacro\xinc{0.2}
+        \pgfmathsetmacro\xoff{\x * 0.7 + \xinc}
+        \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.02 cm);
+        \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.02 cm);
+        \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.02 cm);
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+      };
+    \end{scope}
+    \begin{scope}[xshift=0cm,yshift=-4.4cm] % Intel Xeon E5520, CentOS 5.6 (amd64)
+      \foreach \y in {1,...,4}  %Hilfslinien
+      {
+        \pgfmathtruncatemacro\ytext{\y * 6}
+        \draw[gray!50, text=black] (-0.2 cm,\y * 0.5 cm) -- (6.6 cm,\y * 0.5 cm)
+        node at (-0.5 cm,\y * 0.5 cm) {\ytext x};  %Beschriftung
+      };
+      \draw (0cm,0cm) -- (6.6cm,0cm);  %Abzisse
+      \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+      \draw (6.6cm,0cm) -- (6.6cm,-0.1cm);  %rechtes Ende der Abzisse
+      \draw (-0.1cm,0cm) -- (-0.1cm,2.2cm);  %Ordinate
+      \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+      \draw (-0.1cm,2.2cm) -- (-0.2cm,2.2cm);  %oberes Ende der Ordinate
+      \node at (3.3cm, 2.5cm) {\small Intel Xeon E5520, CentOS 5.6 (amd64)};
+      \foreach \name/\x/\a/\b/\c in
+      {
+        almabench/0/2.994/4.641/4.793,
+        bdd/1/3.087/5.677/13.254,
+        boyer/2/2.725/2.620/3.980,
+        fft/3/3.611/10.073/13.389,
+        nucleic/4/3.076/3.396/13.944,
+        quicksort/5/3.820/9.720/15.535,
+        sieve/6/1.053/0.516/3.200,
+        soli/7/2.375/0.609/5.344,
+        sorts/8/2.967/2.136/4.542
+      }
+      {
+        \pgfmathsetmacro\xinc{0.2}
+        \pgfmathsetmacro\xoff{\x * 0.7 + \xinc}
+        \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.083 cm);
+        \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.083 cm);
+        \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.083 cm);
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+      };
+    \end{scope}
+    \begin{scope}[xshift=8cm,yshift=-4.4cm] % Pentium 4, Debian testing 2011/09 (i386)
+      \foreach \y in {1,...,4}  %Hilfslinien
+      {
+        \pgfmathtruncatemacro\ytext{\y * 6}
+        \draw[gray!50, text=black] (-0.2 cm,\y * 0.5 cm) -- (6.6 cm,\y * 0.5 cm)
+        node at (-0.5 cm,\y * 0.5 cm) {\ytext x};  %Beschriftung
+      };
+      \draw (0cm,0cm) -- (6.6cm,0cm);  %Abzisse
+      \draw (0cm,0cm) -- (0cm,-0.1cm);  %linkes Ende der Abzisse
+      \draw (6.6cm,0cm) -- (6.6cm,-0.1cm);  %rechtes Ende der Abzisse
+      \draw (-0.1cm,0cm) -- (-0.1cm,2.2cm);  %Ordinate
+      \draw (-0.1cm,0cm) -- (-0.2cm,0cm);  %unteres Ende der Ordinate
+      \draw (-0.1cm,2.2cm) -- (-0.2cm,2.2cm);  %oberes Ende der Ordinate
+      \node at (3.3cm, 2.5cm) {\small Pentium 4, Debian testing 2011/09 (i386)};
+      \foreach \name/\x/\a/\b/\c in
+      {
+        almabench/0/2.835/3.065/2.721,
+        bdd/1/2.525/3.667/11.459,
+        boyer/2/2.284/2.367/4.170,
+        fft/3/2.320/3.876/4.292,
+        nucleic/4/3.142/2.700/12.499,
+        quicksort/5/3.662/9.755/24.566,
+        sieve/6/0.978/0.361/4.000,
+        soli/7/2.813/0.388/8.182,
+        sorts/8/2.678/1.903/5.812
+      }
+      {
+        \pgfmathsetmacro\xinc{0.2}
+        \pgfmathsetmacro\xoff{\x * 0.7 + \xinc}
+        \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.083 cm);
+        \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.083 cm);
+        \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.083 cm);
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+      };
+    \end{scope}
+    \begin{scope}[xshift=2cm,yshift=-6.5cm]
+      \draw[fill=ocamljit2] (0.0cm, 0.0cm) rectangle (0.5cm, 0.2cm) node[right] at (0.5cm, 0.1cm)
+      {OCamlJIT2};
+      \draw[fill=ocamlnatext] (3.0cm, 0.0cm) rectangle (3.5cm, 0.2cm) node[right] at (3.5cm, 0.1cm)
+      {OCamlNat/Toolchain};
+      \draw[fill=ocamlnatjit] (7.2cm, 0.0cm) rectangle (7.7cm, 0.2cm) node[right] at (7.7cm, 0.1cm)
+      {OCamlNat/JIT};
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Speedup relative to the byte code toplevel \texttt{ocaml}}
+  \label{fig:Speedup_relative_to_the_byte_code_toplevel_ocaml}
+\end{figure*}
 
 TODO
 
