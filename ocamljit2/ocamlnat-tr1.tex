@@ -93,7 +93,7 @@ author's diploma thesis.} on a new native OCaml toplevel, called \texttt{ocamlna
 based on the native runtime, the compilation engine of the optimizing native code compiler and
 an earlier prototype implementation of a native toplevel by Alain Frisch. The full source code
 is available from the \texttt{ocamljit-nat} branch of the \texttt{ocaml-experimental} Git
-repository hosted on GitHub at \url{https://github.com/bmeurer/ocaml-experimental/}.
+repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
 
 The paper is organized as follows: Section~\ref{section:Motivation} motivates the need for a
 usable native OCaml toplevel. Section~\ref{section:Overview_of_the_OCaml_compilers} presents
@@ -398,7 +398,7 @@ do not change very often during the OCaml development process.
 %% Performance
 \section{Performance} \label{section:Performance}
 
-\begin{figure*}[htb]
+\begin{figure*}[bt]
   \centering
   \footnotesize
   \begin{tikzpicture}
@@ -434,7 +434,7 @@ do not change very often during the OCaml development process.
         \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.02 cm);
         \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.02 cm);
         \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.02 cm);
-        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\bf\name};
       };
     \end{scope}
     \begin{scope}[xshift=8cm,yshift=0cm] % iMac Core 2 Duo, OS X 10.7 (amd64)
@@ -469,7 +469,7 @@ do not change very often during the OCaml development process.
         \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.02 cm);
         \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.02 cm);
         \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.02 cm);
-        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\bf\name};
       };
     \end{scope}
     \begin{scope}[xshift=0cm,yshift=-4.4cm] % Intel Xeon E5520, CentOS 5.6 (amd64)
@@ -504,7 +504,7 @@ do not change very often during the OCaml development process.
         \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.083 cm);
         \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.083 cm);
         \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.083 cm);
-        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\bf\name};
       };
     \end{scope}
     \begin{scope}[xshift=8cm,yshift=-4.4cm] % Pentium 4, Debian testing 2011/09 (i386)
@@ -539,7 +539,7 @@ do not change very often during the OCaml development process.
         \draw[fill=ocamljit2] (\xoff cm + 0 * \xinc cm, 0 cm) rectangle (\xoff cm + 1 * \xinc cm, \a * 0.083 cm);
         \draw[fill=ocamlnatext] (\xoff cm + 1 * \xinc cm, 0 cm) rectangle (\xoff cm + 2 * \xinc cm, \b * 0.083 cm);
         \draw[fill=ocamlnatjit] (\xoff cm + 2 * \xinc cm, 0 cm) rectangle (\xoff cm + 3 * \xinc cm, \c * 0.083 cm);
-        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\name};
+        \node[rotate=45,left] at (\xoff cm + 2.5 * \xinc cm, -.1cm) {\bf\name};
       };
     \end{scope}
     \begin{scope}[xshift=2cm,yshift=-6.5cm]
@@ -555,8 +555,59 @@ do not change very often during the OCaml development process.
   \label{fig:Speedup_relative_to_the_byte_code_toplevel_ocaml}
 \end{figure*}
 
-TODO
+We compared the performance of our native toplevel to the performance of the byte code toplevel
+\texttt{ocaml} running on top of the OCaml 3.12.1 byte code interpreter, the byte code toplevel
+\texttt{ocaml} running on top of the OCamlJIT2 Just-in-Time byte code compiler
+\cite{Meurer10jit,Meurer10ocamljit,Meurer11ocamljit2}, and Alain Frisch's earlier \texttt{ocamlnat}
+proof-of-concept implementation (as described in Section~\ref{section:The_native_toplevel}).
+ We measured the performance on four different systems:
+\begin{itemize}
+\item A MacBook Pro 13" (Early 2011) with an Intel Core i7 2.7GHz CPU (4 MiB L3 Cache, 256 KiB L2 Cache per Core,
+  2 Cores) and 4 GiB RAM, running Mac OS X Lion 10.7.1. The C compiler is
+  \texttt{llvm-gcc-4.2.1} (Based on Apple Inc. build 5658) (LLVM build 2336.1.00).
+\item An iMac 20" (Early 2008) with an Intel Core 2 Duo ``Penryn'' 2.66GHz CPU (6 MiB L2 Cache, 2 Cores),
+  and 4 GiB RAM, running Mac OS X Lion 10.7.1. The C compiler is
+  \texttt{llvm-gcc-4.2.1} (Based on Apple Inc. build 5658) (LLVM build 2336.1.00).
+\item A Fujitsu Siemens Primergy server with two Intel Xeon E5520 2.26GHz CPUs (8 MiB L2 Cache, 4 Cores),
+  and 12 GiB RAM, running CentOS release 5.7 (Final) with Linux/x86\_64 2.6.18-274.3.1.el5.
+  The C compiler is \texttt{gcc-4.1.2} (Red Hat 4.1.2-51).
+\item A Fujitsu Siemens Primergy server with an Intel Pentium 4 ``Northwood'' 2.4 GHz CPU (512 KiB L2 Cache),
+  and 768 MiB RAM, running Debian testing as of 2011/09 with Linux/i686 3.0.0-1-686-pae.
+  The C compiler is \texttt{gcc-4.6.1} (Debian 4.6.1-4).
+\end{itemize}
 
+The OCaml distribution used for the tests is 3.12.1. The OCamlJIT2 version is the commit \texttt{8514ccb}
+from the \texttt{ocamljit2} Git repository hosted on GitHub at \cite{Meurer11ocamljit2}. For
+our native toplevel \texttt{ocamlnat} we used the commit \texttt{d30210d} from the \texttt{ocaml-experimental}
+Git repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
+
+The benchmark programs used to measure the performance are the following test programs
+from the \texttt{testsuite/test} folder of the OCaml 3.12.1 distribution:
+\begin{description}
+\item[almabench] is a number-crunching benchmark designed for cross-language comparisons.
+\item[bdd] is an implementation of binary decision diagrams, and therefore a good test for
+  the symbolic computation performance.
+\item[boyer] is a term manipulation benchmark.
+\item[fft] is an implementation of the Fast Fourier Transformation \cite{BrighamM67}.
+\item[nucleic] is another floating-point benchmark.
+\item[quicksort] is an implementation of the well-known QuickSort algorithm \cite{Hoare61b,Hoare62}
+  on arrays and serves as a good test for loops.
+\item[sieve] is an implementation of the sieve of Eratosthenes, one of a number of prime number sieves,
+  for finding all prime numbers up to a specified integer.
+\item[soli] is a simple solitaire solver, well suited for testing the performance of non-trivial,
+  short running programs.
+\item[sorts] is a test bench for various sorting algorithms.
+\end{description}
+
+For our tests we measured the total execution time of the benchmark process itself and all spawned
+child processes (only relevant for the earlier toolchain based \texttt{ocamlnat} prototype), given
+as combined system and user CPU time. The times were collected by executing each benchmark two times
+with every toplevel, and using the timings of the fastest run.
+
+Figure~\ref{fig:Speedup_relative_to_the_byte_code_toplevel_ocaml} presents the results of the benchmarks
+as speedup relative to the regular byte code toplevel \texttt{ocaml}, where OCamlNat/Toolchain is
+Alain Frisch's toolchain based \texttt{ocamlnat} prototype and OCamlNat/JIT is our new Just-in-Time
+native toplevel.
 
 %% Conclusion and further work
 \section{Conclusion and further work} \label{section:Conclusion_and_further_work}
