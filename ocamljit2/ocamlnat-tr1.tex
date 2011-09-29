@@ -91,7 +91,10 @@ the Coq proof assistant \cite{Bertot04,Coq10}, or the interactive toplevel \text
 This paper presents our work\footnote{The initial work in this area was done as part of the first
 author's diploma thesis.} on a new native OCaml toplevel, called \texttt{ocamlnat}, which is
 based on the native runtime, the compilation engine of the optimizing native code compiler and
-an earlier prototype implementation of a native toplevel by Alain Frisch. The full source code
+an earlier prototype implementation of a native toplevel by Alain Frisch. Our implementation
+currently supports x86 and x86-64 processors \cite{Amd09Vol1,Intel10Vol1} and should work with any
+POSIX compliant operating system supported by OCaml. It is verified to work with Mac OS X 10.6 and
+10.7, Debian GNU Linux 6.0 and above, and CentOS 5.6 and 5.7. The full source code
 is available from the \texttt{ocamljit-nat} branch of the \texttt{ocaml-experimental} Git
 repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
 
@@ -99,7 +102,7 @@ The paper is organized as follows: Section~\ref{section:Motivation} motivates th
 usable native OCaml toplevel. Section~\ref{section:Overview_of_the_OCaml_compilers} presents
 an overview of the OCaml compilers and Section~\ref{section:The_native_toplevel} describes the
 previous \texttt{ocamlnat} prototype which inspired our work, while
-Section~\ref{section:Just_in_time_code_generation} presents our work on \texttt{ocamlnat}.
+Section~\ref{section:Just_In_Time_code_generation} presents our work on \texttt{ocamlnat}.
 Performance measures are given in Section~\ref{section:Performance}.
 Section~\ref{section:Conclusion_and_further_work} concludes with possible directions for
 further work.
@@ -295,18 +298,45 @@ While this approach has the immediate benefit of requiring only a few hundred li
 the existing modules of the optimizing native code compiler and the native \texttt{Dynlink} library into
 a native toplevel, there are also various obvious drawbacks to this approach (preventing wide-spread
 adoption of \texttt{ocamlnat}):
-\begin{enumerate}
-\item Dependency on the system toolchain (as, ld).
-  Problematic for Mirage \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}.
-  \textbf{TODO}
-\item Latency of the external tools and the necessary I/O. \textbf{TODO}
-\item Left-over temporary files on (DLLs on Windows). \textbf{TODO}
-\item Unclear maintenance status. \textbf{TODO}
-\end{enumerate}
+
+\paragraph{Dependency on the system toolchain}
+
+This is the most important problem of the native toplevel prototype as it prevents from being
+used in areas that would really benefit from a native toplevel but do not have the toolchain programs
+available. For example, the Mirage cloud operating system \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}
+compiles OCaml programs to Xen micro-kernels, which are then executed by the Xen hypervisor; Mirage uses
+the OCaml toplevel as OS console, but is limited to the byte code toplevel in read-only mode right now, as
+there is obviously no GNU toolchain available in a Xen micro-kernel.
+
+It is worth noting that the toolchain dependency is also a problem with the optimizing native code compiler
+\texttt{ocamlopt} on certain platforms such as Microsoft Windows where it is often a non-trivial task to
+install the system toolchain. This is one of the reasons why companies such as LexiFi provide custom OCaml
+distributions with an integrated toolchain.
+
+\paragraph{Latency}
+
+While the latency caused by reading and writing the assembly, object and library files as well as invoking the
+external toolchain programs is not necessarily a show-stopper for an interactive toplevel, it is nevertheless
+quite noticable, especially with short running programs or programs with many phrases, as we will see in
+Section~\ref{section:Performance}.
+
+\paragraph{Temporary library files}
+
+On Microsoft Windows it is impossible to delete a library file that is currently loaded into a process, which
+means that the prototype ``leaks'' one library file per toplevel phrase.
+
+\paragraph{Unclear maintenance status}
+
+Many people don't even know about \texttt{ocamlnat}, and those who do cannot rely on it. This is because
+\texttt{ocamlnat} is not part of an OCaml installation, even though it ships as part of the source code
+distribution, and it is not documented anywhere.
+
+This is not so much a technical argument against the current approach, but it highlights its status as
+being a proof-of-concept with no clear direction from the users point of view.
 
 
-%% Just-in-Time code generation
-\section{Just-in-Time code generation} \label{section:Just_in_time_code_generation}
+%% Just-In-Time code generation
+\section{Just-In-Time code generation} \label{section:Just_In_Time_code_generation}
 
 We aim to improve \texttt{ocamlnat} in a way that avoids the drawbacks of the earlier prototype
 and turns the native toplevel into a viable alternative to the byte code toplevel. As noted above,
@@ -324,8 +354,8 @@ but does the executable code generation just-in-time in the native toplevel proc
     {
       \node (start) {}; \\
       \node[phase] (compiler) {Native code compiler}; \\
-      \node[phase] (jit) {Just-in-Time Emitter}; \\
-      \node[phase] (jitld) {Just-in-Time Linker}; \\
+      \node[phase] (jit) {Just-In-Time Emitter}; \\
+      \node[phase] (jitld) {Just-In-Time Linker}; \\
       \node (end) {}; \\
     };
     \draw[->] (start) -- node[right] {\it OCaml phrase} (compiler);
@@ -339,12 +369,12 @@ but does the executable code generation just-in-time in the native toplevel proc
 
 Figure~\ref{fig:ocamlnat_overview} shows our current implementation. As you can see we replaced
 the Native code emitter and Toolchain Assembler phases from the \texttt{ocamlnat} prototype with
-a Just-in-Time Emitter phase, and the Toolchain Linker and Runtime Linker phases with a Just-in-Time
+a Just-In-Time Emitter phase, and the Toolchain Linker and Runtime Linker phases with a Just-In-Time
 Linker phase. The earlier phases, that are shared with the optimizing native code compiler
 \texttt{ocamlopt} as described in Section~\ref{section:Overview_of_the_OCaml_compilers} and
 \ref{section:The_native_toplevel}, remain unchanged.
 
-The Just-in-Time Emitter phase is responsible for transforming the linearized native code that is
+The Just-In-Time Emitter phase is responsible for transforming the linearized native code that is
 generated by the Native code compiler (as shown in Figure~\ref{fig:Native_code_generation}) into
 \emph{object code} for the target platform. This \emph{object code} is very similar to the \emph{object
 file} generated by the Toolchain Assembler; it contains a \texttt{text} section with the executable
@@ -352,13 +382,13 @@ code, a \texttt{data} section with the associated data items (\ie the floating-p
 and string literals used within the code, the frametable for the garbage collector, \ldots), a list
 of relocations, and a list of global symbols.
 
-The Just-in-Time Linker phase allocates executable memory for the \texttt{text} section and writable
+The Just-In-Time Linker phase allocates executable memory for the \texttt{text} section and writable
 memory for the \texttt{data} section, copies the section contents to their final memory locations,
 takes care of the relocations, and registers the global symbols. This is roughly what the Toolchain
 Linker and Runtime Linker do in the \texttt{ocamlnat} prototype.
 
 The code for the two phases is found in the \texttt{toplevel/jitaux.ml} file, which provides the common
-functionality for Just-in-Time code generation, as well as \texttt{toplevel/amd64/jit.ml} for the x86-64
+functionality for Just-In-Time code generation, as well as \texttt{toplevel/amd64/jit.ml} for the x86-64
 platform and \texttt{toplevel/i386/jit.ml} for the x86 platform, plus a few lines of additional C code in
 \texttt{asmrun/natdynlink.c} and \texttt{asmrun/natjit.c}. At the time of this writing the changes for our
 new native toplevel with support for x86 and x86-64 account for approximately 2300 lines of C and OCaml
@@ -384,14 +414,14 @@ We tried to keep the code as easy to maintain as possible. To achieve this goal 
 \item reused as much of the existing functionality as possible with respect to both the native code compiler and
   its runtime,
 \item kept the amount of additional runtime support as low as possible (basically just an additional layer in
-  the global symbol management and a new entry point for the Just-in-Time code execution), and
-\item made the Just-in-Time Emitter (the \texttt{jit.ml} files in the \texttt{toplevel} subdirectories) look as
+  the global symbol management and a new entry point for the Just-In-Time code execution), and
+\item made the Just-In-Time Emitter (the \texttt{jit.ml} files in the \texttt{toplevel} subdirectories) look as
   similar as possible to the Native Code Emitter (the \texttt{emit.mlp} files in the \texttt{asmcomp}
   subdirectories).
 \end{enumerate}
 The last point is especially important as every change to the Native Code Emitters
 (\ie \texttt{asmcomp/amd64/emit.mlp}) must be reflected by an equivalent change to the appropriate
-Just-in-Time Emitter (\ie \texttt{toplevel/amd64/jit.ml}). Fortunately the Native Code Emitters usually
+Just-In-Time Emitter (\ie \texttt{toplevel/amd64/jit.ml}). Fortunately the Native Code Emitters usually
 do not change very often during the OCaml development process.
 
 
@@ -557,7 +587,7 @@ do not change very often during the OCaml development process.
 
 We compared the performance of our native toplevel to the performance of the byte code toplevel
 \texttt{ocaml} running on top of the OCaml 3.12.1 byte code interpreter, the byte code toplevel
-\texttt{ocaml} running on top of the OCamlJIT2 Just-in-Time byte code compiler
+\texttt{ocaml} running on top of the OCamlJIT2 Just-In-Time byte code compiler
 \cite{Meurer10jit,Meurer10ocamljit,Meurer11ocamljit2}, and Alain Frisch's earlier \texttt{ocamlnat}
 proof-of-concept implementation (as described in Section~\ref{section:The_native_toplevel}).
  We measured the performance on four different systems:
@@ -606,20 +636,52 @@ with every toplevel, and using the timings of the fastest run.
 
 Figure~\ref{fig:Speedup_relative_to_the_byte_code_toplevel_ocaml} presents the results of the benchmarks
 as speedup relative to the regular byte code toplevel \texttt{ocaml}, where OCamlNat/Toolchain is
-Alain Frisch's toolchain based \texttt{ocamlnat} prototype and OCamlNat/JIT is our new Just-in-Time
-native toplevel.
+Alain Frisch's toolchain based \texttt{ocamlnat} prototype and OCamlNat/JIT is our new Just-In-Time based
+native toplevel. As you can see we managed to achieve speedups of up to hundred times faster than the
+byte code toplevel in certain benchmarks. It is however worth noting that this is in part related to
+the fact that \texttt{llvm-gcc} became the default C compiler with recent versions of OS X (and it's
+related software development tools), which disables the very important manual register assignment
+optimization in the byte code interpreter, because LLVM does not support manual register assignment.
 
 %% Conclusion and further work
 \section{Conclusion and further work} \label{section:Conclusion_and_further_work}
 
-\begin{enumerate}
-\item Additional targets.
-\item Integration into Mirage \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}.
-\item Reuse for custom binary emitters to avoid the toolchain dependency of \texttt{ocamlopt}.
-\item Integration with Linear Scan.
-\end{enumerate}
+Our results demonstrate that an OCaml toplevel based on the native code compiler and runtime offers
+significant performance improvements over the byte code toplevel (at least thrice as fast in all
+benchmarks, and up to hundred times faster in one benchmark), at moderate maintenance costs. It also
+beats our earlier byte code based OCamlJIT2 prototype in almost every case (except for the
+\texttt{almabench} benchmark on x86, which is due to the fact that OCamlJIT2 uses SSE2 registers and
+instructions while our native toplevel uses the x87 FPU stack and instructions \cite{Meurer10jit}).
 
-TODO
+We are looking forward to integrate our new native toplevel as interactive console
+into the Mirage cloud operating system \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}, which
+will be really useful for development (\ie when exploring the heap of Xen kernels interactively to
+find resource leaks, \ldots).
+
+Right now our \texttt{ocamlnat} implementation supports only x86 and x86-64 targets on POSIX systems.
+We plan to add support for additional targets that are already supported by the optimizing native
+code compiler, most notably ARM and PowerPC, and extend the support for other operating systems,
+\ie Microsoft Windows.
+
+We are also working on integrating the linear scan register allocator \cite{PolettoS99,WimmerM05}
+into the optimizing native code compiler as an alternative to the currently used graph coloring
+register allocator \cite{Aho06}. By using the linear scan algorithm we expect to avoid the problematic
+$O(n^2)$ case of the graph coloring algorithm. This work is also part of the first author's diploma
+thesis.
+
+We are also in the process of evaluating the use of the LLVM compiler infrastructure
+\cite{Lattner02,Lattner04,LLVM11} as a replacement
+for the last phases of the native code compiler engine. Other projects such as Clang \cite{Clang11},
+GHC \cite{Terei10} and MacRuby \cite{MacRuby11} already demonstrated the viability and usefulness of
+using LLVM as compiler backend. Besides the other obvious benefits of using LLVM in OCaml, we would
+also get the Just-In-Time compilation and execution engine for free.
+
+
+%% Acknowledgements
+\section*{Acknowledgements} \label{section:Acknowledgements}
+
+We would like to thank Alain Frisch and Fabrice Le Fessant for sharing their earlier work on
+in-process object code generation with us, which inspired our current work to some degree.
 
 
 %% References
