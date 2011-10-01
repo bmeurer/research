@@ -65,10 +65,10 @@
 
 \begin{abstract}
   This paper presents the current state of our work on an interactive toplevel for the OCaml language
-  based on the optimizing native code compiler and runtime, that is up to 100 times faster
-  than the default OCaml toplevel, which is based on the byte code compiler and interpreter.
+  based on the optimizing native code compiler and runtime. Our native toplevel is up to $100$ times
+  faster than the default OCaml toplevel, which is based on the byte code compiler and interpreter.
   It uses Just-In-Time techniques to compile toplevel phrases to native code at runtime, and
-  currently works with various Unix-like systems powered by x86 or x86-64 processors.
+  currently works with various Unix-like systems running on x86 or x86-64 processors.
 \end{abstract}
 
 
@@ -98,7 +98,7 @@ based on the native runtime, the compilation engine of the optimizing native cod
 an earlier prototype implementation of a native toplevel by Alain Frisch. Our implementation
 currently supports x86 and x86-64 processors \cite{Amd09Vol1,Intel10Vol1} and should work with any
 POSIX compliant operating system supported by the OCaml native code compiler. It is verified to
-work with Mac OS X 10.6 and 10.7, Debian GNU Linux 6.0 and above, and CentOS 5.6 and 5.7. The
+work with Mac OS X 10.6 and 10.7, Debian GNU/Linux 6.0 and above, and CentOS 5.6 and 5.7. The
 full source code is available from the \texttt{ocamljit-nat} branch of the \texttt{ocaml-experimental}
 Git repository hosted on GitHub at \cite{Meurer11ocamlexperimental}.
 
@@ -120,8 +120,9 @@ and Shell, but also with functional programming languages like OCaml, Haskell an
 scripting languages the interactive toplevel is usually the only frontend to the underlying interpreter
 or Just-In-Time compiler.
 
-In case of OCaml, the interactive toplevel is only one possible interface to the byte code interpreter
-(as mentioned earlier); it is also possible to compile files, link them into libraries or executables,
+In case of OCaml, the interactive toplevel is only one possible interface to the byte code interpreter;
+it is also possible to separately compile source files to byte or native code object files, link them
+into libraries or executables,
 and deploy these libraries or executables. The OCaml toplevel is therefore mostly used for
 interactive development, rapid prototyping, teaching and learning, as an interactive program console
 or for scripting purposes.
@@ -151,8 +152,8 @@ There are scenarios where only the native code runtime is available and hence th
 which depends on the byte code runtime, cannot be used. One recent example here is the Mirage cloud
 operating system \cite{Mirage11,Madhavapeddy10,Madhavapeddy10hotcloud}, which compiles OCaml programs
 to Xen micro-kernels \cite{Barham03} and executes them via the Xen hypervisor \cite{Xen11}. Mirage
-uses the OCaml toplevel as OS console, but is currently limited to the byte code toplevel in read
-only mode, due to the lack of a toplevel that works with the native code runtime.
+uses the OCaml toplevel as OS console, but is currently limited to the byte code toplevel in read-only
+mode, due to the lack of a toplevel that works with the native code runtime.
 
 
 %% Overview of the OCaml compilers
@@ -203,7 +204,7 @@ transforming lambda trees into \emph{better} or smaller lambda trees (see file
 representation of the source program as result of the compiler frontend phases.
 
 The simplified lambda representation is then used as input for the respective compiler
-backend, which is
+backend, which is either
 \begin{itemize}
 \item the \texttt{Bytegen} module in case of the byte code compiler
   (see file \texttt{bytecomp/bytegen.ml}), or
@@ -212,7 +213,7 @@ backend, which is
 \end{itemize}
 
 The byte code backend, which is used by the byte code compiler \texttt{ocamlc} as well as
-the byte code toplevel \texttt{ocaml}, basically turns the simplified lambda representation
+the byte code toplevel \texttt{ocaml}, basically transforms the simplified lambda representation
 into an equivalent byte code program (see file \texttt{bytecomp/instruct.mli}), suitable for
 (a) direct execution by the byte code interpreter \texttt{ocamlrun} or (b) just-in-time
 compilation using either OCAMLJIT \cite{Starynkevitch04} or OCamlJIT2
@@ -258,19 +259,19 @@ processed and transformed into an equivalent representation in an internal diale
 \end{figure}
 
 Afterwards the Instruction selection phase (see file \texttt{asmcomp/selection.ml}) picks appropriate
-instructions for the target machine, transforming the C\mbox{-}\mbox{-} code into non-linear machine
-code (see file \texttt{asmcomp/mach.mli}). The next step attempts to combine multiple heap allocations
-within a basic block into a single heap allocation (see file \texttt{asmcomp/comballoc.ml}), prior to
-allocating and assigning physical registers to the virtual registers used in the machine code (see
-function \texttt{regalloc} in file \texttt{asmcomp/asmgen.ml}).
+instructions for the target machine, transforming the C\mbox{-}\mbox{-} code into a tree based representation
+of the machine code (see file \texttt{asmcomp/mach.mli}). The next step attempts to combine multiple heap
+allocations within a basic block into a single heap allocation (see file \texttt{asmcomp/comballoc.ml}),
+prior to allocating and assigning physical registers to the virtual registers used in the machine code
+(see function \texttt{regalloc} in file \texttt{asmcomp/asmgen.ml}).
 The final phases linearize the machine code (see file \texttt{asmcomp/linearize.ml}) and perform
 instruction scheduling for better performance (see file \texttt{asmcomp/scheduling.ml}), yielding the
 final representation of the (linearized) machine code.
 
-The optimizing native code compiler \texttt{ocamlopt} writes the linearized machine code output of
-the \texttt{Asmgen} module to an assembly file in the appropriate format for the target platform (see
-file \texttt{asmcomp/emit.ml}), \ie using AT\&T assembly syntax on Linux and Intel assembly syntax
-on Windows, and invokes the assembler from the system compiler toolchain, \ie GNU \texttt{as} on Linux,
+The optimizing native code compiler \texttt{ocamlopt} writes the linearized machine code output of the
+\texttt{Asmgen} module to an assembly file in the appropriate format for the target platform (see file
+\texttt{asmcomp/emit.ml}), \ie using AT\&T assembly syntax on Linux and Mac OS X while using Intel assembly
+syntax on Windows, and invokes the assembler from the system compiler toolchain, \ie GNU \texttt{as} on Linux,
 to generate an object file. This object file can then be linked with other OCaml modules and C code into
 an executable binary or a dynamic library file.
 
@@ -286,9 +287,9 @@ to reuse the existing functionality of the optimizing native code compiler withi
 native toplevel.
 
 The initial proof-of-concept prototype of a native toplevel, developed by Alain Frisch and named
-\texttt{ocamlnat}, was since silently shipped with every OCaml release\footnote{It must be build
-explicitly using \texttt{make ocamlnat} after \texttt{make world} and \texttt{make opt}, and it
-is only available for targets that support the native \texttt{Dynlink} library.}.
+\texttt{ocamlnat}, was since silently shipped with every OCaml source code release\footnote{It must
+be build explicitly using \texttt{make ocamlnat} after \texttt{make world} and \texttt{make opt},
+and it is only available for targets that support the native \texttt{Dynlink} library.}.
 
 \begin{figure}[htb]
   \centering
@@ -330,8 +331,8 @@ which is then executed.
 
 While this approach has the immediate benefit of requiring only a few hundred lines of glue code to turn
 the existing modules of the optimizing native code compiler and the native \texttt{Dynlink} library into
-a native toplevel, there are also various obvious drawbacks to this approach (preventing wide-spread
-adoption of \texttt{ocamlnat}):
+a native toplevel, there are also several obvious drawbacks to this approach -- preventing wide-spread
+adoption of \texttt{ocamlnat}:
 
 \paragraph{Dependency on the system toolchain}
 
@@ -377,9 +378,9 @@ and turns the native toplevel into a viable alternative to the byte code topleve
 the major drawback of Alain's prototype is the dependency on the system toolchain, that is, the
 external assembler and linker programs.
 
-Therefore we had to replace the last four phases of the \texttt{ocamlnat} prototype as shown in
-Figure~\ref{fig:ocamlnat_prototype} with something that does not depend on any external programs
-but does the executable code generation just-in-time in the native toplevel process.
+Therefore we had to replace the last four phases of the \texttt{ocamlnat} prototype (as shown in
+Figure~\ref{fig:ocamlnat_prototype}) with something that does not depend on any external programs
+but does the executable code generation just-in-time within the process of the native toplevel.
 
 \begin{figure}[htb]
   \centering
@@ -419,16 +420,16 @@ of relocations, and a list of global symbols.
 The Just-In-Time Linker phase allocates executable memory for the \texttt{text} section and writable
 memory for the \texttt{data} section, copies the section contents to their final memory locations,
 takes care of the relocations, and registers the global symbols. This is roughly what the Toolchain
-Linker and Runtime Linker do in the \texttt{ocamlnat} prototype.
+Linker and Runtime Linker in the \texttt{ocamlnat} prototype do.
 
-The code for the two phases is found in the \texttt{toplevel/jitaux.ml} file, which provides the common
-functionality for Just-In-Time code generation, as well as \texttt{toplevel/amd64/jit.ml} for the x86-64
+The code for the two phases is found in the \texttt{toplevel/jitaux.ml} file, which provides the common, platform
+independent functionality for Just-In-Time code generation, as well as \texttt{toplevel/amd64/jit.ml} for the x86-64
 platform and \texttt{toplevel/i386/jit.ml} for the x86 platform, plus a few lines of additional C code in
 \texttt{asmrun/natdynlink.c} and \texttt{asmrun/natjit.c}. At the time of this writing the changes for our
 new native toplevel with support for x86 and x86-64 account for approximately 2300 lines of C and OCaml
-code as shown in Figure~\ref{fig:Additional_lines_of_code_for_ocamlnat}.
+code as shown in Table~\ref{tab:Additional_lines_of_code_for_ocamlnat}.
 
-\begin{figure}[htb]
+\begin{table}[htb]
   \centering
   \begin{tabular}{r|rr}
     & OCaml & C \\
@@ -440,12 +441,12 @@ code as shown in Figure~\ref{fig:Additional_lines_of_code_for_ocamlnat}.
     & $2131$ & $185$ \\
   \end{tabular}
   \caption{Additional lines of code for \texttt{ocamlnat}}
-  \label{fig:Additional_lines_of_code_for_ocamlnat}
-\end{figure}
+  \label{tab:Additional_lines_of_code_for_ocamlnat}
+\end{table}
 
 We tried to keep the code as easy to maintain as possible. To achieve this goal we
 \begin{enumerate}[(a)]
-\item reused as much of the existing functionality as possible with respect to both the native code compiler and
+\item reused as much of the existing functionality as possible of both the native code compiler and
   its runtime,
 \item kept the amount of additional runtime support as low as possible (basically just an additional layer in
   the global symbol management and a new entry point for the Just-In-Time code execution), and
@@ -677,6 +678,7 @@ the fact that \texttt{llvm-gcc} became the default C compiler with recent versio
 related software development tools), which disables the very important manual register assignment
 optimization in the byte code interpreter, because LLVM does not support manual register assignment.
 
+
 %% Related and further work
 \section{Related and further work} \label{section:Related_and_further_work}
 
@@ -692,9 +694,9 @@ code compiler, most notably ARM and PowerPC, and extend the support for other op
 
 We are also working on integrating the linear scan register allocator \cite{PolettoS99,WimmerM05}
 into the optimizing native code compiler as an alternative to the currently used graph coloring
-register allocator \cite{Aho06}. By using the linear scan algorithm we expect to avoid the problematic
-$O(n^2)$ case of the graph coloring algorithm\footnote{This work is also part of the first author's
-diploma thesis.}.
+register allocator \cite{Aho06}. By using the linear scan algorithm, which is commonly used in the
+scope of Just-In-Time compilers, we expect to avoid the quadratic worst case running time of the
+graph coloring algorithm\footnote{This work is also part of the first author's diploma thesis.}.
 
 We are also in the process of evaluating the use of the LLVM compiler infrastructure
 \cite{Lattner02,Lattner04,LLVM11} as a replacement
@@ -711,9 +713,10 @@ Our results demonstrate that an OCaml toplevel based on the native code compiler
 significant performance improvements over the byte code toplevel (at least thrice as fast in all
 benchmarks, and up to hundred times faster in one benchmark), at acceptable maintenance costs.
 
-It also beats our earlier byte code based OCamlJIT2 prototype in almost every case (except for the
-\texttt{almabench} benchmark on x86, which is due to the fact that OCamlJIT2 uses SSE2 registers and
-instructions while our native toplevel uses the x87 FPU stack and instructions \cite{Meurer10jit}).
+As demonstrated in Section~\ref{section:Performance} we were also able to beat the performance of
+our earlier byte code based OCamlJIT2 prototype in almost every case (except for the \texttt{almabench}
+benchmark on x86, which is due to the fact that OCamlJIT2 uses SSE2 registers and instructions while
+our native toplevel uses the x87 FPU stack and instructions \cite{Meurer10jit}).
 
 
 %% Acknowledgements
