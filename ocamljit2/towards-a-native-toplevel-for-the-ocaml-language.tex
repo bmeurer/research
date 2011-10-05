@@ -1,10 +1,14 @@
 \documentclass[10pt,a4paper,final,twocolumn]{article}
 
+% PDFLaTeX hint for arXiv to make sure breaklinks=true works for hyperref (must be within the first 5 lines)
+\pdfoutput=1
+
 \usepackage{amssymb}
 \usepackage[english]{babel}
 \usepackage{color}
 \usepackage{enumerate}
-\usepackage[colorlinks=false,%
+\usepackage[breaklinks=true,%
+            colorlinks=false,%
             pdfkeywords={OCaml, Just In Time compilation, machine code generation},%
             pdftitle={Towards a native toplevel for the OCaml language},%
             pdfauthor={Marcell Fischbach, Benedikt Meurer},%
