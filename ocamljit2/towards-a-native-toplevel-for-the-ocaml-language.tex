@@ -165,7 +165,7 @@ mode, due to the lack of a toplevel that works with the native code runtime.
 %% Overview of the OCaml compilers
 \section{Overview of the OCaml compilers} \label{section:Overview_of_the_OCaml_compilers}
 
-This section gives a brief overview of the OCaml compilers, covering both the byte code compiler
+In this section we briefly describe the OCaml compilers, covering both the byte code compiler
 \texttt{ocamlc} and the optimizing native code compiler \texttt{ocamlopt}.
 Feel free to skip to section~\ref{section:The_native_toplevel} if you are already familiar with the details.
 
@@ -191,11 +191,11 @@ Feel free to skip to section~\ref{section:The_native_toplevel} if you are alread
     \draw[->] (bytegen) -- node[left] {\it byte code} (bytecode);
     \draw[->] (asmgen) -- node[right] {\it native code} (nativecode);
   \end{tikzpicture}
-  \caption{Overview of the OCaml compilers}
-  \label{fig:Overview_of_the_OCaml_compilers}
+  \caption{The OCaml compilers}
+  \label{fig:The_OCaml_compilers}
 \end{figure}
 
-Figure~\ref{fig:Overview_of_the_OCaml_compilers} gives an overview of the compiler phases
+Figure~\ref{fig:The_OCaml_compilers} gives an overview of the compiler phases
 and representations in the OCaml byte and native code compilers. Compilation always starts
 by parsing an OCaml source program (either from a source file or a source region in
 interactive mode) into an abstract syntax tree (AST, see file \texttt{parsing/parsetree.mli}
@@ -293,8 +293,8 @@ to reuse the existing functionality of the optimizing native code compiler withi
 native toplevel.
 
 The initial proof-of-concept prototype of a native toplevel, developed by Alain Frisch and named
-\texttt{ocamlnat}, was since silently shipped with every OCaml source code release\footnote{It must
-be build explicitly using \texttt{make ocamlnat} after \texttt{make world} and \texttt{make opt},
+\texttt{ocamlnat}, was since then silently shipped with every OCaml source code release\footnote{It
+must be build explicitly using \texttt{make ocamlnat} after \texttt{make world} and \texttt{make opt},
 and it is only available for targets that support the native \texttt{Dynlink} library.}.
 
 \begin{figure}[htb]
@@ -325,7 +325,7 @@ Figure~\ref{fig:ocamlnat_prototype} gives an overview of the internals of this \
 It works by starting up the OCaml native runtime and then prompts the user for OCaml phrases to evaluate
 (just like the byte code toplevel \texttt{ocaml} does). Whenever the user enters a phrase, it is compiled
 to native code using the modules of the optimizing native code compiler (utilizing the frontend phases as
-shown in Figure~\ref{fig:Overview_of_the_OCaml_compilers} and the native backend phases as shown in
+shown in Figure~\ref{fig:The_OCaml_compilers} and the native backend phases as shown in
 Figure~\ref{fig:Native_code_generation}).
 
 This \emph{native code} is written to a temporary \emph{assembly file} by the Native code emitter, which
@@ -408,7 +408,7 @@ but does the executable code generation just-in-time within the process of the n
   \label{fig:ocamlnat_overview}
 \end{figure}
 
-Figure~\ref{fig:ocamlnat_overview} shows our current implementation. As you can see we replaced
+Figure~\ref{fig:ocamlnat_overview} shows our current implementation. We replaced
 the Native code emitter and Toolchain Assembler phases from the \texttt{ocamlnat} prototype with
 a Just-In-Time Emitter phase, and the Toolchain Linker and Runtime Linker phases with a Just-In-Time
 Linker phase. The earlier phases, that are shared with the optimizing native code compiler
@@ -730,6 +730,7 @@ our native toplevel uses the x87 FPU stack and instructions \cite{Meurer10jit}).
 
 We would like to thank Alain Frisch and Fabrice Le Fessant for sharing their earlier work on
 in-process object code generation with us, which inspired our current work to some degree.
+We would also like to thank Simon Meurer for his careful proof-reading.
 
 
 %% References
