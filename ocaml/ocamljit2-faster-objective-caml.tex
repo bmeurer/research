@@ -735,7 +735,7 @@ which contains a not yet translated \texttt{PUSH} instruction.
 
 The \texttt{caml\_jit\_compile} driver loop works by allocating a native code address,
 patching all forward jumps threaded to the current byte-code address\footnote{We intentionally
-omitted the implementation details of threading and patching, and refer to the interested
+omitted the implementation details of threading and patching, and direct the interested
 reader to the source code in the file \texttt{byterun/jit.c}.}, replacing the
 instruction opcode of the current byte-code with the offset to the native machine code,
 and generating the native code for the byte-code instruction at the allocated address.
