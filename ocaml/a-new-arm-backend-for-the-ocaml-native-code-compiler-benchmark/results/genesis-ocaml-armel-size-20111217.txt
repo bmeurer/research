@@ -1,0 +1,10 @@
+   text	   data	    bss	    dec	    hex	filename
+ 146536	  24420	  22184	 193140	  2f274	almabench.opt
+  98896	   7628	  22184	 128708	  1f6c4	bdd.opt
+ 105624	  45996	  22180	 173800	  2a6e8	boyer.opt
+  96344	   5928	  22180	 124452	  1e624	fft.opt
+ 147932	  89568	  22184	 259684	  3f664	nucleic.opt
+  93928	   5864	  22180	 121972	  1dc74	quicksort.opt
+  91116	   5832	  22180	 119128	  1d158	sieve.opt
+  95472	   6388	  22180	 124040	  1e488	soli.opt
+ 367688	  73588	  22184	 463460	  71264	sorts.opt
