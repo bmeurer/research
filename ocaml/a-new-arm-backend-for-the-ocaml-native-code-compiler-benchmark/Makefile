@@ -11,14 +11,18 @@ OCAMLOPTFLAGS=-nodynlink
 
 SOURCES=$(shell ls *.ml | sort)
 
-all: benchmark
+all: all-byte all-opt benchmark
+all-byte: $(SOURCES:.ml=.byte)
+all-opt: $(SOURCES:.ml=.opt)
 
 benchmark: benchmark.o
 	$(CC) $(CFLAGS) -o $@ $<
 
-byte: $(SOURCES:.ml=.byteresult)
-
-opt: $(SOURCES:.ml=.optresult)
+report: all report-byte report-opt
+report-byte: $(SOURCES:.ml=.byteresult)
+	@for i in $^; do echo "$${i%.*}\t`cat $$i`"; done
+report-opt: $(SOURCES:.ml=.optresult)
+	@for i in $^; do echo "$${i%.*}\t`cat $$i`"; done
 
 clean:
 	rm -f *.a *.cm[aiox] *.o
