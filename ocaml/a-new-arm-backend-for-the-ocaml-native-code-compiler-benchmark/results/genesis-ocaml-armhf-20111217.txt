@@ -1,0 +1,9 @@
+almabench	   111.810
+bdd	     6.590
+boyer	     7.120
+fft	     6.680
+nucleic	    19.430
+quicksort	     1.570
+sieve	     0.110
+soli	     0.070
+sorts	    20.900
