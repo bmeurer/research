@@ -1,0 +1,5 @@
+*.byte
+*.byteresult
+*.opt
+*.optresult
+benchmark
