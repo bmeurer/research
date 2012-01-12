@@ -1,0 +1,258 @@
+%%
+%% $Id$
+%%
+%% Latex-Hilfsmakros
+%%
+%% Copyright (c) 2006-2007 Benedikt Meurer <meurer@informatik.uni-siegen.de>
+%%
+
+
+%%
+%% General
+%%
+
+\newcommand{\name}[1]{{\textup{\textsf{#1\/}}}}
+
+\newcommand{\Lf}{\ensuremath{{\cal L}_f}}
+\newcommand{\Lo}{\ensuremath{{\cal L}_o}}
+\newcommand{\Lom}{\ensuremath{{\cal L}_o^m}}
+\newcommand{\Lot}{\ensuremath{{\cal L}_o^t}}
+\newcommand{\Loref}{\ensuremath{{\cal L}_o^{ref}}}
+\newcommand{\Lort}{\ensuremath{{\cal L}_o^{rt}}}
+\newcommand{\Losrt}{\ensuremath{{\cal L}_o^{srt}}}
+\newcommand{\Losub}{\ensuremath{{\cal L}_o^{sub}}}
+\newcommand{\Loti}{\ensuremath{{\cal L}_o^{ti}}}
+\newcommand{\Lc}{\ensuremath{{\cal L}_c}}
+\newcommand{\Lct}{\ensuremath{{\cal L}_c^t}}
+\newcommand{\Ltwo}{\ensuremath{{\cal L}_2}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\coloncolon}{\mathrel{::}}
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\simle}{\ensuremath{\stackrel{<}{_\sim}}}
+
+
+%%
+%% Index
+%%
+
+\newcommand{\Index}[1]{#1\index{#1}}
+\newcommand{\define}[1]{{\em #1\/}\index{#1}}
+\newcommand{\Define}[2]{{\em #1\/}\index{#2}}
+\newcommand{\defineSee}[2]{{\em #1\/}\index{#1|see{#2}}}
+\newcommand{\engl}[1]{(engl.: \define{#1})}
+
+
+%%
+%% Functions
+%%
+
+\newcommand{\dom}[1]{\name{dom}\,(#1)}
+\newcommand{\doma}[1]{\name{dom}_a\,(#1)}
+\newcommand{\domm}[1]{\name{dom}_m\,(#1)}
+\newcommand{\desc}[2]{\name{desc}_{#1}\,(#2)}
+\newcommand{\Desc}[2]{\name{Desc}\,(#1,#2)}
+\newcommand{\free}[1]{\name{free}\,(#1)}
+\newcommand{\type}[1]{\name{type}\,(#1)}
+\newcommand{\erase}[1]{\name{erase}\,(#1)}
+\newcommand{\methods}[1]{\name{methods}\,(#1)}
+
+\newcommand{\TREEroot}[1]{\name{root}\,(#1)}
+\newcommand{\TREEarity}[1]{\name{arity}\,(#1)}
+\newcommand{\TREEchild}[2]{\name{child}_{#1}\,(#2)}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\setN}{\ensuremath{\mathbb N}}
+\newcommand{\setZ}{\ensuremath{\mathbb Z}}
+
+\newcommand{\setU}{\ensuremath{\mathcal U}}
+
+\newcommand{\setId}{\name{Id}}
+\newcommand{\setOp}{\name{Op}}
+\newcommand{\setInt}{\name{Int}}
+\newcommand{\setVar}{\name{Var}}
+\newcommand{\setBody}{\name{Body}}
+\newcommand{\setBool}{\name{Bool}}
+\newcommand{\setSelf}{\name{Self}}
+\newcommand{\setClass}{\name{Class}}
+\newcommand{\setConst}{\name{Const}}
+\newcommand{\setSuper}{\name{Super}}
+\newcommand{\setMethod}{\name{Method}}
+\newcommand{\setAttribute}{\name{Attribute}}
+\newcommand{\setLoc}{\name{Loc}}
+
+\newcommand{\setExp}{\name{Exp}}
+\newcommand{\setRow}{\name{Row}}
+
+\newcommand{\setVal}{\name{Val}}
+\newcommand{\setRVal}{\name{RVal}}
+
+\newcommand{\setTEnv}{\name{TEnv}}
+\newcommand{\setType}{\name{Type}}
+\newcommand{\setRType}{\name{RType}}
+\newcommand{\setSType}{\name{SType}}
+\newcommand{\setTypeRel}{\name{TypeRel}}
+\newcommand{\setTypearrow}{\ensuremath{\name{Type}_\to}}
+
+\newcommand{\setRVar}{\name{RVar}}
+\newcommand{\setTVar}{\name{TVar}}
+\newcommand{\setTCons}{\name{TCons}}
+\newcommand{\setTName}{\name{TName}}
+\newcommand{\setSubst}{\name{Subst}}
+\newcommand{\setTSubst}{\name{TSubst}}
+
+
+%%
+%% Names
+%%
+
+\newcommand{\id}{\name{id}}
+\newcommand{\op}{\name{op}}
+\newcommand{\loc}{\name{loc}}
+\newcommand{\raw}{\name{raw}}
+\newcommand{\self}{\name{self}}
+\newcommand{\true}{\name{true}}
+\newcommand{\false}{\name{false}}
+
+
+%%
+%% Keywords
+%%
+
+\newcommand{\bas}{\normalfont\textbf{as}}
+\newcommand{\battr}{\normalfont\textbf{attr}}
+\newcommand{\bbool}{\normalfont\textbf{bool}}
+\newcommand{\bclass}{\normalfont\textbf{class}}
+\newcommand{\belse}{\normalfont\textbf{else}}
+\newcommand{\bend}{\normalfont\textbf{end}}
+\newcommand{\bfrom}{\normalfont\textbf{from}}
+\newcommand{\bif}{\normalfont\textbf{if}}
+\newcommand{\bin}{\normalfont\textbf{in}}
+\newcommand{\binherit}{\normalfont\textbf{inherit}}
+\newcommand{\bint}{\normalfont\textbf{int}}
+\newcommand{\blet}{\normalfont\textbf{let}}
+\newcommand{\bmethod}{\normalfont\textbf{method}}
+\newcommand{\bnew}{\normalfont\textbf{new}}
+\newcommand{\bobject}{\normalfont\textbf{object}}
+\newcommand{\brec}{\normalfont\textbf{rec}}
+\newcommand{\bref}{\normalfont\textbf{ref}}
+\newcommand{\bstruct}{\normalfont\textbf{struct}}
+\newcommand{\bthen}{\normalfont\textbf{then}}
+\newcommand{\bunit}{\normalfont\textbf{unit}}
+\newcommand{\bval}{\normalfont\textbf{val}}
+
+
+%%
+%% Grammars
+%%
+
+\newcommand{\GRbeg}{\begin{array}{rrlll}}
+\newcommand{\GRend}{\end{array}}
+
+\newcommand{\GRis}{& ::= &}
+\newcommand{\GRal}{\\ & \mid &}
+\newcommand{\GRnl}{\vspace{2mm}\\}
+\newcommand{\GRmid}{\,\mid\,}
+\newcommand{\GRtext}[1]{\quad \quad & \text{#1}}
+
+
+%%
+%% Abstract Syntax
+%%
+
+\newcommand{\expAbstr}[2]{\lambda#1.#2}
+\newcommand{\expApp}[2]{#1\,#2}
+\newcommand{\expCond}[3]{\bif\,#1\,\bthen\,#2\,\belse\,#3}
+\newcommand{\expLet}[3]{\blet\,#1=#2\,\bin\,#3}
+\newcommand{\expRec}[2]{\brec\,#1.#2}
+
+\newcommand{\expObject}[2]{\bobject\,(#1)\ #2\ \bend}
+\newcommand{\expSend}[2]{#1\##2}
+\newcommand{\expDupl}[1]{\{\langle#1\rangle\}}
+
+\newcommand{\expCoerce}[2]{(#1:#2)}
+
+\newcommand{\expNew}[1]{\bnew\,#1}
+\newcommand{\expClass}[2]{\bclass\,(#1)\ #2\ \bend}
+
+\newcommand{\rowEpsilon}{\epsilon}
+\newcommand{\rowVal}[3]{\bval\ #1=#2;\,#3}
+\newcommand{\rowMethod}[3]{\bmethod\ #1=#2;\,#3}
+
+\newcommand{\bodyInherit}[3]{\binherit\ #1\ \bfrom\ #2;\,#3}
+
+
+%%
+%% Types
+%%
+
+\newcommand{\typeUnit}{\bunit}
+\newcommand{\typeBool}{\bbool}
+\newcommand{\typeInt}{\bint}
+\newcommand{\typeArrow}[2]{#1\to#2}
+\newcommand{\typeObject}[1]{\langle#1\rangle}
+\newcommand{\typeRec}[2]{\mu#1.#2}
+\newcommand{\typeRef}[1]{#1\,\bref}
+\newcommand{\typeClass}[2]{\zeta(#1\,:\,#2)}
+
+\newcommand{\typeIntIntInt}{\typeArrow{\typeInt}{\typeArrow{\typeInt}{\typeInt}}}
+\newcommand{\typeIntIntBool}{\typeArrow{\typeInt}{\typeArrow{\typeInt}{\typeBool}}}
+
+\newcommand{\rtypeEmpty}{\emptyset}
+\newcommand{\rtypeMethod}[3]{#1:#2;\,#3}
+
+
+%%
+%% Other environments
+%%
+
+\newcommand{\EQNbeg}{\[\begin{array}{rcll}}
+\newcommand{\EQNend}{\end{array}\]}
+
+\newcommand{\CASEbeg}{\left\{\!\!\!\begin{array}{ll}}
+\newcommand{\CASEend}{\end{array}\right.}
+
+\newcommand{\LONGbeg}{\!\!\begin{array}[t]{l}}
+\newcommand{\LONGend}{\end{array}}
+
+\newcommand{\PROOFCASEbeg}{%
+  \renewcommand{\labelenumi}{\arabic{enumi}.)}%
+  \renewcommand{\labelenumii}{\arabic{enumii}.)}%
+  \begin{enumerate}%
+}
+\newcommand{\PROOFCASEend}{%
+  \end{enumerate}%
+  \renewcommand{\labelenumii}{(\arabic{enumii}.}%
+  \renewcommand{\labelenumi}{(\alph{enumi})}%
+}
+
+
+%%
+%% Rules, etc.
+%%
+
+\newcommand{\SUB}[2]{\ensuremath{[^{#1}\slash_{#2}]}}
+\newcommand{\RINS}[2]{\ensuremath{\langle^{#1}\slash_{#2}\rangle}}
+
+\newcommand{\RULE}[2]{\begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}}
+
+% Rule names (small caps)
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+
+\newcommand{\tj}[2]{#1\coloncolon#2}
+\newcommand{\Tj}[3]{#1\,\triangleright\,#2\coloncolon#3}
+\newcommand{\Tje}[3]{#1\,\triangleright_e\,#2\coloncolon#3}
+\newcommand{\Tjr}[3]{#1\,\triangleright_r\,#2\coloncolon#3}
+\newcommand{\Tjm}[3]{#1\,\triangleright_m\,#2\coloncolon#3}
+
+
+

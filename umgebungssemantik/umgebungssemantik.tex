@@ -1,0 +1,352 @@
+\documentclass[12pt,fleqn,a4paper]{article}
+\usepackage{ngerman}
+\usepackage{hyperref,german,amssymb,amstext,amsmath,amsthm,array,stmaryrd,color,latexsym}
+
+% TP Macros
+\input{TP}
+
+\newcommand{\RN}[1]{\mbox{\textsc{(#1)}}}
+\newcommand{\Cl}{\name{Cl}}
+\newcommand{\cl}{\name{cl}}
+\newcommand{\Req}{\name{Req}}
+\newcommand{\Ptr}{\name{Ptr}}
+
+\begin{document}
+
+\section{Substitutionssemantik}
+
+\begin{definition}[Syntax der Programmiersprache]
+  Vorgegeben seien
+  \begin{itemize}
+  \item eine Menge $\Bool = \{\true,\false\}$ von booleschen Konstanten $b$,
+  \item eine Menge $\Int = \setZ$ von Integerkonstanten $z$, und
+  \item eine (unendliche) Menge $\Id$ von Namen $\id$.
+  \end{itemize}
+  Die Mengen $\Op$ aller {\em Operatoren} $\op$, $\Const$ aller {\em Konstanten} $c$, $\Exp$ aller 
+  {\em Ausdr\"ucke} $e$ und $\Val$ aller {\em Werte} $v$ sind durch folgende kontextfreie Grammatik definiert:
+  \bgram
+  \op \is + \mid - \mid * \mid \le \mid \ge \mid < \mid > \mid = \\
+  c \is b \mid z \mid \op \mid \proj{i} \\
+  e \is c \mid \id \mid \abstr{\id}{e} \mid \app{e_1}{e_2} \mid \bli{\id}{e_1}{e_2}
+  \al \bifte{e_0}{e_1}{e_2} \mid (e_1,\ldots,e_n) \\
+  v \is c \mid \abstr{\id}{e} \mid (v_1,\ldots,v_n)
+  \egram
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Substitutionssemantik ist eine Formel der Gestalt $e \Downarrow v$ mit $e\in\Exp$
+und $v \in \Val$. Ein solcher big step hei"st {\em g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Val}        & $v \Downarrow v$ \\[3mm]
+  \RN{Beta-V}     & $\regel{e_1 \Downarrow \abstr{\id}{e} \quad e_2 \Downarrow v \quad e[v/\id] \Downarrow v'}
+                           {\app{e_1}{e_2} \Downarrow v'}$ \\[3mm]
+  \RN{Op}         & $\regel{e_1 \Downarrow \op \quad e_2 \Downarrow (z_1,z_2)}
+                           {\app{e_1}{e_2} \Downarrow \op^I(z_1,z_2)}$ \\[3mm]
+  \RN{Proj}       & $\regel{e_1 \Downarrow \proj{i} \quad e_2 \Downarrow (v_1,\ldots,v_n) \quad 1 \le i \le n}
+                           {\app{e_1}{e_2} \Downarrow v_i}$ \\[3mm]
+  \RN{Let}        & $\regel{e_1 \Downarrow v \quad e_2[v/\id] \Downarrow v'}
+                           {\bli{\id}{e_1}{e_2} \Downarrow v'}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{e_0 \Downarrow \true \quad e_1 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Cond-False} & $\regel{e_0 \Downarrow \false \quad e_2 \Downarrow v}
+                           {\bifte{e_0}{e_1}{e_2} \Downarrow v}$ \\[3mm]
+  \RN{Tuple}      & $\regel{e_1 \Downarrow v_1 \quad \ldots \quad e_n \Downarrow v_n}
+                           {(e_1,\ldots,e_n) \Downarrow (v_1,\ldots,v_n)}$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+
+\section{Umgebungssemantik}
+
+\begin{definition}[Umgebungen]
+  Die Mengen $\Env$ aller {\em Umgebungen} $\eta$ und $W$ aller {\em Umgebungswerte} $w$ sind
+  durch die folgende kontextfreie Grammatik definiert:
+  \bgram
+  \eta \is [\,]
+  \al \id:v;\eta
+  \al \id:w;\eta
+  \n
+  w \is c
+  \al (\abstr{\id}{e},\eta)
+  \al (w_1,\ldots,w_n)
+  \egram
+  Die Menge $\Cl$ aller Closures $\cl$ ist definiert durch:
+  \bgram
+  \cl \is (e,\eta)
+  \egram
+\end{definition}
+
+% \begin{definition}[Freie Namen]
+%   Die Mengen $\free{\eta}$, $\free{w}$ und $\free{\cl}$ sind wie folgt induktiv definiert:
+%   \[\begin{array}{rcl}
+%     \free{[\,]} &=& \emptyset \\
+%     \free{\id:w;\eta} &=& \free{w} \cup \free{\eta} \\
+%     \free{c} &=& \emptyset \\
+%     \free{w_1,\ldots,w_n} &=& \bigcup_{i=1 \ldots n} \free{w_i} \\
+%     \free{e,\eta} &=& \bigl( \free{e} \setminus \dom{\eta} \bigr) \cup \free{\eta} \\
+%   \end{array}\]
+%   Eine Umgebung $\eta$ hei"st \emph{abgeschlossen}, wenn $\free{\eta} = \emptyset$. Analog f"ur Werte $w$
+%   und Closures $\cl$.
+% \end{definition}
+
+\begin{definition}
+  Ein \emph{expand} ist eine Formel der Gestalt $\Lj{\eta}{v}{w}$, wobei $\eta\in\Env$, $v\in\Val$ und $w\in W$.
+  Ein derartiger expand hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{E-Const}   & $\Lj{\eta}{c}{c}$ \\[1mm]
+    \RN{E-Closure} & $\Lj{\eta}{\abstr{\id}{e}}{(\abstr{\id}{e},\eta)}$ \\[1mm]
+    \RN{E-Tuple}   & $\regel{\Lj{\eta}{v_1}{w_1} \quad\ldots\quad \Lj{\eta}{v_n}{w_n}}
+                            {\Lj{\eta}{(v_1,\ldots,v_n)}{(w_1,\ldots,w_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Ein \emph{lookup} ist eine Formel der Gestalt $\Lj{\eta}{\id}{w}$, wobei $\eta\in\Env$, $\id\in\Id$ und
+  $w \in W$. Ein derartiger lookup hei"st \emph{g"ultig}, wenn er sich mit den folgenden Regeln herleiten
+  l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{L-Immediate} & $\Lj{\id:w;\eta}{\id}{w}$ \\[1mm]
+    \RN{L-Expand}    & $\regel{\Lj{\id:v;\eta}{v}{w}}
+                              {\Lj{\id:v;\eta}{\id}{w}}$ \\[3mm]
+    \RN{L-Skip}      & $\regel{\id \ne \id' \quad \Lj{\eta}{\id'}{w'}}
+                              {\Lj{\id:\underline{\quad};\eta}{\id'}{w'}}$ \\[3mm]
+  \end{tabular}
+\end{definition}
+
+\begin{definition}[Big step Regeln]
+Ein {\em big step} in der Umgebungssemantik ist eine Formel der Gestalt $(e,\eta) \Downarrow w$,
+wobei $e\in\Exp$, $\eta\in\Env$ und $w \in W$. Ein derartiger big step hei"st {\em g"ultig}, wenn er sich mit den
+folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ll}
+  \RN{Const}      & $(c,\eta) \Downarrow c$ \\[1mm]
+  \RN{Closure}    & $(\abstr{\id}{e},\eta) \Downarrow (\abstr{\id}{e},\eta)$ \\[1mm]
+  \RN{Id}         & $\regel{\Lj{\eta}{id}{w}}
+                           {(\id,\eta) \Downarrow w}$ \\[3mm]
+  \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                            \quad (e_2,\eta) \Downarrow w'
+                            \quad (e',\id':w';\eta') \Downarrow w}
+                           {(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Op}         & $\regel{(e_1,\eta) \Downarrow \op \quad (e_2,\eta) \Downarrow (z_1,z_2)}
+                           {(\app{e_1}{e_2},\eta) \Downarrow \op^I(z_1,z_2)}$ \\[3mm]
+  \RN{Proj}       & $\regel{(e_1,\eta) \Downarrow \proj{i} \quad (e_2,\eta) \Downarrow (w_1,\ldots,w_n)
+                            \quad 1 \le i \le n}
+                           {\app{e_1}{e_2} \Downarrow w_i}$ \\[3mm]
+  \RN{Let}        & $\regel{(e_1,\eta) \Downarrow w \quad (e_2,\id:w;\eta) \Downarrow w'}
+                           {(\bli{\id}{e_1}{e_2},\eta) \Downarrow w'}$ \\[3mm]
+  \RN{Let-Rec}    & $\regel{(e,\id:v;\eta) \Downarrow w}
+                           {(\blri{\id}{v}{e},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow \true \quad (e_1,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow \false \quad (e_2,\eta) \Downarrow w}
+                           {(\bifte{e_0}{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+  \RN{Tuple}      & $\regel{(e_1,\eta) \Downarrow w_1 \quad \ldots \quad (e_n,\eta) \Downarrow w_n}
+                           {((e_1,\ldots,e_n),\eta) \Downarrow (w_1,\ldots,w_n)}$ \\[3mm]
+\end{tabular}
+\end{definition}
+
+% \begin{lemma}[Wohldefiniertheit der Umgebungssemantik] \label{lemma:Wohldefiniertheit}
+%   Wenn $\cl \Downarrow w$, dann gilt $\free{w} \subseteq \free{\cl}$.
+% \end{lemma}
+
+\begin{definition}
+  Die Relation $\multimap$ ist wie folgt definiert: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{App-Left}   & $(\app{e_1}{e_2},\eta) \multimap (e_1,\eta)$ \\[1mm]
+    \RN{App-Right}  & $(\app{e_1}{e_2},\eta) \multimap (e_2,\eta)$ \\[1mm]
+    \RN{Beta-V}     & $\regel{(e_1,\eta) \Downarrow (\abstr{\id'}{e'},\eta')
+                              \quad (e_2,\eta) \Downarrow w'}
+                             {(\app{e_1}{e_2},\eta) \multimap (e',\id':w';\eta')}$ \\[3mm]
+    \RN{Let-Eval}   & $(\bli{\id}{e_1}{e_2},\eta) \multimap (e_1,\eta)$ \\[1mm]
+    \RN{Let-Exec}   & $\regel{(e_1,\eta) \Downarrow w}
+                             {(\bli{\id}{e_1}{e_2},\eta) \multimap (e_2,\id:w;\eta)}$ \\[3mm]
+    \RN{Let-Rec}    & $(\blri{\id}{v}{e},\eta) \multimap (e,\id:v;\eta)$ \\[1mm]
+    \RN{Cond-Eval}  & $(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_0,\eta)$ \\[1mm]
+    \RN{Cond-True}  & $\regel{(e_0,\eta) \Downarrow \true}
+                             {(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_1,\eta)}$ \\[3mm]
+    \RN{Cond-False} & $\regel{(e_0,\eta) \Downarrow \false}
+                             {(\bifte{e_0}{e_1}{e_2},\eta) \multimap (e_2,\eta)}$ \\[3mm]
+    \RN{Tuple}      & $\regel{1 \le i \le n}
+                             {((e_1,\ldots,e_n),\eta) \multimap (e_i,\eta)}$ \\[3mm]
+  \end{tabular}
+\end{definition}
+
+
+\section{Ein allgemeines Typsystem}
+
+\begin{definition}[Typen]
+  Die Menge aller g"ultigen \emph{Typen} $\tau$ ist durch die folgende
+  kontextfreie Grammatik definiert:
+  \bgram
+  \tau \is \bool \mid \z \mid \unit
+  \al \tau_1 \to \tau_2 \mid (\tau_1,\ldots,\tau_n)
+  \egram
+\end{definition}
+
+\begin{definition}[Typregeln]
+  Ein Typurteil $\Tj{\Gamma}{e}{\tau}$ hei"st g"ultig, wenn es sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ll}
+    \RN{Const}   & $\regel{\tj{c}{\tau}}
+                          {\Tj{\Gamma}{c}{\tau}}$ \\[3mm]
+    \RN{Id}      & $\regel{\Gamma(\id) = \tau}
+                          {\Tj{\Gamma}{\id}{\tau}}$ \\[3mm]
+    \RN{Abstr}   & $\regel{\Tj{(\id:\tau;\Gamma)}{e}{\beta}}
+                          {\Tj{\Gamma}{\abstr{\id}{e}}{\tau \to \beta}}$ \\[3mm]
+    \RN{App}     & $\regel{\Tj{\Gamma}{e_1}{\tau \to \tau'} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\app{e_1}{e_2}}{\tau'}}$ \\[3mm]
+    \RN{Let}     & $\regel{\Tj{\Gamma}{e_1}{\tau} \quad \Tj{(\id:\tau;\Gamma)}{e_2}{\beta}}
+                          {\Tj{\Gamma}{\bli{\id}{e_1}{e_2}}{\beta}}$ \\[3mm]
+    \RN{Let-Rec} & $\regel{\Tj{(\id:\tau;\Gamma)}{v}{\tau} \quad \Tj{\id:\tau;\Gamma}{e}{\beta}}
+                          {\Tj{\Gamma}{\blri{\id}{v}{e}}{\beta}}$ \\[3mm]
+    \RN{Cond}    & $\regel{\Tj{\Gamma}{e_0}{\bool} \quad \Tj{\Gamma}{e_1}{\tau} \quad \Tj{\Gamma}{e_2}{\tau}}
+                          {\Tj{\Gamma}{\bifte{e_0}{e_1}{e_2}}{\tau}}$ \\[3mm]
+    \RN{Tuple}   & $\regel{\Tj{\Gamma}{e_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{e_n}{\tau_n}}
+                          {\Tj{\Gamma}{(e_1,\ldots,e_n)}{(\tau_1,\ldots,\tau_n)}}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  Typurteile f"ur Umgebungen sind von der Form $\Tjh{\Gamma_w,\Gamma_\eta}{\eta}$, Typurteile f"ur Closures und
+  Werte sind von der Form $\Tj{\Gamma}{\cl}{\tau}$ bzw. $\Tj{\Gamma}{w}{\tau}$.
+  \[\begin{array}{cc}
+    \Tjh{\Gamma,[\,]}{[\,]}
+    & \regel{\Tj{(\Gamma_\eta;\Gamma)}{e}{\tau} \quad \Tjh{\Gamma,\Gamma_\eta}{\eta}}{\Tj{\Gamma}{(e,\eta)}{\tau}} \\
+    \regel{\Tj{\Gamma_w}{w}{\tau} \quad \Tjh{\Gamma_w,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_w,(\id:\tau;\Gamma_\eta)}{(\id:w;\eta)}}
+    & \regel{\Tj{\Gamma}{w_1}{\tau_1} \quad \ldots \quad \Tj{\Gamma}{w_n}{\tau_n}}{\Tj{\Gamma}{(w_1,\ldots,w_n)}{(\tau_1,\ldots,\tau_n)}} \\
+    \regel{\Tj{(\id:\tau;\Gamma_\eta;\Gamma_v)}{v}{\tau} \quad \Tjh{\Gamma_v,\Gamma_\eta}{\eta}}{\Tjh{\Gamma_v,(\id:\tau;\Gamma_\eta)}{(\id:v;\eta)}}
+  \end{array}\]
+\end{definition}
+
+% \begin{lemma}
+%   Sei $\Tj{\Gamma}{(e,\eta)}{\tau}$.
+%   \begin{enumerate}
+%   \item Wenn $(e,\eta) \multimap (e',\eta')$, dann ex. $\Gamma',\tau'$ mit $\Gamma \sqsubseteq \Gamma'$
+%     und $\Tj{\Gamma'}{(e',\eta')}{\tau'}$.
+%   \item Wenn $(e,\eta) \Downarrow w$, dann $\Tj{\Gamma}{w}{\tau}$.
+%   \end{enumerate}
+% \end{lemma}
+
+
+\section{Stack Disziplin}
+
+\begin{definition}
+  Sei $w \in W$ und $\eta \in \Env$. Eine Umgebung $\eta'$ hei"st \emph{Teil von $\eta$ bzw. $w$},
+  geschrieben $\eta' \sqsubseteq \eta$ bzw. $\eta' \sqsubseteq w$, wenn sich dies mit den folgenden
+  Regeln herleiten l"asst: \\[5mm]
+  \begin{tabular}{ccc}
+    $\eta \sqsubseteq \eta$
+    & $\regel{\eta' \sqsubseteq \eta}{\eta' \sqsubseteq (\id:\underline{\quad};\eta)}$
+    & $\regel{\eta' \sqsubseteq w}{\eta' \sqsubseteq (\id:w;\eta)}$ \\[3mm]
+    $\regel{\eta' \sqsubseteq \eta}{\eta' \sqsubseteq (\abstr{\id}{e},\eta)}$
+    & $\regel{\eta \sqsubseteq w_i \quad 1 \le i \le n}{\eta \sqsubseteq (w_1,\ldots,w_n)}$ \\[3mm]
+  \end{tabular} \\[2mm]
+  $\eta'$ hei"st \emph{echter Teil von $\eta$}, wenn $\eta' \sqsubseteq \eta$ und $\eta' \ne \eta$.
+\end{definition}
+
+\begin{lemma}
+  Die Relation $\sqsubseteq$ ist eine Halbordnung auf $\Env \times \Env$ mit kleinstem Element $[\,]$.
+\end{lemma}
+
+% \begin{definition}
+%   Eine Umgebung $\eta$ bzw. ein Wert $w$ \emph{zeigt auf} eine Umgebung $\eta'$, geschrieben $\eta \leadsto \eta'$
+%   bzw. $w \leadsto \eta'$, wenn sich dies mit den folgenden Regeln herleiten l"asst: \\[5mm]
+%   \begin{tabular}{cccc}
+%     $(\id:\underline{\quad};\eta) \leadsto \eta$
+%     & $\regel{w \leadsto \eta'}{(\id:w;\eta) \leadsto \eta'}$ 
+%     & $(\abstr{\id}{e},\eta) \leadsto \eta$
+%     & $\regel{w_i \leadsto \eta \quad 1 \le i \le n}{(w_1,\ldots,w_n) \leadsto \eta}$ \\[3mm]
+%   \end{tabular}
+% \end{definition}
+
+% \begin{lemma}
+%   Wenn $\eta \leadsto \eta'$, dann $\eta' \sqsubset \eta$.
+% \end{lemma}
+
+\begin{definition}[Stack Disziplin]
+  Eine Sprache erf"ullt die Stack-Disziplin, wenn f"ur alle Pfade
+  Sei $(e_{n+1},\eta_{n+1}) \multimap \ldots \multimap (e_{1},\eta_{1})$  mit $n \ge 0$ gilt:
+  \begin{itemize}
+  \item \RN{Sd-1} Wenn $\eta \sqsubset \eta_1$, dann $\eta \in \{\eta_2,\ldots,\eta_{n+1}\}$
+    oder $n\sqsubset\eta_{n+1}$.
+  \item \RN{Sd-2} Wenn $(e_1,\eta_1) \Downarrow w$ und $\eta \sqsubseteq w$, dann ist
+    $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder $\eta \sqsubseteq \eta_{n+1}$.
+  \end{itemize}
+\end{definition}
+
+\begin{lemma}
+  Zum Nachweis der Stack-Disziplin gen"ugt es zu zeigen:
+  \begin{itemize}
+  \item \RN{Sd-1'} Wenn $(e_2,\eta_2) \multimap (e_1,\eta_1)$ und $\eta \sqsubset \eta_1$, dann
+    $\eta \sqsubseteq \eta_2$.
+  \item \RN{Sd-2'} Wenn $(e_2,\eta_2) \multimap (e_1,\eta_1) \Downarrow w$ und
+    $\eta \sqsubseteq w$, dann $\eta \sqsubseteq \eta_2$.
+  \end{itemize}
+\end{lemma}
+
+\begin{corollary} \label{corollary:SD-2}
+  Wenn $(e_1,\eta_1) \Downarrow w$ und $\eta \sqsubseteq w$, dann $\eta \sqsubseteq \eta_1$.
+\end{corollary}
+
+\begin{proof}
+  Hier muss man einen Trick anwenden, um \RN{Sd-2'} anwenden zu k"onnen, da \RN{Sd-2'} einen
+  $\multimap$-Schritt verlangt. Man geht also von folgendem aus:
+  $((\abstr{x}{x})\,e_1,\eta_1) \multimap (e_1,\eta_1) \Downarrow w$ und $\eta \sqsubseteq w$.
+  Jetzt folgt die Aussage sofort mit \RN{Sd-2'}.
+\end{proof}
+
+\begin{theorem}
+  Jede Sprache, die \RN{Sd-1'} und \RN{Sd-2'} gen"ugt, erf"ullt die Stack-Disziplin.
+\end{theorem}
+
+\begin{proof}
+  \RN{Sd-1} und \RN{Sd-2} werden durch Induktion "uber $n$ bewiesen:
+  \begin{itemize}
+  \item \RN{Sd-1}
+    \begin{itemize}
+    \item $n = 0$
+
+      Trivial.
+
+    \item $n > 0$
+
+      Nach I.V. ergibt sich f"ur $(e_n,\eta_n) \multimap \ldots \multimap (e_1,\eta_1)$, dass wenn
+      $\eta \sqsubset \eta_1$, dann gilt $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder $\eta \sqsubset \eta_n$.
+      Jetzt ist \RN{Sd-1'} anwendbar, und es ergibt sich $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder
+      $\eta \sqsubseteq \eta_{n+1}$. Letzteres wiederum bedeutet $\eta \sqsubset \eta_{n+1}$ oder
+      $\eta = \eta_{n+1}$. D.h. insgesamt erhalten wir $\eta \in \{\eta_2,\ldots,\eta_{n+1}\}$ oder
+      $\eta \sqsubset \eta_{n+1}$, was zu zeigen war.
+    \end{itemize}
+
+  \item \RN{Sd-2}
+    \begin{itemize}
+    \item $n = 0$ 
+
+      Folgt unmittelbar aus Korollar~\ref{corollary:SD-2}.
+
+    \item $n = 1$
+
+      Folgt unmittelbar aus \RN{Sd-2'}.
+
+    \item $n > 1$
+
+      Nach I.V. erhalten wir f"ur $(e_n,\eta_n) \multimap \ldots \multimap (e_1,\eta_1)$, dass wenn
+      $\eta \sqsubseteq w$, dann $\eta \in \{\eta_2,\ldots,\eta_{n-1}\}$ oder $\eta \sqsubseteq \eta_n$.
+      Daraus folgt unmittelbar, dass auch $\eta \in \{\eta_2,\ldots,\eta_n\}$ oder $\eta \sqsubset \eta_n$
+      gilt, denn $n \ge 2$. Mit \RN{Sd-1'} folgt daraus unmittelbar, dass auch $\eta \in \{\eta_2,\ldots,\eta_n\}$
+      oder $\eta \sqsubseteq \eta_{n+1}$ gilt, was zu zeigen war.
+    \end{itemize}
+  \end{itemize}
+\end{proof}
+
+\section{Zusammenhang}
+
+\begin{lemma}
+  Eine Sprache erf"ullt das Kriterium \RN{Sd-2}, wenn gilt:
+  \begin{enumerate}
+  \item Wenn $(e,\eta) \multimap (e',\eta')$ und $(e',\eta')$ wohlgetypt, aber nicht vom Basistyp, dann gilt
+    $\eta = \eta'$.
+  \item Wenn $(e',\eta') \Downarrow w$ und $\eta \sqsubseteq w$, dann $\eta \sqsubseteq \eta'$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{theorem}
+  Die Sprache $\mathcal{L}_1$ mit pascal-artigem Typsystem erf"ullt die Stack-Disziplin.
+\end{theorem}
+
+\end{document}
+
+% vi:set ts=2 sw=2 et:

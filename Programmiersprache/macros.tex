@@ -1,0 +1,140 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2008 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%%
+
+
+%%
+%% Generic style macros
+%%
+
+\newcommand{\nstyle}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\pstyle}[1]{\ensuremath{\mathsf{#1}}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\coloncolon}{\mathrel{::}}
+\newcommand{\pto}{\hookrightarrow}
+\newcommand{\tto}{\rightarrow_t}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+
+\newcommand{\Bool}{\nstyle{Bool}}
+\newcommand{\Const}{\nstyle{Const}}
+\newcommand{\Exp}{\nstyle{Exp}}
+\newcommand{\Member}{\ensuremath{\mathcal{M}}}
+\newcommand{\Var}{\ensuremath{\mathcal{X}}}
+\newcommand{\Int}{\Z}
+\newcommand{\Loc}{\nstyle{Loc}}
+\newcommand{\Op}{\nstyle{Op}}
+\newcommand{\Store}{\nstyle{Store}}
+\newcommand{\Type}{\nstyle{Type}}
+\newcommand{\Val}{\nstyle{Val}}
+
+\newcommand{\TEnv}{\nstyle{TEnv}}
+
+\newcommand{\AType}{\nstyle{AType}}
+\newcommand{\DType}{\nstyle{DType}}
+\newcommand{\LType}{\nstyle{LType}}
+
+\newcommand{\Assn}{\nstyle{Assn}}
+\newcommand{\Formula}{\nstyle{Formula}}
+\newcommand{\Term}{\nstyle{Term}}
+
+\newcommand{\Perm}{\nstyle{Perm}}
+
+
+%%
+%% Functions (TODO - DeclareMathOperator)
+%%
+
+\newcommand{\dom}[1]{\ensuremath{\nstyle{dom}\,(#1)}}
+\newcommand{\free}[1]{\ensuremath{\nstyle{free}\,(#1)}}
+\newcommand{\locns}[1]{\ensuremath{\nstyle{locns}\,(#1)}}
+\newcommand{\grph}[1]{\ensuremath{\nstyle{graph}\,(#1)}}
+\newcommand{\supp}[1]{\ensuremath{\nstyle{supp}\,(#1)}}
+\newcommand{\reach}[2]{\ensuremath{\nstyle{reach}\,(#1,#2)}}
+\newcommand{\reachn}[3]{\ensuremath{\nstyle{reach}_{#1}\,(#2,#3)}}
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+
+\newcommand{\powerset}[1]{\ensuremath{\wp\,(#1)}}
+\newcommand{\powersetfin}[1]{\ensuremath{\wp_{fin}\,(#1)}}
+
+
+%%
+%% Names
+%%
+
+\newcommand{\op}{\nstyle{op}}
+
+
+%%
+%% Types
+%%
+
+\newcommand{\tassn}{\pstyle{assn}}
+\newcommand{\tunit}{\pstyle{unit}}
+\newcommand{\tbool}{\pstyle{bool}}
+\newcommand{\tint}{\pstyle{int}}
+\newcommand{\tarrow}[2]{#1\to#2}
+\newcommand{\ttarrow}[2]{#1\tto#2}
+\newcommand{\trecord}[1]{\left\{#1\right\}}
+\newcommand{\tref}[1]{#1\,\pstyle{ref}}
+
+
+%%
+%% Constants
+%%
+
+\newcommand{\true}{\pstyle{true}}
+\newcommand{\false}{\pstyle{false}}
+\newcommand{\assign}{\pstyle{:=}}
+\newcommand{\fix}{\pstyle{fix}}
+\newcommand{\cref}{\pstyle{ref}}
+\newcommand{\unit}{\pstyle{()}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\abstr}[2]{\lambda #1.#2}
+\newcommand{\app}[2]{#1\,#2}
+\newcommand{\ifte}[3]{\pstyle{if}\,#1\,\pstyle{then}\,#2\,\pstyle{else}\,#3}
+\newcommand{\record}[1]{\left\{#1\right\}}
+\newcommand{\proj}[2]{#1.#2}
+
+\newcommand{\triple}[3]{\{#1\}\,#2\,\{#3\}}
+
+
+%%
+%% Grammars
+%%
+
+\newcommand{\GRbeg}{\begin{array}{rrlll}}
+\newcommand{\GRend}{\end{array}}
+
+\newcommand{\GRis}{& ::= &}
+\newcommand{\GRal}{\\ & \mid &}
+\newcommand{\GRnl}{\vspace{2mm}\\}
+\newcommand{\GRmid}{\,\mid\,}
+\newcommand{\GRtext}[1]{\hfill & \text{#1}}
+
+
+%%
+%% Rules
+%%
+
+\newcommand{\tj}[2]{#1\,\coloncolon\,#2}
+\newcommand{\Tj}[3]{#1\,\triangleright\,#2\coloncolon#3}
+

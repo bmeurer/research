@@ -1,0 +1,107 @@
+\documentclass[12pt,a4paper,bigheadings]{scrartcl}
+
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[ngerman]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{mathpartir}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{scrpage2}
+\usepackage{stmaryrd}
+%\usepackage[DIV13,BCOR5mm]{typearea}
+\usepackage{url}
+\usepackage[all]{xy}
+
+%% BM-Makros
+\include{BM}
+
+%\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+%\newcommand{\assn}{\ensuremath{\mathbf{assn}}}
+%\newcommand{\atype}[1]{#1\,\assn}
+%\newcommand{\bexpr}{\ensuremath{\mathbf{expr}}}
+%\newcommand{\TEnv}{\name{TEnv}}
+%\newcommand{\Dtype}{\name{DType}}
+%\newcommand{\Atype}{\name{AType}}
+%\newcommand{\Assn}{\name{Assn}}
+%\newcommand{\Term}{\name{Term}}
+%\newcommand{\locns}[1]{\name{locns}(#1)}
+%\newcommand{\reach}[1]{\name{reach}(#1)}
+%\newcommand{\grph}[1]{\name{graph}(#1)}
+%\newcommand{\reachable}[1]{\name{reachable}(#1)}
+%\newcommand{\supp}[1]{\name{supp}(#1)}
+%\newcommand{\tto}{\ensuremath{\xrightarrow{t}}}
+%\renewcommand{\disjoint}[2]{\ensuremath{#2\not\hookrightarrow#1}}
+%\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+%\newcommand{\Tje}[3]{#1 \,\tr_e\, #2\cc#3}
+%\newcommand{\TC}[4]{#1 \models \{#2\}\,#3\,\{#4\}}
+
+
+\begin{document}
+
+
+%%
+%% Die Programmiersprache
+%%
+
+\section{Die Programmiersprache}
+
+\subsection{Syntax}
+
+\begin{definition}[Typen der Programmiersprache] \label{definition:Typen_der_Programmiersprache}
+  Die Menge $\setType$ aller \Define{Typen}{Typ} $\tau$ ist durch die kontextfreie Grammatik
+  \[\GRbeg
+  \tau \GRis \typeBool \GRmid \typeInt \GRmid \typeUnit \GRmid \typeArrow{\tau_1}{\tau_2}
+  \GRend\]
+  definiert.
+\end{definition}
+
+\begin{definition}[Abstrakte Syntax der Programmiersprache] \label{definition:Abstrakte_Syntax_der_Programmiersprache}
+  Zu jedem Typ $\tau\in\setType$ sei eine unendliche Menge $\setLoc^\tau$ von
+  \Define{$\tau$-Speicherpl"atzen}{$\tau$-Speicherplatz}
+  vorgegeben, wobei vorausgesetzt wird, dass die Mengen $\setLoc^\tau$ paarweise disjunkt
+  sind. Die Menge $\setLoc$ aller \Define{Speicherpl"atze}{Speicherplatz} $\loc$ ist definiert durch
+  \[
+    \setLoc = \bigcup_{\tau\in\setType} \setLoc^\tau.
+  \]
+  Die Menge $\setOp$ aller Operatoren $\op$ ist definiert durch die kontextfreie Grammatik
+  \[\begin{array}{rrcccccccccl}
+  \op \GRis + & \mid & - & \mid &  *  &      &     &      &
+      \GRal < & \mid & > & \mid & \le & \mid & \ge & \mid & =
+      \GRal :=
+  \end{array}\]
+  die Menge $\setConst$ aller Konstanten $c$ durch
+  \[\GRbeg
+  c \GRis () \GRmid b \GRmid n \GRmid \op \GRmid \loc
+  \GRend\]
+  und die Menge $\setExp$ aller \Define{Ausdr\"ucke}{Ausdruck} $e$ von \Lf\ durch
+  \[\GRbeg
+  e \GRis c
+    \GRal x
+    \GRal \expApp{e_1}{e_2}
+    \GRal \expAbstr{x}{e_1}
+    \GRal \expRec{x}{e_1}
+    \GRal \expLet{x}{e_1}{e_2}
+    \GRal \expCond{e_0}{e_1}{e_2}
+  \GRend\]
+\end{definition}
+
+
+\end{document}

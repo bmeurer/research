@@ -1,0 +1,193 @@
+\documentclass[12pt,a4paper,bigheadings]{scrartcl}
+
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage[ngerman]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+%\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+%\usepackage{mathpartir}
+\usepackage{ngerman}
+%\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{scrpage2}
+\usepackage{stmaryrd}
+%\usepackage[DIV13,BCOR5mm]{typearea}
+\usepackage{url}
+\usepackage[all]{xy}
+
+%% TP-Makros
+\include{TP}
+
+\newcommand{\semantic}[1]{\ensuremath{\llbracket#1\rrbracket}}
+\newcommand{\assn}{\textbf{assn}}
+\newcommand{\prop}{\textbf{prop}}
+\newcommand{\expr}{\textbf{expr}}
+
+\begin{document}
+
+\section*{Ideensammlung}
+
+\paragraph*{Vorgegeben:}
+\begin{itemize}
+  \item Menge $\Id$
+  \item Menge $\Type$
+  \item Mengen $\Loc^\tau$, $\Loc = \bigcup\limits_{\tau\in\Type} \Loc^\tau$
+\end{itemize}
+
+\paragraph*{Definitionen:}
+\begin{itemize}
+  \item Menge $\Exp$ der Ausdr"ucke
+  \item Menge $\Val$ der Werte
+  \item Typumgebungen $\Gamma$ wie "ublich
+  \item $\Val^\tau = \{v\in\Val\,|\,\tj{v}{\tau}\}$, also alle abgeschlossenen
+        Werte vom Typ $\tau$
+  \item Umgebungen $\rho: \Id \pto \Val$
+  \item $\rho$ {\em passt zu} $\Gamma$, geschrieben $\Gamma \models \rho$,
+        wenn gilt:
+        \begin{itemize}
+          \item $\dom{\rho} = \dom{\Gamma}$
+          \item $\forall \id\in\dom{\rho}: \rho(\id) \in \Val^{\Gamma(\id)}$
+        \end{itemize}
+\end{itemize}
+
+\paragraph*{Semantische Bereiche:}
+\begin{itemize}
+  \item $\semantic{\tau\,\assn} = \Val^\tau \times \Store \pto \Bool$
+  \item $\semantic{\unit\,\assn} = \Val^\unit \times \Store \pto \Bool \cong \Store \pto \Bool = \semantic{\assn}$
+  \item $\semantic{\tau\,\expr} = \Store \pto \Val^\tau \times \Store$
+\end{itemize}
+
+\paragraph*{Totale Korrektheit:}
+\begin{itemize}
+  \item $\Tj{\Gamma}{\triple{p}{e}{\ret{\id:\tau}{q}}}{\prop}$
+  \item $\semantic{\Tj{\Gamma}{p}{\assn}} \rho: \Store \pto \Bool$
+  \item $\semantic{\Tj{\Gamma}{\ret{\id:\tau}{q}}{\tau\,\assn}}: \Val^\tau \times \Store \pto \Bool$
+  \item $\semantic{\Tj{\Gamma}{e}{\tau\,\expr}}\rho: \Store \pto \Val^\tau \times \Store$
+\end{itemize}
+
+\noindent
+Seien $f\in\semantic{\tau\,\expr}$, $\phi\in\semantic{\assn}$,
+$\psi\in\semantic{\tau\,\assn}$. $f$ heisst genau dann {\em total korrekt} bzgl.
+$\phi$ und $\psi$, wenn gilt:
+\[
+  \forall \sigma\in\dom{\phi}: \phi\,\sigma = \true
+  \Rightarrow \exists (v,\sigma')\in\dom{\psi}: f\sigma = (v,\sigma') \wedge \psi(v,\sigma')=\true.
+\]
+{\em Totale Korrektheit} kann dann einfach als logisches Pr"adikat verwendet
+werden.
+\[\begin{array}{rl}
+  & \semantic{\Tj{\Gamma}{\triple{p}{e}{\ret{\id:\tau}{q}}}{\prop}}\rho = \true
+    \\
+  \Leftrightarrow & \semantic{\Tj{\Gamma}{e}{\tau\,\expr}}\rho \\
+  & \text{ total korrekt bzgl.} 
+    \semantic{\Tj{\Gamma}{p}{\assn}}\rho \\
+  & \text{ und } \semantic{\Tj{\Gamma}{\ret{\id:\tau}{q}}{\tau\,\assn}}\rho
+\end{array}\]
+
+
+\section*{29.02.2008}
+
+\subsection*{Semantik der Logik}
+
+Jedem logischen Typ $\pi \in \Ltype$ wird ein semantischer Bereich $\semantic{\pi}$ zugeordnet,
+insb.:
+\[\begin{array}{rcl}
+  \semantic{\tau} & = & \Val^\tau \\
+  \semantic{\assn} & = & \Store \pto \Bool
+                    \quad \quad (= \semantic{\unit\,\assn} = \Val^\unit \times \Store \pto \Bool) \\
+  \semantic{\tau\,\assn} & = & \Val^\tau \times \Store \pto \Bool \\
+  \semantic{\tau\,\expr} & = & \Store \pto \Val^\tau \times \Store
+\end{array}\]
+Eine Funktion $f \in \semantic{\tau\,\expr}$ heisst {\em total korrekt} bzgl. $\phi \in \semantic{\assn}$
+und $\psi\in\semantic{\tau\,\assn}$, wenn f"ur alle $\sigma \in \dom{\phi}$ gilt:
+\begin{quote}
+  Wenn $\phi(\sigma)=\true$, dann ist $\sigma\in\dom{f}$ und $\psi(\app{f}{\sigma}) = \true$.
+\end{quote}
+Eine {\em Umgebung} ist eine endliche partielle Funktion $\rho: \Id \pto \bigcup_{\pi\in\Ltype}\semantic{\pi}$.
+$\rho$ {\em passt} zur Typumgebung $\Gamma$ -- geschrieben $\Gamma \models \rho$ -- wenn gilt:
+\begin{itemize}
+  \item $\dom{\rho} = \dom{\Gamma}$
+  \item $\rho(\id) \in \semantic{\Gamma(\id)}$ f"ur alle $\id \in \dom{\rho}$
+\end{itemize}
+
+
+\section*{05.03.2008}
+
+\subsection*{TCs in Pre-/Post-conditions}
+
+Zweistufige Syntax f"ur Hoare-Formeln, wo totale Korrektheit nur auf oberster Ebene erlaubt ist,
+also insbesondere nicht in Pre-/Post-conditions, wird nicht funktionieren. Beispielsweise l"asst
+sich der Counter umschreiben zu
+\[\begin{array}{rl}
+  \exists c:\langle\ldots\rangle.\exists x:\reftype{\z}.
+  & (\forall i:\z. \{!x=i\}\ c\#\name{inc}\ \{!x=i+1\}) \\
+  \wedge & \{\true\}\ \name{new\_counter\_1}\,(\,)\ \{\ret{c_1}{c_1=c}\}
+\end{array}\]
+aber dann besagt die Spezifikation, dass $\name{new\_counter\_1}$ immer den gleichen counter
+liefert. D.h. man wird wohl doch TCs in Pre-/Post-conditions zulassen m"ussen.
+
+\subsection*{Neue Idee}
+
+Dann k"onnte man eine einfache Syntax f"ur Assertions und Hoare-Formeln entwerfen. Dabei ist
+eine Hoare-Formel nur ein Spezialfall einer Assertion, genauer eine Assertion von Typ $\bool$.
+
+\[\bgram
+p \is p_1 \wedge p_2
+  \al \neg p_1
+  \al \forall id:\hat{\pi}. p_1 \quad\quad \text{$\hat{\pi}$ ist eingeschr"anktes $\pi$}
+  \al \app{p_1}{p_2}
+  \al f \in F
+  \al \id \in \Id
+  \al v \in \bigcup_{\tau\in\Type} \Val^\tau
+  \al p_1 = p_2
+  \al \abstr{\id_1:\tau_1,\ldots,\id_n:\tau_n}{p_1} \quad (n \ge 1)
+  \al \triple{p_1}{e}{p_2}
+  \n
+\egram\]
+
+\noindent
+Die TC wird durch $\triple{p_1}{e}{p_2}$ dargestellt. Hierbei wird, wie zuvor definiert, implizit
+"uber alle Stores quantifiziert. D.h. f"ur alle (passenden) $\sigma$ gilt: Wenn $p_1$ f"ur $\sigma$
+gilt, dann terminiert $e$ und es gilt $p_2$ (formal unsauber).
+
+Die Menge $\Ltype$ der logischen Typen (f"ur Assertions) enth"alt dann zumindest:
+
+\[\bgram
+\pi \is \tau
+    \al \pi_1 * \ldots * \pi_n \quad (n \ge 1)
+    \al \pi_1 \xrightarrow{t} \pi_2
+    \n
+\egram\]
+
+\noindent
+Wobei in $\tau$ noch der Spezielle Typ $\textbf{store}$ enthalten sein muss, mglw.
+als polymorpher Typ.
+
+\[
+  \regel{\Tj{\Gamma[\tau_1/\id_1,\ldots,\tau_n/\id_n]}{p_1}{\tau}}
+        {\Tj{\Gamma}{\abstr{\id_i:\tau_i}{p_1}}{\tau_1*\ldots*\tau_n\xrightarrow{t}\tau}}
+\]
+\[
+  \regel{\Tj{\Gamma}{p}{\textbf{store}\xrightarrow{t}\bool} \quad
+         \Tj{\Gamma}{e}{\tau} \quad
+         \Tj{\Gamma}{q}{\tau*\textbf{store}\xrightarrow{t}\bool}}
+        {\Tj{\Gamma}{\triple{p}{e}{q}}{\bool}}
+\]
+
+
+\end{document}
