@@ -1,0 +1,110 @@
+\documentclass[10pt,a4paper,final,twocolumn]{article}
+
+% PDFLaTeX hint for arXiv to make sure breaklinks=true works for hyperref (must be within the first 5 lines)
+\pdfoutput=1
+
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[breaklinks=true,%
+            colorlinks=false,%
+            pdfkeywords={OCaml, ARM, backend, native, code, compiler},%
+            pdftitle={A new ARM backend for the OCaml native code compiler},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{tikz}
+\usepackage{varwidth}
+\usepackage{xspace}
+
+\newcommand{\etc}{etc.\@\xspace}
+\newcommand{\ie}{i.e.\@\xspace}
+
+\usetikzlibrary{arrows}
+\usetikzlibrary{trees}
+\usetikzlibrary{arrows,backgrounds,decorations.pathmorphing,fit,matrix,positioning}
+\tikzset{
+  phase/.style={
+      rectangle,
+      inner sep=1mm,
+      rounded corners=1mm,
+      minimum size=6mm,
+      very thick,
+      draw=blue!50!black!50,
+      top color=white,
+      bottom color=blue!50!black!20
+  }
+}
+
+\definecolor{ocamljit2}{HTML}{FF0000}
+\definecolor{ocamlnatext}{HTML}{00FF00}
+\definecolor{ocamlnatjit}{HTML}{0000FF}
+
+\begin{document}
+
+\title{%
+  A new ARM backend for the OCaml native code compiler
+}
+\author{%
+  Benedikt Meurer \\
+  Compilerbau und Softwareanalyse \\
+  Fakult\"at IV, Universit\"at Siegen \\
+  D-57068 Siegen, Germany \\
+  \url{meurer@informatik.uni-siegen.de}
+}
+\date{}
+
+\maketitle
+
+\begin{abstract}
+  \textcolor{red}{TODO}
+\end{abstract}
+
+
+%% Introduction
+\section{Introduction}
+
+Nowadays ARM cores are present in many devices we use on a daily basis, ranging from energy efficient servers,
+netbooks and tablets to smartphones and music players. Its large scale deployment and the variety of devices
+it powers makes ARM an interesting target platform for developers.
+
+The OCaml \cite{Leroy11,Remy02} system is the main implementation of the Caml language \cite{Caml11}, featuring
+a powerful module system combined with a full-fledged object-oriented layer. It ships with an optimizing native
+code compiler \texttt{ocamlopt}, for high performance; a byte code compiler \texttt{ocamlc} and interpreter
+\texttt{ocamlrun}, for increased portability; and an interactive top-level \texttt{ocaml} based on the byte code
+compiler and runtime, for interactive use of OCaml through a read-eval-print loop.
+
+\textcolor{red}{TODO} In the remainder of this document we use the term \emph{OCaml Compiler} to refer to the
+optimizing native code compiler \texttt{ocamlopt}.
+
+
+%% ARM
+\section{ARM} \label{section:ARM}
+
+\textcolor{red}{TODO}
+
+
+%% Performance
+\section{Performance} \label{section:Performance}
+
+\textcolor{red}{TODO}
+
+
+%% Related work
+\section{Related work} \label{section:Related_work}
+
+\textcolor{red}{TODO}
+
+
+%% Conclusion
+\section{Conclusion} \label{section:Conclusion}
+
+\textcolor{red}{TODO}
+
+
+%% References
+\bibliographystyle{abbrv}
+\bibliography{citations}
+
+\end{document}
