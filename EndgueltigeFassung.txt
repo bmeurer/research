@@ -1,9 +1,0 @@
-Ideen fuer die endgueltige Fassung:
------------------------------------
-
-* In Deutsch veroeffentlichen (siehe Promotionsordnung Mathe)
-
-* Substitutionsschreibweise aus "Einfuehrung in die mathematische Logik"
-  uebernehmen, d.h. simultane Substitution mit Bruchstrich (oben die
-  einzusetzenden Ausdruecke, unten die Variablen)
-
