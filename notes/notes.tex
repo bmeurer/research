@@ -409,14 +409,14 @@ Typsystem.
 \end{definition}
 
 Zum Beweis der Typsicherheit eines Rekursionssystems $\mathcal{R}$ gen"ugt es, unabh"angig von
-der konkreten Semantik des Rekursionssystems, zwei ``lokale Eigenschaften'' "uber die Rekursionsregeln
+der konkreten Semantik des Rekursionssystems, drei ``lokale Eigenschaften'' "uber die Rekursionsregeln
 bzgl.\xspace des Typsystems zu beweisen, wie das folgende Meta-Theorem nahelegt:
 
 \begin{theorem}[Typsicherheit]
   Sei \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} ein Rekursionssystem und
   \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$} ist typsicher bzgl.\xspace
   eines Typsystems $T$ f"ur \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$}, wenn
-  die folgenden beiden Eigenschaften gelten:
+  die folgenden drei Eigenschaften gelten:
   \begin{description}[labelindent=\parindent,style=nextline]
   \item[Local Preservation] 
     Wenn \mbox{$a \in A^\tau$},
@@ -424,7 +424,11 @@ bzgl.\xspace des Typsystems zu beweisen, wie das folgende Meta-Theorem nahelegt:
     \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,a') \in R$}, dann ex. \mbox{$\tau' \in T$},
     so dass \mbox{$a' \in A^{\tau'}$}.
     
-  \item[Local Progress]
+  \item[Local Progress I]
+    Wenn \mbox{$a \in A^\tau$},
+    dann ex. \mbox{$R \in \mathcal{R}$} und \mbox{$x \in A \cup B$}, so dass \mbox{$(a,\varepsilon,x) \in R$}.
+
+  \item[Local Progress II]
     Wenn \mbox{$a \in A^\tau$},
     \mbox{$a_i \rightarrow_{\mathcal{R}}^* b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$} f"ur
     \mbox{$i=1,\ldots,n$}, dann ex. \mbox{$a \in A \cup B$} so dass \mbox{$(a,b_1 \ldots b_n,x) \in R$}.
