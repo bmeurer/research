@@ -1,0 +1,373 @@
+\documentclass[12pt,a4paper,fleqn]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+\title{Stackdisziplin}
+\author{Benedikt Meurer}
+\maketitle
+
+
+\section{Namenlose Umgebungssemantik}
+
+Vorgegeben sei eine Menge von \emph{Indizes} $\iota = \underline{0},\underline{1},\ldots$ und eine
+Menge von Konstanten $c$. Die Menge der \emph{Ausdr"ucke} $e$ ist definiert durch folgende kontextfreie
+Grammatik:
+\[\begin{grammar}
+  f \is \abstr{}{e}
+  \nl
+  e \is c \mid \iota \mid f \mid \app{e_1}{e_2}
+\end{grammar}\]
+Die Mengen der \emph{Werte} $v$ und \emph{Umgebungen} $\eta$ sind definiert durch:
+\[\begin{grammar}
+  v \is c \mid (f,\eta)
+  \nl
+  \eta \is \varepsilon \mid \eta,v
+\end{grammar}\]
+Ein \emph{big step} ist eine Formel der Gestalt $(e,\eta) \Downarrow v$ und hei"st \emph{g"ultig},
+wenn er sich mit den folgenden Regeln sowie den nicht angegebenen Regeln f"ur Konstanten herleiten
+l"asst: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Const} & $(c,\eta) \Downarrow c$ \\[1mm]
+  \RN{Closure} & $(f,\eta) \Downarrow (f,\eta)$ \\[1mm]
+  \RN{Var} & $(\underline{0},\eta;v) \Downarrow v$ \\[1mm]
+  \RN{Skip} & $\RULE{(\underline{i},\eta) \Downarrow v'}{(\underline{i+1},\eta;v) \Downarrow v'}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\eta) \Downarrow (\abstr{}{e'},\eta') \quad (e_2,\eta) \Downarrow v' \quad (e',\eta';v') \Downarrow c}{(\app{e_1}{e_2},\eta) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+Wie man sieht, handelt es sich um eine eingeschr"ankte Semantik f"ur Stackdisziplin, da Funktionen
+niemals als Ergebnis anderer Funktionen auftreten k"onnen und somit Bindungen niemals "uber ihren
+Scope hinaus erhalten bleiben k"onnen.
+
+
+\section{Stacksemantik}
+
+Die Mengen der \emph{Stackwerte} $w$ und \emph{Stacks} $\sigma$ sind definiert durch:
+\[\begin{grammar}
+  w \is c \mid (f,n)
+  \nl
+  d \is [w,n]
+  \nl
+  \sigma \is \varepsilon \mid \sigma;d
+\end{grammar}\]
+Die Elemente $d$ aus denen ein Stack aufgebaut wird, bezeichnen wir als \emph{Stackeintr"age}.
+Jeder Stackeintrage besteht aus einen Wert und einen (absoluten) Offset. Statt
+$\sigma=\varepsilon;d_1;\ldots;d_n$ schreiben wir kurz $d_1;\ldots;d_n$ und f"ur $j \le n$ ist
+$\sigma^j=d_1;\ldots;d_j$. Weiterhin bezeichnet $|\sigma|=n$ die \emph{L"ange} von $\sigma$.
+
+Ein \emph{big step} ist eine Formel der Gestalt $(e,\sigma) \Downarrow w$ und hei"st \emph{g"ultig},
+wenn er sich mit den folgenden Regeln sowie den wiederum nicht angegebenen Regeln f"ur Konstanten
+herleiten l"asst: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Const} & $(c,\sigma) \Downarrow c$ \\[1mm]
+  \RN{Closure} & $(f,\sigma) \Downarrow (f,|\sigma|)$ \\[1mm]
+  \RN{Var} & $(\underline{0},\sigma;[w,n]) \Downarrow w$ \\[1mm]
+  \RN{Skip} & $\RULE{(\underline{i},\sigma^n) \Downarrow w'}{(\underline{i+1},\sigma;[w,n]) \Downarrow w'}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\sigma) \Downarrow (\abstr{}{e'},n') \quad (e_2,\sigma) \Downarrow w' \quad (e',\sigma;[w',n']) \Downarrow c}{(\app{e_1}{e_2},\sigma) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+
+
+\section{Zusammenhang}
+
+Wir definieren Relationen $\sigma \sim \eta$ und $\sigma \models w \sim v$ durch: \\[5mm]
+\begin{tabular}{ccc}
+  $\varepsilon \sim \varepsilon$
+  &\quad\quad&
+  $\RULE{\sigma \models w \sim v \quad \sigma^n \sim \eta}{\sigma;[w,n] \sim \eta;v}$ \\[3mm]
+  $\sigma \models c \sim c$
+  &&
+  $\RULE{\sigma^n \sim \eta}{\sigma \models (f,n) \sim (f,\eta)}$ \\[3mm]
+\end{tabular} \\[5mm]
+Offensichtlich gilt folgender einfacher Zusammenhang:
+\begin{lemma} \label{lemma1}
+  Wenn $\sigma \models w \sim v$, dann $\sigma;d \models w \sim v$.
+\end{lemma}
+
+\begin{proof}
+  Trivial, denn es gilt $\sigma^n = (\sigma;d)^n$ f"ur alle $\sigma$ mit $n \le |\sigma|$.
+\end{proof}
+Insgesamt gilt folgender Zusammenhang zwischen den beiden Semantiken:
+\pagebreak[2]
+\begin{theorem} \label{theorem1}
+  Wenn $\sigma \sim \eta$, dann gilt:
+  \begin{enumerate}
+  \item Wenn $(e,\sigma) \Downarrow w$, dann existiert ein $v$ mit $(e,\eta) \Downarrow v$ und
+    $\sigma \models w \sim v$.
+  \item Wenn $(e,\eta) \Downarrow v$, dann existiert ein $w$ mit $(e,\sigma) \Downarrow w$ und
+    $\sigma \models w \sim v$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Gelte also $\sigma \sim \eta$.
+  \begin{enumerate}
+  \item Induktion "uber die L"ange der Herleitung von $(e,\sigma) \Downarrow w$ mit Fallunterscheidung
+    "uber die zuletzt angewandten Regel:
+    \begin{itemize}
+    \item[\RN{Const}] Trivial.
+
+    \item[\RN{Closure}] Dann gilt $(f,\sigma) \Downarrow (f,|\sigma|)$. Andererseits
+      existiert auch ein big step $(f,\eta) \Downarrow (f,\eta)$ mit \RN{Closure} in
+      der Umgebungssemantik. Da $\sigma^{|\sigma|} = \sigma$ und nach Voraussetzung $\sigma \sim \eta$
+      gilt, folgt unmittelbar $\sigma \models (f,|\sigma|) \sim (f,\eta)$.
+
+    \item[\RN{Var}] Dann gilt $(\underline{0},\sigma;[w,n]) \Downarrow w$. Weiterhin m"ussen $v$ und $\eta$
+      existieren mit $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$. Nach Lemma~\ref{lemma1}
+      folgt $\sigma;[w,n] \models w \sim v$. Trivialerweise existiert auch ein big step
+      $(\underline{0},\eta;v) \Downarrow v$ mit \RN{Var} in der Umgebungssemantik.
+
+    \item[\RN{Skip}] Dann gilt $(\underline{i+1},\sigma;[w,n]) \Downarrow w'$, was nur aus
+      $(\underline{i},\sigma^n) \Downarrow w'$ folgen kann. Weiterhin m"ussen $v$ und $\eta$ existieren
+      mit $\sigma;[w,n] \sim \eta;v$, also insbesondere $\sigma \sim \eta$. Also existiert nach
+      Induktionsvoraussetzung ein $v'$ mit $(\underline{i},\eta) \Downarrow v'$ und
+      $\sigma^n \models w' \sim v'$. Nach Lemma~\ref{lemma1} folgt $\sigma;[w,n] \models w' \sim v'$
+      und die Existenz des big steps $(\underline{i+1},\eta;v) \Downarrow v'$ folgt mit \RN{Skip} in
+      der Umgebungssemantik.
+
+    \item[\RN{Beta-V}] Dann gilt $(\app{e_1}{e_2},\sigma) \Downarrow c$, was nur aus Pr"amissen der
+      Form
+      \begin{enumerate}
+      \item[(a)] $(e_1,\sigma) \Downarrow (\abstr{}{e},n)$,
+      \item[(b)] $(e_2,\sigma) \Downarrow w$, und
+      \item[(c)] $(e,\sigma;[w,n]) \Downarrow c$
+      \end{enumerate}
+      folgen kann. Nach Induktionsvoraussetzung existieren also $\hat{v},v'$ mit
+      \begin{enumerate}
+      \item[(a')] $(e_1,\eta) \Downarrow \hat{v}$ mit $\sigma \models (\abstr{}{e},n) \sim \hat{v}$, und
+      \item[(b')] $(e_2,\eta) \Downarrow v'$ mit $\sigma \models w \sim v'$.
+      \end{enumerate}
+      Wegen (a') muss ein $\eta'$ existieren, so dass gilt $\hat{v} = (\abstr{}{e},\eta')$ und
+      $\sigma^n \sim \eta'$. Also gilt insbesondere $\sigma;[w,n] \sim \eta';v'$ und nach
+      Induktionsvoraussetzung folgt aus (c), dass ein $c'$ existiert mit
+      \begin{enumerate}
+      \item[(c')] $(e,\eta';v') \Downarrow c'$ und $c \sim c'$.
+      \end{enumerate}
+      Also existiert insgesamt ein big step $(\app{e_1}{e_2},\eta) \Downarrow c'$ mit
+      \RN{Beta-V} in der Umgebungssemantik.
+    \end{itemize}
+
+  \item Induktion "uber die L"ange der Herleitung von $(e,\eta) \Downarrow v$ und Fallunterscheidung
+    nach der zuletzt angewandten Regel:
+    \begin{itemize}
+    \item[\RN{Const}] Trivial.
+
+    \item[\RN{Closure}] Dann gilt $(f,\eta) \Downarrow (f,\eta)$. Andererseits
+      existiert auch ein big step $(f,\sigma) \Downarrow (f,|\sigma|)$ mit
+      \RN{Closure} in der Stacksemantik. Da $\sigma^{|\sigma|} = \sigma$ und nach Voraussetzung
+      $\sigma \sim \eta$ gilt, folgt $\sigma \models (f,|\sigma|) \sim (f,\eta)$.
+
+    \item[\RN{Var}] Dann gilt $(\underline{0},\eta;v) \Downarrow v$. Weiterhin m"ussen $w$, $\sigma$
+      und $n$ existieren, so dass $\sigma;[w,n] \sim \eta;v$ und $\sigma \models w \sim v$ gilt.
+      Nach Lemma~\ref{lemma1} gilt ebenfalls $\sigma;[w,n] \models w \sim v$ und der big step
+      $(\underline{0},\sigma;[w,n]) \Downarrow w$ existiert in der Stacksemantik wegen Regel \RN{Var}.
+
+    \item[\RN{Skip}] Dann gilt $(\underline{i+1},\eta;v) \Downarrow v'$, was nur aus
+      $(\underline{i},\eta) \Downarrow v'$ folgen kann. Weiterhin m"ussen $\sigma$, $w$ und $n$ existieren,
+      so dass $\sigma;[w,n] \sim \eta;v$, also insbesondere $\sigma^n \sim \eta$ gilt. Nach Induktionsvoraussetzung
+      existiert also ein $w'$ mit $(\underline{i},\sigma^n) \Downarrow w'$ und $\sigma^n \models w' \sim v'$.
+      Nach Lemma~\ref{lemma1} folgt $\sigma \models w' \sim v'$, und der big step
+      $(\underline{i+1},\sigma;[w,n]) \Downarrow w'$ existiert wegen \RN{Skip} in der Stacksemantik.
+
+    \item[\RN{Beta-V}] Dann gilt $(\app{e_1}{e_2},\eta) \Downarrow c$, was ausschliesslich aus Pr"amissen
+      der Form
+      \begin{enumerate}
+      \item[(a)] $(e_1,\eta) \Downarrow (\abstr{}{e},\eta')$,
+      \item[(b)] $(e_2,\eta) \Downarrow v'$, und
+      \item[(c)] $(e,\eta';v) \Downarrow c$
+      \end{enumerate}
+      folgen kann. Nach Induktionsvoraussetzung existieren also $\hat{w}, w'$ mit
+      \begin{enumerate}
+      \item[(a')] $(e_1,\sigma) \Downarrow \hat{w}$ mit $\sigma \models \hat{w} \sim (\abstr{}{e},\eta')$, und
+      \item[(b')] $(e_2,\sigma) \Downarrow w'$ mit $\sigma \models w' \sim v'$.
+      \end{enumerate}
+      Wegen (a') muss ein $n$ existieren, so dass gilt $\hat{w} = (\abstr{}{e},n)$ und $\sigma^n \sim \eta'$.
+      Also gilt insbesondere $\sigma;[w,n] \sim \eta';v'$ und nach Induktionsvoraussetzung folgt aus (c), dass
+      ein $c'$ existiert mit
+      \begin{enumerate}
+      \item[(c')] $(e,\sigma;[w,n]) \Downarrow c'$ und $c' \sim c$.
+      \end{enumerate}
+      Also existiert insgesamt ein big step $(\app{e_1}{e_2},\sigma) \Downarrow c'$ mit \RN{Beta-V} 
+      in der Stacksemantik.
+    \end{itemize}
+  \end{enumerate}
+\end{proof}
+
+\begin{corollary}
+  Wenn $\tj{e}{\beta}$, dann gilt: $(e,\varepsilon) \Downarrow c$ in der Umgebungssemantik gdw.
+  $(e,\varepsilon) \Downarrow c$ in der Stacksemantik.
+\end{corollary}
+
+
+\section{Erweiterungen}
+
+
+\subsection{Paare}
+
+Die Syntax der Programmiersprache wird um Paare und Projektionen erweitert:
+\[\begin{grammar}
+  c \is (c_1,c_2) \mid \fst \mid \snd
+  \nl
+  e \is (e_1,e_2)
+\end{grammar}\]
+Die Werte m"ussen um Paarwerte erweitert werden
+\[\begin{grammar}
+  v \is (v_1,v_2)
+\end{grammar}\]
+und folgende neue Regeln m"ussen zur Umgebungssemantik hinzugenommen werden: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Fst} & $\RULE{(e_1,\eta) \Downarrow \fst \quad (e_2,\eta) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\eta) \Downarrow v_1}$ \\[3mm]
+  \RN{Snd} & $\RULE{(e_1,\eta) \Downarrow \snd \quad (e_2,\eta) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\eta) \Downarrow v_2}$ \\[3mm]
+  \RN{Pair} & $\RULE{(e_1,\eta) \Downarrow v_1 \quad (e_2,\eta) \Downarrow v_2}{((e_1,e_2),\eta) \Downarrow (v_1,v_2)}$ \\[3mm]
+\end{tabular} \\[5mm]
+In der Stacksemantik kommen ebenfalls neue Werte
+\[\begin{grammar}
+  w \is (w_1,w_2)
+\end{grammar}\]
+und neue Regeln hinzu: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Fst} & $\RULE{(e_1,\sigma) \Downarrow \fst \quad (e_2,\sigma) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\sigma) \Downarrow v_1}$ \\[3mm]
+  \RN{Snd} & $\RULE{(e_1,\sigma) \Downarrow \snd \quad (e_2,\sigma) \Downarrow (v_1,v_2)}{(\app{e_1}{e_2},\sigma) \Downarrow v_2}$ \\[3mm]
+  \RN{Pair} & $\RULE{(e_1,\sigma) \Downarrow v_1 \quad (e_2,\sigma) \Downarrow v_2}{((e_1,e_2),\sigma) \Downarrow (v_1,v_2)}$ \\[3mm]
+\end{tabular}
+
+\subsubsection{Zusammenhang}
+
+Es ist trivial einzusehen, dass die Zusammenh"ange in Theorem~\ref{theorem1} nach wie vor gelten, da die
+neuen Regeln das $\sigma$ bzw. $\eta$ unver"andert durchreichen.
+
+
+\subsection{Rekursion}
+
+Wir erweitern die Syntax der Programmiersprache durch ein neues Konstrukt f"ur Rekursion:
+\[\begin{grammar}
+  e \is \letrec{f}{e}
+\end{grammar}\]
+In den Umgebungen m"ussen nun neue Eintr"age f"ur rekursive Funktionen erg"anzt werden
+\[\begin{grammar}
+  \eta \is \eta;f
+\end{grammar}\]
+und folgende neue Regeln m"ussen zur Umgebungssemantik hinzgenommen werden: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $(\underline{0},\eta;f) \Downarrow (f,\eta;f)$ \\[1mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\eta) \Downarrow v}{(\underline{i+1},\eta;f) \Downarrow v}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\eta;f) \Downarrow c}{(\letrec{f}{e},\eta) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+Auf Seiten der Stacksemantik m"ussen ebenfalls Eintr"age f"ur rekursive Funktionen vorgesehen werden
+\[\begin{grammar}
+  d \is f
+\end{grammar}\]
+und folgende neue Regeln m"ussen analog zur Stacksemantik hinzugef"ugt werden: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $(\underline{0},\sigma;f) \Downarrow (f,|\sigma|+1)$ \\[1mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\sigma) \Downarrow w}{(\underline{i+1},\sigma;f) \Downarrow w}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\sigma;f) \Downarrow c}{(\letrec{f}{e},\sigma) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+
+\subsubsection{Zusammenhang}
+
+Die Relation $\sigma \sim \eta$ wird wie folgt erweitert: \\[5mm]
+\begin{tabular}{c}
+  $\RULE{\sigma \sim \eta}{\sigma;f \sim \eta;f}$ \\[3mm]
+\end{tabular} \\[5mm]
+Offensichtlich gilt weiterhin Lemma~\ref{lemma1}. Im Folgenden skizzieren wir kurz die
+notwendige Erweiterung des Beweises f"ur Theorem~\ref{theorem1}.
+
+\begin{proof}
+  Wir betrachten nur die neuen F"alle.
+  \begin{enumerate}
+  \item Wiederum durch Induktion "uber die L"ange der Herleitung des big steps $(e,\sigma) \Downarrow w$
+    und Fallunterscheidung nach der zuletzt angewandten Regel:
+    \begin{itemize}
+    \item[\RN{Var-Rec}] Dann gilt $(\underline{0},\sigma;f) \Downarrow (f,|\sigma|+1)$. Weiterhin gilt
+      $(\sigma;f)^{|\sigma|+1} = \sigma;f$, also insbesondere $\sigma;f \models (f,|\sigma|+1) \sim (f,\eta;f)$.
+      Offensichtlich existiert auch ein big step $(\underline{0},\eta;f) \Downarrow (f,\eta;f)$ mit
+      \RN{Var-Rec} in der Umgebungssemantik.
+      
+    \item[\RN{Skip-Rec}] Dann gilt $(\underline{i+1},\sigma;f) \Downarrow w$, was nur aus der Pr"amisse
+      $(\underline{i},\sigma) \Downarrow w$ folgen kann. Weiterhin existiert ein $\eta$, so dass
+      $\sigma;f \sim \eta;f$, also insbesondere $\sigma \sim \eta$. Nach Induktionsvoraussetzung
+      existiert also ein $v$, so dass $(\underline{i},\eta) \Downarrow v$ mit $\sigma \models w \sim v$.
+      Also existiert auch ein big step $(\underline{i+1},\eta;f) \Downarrow v$ mit \RN{Skip-Rec} in der
+      Umgebungssemantik. Mit Lemma~\ref{lemma1} folgt dar"uberhinaus $\sigma;f \models w \sim v$.
+
+    \item[\RN{Let-Rec}] Dann gilt $(\letrec{f}{e},\sigma) \Downarrow c$, was nur aus $(e,\sigma;f) \Downarrow c$
+      folgen kann. Da $\sigma \sim \eta$ gilt insbesondere $\sigma;f \sim \eta;f$, also folgt mit
+      Induktionsvoraussetzung, dass ein $v$ existiert, so dass $(e,\eta;f) \Downarrow v$ und
+      $\sigma;f \models c \sim v$. Das wiederum impliziert $v = c$, also existiert auch ein big step
+      $(\letrec{f}{e},\eta) \Downarrow c$ mit \RN{Let-Rec} in der Umgebungssemantik.
+    \end{itemize}
+
+  \item Diese Richtung verl"auft analog. Sie bleibt dem geneigten Leser als "Ubung "uberlassen.
+  \end{enumerate}
+\end{proof}
+
+
+\subsection{Simultane Rekursion}
+
+Simultane Rekursion erfordert eine etwas subtilere Vorgehensweise. Hierbei ist entscheidend, dass
+mehrere Funktionen auf die gleiche (rekursive) Umgebung Bezug nehmen. Zun"achst wird die Syntax
+verallgemeinert:
+\[\begin{grammar}
+  e \is \letrec{f_1,\ldots,f_n}{e}
+\end{grammar}\]
+In den Umgebungen muss jetzt festgehalten werden, dass diese $f_1,\ldots,f_n$ auf ``gleicher Ebene''
+stehen. Entsprechend sehen die verallgemeinerten Eintr"age
+\[\begin{grammar}
+  \eta \is \eta;(f_1,\ldots,f_n)
+\end{grammar}\]
+und die verallgemeinerten Regeln aus: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $\RULE{0 \le i \le n}{(\underline{i},\eta;(f_n,\ldots,f_0)) \Downarrow (f_i,\eta;(f_n,\ldots,f_0))}$ \\[3mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\eta) \Downarrow v \quad i \ge 1}{(\underline{i+n},\eta;(f_1,\ldots,f_n)) \Downarrow v}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\eta;(f_1,\ldots,f_n)) \Downarrow c}{(\letrec{f_1,\ldots,f_n}{e},\eta) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+Der Trick besteht -- wie unschwer zu erkennen -- darin, alle simultan rekursiv definierten Funktionen
+bzgl. der Umgebung als Einheit zu betrachten.
+
+Auf analoge Weise l"asst sich jetzt die Stacksemantik verallgemeinern, durch neue Eintr"age
+\[\begin{grammar}
+  d \is (f_1,\ldots,f_n)
+\end{grammar}\]
+und neue Regeln: \\[5mm]
+\begin{tabular}{rl}
+  \RN{Var-Rec} & $\RULE{0 \le i \le n}{(\underline{i},\sigma;(f_n,\ldots,f_0)) \Downarrow (f_i,|\sigma|+1)}$ \\[3mm]
+  \RN{Skip-Rec} & $\RULE{(\underline{i},\sigma) \Downarrow w \quad i \ge 1}{(\underline{i+n},\sigma;(f_1,\ldots,f_n)) \Downarrow w}$ \\[3mm]
+  \RN{Let-Rec} & $\RULE{(e,\sigma;(f_1,\ldots,f_n)) \Downarrow c}{(\letrec{f_1,\ldots,f_n}{e},\sigma) \Downarrow c}$ \\[3mm]
+\end{tabular} \\[5mm]
+
+\subsubsection{Zusammenhang}
+
+Der Beweis l"auft analog zur einfachen Rekursion. Die Relation $\sigma \sim \eta$ muss erweitert werden
+durch folgende Regel: \\[5mm]
+\begin{tabular}{c}
+  $\RULE{\sigma \sim \eta}{\sigma;(f_1,\ldots,f_n) \sim \eta;(f_1,\ldots,f_n)}$ \\[3mm]
+\end{tabular} \\[5mm]
+Der Beweis von Theorem~\ref{theorem1} f"ur simultane Rekursion bleibt dem Leser "uberlassen.
+
+
+\end{document}
