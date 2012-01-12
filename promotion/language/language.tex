@@ -1,0 +1,167 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Semantik von Programmiersprachen}
+
+\begin{definition}[Syntax]
+  Eine \emph{Syntax} ist eine Menge $\L$ von syntaktisch korrekten Programmen.
+\end{definition}
+
+\begin{definition}[Semantik]
+  Sei $\L$ eine Syntax. Eine \emph{$\L$-Semantik} ist ein Paar $S = (\Obs,\beh)$.
+  Hierbei ist
+  \begin{enumerate}
+  \item $\Obs$ eine Menge von \emph{beobachtbaren Verhalten}, und
+  \item $\beh: \L \to \powerset{\Obs}$ eine \emph{Beobachtungsfunktion}, die jedem $\L$-Programm
+    beobachtbares Verhalten zuordnet.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Implementierung]
+  Sei $\L$ eine Syntax und sei $\Obs$ eine Menge von beobachtbaren Verhalten.
+  Eine \emph{$(\L,\Obs)$-Implementierung} ist ein Tupel $M = (\Exp,D,\semantic{\cdot},\obs)$,
+  bestehend aus
+  \begin{enumerate}
+  \item der Menge $\Exp \supseteq \L$ von \emph{Ausdr"ucken},
+  \item dem \emph{semantischen Bereich} $D$,
+  \item der \emph{Semantikfunktion} $\semantic{\cdot}:\Exp \to D$, welche jedem Ausdruck
+    ein Element des semantischen Bereichs zuordnet, und
+  \item der \emph{Bewertungsfunktion} $\obs:D \to \powerset{\Obs}$, welche jedes Element
+    des semantischen Bereichs als beobachtbares Verhalten bewertet.
+  \end{enumerate}
+  Eine Implementierung hei"st \emph{ad"aquat} f"ur eine $\L$-Semantik $S=(\Obs,\beh)$,
+  wenn $\obs(\semantic{e}) = \beh(e)$ f"ur alle $e \in \L$ gilt.
+\end{definition}
+
+\begin{lemma} \label{lemma1}
+  Sei $(\L,S)$ eine Programmiersprache mit $S = (\Obs,\beh)$ und $M_1 = (\Exp,D_1,\semantic{\cdot}_1,\obs_1)$
+  eine ad"aquate $(\L,\Obs)$-Implementierung f"ur $S$.
+  Eine weitere $(\L,\Obs)$-Implementierung $M_2=(\Exp,D_2,\semantic{\cdot}_2,\obs_2)$
+  ist ad"aquat f"ur $S$, wenn $\obs_1(\semantic{e}_1) = \obs_2(\semantic{e}_2)$ f"ur alle $e \in \Exp$.
+\end{lemma}
+
+\begin{definition}
+  Eine Menge $A$ hei"st \emph{induktiv definiert} durch eine Familie $C = (C_n)_{n\in\N}$ von
+  \emph{Konstruktoren} $\zeta_n$, wenn $A$ der induktive Abschluss von $C$ ist.
+\end{definition}
+
+\begin{definition}[Kompositionalit"at]
+  Sei $\Exp$ induktiv definiert durch die Familie $C=(C_n)_{n\in\N}$.
+  Eine Implementierung $M=(\Exp,D,\semantic{\cdot},\obs)$ hei"st \emph{$C$-kompositional},
+  wenn zu jedem $\zeta_n \in C_n$ eine Funktion $\semantic{\zeta_n}: D^n \to D$ existiert, so dass gilt:
+  Wenn $e = \zeta_n (e_1 \ldots e_n)$, dann 
+  $\semantic{e} = \semantic{\zeta_n}(\semantic{e_1} \ldots \semantic{e_n})$.
+\end{definition}
+
+\begin{theorem} \label{theorem1}
+  Sei $(\L,S)$ eine Programmiersprache mit $S=(\Obs,\beh)$, $\Exp$ induktiv definiert durch
+  $C=(C_n)_{n\in\N}$, und seien $M_1=(\Exp,D_1,\semantic{\cdot}_1,\obs_1)$ und
+  $M_2 = (\Exp,D_2,\semantic{\cdot}_2,\obs_2)$ $C$-kompositionale $(\L,\Obs)$-Implementierungen.
+  $M_2$ ist ad"aquat f"ur $S$, wenn $M_1$ ad"aquat f"ur $S$ und eine Relation $\sim\ \subseteq D_1 \times D_2$
+  existiert, so dass gilt:
+  \begin{enumerate}
+  \item Wenn $d_{1,i} \sim d_{2,i}$ f"ur $i=1,\ldots,n$, dann gilt
+    \[\semantic{\zeta_n}_1 (d_{1,1} \ldots d_{1,n}) \sim \semantic{\zeta_n}_2 (d_{2,1} \ldots d_{2,n})\]
+    f"ur alle $n \ge 0$ und $\zeta_n \in C_n$.
+  \item Wenn $d_1 \sim d_2$, dann gilt $\obs_1(d_1) = \obs_2(d_2)$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Wir zeigen zun"achst, dass $\semantic{e}_1 \sim \semantic{e}_2$ f"ur alle $e\in\Exp$. Da $M_1$ und $M_2$
+  nach Voraussetzung $C$-kompositional sind, l"a"st sich dies leicht durch Induktion "uber die Struktur
+  von $e$ zeigen:
+  \begin{itemize}
+  \item F"ur $e = \zeta_0$ folgt nach Voraussetzung unmittelbar $\semantic{\zeta_0}_1 \sim \semantic{\zeta_0}_2$.
+  \item F"ur $e = \zeta_n(e_1 \ldots e_n)$ folgt zun"achst nach Induktionsvoraussetzung, dass
+    $\semantic{e_i}_1 \sim \semantic{e_i}_2$ f"ur alle $i=1,\ldots,n$ gilt. Daraus folgt dann unmittelbar,
+    dass auch $\semantic{\zeta_n(e_1 \ldots e_n)}_1 \sim \semantic{\zeta_n(e_1 \ldots e_n)}_2$ gilt.
+  \end{itemize}
+  $\semantic{e}_1 \sim \semantic{e}_2$ wiederum impliziert $\obs_1(\semantic{e}_1)=\obs_2(\semantic{e}_2)$,
+  also ist nach Lemma~\ref{lemma1} $M_2$ ebenfalls ad"aquat.
+\end{proof}
+
+Dies bedeutet, dass es, gegeben eine ad"aquate Implementierung einer Programmiersprache, f"ur den
+Beweis der Ad"aquatheit einer weiteren Implementierung derselben Programmiersprache, ausreicht zu
+zeigen, dass eine Relation zwischen den verschiedenen semantischen Bereichen existiert, welche
+genau diejenigen Bereiche enth"alt, deren beobachtbares Verhalten "ubereinstimmt, und dass die
+Semantik der semantisch relevanten Bestandteile der Programme diese Relation erh"alt.
+
+Interessant ist inbesondere der Fall, dass der semantische Bereich $D$ aus Funktionen $A \to B$ besteht,
+f"ur zun"achst beliebige $A,B$. Dies entspricht den "ublichen Substitutions- und Umgebungsmodellen, welche
+Ausdr"ucke in Abh"angigkeit einer Substitution bzw. einer Umgebung auf einen Wert abbilden (bzw. in einer
+denotationellen Semantik auf seine Bedeutung abbilden).
+
+\begin{theorem}
+  Sei $(\L,S)$ eine Programmiersprache mit $S = (\Obs,\beh)$, $\Exp$ induktiv definiert durch
+  $C = (C_n)_{n\in\N}$, und seien $M_1 = (\Exp,A_1 \to B_1,\semantic{\cdot}_1,\obs_1)$ und
+  $M_2 = (\Exp,A_2 \to B_2,\semantic{\cdot}_2,\obs_2)$ $C$-kompositionale $(\L,\Obs)$-Implementierungen.
+  $M_2$ ist ad"aquat f"ur $S$, wenn $M_1$ ad"aquat f"ur $S$ ist und Relationen
+  $\sim\ \subseteq A_1 \times A_2$ und $\sim\ \subseteq B_1 \times B_2$ existieren, so dass gilt:
+  \begin{enumerate}
+  \item Wenn $d_{1,i}\,a_1 \sim d_{2,i}\,a_2$ f"ur alle $a_1 \in A_1,a_2 \in A_2$ mit
+    $a_1 \sim a_2$ und $i = 1,\ldots,n$ dann gilt
+    \[\begin{array}{c}
+      \semantic{\zeta_n}_1\,(d_{1,1} \ldots d_{1,n})\,a_1
+      \sim
+      \semantic{\zeta_n}_2\,(d_{2,1} \ldots d_{2,n})\,a_2
+    \end{array}\]
+    f"ur alle $a_1 \sim a_2$, $n \ge 0$ und $\zeta_n \in C_n$.
+  \item Wenn $d_1\,a_1 \sim d_2\,a_2$ f"ur alle $a_1 \sim a_2$, dann gilt
+    $\obs_1(d_1) = \obs_2(d_2)$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Die Relationen $\sim\ \subseteq A_1 \times A_2$ und $\sim\ \subseteq B_1 \times B_2$ definieren
+  wie folgt eine Relation $\sim$ auf $D_1 \times D_2$:
+  \[\begin{array}{rcl}
+    d_1 \sim d_2
+    &:\Leftrightarrow&
+    \forall a_1,a_2.\,a_1 \sim a_2 \Rightarrow d_1\,a_1 \sim d_2\,a_2
+  \end{array}\]
+  Seien nun also $d_{1,i} \sim d_{2,i}$ f"ur $i=1,\ldots,n$, dann folgt nach der ersten Voraussetzung, dass
+  \[\begin{array}{c}
+      \semantic{\zeta_n}_1\,(d_{1,1} \ldots d_{1,n})\,a_1
+      \sim
+      \semantic{\zeta_n}_2\,(d_{2,1} \ldots d_{2,n})\,a_2
+  \end{array}\]
+  f"ur alle $a_1 \sim a_2$ gilt, also gilt auch insbesondere
+  \[\begin{array}{c}
+      \semantic{\zeta_n}_1\,(d_{1,1} \ldots d_{1,n})
+      \sim
+      \semantic{\zeta_n}_2\,(d_{2,1} \ldots d_{2,n}).
+  \end{array}\]
+  Nach Theorem~\ref{theorem1} ist demzufolge auch $M_2$ ad"aquat f"ur $S$.
+\end{proof}
+
+\end{document}

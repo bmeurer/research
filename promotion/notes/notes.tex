@@ -1,0 +1,560 @@
+\documentclass[12pt,a4paper,final]{article}
+
+\usepackage{bmeurer}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{german}
+\usepackage{hyperref}
+\usepackage{mathpartir}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+
+\DeclareMathOperator{\brother}{\mathit{brother}}
+\DeclareMathOperator{\parent}{\mathit{parent}}
+
+\begin{document}
+
+
+%%%
+%%% Baeume
+%%%
+
+\section{B"aume}
+\label{sec:Baeume}
+
+Analog zu
+\cite{DBLP:journals/jacm/Rosen73,DBLP:journals/jacm/GoguenTWW77,DBLP:journals/tcs/Courcelle83,DBLP:books/teu/LoeckxMW86}
+definieren wir Baumbereiche und B"aume wie folgt:
+
+\begin{definition}[Baumbereich, Baum] \
+  \begin{enumerate}
+  \item Die partielle Funktion \mbox{$\parent:\N_+^* \pto \N_+^*$} ist definiert durch
+    \begin{equation*}
+      \parent(w) = 
+      \begin{cases}
+        v
+        & \text{falls $w = v.n$ mit $v \in \N_+^*$, $n \in \N_+$}, \\
+        \text{undefiniert}
+        & \text{falls $w = \varepsilon$},
+      \end{cases}
+    \end{equation*}
+    und die partielle Funktion \mbox{$\brother:\N_+^* \pto \N_+^*$} ist definiert durch
+    \begin{equation*}
+      \brother(w) =
+      \begin{cases}
+        v.n
+        & \text{falls $w = v.(n+1)$ mit $v \in \N_+^*$, $n \in \N_+$}, \\
+        \text{undefiniert}
+        & \text{sonst}.
+      \end{cases}
+    \end{equation*}
+
+  \item Ein \emph{Baumbereich} $D$ ist eine endliche Teilmenge von $\N_+^*$, welche
+    abgeschlossen ist unter den Funktionen $\parent$ und $\brother$, d.h.\xspace es gilt
+    \mbox{$\parent(D) \subseteq D$} und \mbox{$\brother(D) \subseteq D$}.
+    Die Elemente eines Baumbereichs hei"sen \emph{Knoten}.
+
+  \item Sei $S$ eine beliebige Menge. Ein \emph{$S$-markierter Baum} (oder kurz \emph{Baum})
+    ist ein Paar \mbox{$(D,b)$}, wobei $D$ ein Baumbereich ist, und $b$ eine Abbildung
+    \mbox{$b:D \to S$}. Die Abbildung $b$ hei"st die \emph{Beschriftung} des
+    Baumes und $D$ sein \emph{Definitionsbereich}.
+    Wir identifizieren "ublicherweise einen Baum $(D,b)$ mit seiner Beschriftung $b$.
+  \end{enumerate}
+\end{definition}
+Wir werden die folgenden gebr"auchlichen Sprechweisen verwenden: Das Element
+\mbox{$\varepsilon \in \N_+^*$} hei"st \emph{Wurzel}. Wenn $v = \parent(w)$, dann
+ist $w$ \emph{Kind} von $v$. Die Anzahl der Kinder eines Knoten hei"st
+\emph{Grad} des Knoten. Ein Knoten ohne Kinder hei"st \emph{Blatt}.
+
+
+%%%
+%%% Kalkuele
+%%%
+
+\section{Kalk"ule}
+\label{sec:Kalkuele}
+
+\begin{definition}[Kalk"ul]
+  Ein \emph{Kalk"ul} \mbox{$\mathcal{K} = (\mathcal{U}, \mathcal{R})$} besteht aus
+  \begin{enumerate}
+  \item einer Formelmenge $\mathcal{U}$, dem \emph{Universum}, und
+  \item einer entscheidbaren Relation $\mathcal{R} \subseteq \mathcal{U}^+$, der \emph{Ableitungsrelation}.
+  \end{enumerate}
+\end{definition}
+Zu jedem Kalk"ul $\mathcal{K}$ l"asst sich eine Funktion
+\mbox{$\mathcal{F}:\powerset(\mathcal{U}) \to \powerset(\mathcal{U})$} definieren durch
+\begin{equation*}
+\mathcal{F}(X) = \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
+\end{equation*}
+$\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset(\mathcal{U})$, d.h.\xspace es
+existiert
+\begin{itemize}
+\item ein kleinster Fixpunkt $\mu\mathcal{F} = \bigcup_{n\in\N}\mathcal{F}^n(\emptyset)$, und
+\item ein gr"o"ster Fixpunkt $\nu\mathcal{F} = \bigcap_{n\in\N}\mathcal{F}^n(\mathcal{U})$.
+\end{itemize}
+Ein \emph{$\mathcal{K}$-Ableitungsbaum} f"ur eine Formel $u \in \mathcal{U}$ ist (endl. oder unendl.)
+$\mathcal{U}$-markierter Baum $t$, so dass:
+\begin{enumerate}
+\item $t(\varepsilon) = u$, und
+\item $(t(k.1),\ldots,t(k.n),t(k)) \in \mathcal{R}$ f"ur jeden Knoten $k$ mit den Kindern $k.1,\ldots,k.n$.
+\end{enumerate}
+
+\begin{theorem} \
+  \begin{enumerate}
+  \item $u$ besitzt einen endlichen Ableitungsbaum gdw. $u \in \mu\mathcal{F}$.
+  \item $u$ besitzt einen beliebigen Ableitungsbaum gdw. $u \in \nu\mathcal{F}$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item $u \in \mathcal{F}^n(\emptyset)$ gdw. $u$ besitzt Ableitugnsbaum der H"ohe $\le n$.
+  \item 
+    \begin{itemize}
+    \item[``$\Rightarrow$'']
+      Sei $X$ die Menge der Markierungen, dann ist $u \in X$ und f"ur jedes $w \in X$ ex.
+      $w_1,\ldots,w_n \in X$ mit $(w_1 \ldots w_n\,w) \in \mathcal{R}$, also
+      $w \in \mathcal{F}(X)$. D.h.\xspace $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
+      $u \in X \subseteq \nu \mathcal{F}$.
+    \item[``$\Leftarrow$'']
+      Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N_+^* \pto \nu\mathcal{F}$ induktiv definiert
+      durch:
+      \begin{itemize}
+      \item $(\varepsilon,u) \in t$
+      \item Wenn $(k,w) \in t$, dann ex. $n\in\N,w_1,\ldots,w_n \in \nu\mathcal{F}$ --
+        denn $w \in \nu\mathcal{F} = \mathcal{F}(\nu\mathcal{F})$ -- mit
+        $(w_1 \ldots w_n\,w) \in \mathcal{R}$ \\
+        ind. def. $\leadsto$ $(k.i,w_i) \in t$ f"ur $i=1,\ldots,n$.
+      \end{itemize}
+    \end{itemize}
+  \end{enumerate}
+\end{proof}
+
+
+%%%
+%%% Semantische Modelle
+%%%
+
+\section{Semantische Modelle}
+\label{sec:Semantische_Modelle}
+
+\begin{definition}[Semantisches Modell]
+  Seien $A$ und $B$ beliebige Mengen.
+  Ein \emph{semantisches Modell} $\mathcal{M}$ ist ein Tripel $\bigl(A, B, \Rightarrow\bigr)$,
+  geschrieben $\mathcal{M}: A \Rightarrow B$, mit \mbox{$\Rightarrow\ \subseteq A \times B^\infty_{\mathsf{err}}$}
+  und $B^\infty_{\mathsf{err}} = B \uplus \{\infty,\mathsf{err}\}$.
+\end{definition}
+Wir bezeichnen die Elemente $a \in A$ als \emph{Argumente}, und die Elemente $b \in B$
+als \emph{Resultate}. Bzgl. $\mathcal{M}: A \Rightarrow B$ sagen wir
+\begin{itemize}
+\item \emph{$a$ terminiert mit $b$} wenn $a \Rightarrow b$,
+\item \emph{$a$ divergiert} wenn $a \Rightarrow \infty$, und
+\item \emph{$a$ f"uhrt zu einem Laufzeitfehler} wenn $a \Rightarrow \mathsf{err}$.
+\end{itemize}
+Wir sagen ein solches semantisches Modell \mbox{$\mathcal{M}: A \Rightarrow B$} ist \emph{deterministisch},
+wenn $\Rightarrow$ eine Abbildung ist. Ein Argument \mbox{$a \in A$} hei"st \emph{sicher} wenn
+\mbox{$a \not\Rightarrow \mathsf{err}$}. In einem deterministischen semantischen Modell gen"ugt es
+\mbox{$a \Rightarrow \infty$} oder \mbox{$a \Rightarrow b$} f"ur ein beliebiges \mbox{$b \in B$} zu zeigen,
+um nachzuweisen, dass $a$ sicher ist.
+
+
+%%%
+%%% Transitionssysteme
+%%%
+
+\section{Transitionssysteme}
+\label{sec:Transitionssysteme}
+
+\begin{definition}[Transitionssystem]
+  Seien $A$ und $B$ beliebige Mengen.
+  Ein \emph{Transitionssystem} $\mathcal{T}$ ist ein Quadrupel \mbox{$(\Sigma,\operatorname{in},\operatorname{out},\rightarrow)$} mit
+  \begin{itemize}
+  \item einer nicht-leeren Menge $\Sigma$ von \emph{Zust"anden} $\sigma$,
+  \item einer \emph{Eingabefunktion} \mbox{$\operatorname{in}:A \pto \Sigma$},
+  \item einer \emph{Ausgabefunktion} \mbox{$\operatorname{out}:\Sigma \pto B$}, und
+  \item einer \emph{Transitionsrelation} $\rightarrow\ \subseteq \Sigma \times \Sigma$.
+  \end{itemize}
+\end{definition}
+Die Elemente $A_0 = \dom(\operatorname{in})$ hei"sen \emph{initiale Argumente}. Wir schreiben
+\mbox{$\sigma_0 \rightarrow^n \sigma_n$} wenn eine Folge von $n$ Schritten existiert,
+so dass \mbox{$\sigma_i \rightarrow \sigma_{i+1}$} f"ur $0 \le i < n$, und wir schreiben
+\mbox{$\sigma \rightarrow^* \sigma'$} wenn ein $n \in \N$ existiert, so dass
+\mbox{$\sigma \rightarrow^n \sigma'$}. Weiter schreiben wir \mbox{$\sigma \not\rightarrow$}
+wenn kein $\sigma' \in \Sigma$ existiert, so dass \mbox{$\sigma \rightarrow \sigma'$}.
+
+\begin{definition}
+  Durch jedes Transitionssystem \mbox{$\mathcal{T} = (\Sigma,\operatorname{in},\operatorname{out},\rightarrow)$} ist ein
+  semantisches Modell \mbox{$\mathcal{M}_{\mathcal{T}} = (A,B,\Rightarrow_{\mathcal{T}})$} definiert,
+  mit
+  \[\begin{array}{lcl}
+    a \Rightarrow_{\mathcal{T}} b
+    & \text{gdw.} &
+    \text{$\operatorname{in}(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\operatorname{out}(\sigma') = b$} \\
+    a \Rightarrow_{\mathcal{T}} \mathsf{err}
+    & \text{gdw.} &
+    \text{$\operatorname{in}(a) = \sigma \rightarrow^* \sigma' \not\rightarrow$ und $\sigma' \not\in \dom(\operatorname{out})$} \\
+    a \Rightarrow_{\mathcal{T}} \infty
+    & \text{gdw.} &
+    \text{ex. unendliche Folge $\operatorname{in}(a) = \sigma_0 \rightarrow \sigma_1 \rightarrow \ldots$}
+  \end{array}\]
+\end{definition}
+
+
+%%%
+%%% Rekursionssysteme
+%%%
+
+\section{Rekursionssysteme}
+\label{sec:Rekursionssysteme}
+
+\begin{definition}
+  Seien $A$ und $B$ disjunkte Mengen.
+  Eine \emph{Rekursionsregel "uber $A$ und $B$} ist eine Relation
+  \mbox{$R \subseteq A \times B^* \times (A \cup B)$}, die Menge aller Rekursionsregeln
+  "uber $A$ und $B$ bezeichnen wir mit \mbox{$\mathit{Rules}(A,B)$}.
+  Jede solche Menge von Rekursionsregeln \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$}
+  bezeichnen wir als \emph{Rekursionssystem}.
+\end{definition}
+
+
+%%%
+%%% Stacksemantik
+%%%
+
+\subsection{Stacksemantik}
+\label{sec:Stacksemantik}
+
+Zu jedem Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} l"asst sich ein naives Transistionssystem
+\mbox{$\mathcal{T}_{\mathcal{R}} = (\Sigma_{\mathcal{R}},\operatorname{in}_{\mathcal{R}},\operatorname{out}_{\mathcal{R}},\rightarrow_{\mathcal{R}} )$}
+in Form einer \emph{Stacksemantik} definieren durch
+\begin{itemize}
+\item $\Sigma_{\mathcal{R}} = (A \cup B \cup \mathcal{R})^+$,
+\item $\operatorname{in}_{\mathcal{R}}: A \to \Sigma_{\mathcal{R}}, a \mapsto a$,
+\item $\operatorname{out}_{\mathcal{R}}: \Sigma_{\mathcal{R}} \pto B, b \mapsto b$, und
+\item $\rightarrow_{\mathcal{R}}\ \subseteq \Sigma_{\mathcal{R}} \times \Sigma_{\mathcal{R}}$ ist die kleinste
+  Relation, welche abgeschlossen ist unter Anwendung der Regeln in Abbildung~\ref{fig:Stacksemantik}.
+\end{itemize}
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(Select)]{
+      R \in \mathcal{R} \\
+      (a,\varepsilon,x) \in R
+    }{
+      wa \rightarrow_{\mathcal{R}} waR
+    }
+    \and
+    \inferrule[(Reduce)]{
+      (a,b_1 \ldots b_n,b) \in R
+    }{
+      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} wb
+    }
+    \and
+    \inferrule[(Produce)]{
+      (a,b_1 \ldots b_n,a') \in R
+    }{
+      waRb_1 \ldots b_n \rightarrow_{\mathcal{R}} waR b_1 \ldots b_na'
+    }
+  \end{mathpar}
+  \caption{Stacksemantik}
+  \label{fig:Stacksemantik}
+\end{figure}
+Die Regeln in Abbildung~\ref{fig:Stacksemantik} sind weitesgehend selbsterkl"arend: Befindet
+sich ein Argument $a$ zuoberst auf dem Stack, so kann durch \textsc{(Select)} eine
+passende Rekursionsregel \mbox{$R \in \mathcal{R}$} ausgew"ahlt werden. Befindet sich zuoberst
+ein Stackframe, d.h.\xspace ein Argument $a$ mitsamt einer zuvor ausgew"ahlten Regel $R$ und ggfs.\xspace
+bereits vorhandenen Zwischenresultaten \mbox{$b_1,\ldots,b_n$}, zuoberst auf dem Stack, so
+kann entweder mit \textsc{(Produce)} ein weiteres Argument $a'$ erzeugt werden, sofern $R$ dies
+zul"asst, oder mit \textsc{(Reduce)} der komplette Stackframe durch ein Resultat $b$ ersetzt
+werden, wiederum ausgehend davon, dass $R$ dies zul"asst.
+
+Die so definierte Stacksemantik ist in gewissem Sinne ``lokal'', d.h.\xspace der n"achste "Ubergangsschritt
+h"angt nur von einem bestimmten Bereich oben auf dem Stack ab, und der "ubrige Stackinhalt darunter
+spielt daf"ur keine Rolle. Dieser Sachverhalt wird im folgenden Lemma verdeutlicht.
+\begin{lemma}[Lokalit"at]
+  F"ur alle \mbox{$u,v,w \in \Sigma_{\mathcal{R}}$} gilt:
+  \begin{quote}
+    Wenn \mbox{$u \rightarrow_{\mathcal{R}}^n w$}, dann \mbox{$vu \rightarrow_{\mathcal{R}}^n vw$}.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Via Induktion "uber die L"ange der Herleitung. Klar f"ur \mbox{$u \rightarrow_{\mathcal{R}}^0 w$}.
+  Wenn \mbox{$u \rightarrow_{\mathcal{R}}^n wa \rightarrow_{\mathcal{R}} waR$} mit \textsc{(Select)}
+  aus \mbox{$R \in \mathcal{R}$} und \mbox{$(a,\varepsilon,x)\in R$}, dann gilt nach I.V.
+  \mbox{$vu \rightarrow_{\mathcal{R}}^n vwa$} und mit \textsc{(Select)} folgt 
+  \mbox{$vwa \rightarrow_{\mathcal{R}} vwaR$}. Analog f"ur \textsc{(Produce)} und \textsc{(Reduce)}.
+\end{proof}
+
+Die beiden nachfolgenden Lemmata heben den Zusammenhang zwischen Rekursionsregeln
+und dem Steckenbleiben der Stacksemantik hervor. Sie sind triviale Folgerungen der
+Definition der Stacksemantik.
+\begin{lemma} \label{lem:Steckenbleiben1}
+  Wenn \mbox{$a \Rightarrow_{\mathcal{T}_{\mathcal{R}}} \mathsf{err}$},
+  dann ex. \mbox{$w \in \Sigma_{\mathcal{R}}$}, so dass
+  \begin{enumerate}
+  \item \mbox{$a \rightarrow_{\mathcal{R}}^* wa'$} und \mbox{$(a',\varepsilon,x) \not\in R$}
+    f"ur alle \mbox{$R \in \mathcal{R}$} und \mbox{$x \in A \cup B$}, oder
+  \item \mbox{$a \rightarrow_{\mathcal{R}}^* wa'Rb_1 \ldots b_n$} und
+    \mbox{$(a',b_1 \ldots b_n,x) \not\in R$} f"ur alle \mbox{$x \in A \cup B$}.
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}
+  Sei \mbox{$w \in \Sigma_{\mathcal{R}}$}. Wenn
+  \begin{enumerate}
+  \item \mbox{$(a',\varepsilon,x) \not\in R$} f"ur alle \mbox{$R \in \mathcal{R}$}
+    und \mbox{$x \in A \cup B$}, oder
+  \item \mbox{$wa' \rightarrow_{\mathcal{R}}^* wa'Rb_1 \ldots b_n$} und
+    \mbox{$(a',b_1 \ldots b_n, x) \not\in R$} f"ur alle \mbox{$x \in A \cup B$},
+  \end{enumerate}
+  dann gilt \mbox{$a \Rightarrow_{\mathcal{T}_{\mathcal{R}}} \mathsf{err}$} f"ur alle
+  \mbox{$a \in A$} mit \mbox{$a \rightarrow_{\mathcal{R}}^* wa'$}.
+\end{lemma}
+
+
+%%%
+%%% Rekursionssysteme und big steps
+%%%
+
+\subsection{Rekursionssysteme und big steps}
+\label{sec:Rekursionssysteme_und_big_steps}
+
+Durch jedes Rekursionssystem \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} ist auch
+eine naive, rein induktive big step Semantik in Form einer Relation
+\mbox{$\Downarrow_{\mathcal{R}}\ \subseteq A \times B$} definiert.
+\begin{definition}
+  \mbox{$\Downarrow_{\mathcal{R}}$} ist die kleinste Relation "uber $A \times B$, so dass gilt:
+  \begin{quote}
+    Wenn $R \in \mathcal{R}$, $(a,b_1 \ldots b_{i-1},a_i) \in R$ und $a_i \Downarrow_{\mathcal{R}} b_i$
+    f"ur $i=1,\ldots,n$ und $n \in \N$, und $(a,b_1 \ldots b_n,b) \in R$, dann gilt auch
+    $a \Downarrow_{\mathcal{R}} b$.
+  \end{quote}
+\end{definition}
+Offensichtlich gilt folgender Zusammenhang zwischen den obigen big steps und der Stacksemantik
+aus Abschnitt~\ref{sec:Stacksemantik}.
+\begin{theorem}
+  Sei \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$}. Dann gilt:
+ \mbox{$a \rightarrow_{\mathcal{R}}^* b$} gdw. \mbox{$a \Downarrow_{\mathcal{R}} b$}.
+\end{theorem}
+Die ``wenn''-Richtung folgt trivialerweise als Spezialfall \mbox{$w = \varepsilon$} aus nachfolgendem
+Lemma:
+\begin{lemma}
+  Wenn \mbox{$a \Downarrow_{\mathcal{R}} b$}, dann \mbox{$wa \rightarrow_{\mathcal{R}}^* wb$}.
+\end{lemma}
+
+\begin{proof}
+  Via Induktion "uber die L"ange der Herleitung des big steps \mbox{$a \Downarrow_{\mathcal{R}} b$}.
+  Nach Voraussetzung existieren also \mbox{$R \in \mathcal{R}$}, \mbox{$n \in \N$} sowie
+  \mbox{$a_1,\ldots,a_n \in A$} und \mbox{$b_1,\ldots,b_n \in B$}, so dass
+  \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
+  f"ur \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,b) \in R$}.
+  Dann gilt
+  \[\begin{array}{rcll}
+    wa
+    & \rightarrow_{\mathcal{R}}   & waR               & \text{mit \textsc{(Select)}} \\
+    & \rightarrow_{\mathcal{R}}^* & waRb_1 \ldots b_n & \text{mit \textsc{(Produce)} und I.V.} \\
+    & \rightarrow_{\mathcal{R}}   & wb                & \text{mit \textsc{(Reduce)}} \\
+  \end{array}\]
+  was zu zeigen war.
+\end{proof}
+
+Die ``genau dann''-Richtung ist etwas aufwendiger zu beweisen. Die grund\-s"atzliche Idee dabei
+ist, dass sich f"ur jede Berechungsfolge \mbox{$a' \rightarrow_{\mathcal{R}}^* wb$} ein big step
+\mbox{$a \Downarrow_{\mathcal{R}} b$} abspalten l"a"st, der die Berechung f"ur $b$ beschreibt, ausgehend
+von einem $a$, welches zuvor berechnet worden sein muss. Das sieht dann formal wie folgt aus:
+\begin{lemma}
+  Wenn \mbox{$a' \rightarrow_{\mathcal{R}}^k wb$}, dann ex. \mbox{$l \in \N$} und \mbox{$a \in A$}, so dass
+  \mbox{$l < k$}, \mbox{$a \Downarrow_{\mathcal{R}} b$} und \mbox{$a' \rightarrow_{\mathcal{R}}^l wa$}.
+\end{lemma}
+
+\begin{proof}
+  Via Induktion "uber $k$.
+  Der letzte "Ubergangsschritt kann nur mit \textsc{(Reduce)} aus \mbox{$waRb_1 \ldots b_n$}
+  mit \mbox{$n \in \N$}, \mbox{$a \in A$}, \mbox{$R \in \mathcal{R}$} und \mbox{$(a,b_1 \ldots b_n,b) \in R$}
+  hergeleitet worden sein.
+
+  Mittels geschachtelter Induktion "uber $n$ folgern wir unter Ber"ucksichtigung von \textsc{(Produce)},
+  dass \mbox{$l_1,\ldots,l_n \in \N$} und \mbox{$a_1,\ldots,a_n \in A$} existieren, so dass
+  \mbox{$l_1 < \ldots l_n < k$}, \mbox{$a_i \Downarrow_{\mathcal{R}} b_i$}, \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$}
+  und \mbox{$a' \rightarrow_{\mathcal{R}}^{l_i} waRb_1 \ldots b_{i-1}$} f"ur \mbox{$i=1,\ldots,n$}.
+
+  Also existiert trivialerweise auch ein \mbox{$l \in \N$}, so dass \mbox{$l < l_1 < \ldots < l_n < k$} und
+  \mbox{$a' \rightarrow_{\mathcal{R}}^l wa \rightarrow_{\mathcal{R}} waR$} mit \textsc{(Select)}. Und selbstverst"andlich
+  existiert dann auch ein big step $a \Downarrow_{\mathcal{R}} b$.
+\end{proof}
+
+
+%%%
+%%% Typsichere Rekursionssysteme
+%%%
+
+\subsection{Typsichere Rekursionssysteme}
+\label{sec:Typsichere_Rekursionssysteme}
+
+Ein \emph{Typsystem} f"ur ein semantisches Modell \mbox{$\mathcal{M} = (A,B,\Rightarrow)$}
+ist ein Paar \mbox{$(T,(A_\tau)_{\tau \in T})$} bestehend aus
+\begin{itemize}
+\item einer Menge $T$ von \emph{Typen} $\tau$, und
+\item einer Familie \mbox{$(A_\tau)_{\tau \in T}$} von Mengen \mbox{$A_\tau \subseteq A$},
+  deren Elemente wir Argumente vom Typ $\tau$ nennen.
+\end{itemize}
+Wir identifizieren ein Typsystem mit seiner Menge von Typen, d.h.\xspace wir schreiben $T$ f"ur obiges
+Typsystem.
+
+\begin{definition}[Typsicherheit]
+  Ein semantisches Modell \mbox{$\mathcal{M} = (A,B,\Rightarrow)$} hei"st \emph{typsicher} bzgl.\xspace
+  eines Typsystems $T$ f"ur $\mathcal{M}$, wenn \mbox{$\neg(a \Rightarrow \mathsf{err})$} f"ur
+  alle \mbox{$a \in A_\tau$} mit \mbox{$\tau \in T$}.
+\end{definition}
+
+Zum Beweis der Typsicherheit eines Rekursionssystems $\mathcal{R}$ gen"ugt es, unabh"angig von
+der konkreten Semantik des Rekursionssystems, drei ``lokale Eigenschaften'' "uber die Rekursionsregeln
+bzgl.\xspace des Typsystems zu beweisen, wie das folgende Meta-Theorem nahelegt:
+
+\begin{theorem}[Typsicherheit]
+  Sei \mbox{$\mathcal{R} \subseteq \mathit{Rules}(A,B)$} ein Rekursionssystem und
+  \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$} ist typsicher bzgl.\xspace
+  eines Typsystems $T$ f"ur \mbox{$\mathcal{M}_{\mathcal{T}_{\mathcal{R}}}$}, wenn
+  die folgenden drei Eigenschaften gelten:
+  \begin{description}[labelindent=\parindent,style=nextline]
+  \item[Local Preservation] 
+    Wenn \mbox{$a \in A^\tau$},
+    \mbox{$a_i \rightarrow_{\mathcal{R}}^* b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$} f"ur
+    \mbox{$i=1,\ldots,n$}, und \mbox{$(a,b_1 \ldots b_n,a') \in R$}, dann ex. \mbox{$\tau' \in T$},
+    so dass \mbox{$a' \in A^{\tau'}$}.
+    
+  \item[Local Progress I]
+    Wenn \mbox{$a \in A^\tau$},
+    dann ex. \mbox{$R \in \mathcal{R}$} und \mbox{$x \in A \cup B$}, so dass \mbox{$(a,\varepsilon,x) \in R$}.
+
+  \item[Local Progress II]
+    Wenn \mbox{$a \in A^\tau$},
+    \mbox{$a_i \rightarrow_{\mathcal{R}}^* b_i$} und \mbox{$(a,b_1 \ldots b_{i-1},a_i) \in R$} f"ur
+    \mbox{$i=1,\ldots,n$}, dann ex. \mbox{$a \in A \cup B$} so dass \mbox{$(a,b_1 \ldots b_n,x) \in R$}.
+  \end{description}
+\end{theorem}
+
+\TODO{Beweis}
+
+
+% %%%
+% %%% Mehrsortige Algebren
+% %%%
+
+% \section{Mehrsortige Algebren}
+% \label{sec:Mehrsortige_Algebren}
+
+% Basierend auf \cite{DBLP:journals/jacm/GoguenTWW77,DBLP:books/sp/EhrigM85} definieren wir die grundlegende
+% Konzepte f"ur \emph{$\Sigma$-Algebren} bzw. \emph{Mehrsortige Algebren} (many-sorted algebras).
+
+% \begin{definition}[Signatur]
+%   Eine \emph{Signatur} ist ein Paar \mbox{$\Sigma = (S,\Omega)$} mit einer Menge $S$ von
+%   \emph{Sorten} und einer Familie \mbox{$\Omega = (\Omega_{w,s})_{(w,s) \in S^* \times S}$} von
+%   paarweise disjunkten Mengen.
+%   Die Elemente von \mbox{$\Omega_{w,s}$} hei"sen \emph{Operationssymbole} mit \emph{Argumentsorten}
+%   $w$ und \emph{Wertsorte} $s$, wobei die Elemente von \mbox{$\Omega_{\varepsilon,s}$} "ublicherweise
+%   als \emph{Konstanten} der Sorte $s$ bezeichnet werden.
+% \end{definition}
+
+% Statt \mbox{$\bigcup_{(w,s) \in S^* \times S} \Omega_{w,s}$} schreiben wir auch kurz $\Omega$.
+
+% \begin{definition}[Variablensystem]
+%   Ein \emph{Variablensystem} zu \mbox{$\Sigma = (S,\Omega)$} ist eine
+%   Familie $X = (X_s)_{s \in S}$ von paarweise disjunkten Mengen, so dass
+%   \mbox{$x \not\in \Omega$} f"ur alle \mbox{$s \in S$} und \mbox{$x \in X_s$}.
+%   Die Elemente von \mbox{$X_s$} bezeichnen wir als \emph{Variablen} der Sorte $s$.
+% \end{definition}
+
+% Ist $X$ ein Variablensystem zu \mbox{$\Sigma = (S,\Omega)$} und ist
+% \mbox{$Y = (Y_s)_{s \in S}$} eine Familie von paarweise disjunkten Mengen,
+% mit \mbox{$Y_s \subseteq X_s$} f"ur alle \mbox{$s \in S$}, so ist auch $Y$
+% ein Variablensystem zu $\Sigma$.
+
+% \begin{definition}[Term]
+%   Sei $X$ ein Variablensystem zu einer Signatur \mbox{$\Sigma = (S,\Omega)$}.
+%   Die Familie \mbox{$(\mathfrak{T}_{\Omega,s}(X))_{s \in S}$} besteht aus den
+%   kleinsten Mengen \mbox{$\mathfrak{T}_{\Omega,s}(X)$} f"ur die gilt:
+%   \begin{enumerate}
+%   \item Wenn \mbox{$s \in S$} und \mbox{$x \in X_s$},
+%     dann ist \mbox{$x \in \mathfrak{T}_{\Omega,s}(X)$}.
+%   \item Wenn \mbox{$s \in S$} und \mbox{$\omega \in \Omega_{\varepsilon,s}$},
+%     dann ist \mbox{$\omega \in \mathfrak{T}_{\Omega,s}(X)$}.
+%   \item Wenn \mbox{$n \ge 1$}, \mbox{$s_1,\ldots,s_n,s \in S$}, \mbox{$\omega \in \Omega_{s_1 \ldots s_n,s}$}
+%     und \mbox{$T_i \in \mathfrak{T}_{\Omega,s_i}(X)$} f"ur $i=1,\ldots,n$,
+%     dann ist \mbox{$\omega(T_1,\ldots,T_n) \in \mathfrak{T}_{\Omega,s}(X)$}.
+%   \end{enumerate}
+% \end{definition}
+
+% \begin{definition}[Algebra]
+%   Sei \mbox{$\Sigma = (S,\Omega)$} eine Signatur. Eine \emph{$\Sigma$-Algebra} ist
+%   ein Paar \mbox{$A = ((A_s)_{s \in S}, (\omega^A)_{\omega \in \Omega})$} mit folgenden
+%   Eigenschaften:
+%   \begin{enumerate}
+%   \item Wenn \mbox{$s \in S$}, dann ist $A_s$ eine Menge.
+%   \item Wenn \mbox{$s \in S$} und \mbox{$\omega \in \Omega_{\varepsilon,s}$}, dann ist \mbox{$\omega^A \in A_s$}.
+%   \item Wenn \mbox{$n \ge 1$}, \mbox{$s_1,\ldots,s_n,s \in S$} und \mbox{$\omega \in \Omega_{s_1 \ldots s_n,s}$},
+%     dann ist \mbox{$\omega^A$} eine (partielle) Abbildung \mbox{$\omega^A: A_{s_1} \ldots A_{s_n} \pto A_s$}.
+%   \end{enumerate}
+%   \mbox{$A_s$} hei"st \emph{Tr"agermenge} von \mbox{$s \in S$}. Die Elemente $\omega^A$ mit
+%   \mbox{$\omega \in \Omega_{\varepsilon,s}$} hei"sen \emph{Konstanten} (der Sorte $s$), und die
+%   Elemente $\omega^A$ mit \mbox{$\omega \in \Omega_{w,s}$} und $w \ne \varepsilon$ hei"sen
+%   \emph{Operationen} (von $w$ nach $s$).
+% \end{definition}
+
+% \begin{definition}
+%   Sei $X$ ein Variablensystem f"ur \mbox{$\Sigma = (S,\Omega)$}. Eine \emph{Belegung} von $X$ in der
+%   $\Sigma$-Algebra $A$ ist eine Familie \mbox{$\alpha = (\alpha_s)_{s \in S}$} von Abbildungen
+%   \mbox{$\alpha_s: X_s \to A_s$}.
+% \end{definition}
+
+% Statt \mbox{$\alpha_s(x)$} (f"ur \mbox{$x \in X_s$}) schreiben wir kurz \mbox{$\alpha(x)$},
+% da die Sorte $s$ durch $x$ eindeutig festgelegt ist. Entsprechend verwenden wir auch die
+% abk"urzende Schreibweise \mbox{$\alpha:X \to A$}.
+
+% \TODO{Update$\ldots$}
+
+% \begin{definition}
+%   Ein \emph{$\Sigma$-Homomorphismus \mbox{$h:\mathcal{A} \to \mathcal{B}$}}
+%   zwischen zwei $\Sigma$-Algebren $\mathcal{A}$ und $\mathcal{B}$ ist eine
+%   Familie von Abbildungen \mbox{$\{h_s:A_s \to B_s\}_{s \in S}$}, so dass
+%   \begin{equation*}
+%     h_s(f^{\mathcal{A}}(a_1,\ldots,a_n)) = f^{\mathcal{B}}(h_{s_1}(a_1),\ldots,h_{s_n}(a_n))
+%   \end{equation*}
+%   f"ur alle $a_1 \in A_{s_1},\ldots,a_n \in A_{s_n}$ und $f \in F$ mit 
+%   \mbox{$f:s_1 \times \ldots \times s_n \to s$} gilt.
+% \end{definition}
+
+% Ein bijektiver $\Sigma$-Homomorphismus wird als \emph{$\Sigma$-Isomorphismus} bezeichnet.
+% Zwei $\Sigma$-Algebren $\mathcal{A}$ und $\mathcal{B}$ hei"sen \emph{isomorph}, geschrieben
+% \mbox{$\mathcal{A} \cong \mathcal{B}$}, wenn zwischen ihnen ein $\Sigma$-Isomorphismus
+% existiert.
+
+% \begin{definition}
+%   Sei $X$ eine $S$-sortige Menge von Variablen. F"ur jede Sorte $s \in S$ ist die
+%   Menge $T_\Sigma(X)_s$ aller Terme der Sorte $s$, die h"ochstens Variablen aus $X$
+%   enthalten, definiert als die kleinste Menge f"ur die gilt:
+%   \begin{enumerate}
+%   \item \mbox{$X_s \subseteq T_\Sigma(X)_s$}
+%   \item Wenn \mbox{$f \in F$}, \mbox{$f:s_1 \times \ldots \times s_n \to s$}, und
+%     \mbox{$t_i \in T_\Sigma(X)_{s_i}$} f"ur \mbox{$i=1,\ldots,n$}, dann
+%     \mbox{$f(t_1,\ldots,t_n) \in T_\Sigma(X)_s$}.
+%   \end{enumerate}
+%   Diese Mengen bilden die Familie der Mengen \mbox{$\{T_\Sigma(X)_s\}_{s \in S}$},
+%   die wir mit \mbox{$T_\Sigma(X)$} bezeichnen.
+% \end{definition}
+
+% Sei $X$ eine $S$-sortige Menge von Variablen, und $\mathcal{A}$ eine $\Sigma$-Algebra. Eine
+% Abbildung \mbox{$I: X \to \mathcal{A}$} hei"st \emph{Belegung}, wenn
+% \mbox{$I(X_s) \subseteq A_s$} f"ur alle \mbox{$s \in S$}.
+
+
+%%%
+%%% Literatur
+%%%
+
+\bibliographystyle{alphadin}
+\bibliography{citations}
+
+
+\end{document}

@@ -1,0 +1,173 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+\section{Domains und Patterns}
+
+Vorgegeben sei eine (unendliche) Menge von Domainnamen $\alpha$, eine beliebige Menge von Konstruktoren
+$\zeta$ und eine beliebige Menge von Basisdomains $\beta$. Die Menge $\Dom$ aller Domains $\delta$ ist
+durch die kontextfreie Grammatik
+\[\begin{grammar}
+  \delta \in \Dom \is \beta
+  \al \alpha \mid \mu \alpha.\,\delta
+  \al \delta_1 * \ldots * \delta_n & (n \ge 2)
+  \al \zeta_1\,\delta_1+\ldots+\zeta_n\,\delta_n & (n \ge 2)
+\end{grammar}\]
+definiert, wobei in der letzten Produktion angenommen wird, dass die $\zeta_1$ bis $\zeta_n$ paarweise verschieden
+sind. Die Menge $\free{\delta}$ aller \emph{freien Domainnamen von $\delta$} ist induktiv definiert durch:
+\[\begin{array}{rcl}
+  \free{\beta} &=& \emptyset \\
+  \free{\alpha} &=& \{\alpha\} \\
+  \free{\mu\alpha.\,\delta} &=& \free{\delta} \setminus \{\alpha\} \\
+  \free{\delta_1 * \ldots * \delta_n} &=& \free{\delta_1} \cup \ldots \cup \free{\delta_n} \\
+  \free{\zeta_1\,\delta_1+\ldots+\zeta_n\,\delta_n} &=& \free{\delta_1} \cup \ldots \cup \free{\delta_n} \\
+\end{array}\]
+Eine Domain $\delta$ hei"st \emph{abgeschlossen}, wenn $\free{\delta} = \emptyset$.
+
+
+\subsection{Patterns}
+
+Weiter sei vorgegeben eine Menge $\Var$ von Variablen $x$ und zu jeder Basisdomain $\beta$ eine beliebige
+Menge von Konstanten $c^\beta$. Die Menge $\Pat$ aller Patterns $p$ ist durch die kontextfreie Grammatik
+\[\begin{grammar}
+  p \in \Pat \is \any \mid x
+  \al c \mid \zeta\,p
+  \al p_1,\ldots,p_n & (n \ge 2)
+\end{grammar}\]
+definiert. Die Menge $\free{p}$ aller \emph{freien Variablen von $p$} ist induktiv definiert durch:
+\[\begin{array}{rcl}
+  \free{\any} &=& \emptyset \\
+  \free{x} &=& \{x\} \\
+  \free{c} &=& \emptyset \\
+  \free{\zeta\,p} &=& \free{p} \\
+  \free{p_1,\ldots,p_n} &=& \free{p_1} \cup \ldots \cup \free{p_n} \\
+\end{array}\]
+
+Eine \emph{Domainisierung} ist eine partielle Funktion $\Gamma: \Var \pto \Dom$ mit endlichem
+Definitionsbereich. Eine \emph{Patterndomainzuordnung} ist eine Formel der Gestalt $\da{\Gamma}{p}{\delta}$.
+Eine solche Patterndomainzuordnung hei"st g"ultig, wenn sie sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{cccc}
+  $\da{[\,]}{\any}{\delta}$
+  & $\da{[x \mapsto \delta]}{x}{\delta}$
+  & $\RULE{\da{\Gamma}{c}{\delta[\mu\alpha.\,\delta/\alpha]}}{\da{\Gamma}{c}{\mu\alpha.\,\delta}}$
+  & $\da{[\,]}{c^\beta}{\beta}$ \\[3mm]
+  \multicolumn{2}{c}{$\RULE{\da{\Gamma}{\zeta\,p}{\delta[\mu\alpha.\,\delta/\alpha]}}{\da{\Gamma}{\zeta\,p}{\mu\alpha.\,\delta}}$}
+  & \multicolumn{2}{c}{$\RULE{1 \le i \le n \quad \da{\Gamma}{p}{\delta_i}}{\da{\Gamma}{\zeta_i\,p}{\zeta_1\,\delta_1+\ldots+\zeta_n\,\delta_n}}$} \\[3mm]
+  \multicolumn{2}{c}{$\RULE{\da{\Gamma}{p_1,\ldots,p_n}{\delta[\mu\alpha.\,\delta/\alpha]}}{\da{\Gamma}{p_1,\ldots,p_n}{\mu\alpha.\,\delta}}$}
+  & \multicolumn{2}{c}{$\RULE{\da{\Gamma_1}{p_1}{\delta_1} \quad \ldots \quad \da{\Gamma_n}{p_n}{\delta_n}}{\da{\Gamma_1 \circ \ldots \circ \Gamma_n}{p_1,\ldots,p_n}{\delta_1 * \ldots * \delta_n}}$}
+\end{tabular} \\[3mm]
+Wir sagen \emph{das Pattern $p$ geh"ort zur Domain $\delta$}, wenn ein $\Gamma$ existiert,
+so dass $\da{\Gamma}{p}{\delta}$. Eine Domain $\delta$ hei"st \emph{azyklisch} oder \emph{g"ultig},
+wenn ein $p \in \Pat$ existiert, welches zu $\delta$ geh"ort.
+
+
+\subsection{Ausdr"ucke}
+
+Die Mengen $\Exp$ aller Ausdr"ucke $e$ und $\Node \subset \Exp$ aller Knoten $\kappa$ sind durch die
+kontextfreie Grammatik
+\[\begin{grammar}
+  e \in \Exp \is x \mid c \mid \zeta\,e
+  \al e_1,\ldots,e_n & (n \ge 2)
+  \nl
+  \kappa \in \Node \is c \mid \zeta\,\kappa
+  \al \kappa_1,\ldots,\kappa_n & (n \ge 2)
+\end{grammar}\]
+definiert. Die Menge $\free{e}$ aller \emph{freien Variablen von $e$} ist induktiv definiert durch:
+\[\begin{array}{rcl}
+  \free{x} &=& \{x\} \\
+  \free{c} &=& \emptyset \\
+  \free{\zeta\,e} &=& \free{e} \\
+  \free{e_1,\ldots,e_n} &=& \free{e_1} \cup \ldots \cup \free{e_n} \\
+\end{array}\]
+
+Ein \emph{Ausdrucksurteil} ist eine Formel der Gestalt $\ej{\Gamma}{e}{\delta}$. Ein
+solches Ausdrucksurteil hei"st g"ultig, wenn sie sich mit den folgenden Regeln herleiten
+l"asst: \\[5mm]
+\begin{tabular}{ccc}
+  $\RULE{\Gamma(x) = \delta}{\ej{\Gamma}{x}{\delta}}$
+  & $\RULE{\ej{\Gamma}{c}{\delta[\mu\alpha.\,\delta/\alpha]}}{\ej{\Gamma}{c}{\mu\alpha.\,\delta}}$
+  & $\ej{\Gamma}{c^\beta}{\beta}$ \\[3mm]
+  $\RULE{\ej{\Gamma}{\zeta\,e}{\delta[\mu\alpha.\,\delta/\alpha]}}{\ej{\Gamma}{\zeta\,e}{\mu\alpha.\,\delta}}$
+  & $\RULE{1 \le i \le n \quad \ej{\Gamma}{e}{\delta_i}}{\ej{\Gamma}{\zeta_i\,e}{\zeta_1\,\delta_1+\ldots+\zeta_n\,\delta_n}}$ \\[3mm]
+  $\RULE{\ej{\Gamma}{e_1,\ldots,e_n}{\delta[\mu\alpha.\,\delta/\alpha]}}{\ej{\Gamma}{e_1,\ldots,e_n}{\mu\alpha.\,\delta}}$
+  & $\RULE{\ej{\Gamma}{e_1}{\delta_1} \quad\ldots\quad \ej{\Gamma}{e_n}{\delta_n}}{\ej{\Gamma}{e_1,\ldots,e_n}{\delta_1 * \ldots * \delta_n}}$ \\[3mm]
+\end{tabular} \\[3mm]
+Wir sagen \emph{der Ausdruck $e$ geh"ort zur Domain $\delta$}, wenn ein $\Gamma$ existiert, so dass
+$\ej{\Gamma}{e}{\delta}$.
+
+
+\subsection{Patternmatching}
+
+Eine \emph{Variablenbelegung} ist eine partielle Funktion $\gamma:\Var \pto \Node$ mit endlichem
+Definitionsbereich. Ein \emph{Patternmatching} ist eine Formel der Gestalt $\match{p}{\kappa}{\gamma}$
+und hei"st g"ultig, wenn es sich mit den folgenden Regeln herleiten l"asst: \\[5mm]
+\begin{tabular}{ccc}
+  $\match{\any}{\kappa}{[\,]}$
+  & $\match{x}{\kappa}{[\kappa/x]}$
+  & $\match{c}{c}{[\,]}$ \\[1mm]
+  $\RULE{\match{p}{\kappa}{\gamma}}{\match{\zeta\,p}{\zeta\,\kappa}{\gamma}}$
+  & \multicolumn{2}{c}{$\RULE{\match{p_1}{\kappa_1}{\gamma_1} \quad\ldots\quad \match{p_n}{\kappa_n}{\gamma_n}}{\match{p_1,\ldots,p_n}{\kappa_1,\ldots,\kappa_n}{\gamma_1 \circ\ldots\circ \gamma_n}}$} \\[3mm]
+\end{tabular} \\[3mm]
+
+\begin{lemma}
+  Wenn $\match{p}{\kappa}{\gamma}$ und $\match{p}{\kappa}{\gamma'}$, dann gilt $\gamma = \gamma'$.
+\end{lemma}
+
+Der Ausdruck $(e\,\gamma) \in \Exp$, welcher durch Anwendung der Variablenbelegung $\gamma$ auf den Ausdruck
+$e$ entsteht, ist induktiv definiert durch:
+\[\begin{array}{rcl}
+  x\,\gamma &=& \begin{case} \gamma(x) & \text{falls } x \in \dom{\gamma} \\ x & \text{sonst} \end{case} \\
+  c\,\gamma &=& c \\
+  (\zeta\,e)\,\gamma &=& \zeta\,(e\,\gamma) \\
+  (e_1,\ldots,e_n)\,\gamma &=& (e_1\,\gamma),\ldots,(e_n\,\gamma) \\
+\end{array}\]
+
+Sei $\gamma$ eine Variablenbelegung und $\Gamma$ eine Domainisierung. $\gamma$ hei"st \emph{wohldefiniert bzgl.
+$\Gamma$}, geschrieben $\Gamma \models \gamma$, wenn $\dom{\gamma} = \dom{\Gamma}$ und
+$\ej{[\,]}{\gamma(x)}{\Gamma(x)}$ f"ur alle $x \in \dom{\gamma}$.
+
+
+\subsection{Zusammenhang}
+
+\begin{proposition}
+  Wenn $\da{\Gamma}{p}{\delta}$ und $\ej{\Gamma}{\kappa}{\delta}$, dann gilt:
+  \begin{enumerate}
+  \item Es existiert ein $\gamma$ mit $\match{p}{\kappa}{\gamma}$.
+  \item F"ur alle $\gamma$ mit $\match{p}{\kappa}{\gamma}$ gilt $\Gamma \models \gamma$.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proposition}
+  Wenn $\Gamma \models \gamma$ und $\ej{\Gamma}{e}{\delta}$, dann gilt
+  $\ej{[\,]}{e\,\gamma}{\delta}$.
+\end{proposition}
+
+
+\end{document}

@@ -1,0 +1,337 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Kalk"ul}
+
+\begin{definition}[Kalk"ul]
+  Ein \emph{Kalk"ul} $\mathcal{K} = (\mathcal{U}, \mathcal{R})$ besteht aus
+  \begin{enumerate}
+  \item einer Formelmenge $\mathcal{U}$, dem \emph{Universum}, und
+  \item einer entscheidbaren Relation $\mathcal{R} \subseteq \mathcal{U}^+$, der \emph{Ableitungsrelation}.
+  \end{enumerate}
+\end{definition}
+Zu jedem Kalk"ul $\mathcal{K}$ l"asst sich eine Funktion
+$\mathcal{F}:\powerset{\mathcal{U}} \to \powerset{\mathcal{U}}$ definieren durch
+\[\begin{array}{rcl}
+\mathcal{F}(X) &=& \{u \in \mathcal{U} \mid \exists n\in\N,u_1,\ldots,u_n\in X.\,(u_1 \ldots u_n\,u) \in\mathcal{R}\}.
+\end{array}\]
+$\mathcal{F}$ ist stetig auf dem vollst"andigen Verband $\powerset{\mathcal{U}}$, d.h. es
+existiert
+\begin{itemize}
+\item ein kleinster Fixpunkt $\mu\mathcal{F} = \bigcup_{n\in\N}\mathcal{F}^n(\emptyset)$, und
+\item ein gr"o"ster Fixpunkt $\nu\mathcal{F} = \bigcap_{n\in\N}\mathcal{F}^n(\mathcal{U})$.
+\end{itemize}
+Ein \emph{$\mathcal{K}$-Ableitungsbaum} f"ur eine Formel $u \in \mathcal{U}$ ist (endl. oder unendl.)
+$\mathcal{U}$-markierter Baum $t$, so dass:
+\begin{enumerate}
+\item $t(\varepsilon) = u$, und
+\item $(t(k.1),\ldots,t(k.n),t(k)) \in \mathcal{R}$ f"ur jeden Knoten $k$ mit den Kindern $k.1,\ldots,k.n$.
+\end{enumerate}
+
+\begin{theorem} \
+  \begin{enumerate}
+  \item $u$ besitzt einen endlichen Ableitungsbaum gdw. $u \in \mu\mathcal{F}$.
+  \item $u$ besitzt einen beliebigen Ableitungsbaum gdw. $u \in \nu\mathcal{F}$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item $u \in \mathcal{F}^n(\emptyset)$ gdw. $u$ besitzt Ableitugnsbaum der H"ohe $\le n$.
+  \item 
+    \begin{itemize}
+    \item[``$\Rightarrow$'']
+      Sei $X$ die Menge der Markierungen, dann ist $u \in X$ und f"ur jedes $w \in X$ ex.
+      $w_1,\ldots,w_n \in X$ mit $(w_1 \ldots w_n\,w) \in \mathcal{R}$, also
+      $w \in \mathcal{F}(X)$. D.h. $u \in X$ und $X$ ist $\mathcal{F}$-konsistent, also
+      $u \in X \subseteq \nu \mathcal{F}$.
+    \item[``$\Leftarrow$'']
+      Der Ableitungsbaum $t$ ist eine partielle Funktion $t: \N^* \pto \nu\mathcal{F}$ induktiv definiert
+      durch:
+      \begin{itemize}
+      \item $(\varepsilon,u) \in t$
+      \item Wenn $(k,w) \in t$, dann ex. $n\in\N,w_1,\ldots,w_n \in \nu\mathcal{F}$ --
+        denn $w \in \nu\mathcal{F} = \mathcal{F}(\nu\mathcal{F})$ -- mit
+        $(w_1 \ldots w_n\,w) \in \mathcal{R}$ \\
+        ind. def. $\leadsto$ $(k.i,w_i) \in t$ f"ur $i=1,\ldots,n$.
+      \end{itemize}
+    \end{itemize}
+  \end{enumerate}
+\end{proof}
+
+
+\section{Rekursion}
+
+\begin{definition}[Rekursionsschema]
+  Seien $A,B$ disjunkte Mengen. Ein \emph{$(A,B)$-Rekursionsschema} ist eine Relation
+  $\sigma \subseteq A \times B^* \times (A \uplus B)$. $\Sigma^A_B$ bezeichnet die Menge
+  aller $(A,B)$-Rekursionsschemata.
+\end{definition}
+
+\begin{definition}[Rekursion]
+  Sei $\sigma \in \Sigma^A_B$. Die durch $\sigma$ definierte \emph{Rekursion}
+  $\Rightarrow_\sigma\ \subseteq A \times B$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $(a,\varepsilon, b) \in \sigma$, dann $a \Rightarrow_\sigma b$.
+  \item Wenn $n \ge 1$, $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$,
+    und $(a,b_1 \ldots b_n,b)\in\sigma$, dann $a \Rightarrow_\sigma b$.
+  \end{enumerate}
+\end{definition}
+Diese induktive Definition von $\Rightarrow_\sigma$ l"asst sich auch k"urzer notieren:
+\begin{quote}
+  F"ur alle $n \in \N$, $a, a_1,\ldots,a_n \in A$ und $b,b_1,\ldots,b_n\in B$ gilt: 
+  Wenn $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur $i = 1,\ldots,n$ und
+  $(a,b_1 \ldots b_n,b)\in\sigma$, dann $a \Rightarrow_\sigma b$.
+\end{quote}
+Wie man leicht sieht, ist $\Rightarrow_\sigma$ eine Funktion wenn $\sigma$ eine Funktion ist.
+
+\begin{definition}[Co-Rekursion]
+  Zu jedem $\sigma \in \Sigma^A_B$ sei $\mathcal{F}_\sigma:\powerset{A} \to \powerset{A}$ definiert durch:
+  \[\begin{array}{rll}
+    \mathcal{F}_\sigma(X) = \{a \in A & \mid & \exists n\in\N,a_1,\ldots,a_{n+1}\in A,b_1,\ldots,b_n\in B.\\
+    && (\forall i=1,\ldots,n.\,a_i \Rightarrow_\sigma b_i) \\
+    &\wedge& (\forall i=1,\ldots,n+1.\,(a,b_1 \ldots b_{i-1},a_i) \in \sigma) \\
+    &\wedge& a_{n+1} \in X\}
+  \end{array}\]
+  Die durch $\sigma$ definierte \emph{Co-Rekursion} $\stackrel{\infty}{\Rightarrow}_\sigma$ ist definiert
+  als gr"o"ster Fixpunkt $\nu\mathcal{F}_\sigma$ der generierenden Funktion $\mathcal{F}_\sigma$.
+\end{definition}
+Statt $\Rightarrow_\sigma$, $\stackrel{\infty}{\Rightarrow}_\sigma$ bzw. $\mathcal{F}_\sigma$
+schreiben wir kurz $\Rightarrow$, $\stackrel{\infty}{\Rightarrow}$ bzw. $\mathcal{F}$ wenn
+$\sigma$ aus dem Kontext ersichtlich ist.
+
+\begin{lemma}
+  F"ur alle $\sigma\in\Sigma^A_B$, $n\in\N$, $a_1,\ldots,a_{n+1}\in A$ und $b_1,\ldots,b_n \in B$ gilt:
+  \begin{quote}
+    Wenn $a_i \Rightarrow_\sigma b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$ f"ur alle $i=1,\ldots,n$,
+    $(a,b_1 \ldots b_n,a_{n+1})\in\sigma$ und $a_{n+1} \stackrel{\infty}{\Rightarrow}_\sigma$, dann
+    auch $a \stackrel{\infty}{\Rightarrow}_\sigma$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Wegen $a_{n+1}\in\nu\mathcal{F}_\sigma$ folgt unmittelbar nach Definition
+  $a \in \mathcal{F}_\sigma(\nu\mathcal{F}_\sigma)$. Da $\nu\mathcal{F}_\sigma$
+  ein Fixpunkt von $\mathcal{F}_\sigma$ ist, gilt somit auch $a \in \nu\mathcal{F}_\sigma$, also
+  $a \stackrel{\infty}{\Rightarrow}_\sigma$.
+\end{proof}
+
+
+\section{Iteration}
+
+\begin{definition}[Iteration]
+  Sei $\sigma: A \Rightarrow B$ ein Rekursionsschema. Die durch $\sigma$ definierte \emph{Iteration}
+  $\to_\sigma\ \in (A \uplus B)^* \times (A \uplus B)^*$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $(a,b_1 \ldots b_n,b) \in \sigma$,
+    dann $w\,a\,b_1 \ldots b_n \to_\sigma w\,b$.
+  \item Wenn $(a,b_1 \ldots b_n,a') \in \sigma$,
+    dann $w\,a\,b_1 \ldots b_n \to_\sigma w\,a\,b_1 \ldots b_n\,a'$.
+  \end{enumerate}
+\end{definition}
+Wir schreiben $\to$ statt $\to_\sigma$ wenn $\sigma$ aus dem Kontext ersichtlich ist.
+$\stackrel{*}{\to}$ ist die reflexive, transitive H"ulle von $\to$.
+
+\begin{definition}[Co-Iteration]
+  Zu jedem $\sigma \in \Sigma^A_B$ sei eine generierende Funktion
+  $\mathcal{G}_\sigma:\powerset{(A \uplus B)^*} \to \powerset{(A \uplus B)^*}$ definiert durch:
+  \[\begin{array}{rcl}
+    \mathcal{G}_\sigma(X) = \{v \in (A \uplus B)^* \mid \exists w \in (A \uplus B)^*.\,v \rightarrow w \wedge w \in X\}
+  \end{array}\]
+  Die durch $\sigma$ definierte \emph{Co-Iteration} $\stackrel{\infty}{\rightarrow}_\sigma$ ist definiert
+  als gr"o"ster Fixpunkt $\nu\mathcal{G}_\sigma$ der generierenden Funktion $\mathcal{G}_\sigma$.
+\end{definition}
+Statt $\stackrel{\infty}{\rightarrow}_\sigma$ schreiben wir kurz $\stackrel{\infty}{\rightarrow}$,
+wenn $\sigma$ aus dem Kontext ersichtlich ist.
+
+\begin{lemma} \label{lemma:Redex_Star_und_Infty}
+  F"ur alle $\sigma \in \Sigma^A_B$ und $v,w \in (A \uplus B)^*$ gilt:
+  \begin{quote}
+    Wenn $v \stackrel{*}{\rightarrow}_\sigma w$ und $w \stackrel{\infty}{\rightarrow}_\sigma$,
+    dann gilt ebenfalls $v \stackrel{\infty}{\rightarrow}_\sigma$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Triviale Induktion.
+\end{proof}
+
+\begin{theorem}[Vollst"andigkeit] \label{theorem:Vollstaendigkeit}
+  F"ur alle $n \in \N$, $a,a_1,\ldots,a_n \in A$, $b,b_1,\ldots,b_n \in B$ und $w \in (A \uplus B)^*$ gilt:
+  \begin{enumerate}
+  \item Wenn $a \Rightarrow b$, dann gilt $w\,a \stackrel{*}{\to} w\,b$.
+  \item Wenn $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$, dann gilt
+    $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Per Induktion "uber die Herleitung von $a \Rightarrow b$ und $n$.
+  \begin{enumerate}
+  \item Es existieren $n \in \N$, $a_1,\ldots,a_n \in A$ und $b_1,\ldots,b_n \in B$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i = 1,\ldots,n$,
+    und es gilt $(a,b_1 \ldots b_n,b) \in \sigma$. Also existiert eine Berechnung der Form
+    $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$, und wegen $(a,b_1 \ldots b_n,b) \in \sigma$
+    folgt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n \to w\,a\,b$.
+
+  \item F"ur $n = 0$ folgt unmittelbar $w\,a \stackrel{*}{\to} w\,a$.
+
+    F"ur $n > 0$ gilt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_{n-1}$ nach Induktionsvoraussetzung und wegen
+    $(a,b_1 \ldots b_{n-1},a_n)\in\sigma$ folgt $w\,a\,b_1 \ldots b_{n-1} \to w\,a\,b_1 \ldots b_{n-1}\,a_n$.
+    Nach Induktionsvoraussetzung folgt
+    $w\,a\,b_1 \ldots b_{n-1}\,a_n \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$ wegen $a_n \Rightarrow b_n$.
+    Also gilt insgesamt $w\,a \stackrel{*}{\to} w\,a\,b_1 \ldots b_n$.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}[Korrektheit] \label{theorem:Korrektheit}
+  F"ur alle $n,l \in N$, $\hat{a} \in A$, $b, b_1,\ldots,b_n \in B$ und
+  $w \in (A \uplus B)^*$ gilt:
+  \begin{enumerate}
+  \item Wenn $\hat{a} \stackrel{l}{\to} w\,b$, dann existieren $k < l$ und $a \in A$ mit
+    $a \Rightarrow b$ und $\hat{a} \stackrel{k}{\to} w\,a$.
+  \item Wenn $\hat{a} \stackrel{l}{\to} w\,a\,b_1 \ldots b_n$, dann existieren $k \le l$
+    und $a_1,\ldots,a_n \in A$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur $i=1,\ldots,n$, und
+    $\hat{a} \stackrel{k}{\to} w\,a$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  Per Induktion "uber $l$.
+  \begin{enumerate}
+  \item Der letzte Schritt kann nur mit der 1. Regel folgen, es existieren also $n\in\N$, $a \in A$
+    und $b_1,\ldots,b_n \in B$, so dass gilt $(a,b_1 \ldots b_n,b) \in \sigma$ und
+    $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_n \to w\,b$. Nach Induktionsvoraussetzung existieren
+    nun $k < l-1$ und $a_1,\ldots,a_n \in A$ mit $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i)\in\sigma$
+    f"ur $i=1,\ldots,n$ und es gilt $\hat{a} \stackrel{k}{\to} w\,a$. Also existiert insgesamt eine
+    Herleitung f"ur $a \Rightarrow b$.
+  \item Trivial im Fall von $n = 0$.
+
+    F"ur $n > 0$ muss der letzte Schritt mit der 1. Regel hergeleitet worden sein, d.h. es existieren
+    $m \in \N$, $a_n \in A$, $b_1',\ldots,b_m' \in B$ mit $(a_n,b_1' \ldots b_m',b_n) \in \sigma$ und
+    $\hat{a} \stackrel{l-1}{\to} w\,a\,b_1 \ldots b_{n-1}\,a_n\,b_1'\ldots b_m' \to w\,a\,b_1 \ldots b_n$.
+
+    Nach Induktionsvoraussetzung existeren $k' \le l-1$ und $a_1',\ldots,a_m' \in A$ mit
+    $a_i' \Rightarrow b_i'$ und $(a_n,b_1' \ldots b_{i-1}',a_i') \in \sigma$ f"ur $i=1,\ldots,m$
+    und es gilt $\hat{a} \stackrel{k'}{\to} w\,a\,b_1 \ldots b_{n-1}\,a_n$. Also folgt sofort
+    $a_n \Rightarrow b_n$.
+
+    Der letzte Schritt kann nur mit der 2. Regel hergeleitet worden sein, d.h. es gilt
+    $(a,b_1 \ldots b_{n-1},a_n) \in \sigma$ und $\hat{a} \stackrel{k'-1}{\to} w\,a\,b_1 \ldots b_{n-1}$.
+    Nach Induktionsvoraussetzung existeren $k \le k' < l$ und $a_1,\ldots,a_{n-1} \in A$ mit
+    $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$ f"ur alle $i=1,\ldots,n-1$, und
+    es gilt $\hat{a} \stackrel{k}{\to} w\,a$.
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}
+  Wenn $a \stackrel{\infty}{\Rightarrow}$, dann $w\,a \stackrel{\infty}{\rightarrow}$.
+\end{theorem}
+
+\begin{proof}
+  Seien $\stackrel{\infty}{\Rightarrow}\ = \nu\mathcal{F}$
+  und $\stackrel{\infty}{\rightarrow}\ = \nu\mathcal{G}$. Z.z.:
+  $\underbrace{\bigcup_w w\,\nu\mathcal{F}}_X \subseteq \nu\mathcal{G}$ \\
+  Dazu gen"ugt es zu zeigen, dass $X \subseteq \mathcal{G}(X)$, d.h.
+  $\bigcup_w w\,\nu\mathcal{F} \subseteq \mathcal{G}(\bigcup_w w\,\nu\mathcal{F})$.
+  Sei $wa \in \bigcup_w w\,\nu\mathcal{F}$, dann ist $a \in \nu\mathcal{F}$, d.h. $a \stackrel{\infty}{\Rightarrow}$.
+
+  Nach Voraussetzung existieren also $n \in \N$, $a_1,\ldots,a_{n+1} \in A$ und
+  $b_1,\ldots,b_n \in B$, so dass $a_i \Rightarrow b_i$ und $(a,b_1 \ldots b_{i-1},a_i) \in \sigma$
+  f"ur $i=1,\ldots,n$, und $a_{n+1} \stackrel{\infty}{\Rightarrow}$ (d.h. $a_{n+1} \in \nu\mathcal{F}$).
+  Also existiert nach Theorem~\ref{theorem:Vollstaendigkeit} eine Folge der Form
+  \[
+  w\,a \stackrel{*}{\rightarrow} w\,a\,b_1 \ldots b_n \rightarrow w\,a\,b_1 \ldots b_n\,a_{n+1}
+  \]
+  und weiterhin gilt $w\,a\,b_1 \ldots b_n\,a_{n+1} \in \bigcup_w w\,\nu\mathcal{F}$,
+  da $a_{n+1} \in \nu\mathcal{F}$. Also gilt $(w\,a\,b_1 \ldots b_n) \in \mathcal{G}(X)$,
+  was induktiv $(w\,a) \in \mathcal{G}(X)$ bedingt. Also ist $X$ $\mathcal{G}$-konsistent,
+  d.h. $X$ ist Teilmenge des gr"o"sten Fixpunktes, was wiederum bedeutet, dass
+  $w\,a \stackrel{\infty}{\rightarrow}$ gilt.
+\end{proof}
+
+\begin{theorem}["Aquivalenz]
+  Sei $\sigma \in \Sigma^A_B$. Dann gilt f"ur alle $a \in A, b \in B$:
+  \begin{enumerate}
+  \item $a \Rightarrow b$ gdw. $a \stackrel{*}{\to} b$.
+  \item $a \stackrel{\infty}{\Rightarrow}$ gdw. $a \stackrel{\infty}{\to}$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item Folgt unmittelbar aus Theorem~\ref{theorem:Korrektheit} und Theorem~\ref{theorem:Vollstaendigkeit}.
+  \end{enumerate}
+\end{proof}
+
+
+\section{Implementationen}
+
+\begin{definition}[Transitionssystem]
+  Ein \emph{Transitionssystem} ist ein Quadrupel $T = (S, S_0, S_F, \step)$ mit $S_0 \subseteq S$,
+  $S_F \subseteq S$ und $\step\ \subseteq S \times S$.
+\end{definition}
+
+\begin{definition}[Implementation]
+  Eine \emph{Implementation} von $\sigma\in\Sigma^A_B$ ist ein Paar
+  $(T,\sim)$, mit $T = (S,S_0,S_F,\step)$ und $\sim\ \subseteq S \times (A \uplus B)^*$.
+\end{definition}
+
+\begin{definition}[Korrektheit von Implementationen]
+  Eine Implementation $((S,S_0,S_F,\step),\sim)$ von $\sigma \in \Sigma^A_B$ hei"st \emph{korrekt},
+  wenn gilt:
+  \begin{enumerate}
+  \item Wenn $s \in S_0$, dann existiert ein $a \in A$ mit $s \sim a$.
+  \item Wenn $s \in S_F$, dann existiert ein $b \in B$ mit $s \sim b$.
+  \item Wenn $s \step s'$ und $s \sim w$, dann existiert ein $w' \in (A \uplus B)^*$
+    mit $w \to_\sigma w'$ und $s' \sim w'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Vollst"andigkeit von Implementationen]
+  Eine Implementation $((S,S_0,S_F,\step),\sim)$ von $\sigma \in \Sigma^A_B$ hei"st \emph{vollst"andig},
+  wenn gilt:
+  \begin{enumerate}
+  \item Wenn $a \in A$, dann existiert ein $s \in S_0$ mit $s \sim a$.
+  \item Wenn $b \in B$, dann existiert ein $s \in S_F$ mit $s \sim b$.
+  \item Wenn $w \to_\sigma w'$ und $s \sim w$, dann existiert ein $s' \in S$
+    mit $s \step s'$ und $s' \sim w'$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Modell]
+  Ein \emph{Modell} von $\sigma \in \Sigma^A_B$ ist eine
+  korrekte und vollst"andige Implementation $(T,\sim)$.
+\end{definition}
+
+\end{document}

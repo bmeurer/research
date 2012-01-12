@@ -1,0 +1,559 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Rekursive Funktionen}
+
+Seien $A,B$ beliebige disjunkte Mengen und sei $f: A \pto B$ eine Funktion. $f$ hei"st \emph{rekursiv
+definiert durch $g:A \times B^* \pto A \uplus B$}, geschrieben $f = \Lambda g$, wenn f"ur alle
+$n \in \N$, $a,a_1,\ldots,a_n \in A$ und $b,b_1,\ldots,b_n \in B$ gilt:
+\begin{quote}
+  Wenn $f(a_i) = b_i$ und $g(a,b_1 \ldots b_{i-1}) = a_i$ f"ur $i = 1,\ldots,n$ und
+  $g(a,b_1 \ldots b_n) = b$, dann $f(a) = b$.
+\end{quote}
+Eine Funktion $f$ hei"st \emph{rekursiv definiert}, wenn ein $g$ existiert, so dass $f = \Lambda g$
+gilt.
+
+Seien $A,B$ und $A',B'$ jeweils disjunkte Mengen und seien $f: A \pto B$ und $f': A' \pto B'$ mit
+$f = \Lambda g$ und $f' = \Lambda g'$. Sei weiter $\sim\ \subseteq (A \times A') \uplus (B \times B')$.
+$f$ und $f'$ hei"sen \emph{strikt "aquivalent bzgl. $\sim$}, geschrieben $f \sim f'$, wenn f"ur alle $n \in \N$ gilt:
+\begin{quote}
+  Wenn $a \sim a'$ und $b_i \sim b_i'$ f"ur $i = 1,\ldots,n$, dann gilt entweder
+  \begin{enumerate}
+  \item $g(a,b_1 \ldots b_n)$ und $g'(a',b_1' \ldots b_n')$ sind undefiniert, oder
+  \item $g(a,b_1 \ldots b_n) \sim g'(a',b_1' \ldots b_n')$.
+  \end{enumerate}
+\end{quote}
+D.h. wenn $a \sim a'$ und $f \sim f'$, dann gilt entweder
+\begin{enumerate}
+\item $f(a)$ und $f'(a')$ sind undefiniert, oder
+\item $f(a) \sim f'(a')$.
+\end{enumerate}
+
+
+\section{Rekursion und Iteration}
+
+Seien $A,B$ disjunkte Mengen und sei $g: A \times B^* \pto A \uplus B$. Dann definieren wir
+drei bin"are Relationen
+\[\begin{array}{rcl}
+  \Downarrow & \subseteq & A \times B \\
+  \multimap  & \subseteq & A \times A \\
+  \step      & \subseteq & (A \uplus B)^* \times (A \uplus B)^*
+\end{array}\]
+induktiv durch folgende Regeln (f"ur alle $n \ge 0$):
+\begin{enumerate}
+\item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_{i-1}) = a_i$ f"ur $i = 1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_n) = b$ \\
+  dann $a \Downarrow b$.
+\item Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$ \\
+  und $g(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$ \\
+  dann $a \multimap a_n$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  dann $w\,a\,b_1 \ldots b_n \step w\,a\,b_1 \ldots b_n\,a'$.
+\item Wenn $g(a,b_1 \ldots b_n) = b$ \\
+  dann $w\,a\,b_1 \ldots b_n \step w\,b$.
+\end{enumerate}
+Um im Folgenden ausschlie"slich \emph{sinnvolle} Semantiken zu erhalten, fordern wir, dass $g$
+keine \emph{L"ucken} aufwei"st.
+\begin{definition}
+  $g: A \times B^* \pto A \uplus B$ hei"st \emph{vollst"andig}, wenn f"ur alle $n \in \N$, $a,a'\in A$
+  und $b,b_1,\ldots,b_{n+1} \in B$ gilt: 
+  Wenn $g(a,b_1 \ldots b_{n+1}) = a'$ oder $g(a,b_1 \ldots b_{n+1}) = b$ dann
+  existieren $a_1',\ldots,a_n' \in A$ so dass $g(a,b_1 \ldots b_i) = a_i'$ f"ur alle $i = 1,\ldots,n$.
+\end{definition}
+
+
+\section{Offset-eindeutigkeit}
+
+Die naive iterative Umsetzung, die anfangs beschrieben wurde, verwaltet Argumente und Resultate auf einem einzigen
+Stack. Grund hierf"ur ist unter anderem das die Argumente f"ur das sogenannte \emph{Framing} ben"otigt werden.
+Hinter jedem Argument $a$ findet sich jeweils eine Liste von Resultaten $b_1 \ldots b_n$ bevor sich das n"achste
+Argument $a'$ anschlie"st (oder das Ende des Stacks erreicht ist). Diese Resultate $b_1 \ldots b_n$ bilden die
+bereits berechneten Zwischenresultate von $a$. Der Teilabschnitt $a\,b_1 \ldots b_n$ des Stacks wird dann als
+\emph{Frame von $a$} bezeichnet.
+
+Mittels dieses Mechanismus ist stets eindeutig zu erkennen, wieviele Zwischenresultate von $a$ bereichts
+berechnet wurden, und wie anhand dieser weiter vorzugehen ist. W"urde man die Argumente auf einem separaten
+Stack verwalten, ohne weitere Markierungen f"ur den Resultatstack, die das Erkennen von Frames erm"oglichen,
+einzuf"uhren, so w"are im Allgemeinen eine Zuordnung der Zwischenresultate unm"oglich. Aber erst durch eine
+(weitgehend) getrennte Verwaltung von Argumenten und Resultaten werden interessante Optimierungen, wie z.B.
+das Weglassen von "uberfl"ussigen Argumenten oder Resultaten, m"oglich.
+
+Betrachten wir dazu zun"achst ein einfaches Beispiel. Sei $g$ wie folgt definiert:
+\[\begin{array}{lclclclclcllclc}
+  a &\mapsto& a_1 &\quad& a,b &\mapsto& a_2 &\quad& && &\quad& \\
+  a_1 &\mapsto& b \\
+  a_2 &\mapsto& a_3 && a_2,b &\mapsto& b_1 && a_2,b_2 &\mapsto& a_4 && a_2,b\,b_2 &\mapsto& a_5 \\
+  a_3 &\mapsto& b_2 \\
+  &\vdots&
+\end{array}\]
+Die Berechnung von $a$ in der naiven iterativen Umsetzung sieht dann wie folgt aus:
+\[\begin{array}{c}
+a \step a\,a_1 \step a\,b \step a\,b\,a_2 \step a\,b\,a_2\,a_3 \step a\,b\,a_2\,b_2 \step a\,b\,a_2\,a_4 \step \ldots
+\end{array}\]
+W"urde man nun Argumente und Resultate auf zwei unabh"angigen Stacks verwalten, so w"urde die
+Berechnung f"ur $a$ wie zuvor mit
+\[\begin{array}{c}
+(a) \step (a\,a_1) \step (a,b) \step (a\,a_2,b)
+\end{array}\]
+beginnen, aber ab hier w"are es nicht mehr eindeutig, wie weiter zu verfahren ist. Denn f"ur $b$ ist
+unklar ob es ein Zwischenresultat von $a$ oder $a_2$ ist. Ersteres w"urde bedeuten, dass
+\[\begin{array}{c}
+(a\,a_2,b) \step (a\,a_2\,a_3,b)
+\end{array}\]
+der n"achste Schritt w"are, denn $g(a_2)=a_3$, w"ahrend letzteres bedeuten w"urde, dass mit
+\[\begin{array}{c}
+(a\,a_2,b) \step (a,b_1)
+\end{array}\]
+fortgefahren werden m"usste, denn $g(a_2,b)=b_1$. Ausgehend von der Annahme, dass die Berechnung den \emph{richtigen}
+Weg -- also den ersten -- nehmen w"urde, erg"abe sich dann nach
+\[\begin{array}{c}
+(a\,a_2,b) \step (a\,a_2\,a_3,b) \step (a\,a_2,b\,b_2)
+\end{array}\]
+das n"achste Problem. Hier existieren sogar drei verschiedene M"oglichkeiten fortzufahren, abh"angig
+davon, ob man animmt, dass f"ur $a_2$ noch keine Zwischenresultat, ein Zwischenresultat $b_2$ oder zwei
+Zwischenresultate $b\,b_2$ vorliegen.
+
+Intuitiv ist jedoch stets klar, wie weiter vorgegangen werden m"usste. F"ur das erste Problem wissen wir,
+dass wir in der Berechnung \emph{vor} $a_3$ stehen, d.h. es k"onnen noch keine Zwischenergebnisse f"ur $a_3$
+vorliegen. Beim zweiten Problem ist klar, dass sich die Berechnung nun \emph{hinter} $a_3$ befindet und das
+Ergebnis ist $b_2$. Da $a_3$ nur dann als Nachfolger von $a_2$ auftreten kann, wenn vorher keine
+Zwischenresultate f"ur $a_2$ vorlagen, ergibt sich daraus sofort, dass genau ein Zwischenresultat f"ur $a_2$
+vorliegen muss, wenn man \emph{hinter} $a_3$ steht. Formalisieren wir zun"achst, was wir unter Nachfolgern
+eines Arguments verstehen:
+
+\begin{definition}[Nachfolger]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $a \in A$. Die Menge aller \emph{Nachfolger} von $a$ ist
+  definiert durch
+  \[\begin{array}{rcl}
+    \children_g(a) = \{a' \in A \mid \exists n \in \N,b_1,\ldots,b_n \in B.\,g(a,b_1 \ldots b_n) = a'\}.
+  \end{array}\]
+\end{definition}
+
+F"ur jeden Nachfolger $a'$ eines Arguments $a$ existiert also mindestens ein $n \in N$, welches die Anzahl
+der zuvor bestimmten Zwischenergebnisse angibt. Diese $n$ bezeichnen wir als die \emph{relativen Offsets}
+von $a'$ bzgl. $a$.
+
+\begin{definition}[Relative und absolute Offsets]
+  Sei $g: A \times B^* \pto A \uplus B$ und seien $a,a' \in A$. Die Menge aller \emph{relativen Offsets}
+  von $a'$ bzgl. $a$ ist definiert durch
+  \[\begin{array}{rcl}
+    \offsets_g(a,a') &=& \{n \in \N \mid \exists b_1,\ldots,b_n \in B.\, g(a,b_1 \ldots b_n) = a'\},
+  \end{array}\]
+  und die Menge aller \emph{absoluten Offsets} von $a'$ ist definiert durch
+  \[\begin{array}{rcl}
+    \offsets_g(a') &=& \bigcup_{a \in A} \offsets_g(a,a').
+  \end{array}\]
+  Die Funktion $g$ hei"st
+  \begin{enumerate}
+  \item \emph{relativ offset-eindeutig} falls $|\offsets_g(a,a')| \le 1$ f.a. $a,a' \in A$, bzw.
+  \item \emph{(absolut) offset-eindeutig} falls $|\offsets_g(a')| \le 1$ f.a. $a' \in A$.
+  \end{enumerate}
+\end{definition}
+
+Im obigen Beispiel wissen wir, dass $0$ das einzige relative Offset f"ur $a_3$ bzgl. $a_2$ ist. Dies
+erlaubt uns den R"uckschluss, dass nach der Berechnung f"ur $a_3$ exakt ein Zwischenresultat f"ur
+$a_2$ vorliegt. Genaugenommen wissen wir sogar, dass die Funktion $g$ aus dem Beispiel -- zumindest
+soweit sie angegeben ist -- absolut offset-eindeutig ist, denn f"ur jedes Argument existiert
+nur h"ochstens ein absolutes Offset.
+
+Weiterhin m"ussen wir nun noch formalisieren, was es bedeutet, in der Berechnung \emph{vor} oder
+\emph{hinter} einem Argument zu stehen. Intuitiv haben wir diese Information aus den vorangegangenen
+Konfigurationen abgeleitet. Es ist jedoch im Allgemeinen nicht m"oglich diese Information -- d.h.
+ob man \emph{vor} oder \emph{hinter} einem Argument steht -- aus einer einzigen Konfiguration zu
+gewinnen. Dementsprechend muss diese Information in Konfigurationen explizit gemacht werden. Dazu
+markieren wir jeweils das aktuelle Argument mit einem Punkt vor dem Argument, um deutlich zu machen,
+dass die Berechnung \emph{vor} selbigem steht, bzw. hinter dem Argument, um deutlich zu machen, dass
+die Berechnung \emph{hinter} dem Argument steht.
+
+\begin{definition}[Punktierte Mengen]
+  Sei $M$ eine beliebige Menge. Die Menge $\dot{M}$ aller \emph{punktierten Elemente} aus
+  $M$ ist definiert durch
+  \[\begin{array}{rcl}
+    \dot{M} &=& \{\cdot m \mid m \in M\} \cup \{m \cdot \mid m \in M\}.
+  \end{array}\]
+\end{definition}
+
+Als Konfigurationen w"ahlen wir Tripel, wobei das erste Element das punktierte aktuelle Argument
+enth"alt, das zweite Element den Stack der vorangegangenen Argumente und das dritte Element den
+Resultatstack. D.h. $\dot{A} \times A^* \times B^*$ ist die Menge aller m"oglichen Konfigurationen.
+Auf dieser Menge definieren wir nun zu jedem relativ offset-eindeutigen $g$ eine bin"are Relation
+$\step$ als die kleinste Relation, f"ur die gilt:
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1}) = b$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (\cdot a'',v\,a,w\,b_1 \ldots b_{n+1})$.
+\end{enumerate}
+
+Die ersten beiden Regeln beschreiben die m"oglichen Konfigurations"uberg"ange, wenn sich die Berechnung
+\emph{vor} einem Argument $a$ befindet. Hier existieren zwei M"oglichkeiten: Entweder liefert $g$ sofort
+ein Resultat $b$, dann wird der Punkt hinter das $a$ gesetzt und das Resultat auf den Stack gelegt. Oder
+$g$ liefert einen Nachfolger $a'$ f"ur $a$, dann wird $a$ auf den Vorg"angerstack gelegt und die Berechnung
+f"ahrt mit $\cdot a'$ fort.
+
+Steht nun die Berechnung hinter $a'$ und ist $a$ der $n$-te Vorg"anger von $a'$, so m"ussen $n+1$
+Zwischenresultate f"ur $a$ auf dem Resultatstack liegen, denn $g$ ist nach Voraussetzung relativ
+offset-eindeutig. Liefert nun $g(a,b_1 \ldots b_{n+1})$ ein Resultat $b$, so greift die dritte
+Regel: Hier werden die Zwischenresultate f"ur $a$ auf dem Resultatstack durch $b$ ersetzt, das
+Argument $a$ vom Vorg"angerstack entfernt und anschlie"send die Berechnung hinter $a$ fortgesetzt.
+Liefert andererseits $g(a,b_1 \ldots b_{n+1})$ einen weiteren Nachfolger $a''$, so wird die Berechnung
+vor $a''$ fortgesetzt.
+
+Anhand dieser Erl"auterungen ist unmittelbar ersichtlich, dass die so definierte "Ubergangsrelation
+\emph{deterministisch} ist, d.h. dass zu jeder Konfiguration $\zeta$ nur h"ochstens eine Konfiguration
+$\zeta'$ existiert, so dass $\zeta \step \zeta'$ gilt. Weiterhin gilt folgende Berechnungsinvariante:
+\begin{lemma}
+  Sei $a \in A$ und $b \in B$. Dann gilt
+  $(\cdot a,\varepsilon,\varepsilon) \step^* (a \cdot, b, \varepsilon)$
+  genau dann wenn $a \Downarrow b$.
+\end{lemma}
+
+
+\section{Vorg"anger-eindeutigkeit}
+
+Die zuvor beschriebene iterative Umsetzung f"ur offset-eindeutige Funktionen $g$ trennt die Argumente
+und Resultate, so dass diese weitgehend unabh"angig von einander verwaltet werden k"onnen. Dies schafft
+Raum f"ur weitere Optimierungen. Betrachten wir dazu n"amlich noch einmal die Beispielfunktion $g$ aus
+dem vorangegangenen Kapitel
+\[\begin{array}{lclclclclcllclc}
+  a &\mapsto& a_1 &\quad& a,b &\mapsto& a_2 &\quad& && &\quad& \\
+  a_1 &\mapsto& b \\
+  a_2 &\mapsto& a_3 && a_2,b &\mapsto& b_1 && a_2,b_2 &\mapsto& a_4 && a_2,b\,b_2 &\mapsto& a_5 \\
+  a_3 &\mapsto& b_2 \\
+  &\vdots&
+\end{array}\]
+so stellen wir fest, dass zu jedem Nachfolger $a'$ nur h"ochstens ein $a$ existiert, f"ur welches
+$a'$ als Ergebnis von $g(a,b_1 \ldots b_n)$ auftreten kann. Dieses $a$ nennen wir dann den
+\emph{Vorg"anger} von $a'$. Allgemein definieren wir dazu:
+
+\begin{definition}[Vorg"anger]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $a'\in A$. Die Menge aller \emph{Vorg"anger} von
+  $a'$ ist definiert durch
+  \[\begin{array}{rcl}
+    \parents_g(a') &=& \{a \in A \mid \offsets_g(a,a') \ne \emptyset \}.
+  \end{array}\]
+  $g$ hei"st \emph{vorg"anger-eindeutig} falls $|\parents_g(a')| \le 1$ f.a. $a' \in A$.
+\end{definition}
+
+Im obigen Beispiel existiert -- wie beschrieben -- zu jedem $a'$ h"ochstens ein Vorg"anger $a$.
+Die Beispielfunktion ist also offensichtlich vorg"anger-eindeutig (zumindest soweit sie angegeben
+ist). Rufen wir uns nun noch einmal die Umsetzung einer offset-eindeutigen Funktion $g$ in eine
+Konfigurations"ubergangsrelation $\step$ ins Ged"achtnis, so zeigt sich, dass die Buchf"uhrung
+"uber die Vorg"angerargumente f"ur \emph{vorg"anger-eindeutige Funktionen} unn"otig wird, da
+die Vorg"anger f"ur alle Argumente eindeutig bestimmt sind.
+
+Dementsprechend kann zu jeder relativ offset-eindeutigen und vorg"anger-eindeutigen Funktion
+$g$ eine bin"are Relation $\step$ als die kleinste Relation "uber
+$(\dot{A} \times B^*) \times (\dot{A} \times B^*)$ definiert werden, f"ur die gilt:
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,w) \step (a \cdot,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  dann $(\cdot a,w) \step (\cdot a',w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  dann $(a' \cdot,w\,b_1 \ldots b_{n+1}) \step (a \cdot,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  dann $(a' \cdot,w\,b_1 \ldots b_{n+1}) \step (\cdot a'',w\,b_1 \ldots b_{n+1})$.
+\end{enumerate}
+Hierf"ur gen"ugt es tats"achlich zu fordern, dass die Funktion $g$ relativ offset-eindeutig ist, denn
+zwischen Vorg"anger- und Offset-eindeutigkeit besteht folgender Zusammenhang:
+
+\begin{lemma}
+  Ist eine Funktion $g$ \emph{relativ offset-eindeutig} und \emph{vorg"anger-eindeutig},
+  so ist $g$ auch \emph{absolut offset-eindeutig}.
+\end{lemma}
+
+Betrachtet man die so definierte Konfigurations"ubergangsrelation $\step$, so ist diese Umsetzung
+-- bezogen auf die Verwaltung der Argumente -- optimal. Es wird keinerlei Buchf"uhrung f"ur die
+vorangegangenen Argumente ben"otigt, da f"ur jedes Argument $a'$,
+\begin{itemize}
+\item durch die Vorg"anger-eindeutigkeit von $g$, h"ochstens ein eindeutiger Vorg"anger $a$ existiert, und
+\item durch die Offset-eindeutigkeit von $g$, eindeutig bestimmt ist, wieviele Zwischenresultate des
+  (eindeutigen) Vorg"angers $a$ bereits auf dem Resultatstack liegen.
+\end{itemize}
+Insgesamt gen"ugt diese Umsetzung der folgenden Berechnungsinvariante:
+\begin{lemma}
+  Sei $a \in A$ und $b \in B$. Dann gilt
+  $(\cdot a,\varepsilon) \step^* (a \cdot, b)$
+  genau dann wenn $a \Downarrow b$.
+\end{lemma}
+
+So verlockend diese optimale Umsetzung aussehen mag, sie kommt f"ur die praktische Anwendung, z.B. auf die
+Semantik einer Programmiersprache, nicht in Frage, denn die interessanten Funktionen $g$ sind allesamt
+nicht vorg"anger-eindeutig. Im Falle der Semantik einer Programmiersprache, scheitert dies schon alleine
+an Funktions- bzw. Unterprogrammaufrufen. Dies sind Spr"unge zu einem Programmteil (in der allgemeinen
+Terminilogie, zu einem Argument), die von verschiedenen anderen Stellen im Programm erfolgen k"onnen.
+F"ur Funktionen und Unterprogramme kann demzufolge im Allgemeinen kein eindeutiger Vorg"anger existieren.
+
+Ein vollst"andiger Verzicht auf Vorg"angerverwaltung ist dementsprechend nicht praktikabel. Allerdings
+hat man es in der Semantik von Programmiersprachen trotzdem h"aufig mit Programmteilen zu tun, deren
+Vorg"anger eindeutig ist. Dementsprechend w"are eine Hybridl"osung angebracht, die nur diejenigen
+Vorg"anger auf einem Argumentstack verwaltet, die nicht eindeutig sind. F"ur die "ubrigen Argumente,
+deren Vorg"anger eindeutig ist, also die Menge
+\[\begin{array}{c}
+  \{a' \in A \mid \exists a \in A.\,\{a\} = \parents_g(a')\}
+\end{array}\]
+kann die zuvor beschriebene Umsetzung verwendet werden.
+
+Zu jeder absolut offset-eindeutigen Funktion $g$ wird eine bin"are Relation $\step$ als kleinste
+"uber $(\dot{A} \times A^* \times B^*) \times (\dot{A} \times A^* \times B^*)$ definiert, f"ur
+die gilt:
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v,w)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1})=b$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = b$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v\,a,w\,b_1 \ldots b_{n+1})$.
+\item Wenn $g(a,b_1 \ldots b_n) = a'$ \\
+  und $g(a,b_1 \ldots b_{n+1}) = a''$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_{n+1}) \step (a'' \cdot,v\,a,w\,b_1 \ldots b_{n+1})$.
+\end{enumerate}
+
+
+\section{Zusammengesetzte Argumente}
+
+In den bisherigen Betrachtungen haben wir Argumente stets als \emph{atomar} betrachtet. In der praktischen
+Anwendung hat man es aber h"aufig mit komplexen, \emph{zusammengesetzten} Argumenten zu tun, die aus mehreren
+Komponenten bestehen. Hier verhindert die atomare Behandlung interessante Optimierungen f"ur Argumente. Im
+Folgenden betrachten wir einige Beispiele, wie durch Auftrennung der Argumentkomponenten die iterative
+Umsetzung verbessert werden kann.
+
+
+\subsection{Seiteneffekte}
+
+Angenommen $A,B$ sind wie zuvor disjunkte Mengen, $C$ sei eine beliebige Menge und
+$g: (A \times C) \times (B \times C)^* \pto (A \times C) \uplus (B \times C)$ sei ein
+Rekursionsschema. Argumente sind in diesem Fall Paare aus $A \times C$ und Resultate sind
+Paare aus $B \times C$, das bedeutet, Elemente aus $C$ treten sowohl als Bestandteil der
+Argumente wie auch als Bestandteil der Resultate auf.
+
+\begin{definition}
+  $g: (A \times C) \times (B \times C)^* \pto (A \times C) \uplus (B \times C)$ hei"st
+  \emph{$C$-seiteneffektbehaftet}, wenn f"ur alle $n \ge 0$ gilt:
+  \begin{enumerate}
+  \item Wenn $g((a_0,c_0),(b_1,c_1) \ldots (b_n,c_n)) = (b,c)$ \\
+    und $g((a_0,c_0'),(b_1,c_1') \ldots (b_n,c_n')) = (b',c')$ \\
+    und $c_n = c_n'$, \\
+    dann gilt $(b,c) = (b',c')$.
+  \item Wenn $g((a_0,c_0),(b_1,c_1) \ldots (b_n,c_n)) = (a,c)$ \\
+    und $g((a_0,c_0'),(b_1,c_1') \ldots (b_n,c_n')) = (a',c')$ \\
+    und $c_n = c_n'$, \\
+    dann gilt $(a,c) = (a',c')$.
+  \end{enumerate}
+\end{definition}
+
+F"ur eine solche \emph{$C$-seiteneffektbehaftete} Funktion $g$ wird f"ur die weitere Berechnung
+immer nur das aktuelle $c$ ben"otigt. Dementsprechend ist es unn"otig, bei der iterativen Umsetzung
+f"ur $C$ einen Stack vorzusehen. Als Konfigurationen k"onnen wir stattdessen Tupel aus
+$(A \uplus B)^* \times C$ verwenden, wobei die zweite Komponente das aktuelle $c$ enth"alt. Dann
+definieren wir $\step$ als die kleinste bin"are Relation zwischen Konfigurationen, f"ur die gilt
+$(n \ge 0)$:
+\begin{enumerate}
+\item Wenn $g((a,c),(b_1,c) \ldots (b_n,c)) = (b',c')$ \\
+  dann $(w\,a\,b_1 \ldots b_n,c) \step (w\,b',c')$.
+\item Wenn $g((a,c),(b_1,c) \ldots (b_n,c)) = (a',c')$ \\
+  dann $(w\,a\,b_1 \ldots b_n,c) \step (w\,a\,b_1 \ldots b_n\,a',c')$.
+\end{enumerate}
+Offensichtlich gilt f"ur diese Umsetzung nachfolgende Berechnungsinvariante.
+
+\begin{lemma}
+  Sei $a \in A$, $b' \in B$ und $c,c' \in C$. Dann gilt $(a,c) \step^* (b',c')$
+  genau dann wenn $(a,c) \Downarrow (b',c')$.
+\end{lemma}
+
+
+\section{Zwischenresultatoptimierung}
+
+In den vorangegangenen Abschnitten haben wir unterschiedliche M"oglichkeiten zur effizienten Verwaltung
+von Argumenten dargestellt. Dabei haben wir aber die Betrachtung der Zwischenresultate weitgehend ausseracht
+gelassen. Dies wollen wir nun in diesem Abschnitt nachholen.
+
+Zun"achst stellen wir dabei fest, dass bisher f"ur jedes Argument $a$ stets alle Zwischenresultate
+$b_1,\ldots,b_n$ aufgesammelt werden, bis schliesslich $g(a,b_1 \ldots b_n)$ ein Resultat $b$ liefert.
+Dies ungeachtet der Tatsache, ob $b$ nun tats"achlich von allen $b_1,\ldots,b_n$ abh"angt. Ebensowenig
+wird ber"ucksichtigt, ob die Nachfolger $a_{i+1}$ von $a$ tats"achlich von allen bis dahin bekannten
+Zwischenresultaten $b_1,\ldots,b_i$ abh"angen.
+
+Ist dies nicht der Fall, so k"onnte man Speicherplatz sparen, indem man Zwischenresultate nur solange
+aufhebt, wie diese f"ur die weitere Berechnung von Belang sind. Angenommen $b_1$ wird nur ben"otigt,
+um zu entscheiden, dass $g(a,b_1)=a_1$ liefert, dann k"onnte man in der iterativen Umsetzung, $b_1$
+nach diesem Schritt vom Zwischenresultatstack entfernen. Dies darf nat"urlich nur dann geschehen,
+wenn alle folgenden Entscheidungen invariant unter der Wahl von $b_1$ sind, d.h. wenn
+$g(a,b_1 b_2\ldots b_k) = g(a,b_1' b_2 \ldots b_k)$ f"ur alle $k \ge 2$. In diesem Fall wissen wir,
+dass das erste Zwischenresultat f"ur $a$ nur im ersten Entscheidungsschritt f"ur $a$ ben"otigt
+wird\footnote{Die Sprechweise \emph{$n$-ter Entscheidungsschritt f"ur $a$} bezieht sich auf das
+Ergebnis von $g(a,b_1 \ldots b_n)$.}.
+
+Formal l"asst sich dieser Sachverhalt durch eine Funktion $\gamma$ beschreiben, die zu jedem Argument $a$
+und jedem Zwischenresultatindex $i$ den Index $j$ eines Entscheidungsschrittes f"ur $a$ liefert,
+bis zu dem das $i$-te Zwischenresultat (m"oglicherweise) noch ben"otigt wird. Eine solche Funktion
+$\gamma$ nennen wir dann \emph{(Zwischenresultat-)Absch"atzung f"ur g}.
+
+\begin{definition}[Zwischenresultatabsch"atzung]
+  Sei $g: A \times B^* \pto A \uplus B$. $\gamma: A \times \N \to \N$ hei"st
+  \emph{(Zwischenresultat-)Absch"atzung f"ur $g$}, wenn f"ur alle $a \in A$ und $i \ge 1$ gilt:
+  \begin{enumerate}
+  \item Wenn $\gamma(a,i) = 0$, dann gilt
+    \[\begin{array}{rcl}
+      g(a,b_1 \ldots b_n) &=& g(a,b_1' \ldots b_n')
+    \end{array}\]
+    f"ur alle $n \ge i$, $b_1,\ldots,b_n,b_1',\ldots,b_n' \in B$, wobei $b_k = b_k'$ wenn $k \ne i$.
+  \item Wenn $\gamma(a,i) = j$, dann gilt $j \ge i$ und
+    \[\begin{array}{rcl}
+      g(a,b_1 \ldots b_n) &=& g(a,b_1' \ldots b_n')
+    \end{array}\]
+    f"ur alle $n > j$, $b_1,\ldots,b_n,b_1',\ldots,b_n' \in B$, wobei $b_k = b_k'$ wenn $k \ne i$.
+  \end{enumerate}
+\end{definition}
+
+Der erste Fall beschreibt dabei Zwischenresultate, die f"ur die weitere Berechnung vollst"andig
+irrelevant sind, w"ahrend der zweite Fall Zwischenresultate $b_i$ beschreibt, die nur bis zum
+$j$-ten Entscheidungsschritt ben"otigt werden. Vollst"andig irrelevante Zwischenresultate deuten
+auf Fehler in $g$ hin und treten bei einer \emph{sinnvoll} formulierten Funktion $g$ nicht auf.
+Wir werden diesen deshalb im Folgende keine weitere Beachtung schenken.
+
+Anhand einer Absch"atzung $\gamma$ erh"alt man f"ur jedes Zwischenresultat eine Art \emph{Lebenszeit}.
+Diese entspricht dem Entscheidungsschritt, bis zu dem das jeweilige Zwischenresultat laut $\gamma$
+mindestens vorzuhalten ist. Umgekehrt lassen sich daraus f"ur jeden Entscheidungsschritt $i$ eines
+Arguments $a$ die Indizes derjenigen Zwischenresultate angeben, die einerseits f"ur $i$ vorliegen
+m"ussen und andererseits f"ur $i+1$ beibehalten werden m"ussen. Die ersteren nennen wir dabei
+die \emph{Eingabe f"ur $(a,i)$} w"ahrend wir die letzteren als \emph{Ausgabe von $(a,i)$} bezeichnen.
+Trivialerweise muss die Ausgabe von $(a,i)$ der Eingabe von $(a,i+1)$ entsprechen. Formal l"asst sich
+dies wie folgt beschreiben.
+
+\begin{definition}[Ein- und Ausgabe]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei weiter $\gamma: A \times \N \to \N$ eine Absch"atzung
+  f"ur $g$. Dann sind f"ur alle $a \in A$ und $i \ge 0$ die Mengen $\I_{g,\gamma}(a,i) \subseteq \N$ der
+  \emph{Eingaben von $(a,i)$} und $\O_{g,\gamma}(a,i) \subseteq \N$ der \emph{Ausgaben von $(a,i)$} wie folgt
+  induktiv definiert:
+  \[\begin{array}{lcl}
+    \I_{g,\gamma}(a,0)
+    &=& \emptyset \\
+    \I_{g,\gamma}(a,i+1)
+    &=& \O_{g,\gamma}(a,i) \\
+    \O_{g,\gamma}(a,i)
+    &=& \{j\in(\I_{g,\gamma}(a,i)\cup\{i+1\}) \mid \gamma(a,j) > i \} \\
+  \end{array}\]
+\end{definition}
+
+Basierend hierauf l"asst sich nun eine \emph{Ein-/Ausgabe-Relation} definieren, die zu jedem Paar $(a,a')$
+Eingaben in Form einer Liste von Zwischenresultaten f"ur $a$ auf Ausgaben in Form eines Resultats $b$ oder
+eines Nachfolgers $a''$ und einer Liste von Zwischenresultaten, die beizubehalten sind, abbildet.
+
+\begin{definition}[Ein-/Ausgabe-Relation]
+  Sei $g: A \times B^* \pto A \uplus B$ und sei $\gamma: A \times \N \to \N$ eine Absch"atzung f"ur $g$.
+  Dann ist f"ur alle $a,a' \in A$ mit $a \in \parents_g(a')$ die \emph{Ein-/Ausgabe-Relation f"ur $(a,a')$}
+  definiert als die kleinste Relation $\IO_{g,\gamma}(a,a') \subseteq B^* \times (B \uplus (A \times B^*))$
+  f"ur die gilt:
+  \begin{enumerate}
+  \item Wenn $k \in \offsets_g(a,a')$, $g(a,b_1 \ldots b_{k+1}) = b$ und $\I_{g,\gamma}(a,k+1) = \{i_1,\ldots,i_n\}$ mit
+    $i_1 < \ldots < i_n$, dann gilt
+    \[(b_{i_1} \ldots b_{i_n},b) \in \IO_{g,\gamma}(a,a').\]
+  \item Wenn $k \in \offsets_g(a,a')$, $g(a,b_1 \ldots b_{k+1}) = a''$, $\I_{g,\gamma}(a,k) = \{i_1,\ldots,i_n\}$ mit
+    $i_1 < \ldots < i_n$, und $\O_{g,\gamma}(a,k+1) = \{j_1,\ldots,j_m\}$ mit
+    $j_1 < \ldots < j_m$, dann gilt
+    \[(b_{i_1} \ldots b_{i_n},(a'',b_{j_1} \ldots b_{j_m})) \in \IO_{g,\gamma}(a,a').\]
+  \end{enumerate}
+\end{definition}
+
+Zu jeder relativ offset-eindeutigen Funktion $g$ und jeder Absch"atzung $\gamma$ f"ur $g$ wird dann eine
+bin"are Relation $\step$ als kleinste solche Relation "uber
+$(\dot{A} \times A^* \times B^*) \times (\dot{A} \times A^* \times B^*)$ definiert, f"ur die gilt
+(mit $n \ge 1, m \ge 0$):
+\begin{enumerate}
+\item Wenn $g(a) = b$ \\
+  dann $(\cdot a,v,w) \step (a \cdot,v,w\,b)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v,w)$.
+\item Wenn $g(a) = a'$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(\cdot a,v,w) \step (\cdot a',v\,a,w)$.
+\item Wenn $(b_1 \ldots b_n,b) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a \cdot,v,w\,b)$.
+\item Wenn $(b_1 \ldots b_n,b) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a \cdot,v,w\,b)$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a'' \cdot,v,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} = \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a'' \cdot,v,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} = \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v,w\,b_1 \ldots b_n) \step (a'' \cdot,v\,a,w\,b_1' \ldots b_m')$.
+\item Wenn $(b_1 \ldots b_n,(a'',b_1' \ldots b_m')) \in \IO_{g,\gamma}(a,a')$ \\
+  und $\{a\} \subset \parents_g(a')$ \\
+  und $\{a\} \subset \parents_g(a'')$ \\
+  dann $(a' \cdot,v\,a,w\,b_1 \ldots b_n) \step (a'' \cdot,v\,a,w\,b_1' \ldots b_m')$.
+\end{enumerate}
+
+
+\end{document}

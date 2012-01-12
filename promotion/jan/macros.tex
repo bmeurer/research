@@ -1,0 +1,86 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2010 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% 
+
+
+%%
+%% Styles
+%%
+
+\newcommand{\sstyle}[1]{\ensuremath{\mathit{#1}}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\abort}{\ensuremath{\mathbf{abort}}}
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\step}{\ensuremath{\rightsquigarrow}}
+
+\renewcommand{\rule}[2]{\ \begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}\ }
+\newcommand{\Rule}[2]{\ \begin{array}{@{}c@{}} #1 \\ \hline\hline #2 \end{array}\ }
+
+\newcommand{\powerset}[1]{\wp(#1)}
+
+
+%%
+%% Names
+%%
+
+\newcommand{\children}{\ensuremath{\mathit{children}}}
+\newcommand{\offsets}{\ensuremath{\mathit{offsets}}}
+\newcommand{\parents}{\ensuremath{\mathit{parents}}}
+\newcommand{\graph}{\ensuremath{\mathit{graph}}}
+\newcommand{\tr}{\ensuremath{\mathit{tr}}}
+
+\newcommand{\Can}{\ensuremath{\mathbf{Can}}}
+\newcommand{\id}{\ensuremath{\mathit{id}}}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\I}{\ensuremath{\mathcal I}}
+\newcommand{\IO}{\ensuremath{\mathcal IO}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\renewcommand{\O}{\ensuremath{\mathcal O}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\Env}{\sstyle{Env}}
+\newcommand{\Exp}{\sstyle{Exp}}
+\newcommand{\Node}{\sstyle{Node}}
+\newcommand{\Val}{\sstyle{Val}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+
+
+%%
+%% Values
+%%
+
+\newcommand{\clov}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\false}{\mathbf{false}}
+\newcommand{\true}{\mathbf{true}}
+
+
+%%
+%% Other environments
+%%
+
+\newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "reciter"
+%%% End: 

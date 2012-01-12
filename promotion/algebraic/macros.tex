@@ -1,0 +1,114 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2011 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% 
+
+
+%%
+%% Styles
+%%
+
+\newcommand{\nstyle}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\sstyle}[1]{\ensuremath{\mathit{#1}}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\abort}{\ensuremath{\mathbf{abort}}}
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\step}{\ensuremath{\rightsquigarrow}}
+
+\newcommand{\sem}[1]{\ensuremath{[\![#1]\!]}}
+
+
+%%
+%% Names
+%%
+
+\newcommand{\arity}{\ensuremath{\mathit{arity}}}
+\newcommand{\cl}{\ensuremath{\mathit{cl}}}
+\newcommand{\dom}{\ensuremath{\mathit{dom}}}
+\newcommand{\fr}{\ensuremath{\mathit{fr}}}
+\newcommand{\free}{\ensuremath{\mathit{free}}}
+\newcommand{\graph}{\ensuremath{\mathit{graph}}}
+\newcommand{\id}{\ensuremath{\mathit{id}}}
+\newcommand{\tr}{\ensuremath{\mathit{tr}}}
+
+\newcommand{\Void}{\nstyle{Void}}
+\newcommand{\Dynamic}{\nstyle{Dynamic}}
+\newcommand{\Static}[1]{\nstyle{Static}\ {#1}}
+
+\newcommand{\App}{\nstyle{App}}
+\newcommand{\Child}{\nstyle{Child}}
+\newcommand{\Compose}{\nstyle{Compose}}
+\newcommand{\Label}{\nstyle{Label}}
+
+
+%%
+%% Sets
+%%
+
+\newcommand{\I}{\ensuremath{\mathcal I}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\renewcommand{\O}{\ensuremath{\mathcal O}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+
+\newcommand{\Assn}{\sstyle{Assn}}
+\newcommand{\Case}{\sstyle{Case}}
+\newcommand{\Cl}{\sstyle{Cl}}
+\newcommand{\Env}{\sstyle{Env}}
+\newcommand{\Exp}{\sstyle{Exp}}
+\newcommand{\Frame}{\sstyle{Frame}}
+\newcommand{\Id}{\sstyle{Id}}
+\newcommand{\Node}{\sstyle{Node}}
+\newcommand{\Rule}{\sstyle{Rule}}
+\newcommand{\Spec}{\sstyle{Spec}}
+\newcommand{\Term}{\sstyle{Term}}
+\newcommand{\Type}{\sstyle{Type}}
+\newcommand{\Val}{\sstyle{Val}}
+\newcommand{\Var}{\sstyle{Var}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+
+
+%%
+%% Values
+%%
+
+\newcommand{\clov}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\false}{\mathbf{false}}
+\newcommand{\true}{\mathbf{true}}
+
+
+%%
+%% Grammars
+%%
+
+\newenvironment{grammar}{\begin{array}{rrlll}}{\end{array}}
+
+\newcommand{\is}{& ::= &}
+\newcommand{\al}{\\ & \mid &}
+\newcommand{\nl}{\vspace{2mm}\\}
+
+
+%%
+%% Other environments
+%%
+
+\newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "algebraic"
+%%% End: 

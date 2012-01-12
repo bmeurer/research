@@ -1,0 +1,141 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+\title{Namenlose $\lambda$-Notationen}
+\author{Benedikt Meurer}
+\maketitle
+
+
+\section{Umgebungssemantik}
+
+Vorgegeben sei eine (unendliche) Menge $\Var$ von Namen $x$. Die abstrakte Syntax der Programmiersprache
+ist durch die kontextfreie Grammatik
+\[\begin{grammar}
+  e \in \Exp
+  \is c \mid x
+  \al \abstr{x}{e}
+  \al \app{e_1}{e_2}
+  \al \ifte{e_0}{e_1}{e_2}
+  \al \letin{x}{e_1}{e_2}
+\end{grammar}\]
+definiert.
+
+
+\section{B"aume}
+
+Die folgenden Definitionen basieren auf \emph{``Grundlagen der Programmiersprachen''} von Loeckx,
+Mehlhorn und Willhelm.
+\begin{definition}[Baumbereiche und B"aume] \
+  \begin{enumerate}
+  \item Die partiellen Funktionen $\mathit{parent}$ und $\mathit{brother}$ sind definiert durch
+    \[\begin{array}{rl}
+      \mathit{parent}: & \N^* \pto \N^*, \\
+      & w \cdot n \mapsto w \\
+      \\
+      \mathit{brother}: & \N^* \pto \N^*, \\
+      & w \cdot (n+1) \mapsto w \cdot n \\
+    \end{array}\]
+    Die reflexive, transitive H"ulle von $\mathit{parent}$ hei"st $\mathit{ancestor}$.
+  \item Ein \emph{Baumbereich} $K$ ist eine endliche Teilmenge von $\N^*$, die abgeschlossen
+    ist unter der Funktion $\mathit{parent}$, d.h. $\parent{K} \subseteq K$. Die Elemente des
+    Baumbereichs hei"sen \emph{Knoten}.
+  \item Sei $D$ eine Menge. Ein \emph{$D$-Baum} (kurz \emph{Baum}) ist ein Paar $(K,\ell)$,
+    wobei $K$ ein Baumbereich ist, und $\ell$ eine totale Abbildung von $K$ nach $D$. Die
+    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Bereich}.
+    Die Menge aller $D$-B"aume bezeichnen wir mit $T_D$.
+  \item Ein Baumbereich $K$ hei"st \emph{vollst"andig}, wenn $K$ abgeschlossen ist unter der
+    Funktion $\mathit{brother}$, d.h. $\brother{K} \subseteq K$. Ein Baum $(K,\ell)$ hei"st
+    \emph{vollst"andig}, wenn sein Baumbereich $K$ vollst"andig ist.
+  \end{enumerate}
+\end{definition}
+
+
+\section{Umgebungssemantik}
+
+Eine \emph{Umgebungssemantik} besteht aus Mengen $\Env$, $\Exp$, $\Ide$ und $\Val$ und beruht im
+Wesentlichen auf den beiden Funktionen
+\[\begin{array}{rl}
+  \lookup: & \Env \to \Ide \to \Val_\bot \\
+  \update: & \Env \to \Ide \to \Val \to \Env 
+\end{array}\]
+mit denen sich die beiden entscheidenden Regeln formulieren lassen: \\[3mm]
+\begin{tabular}{rl}
+  \RN{Lookup} & $\RULE{\lookup\,\eta\,\ide = v}{(\ide,\eta) \Downarrow v}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\eta) \Downarrow (\abstr{\ide'}{e'},\eta') \quad (e_2,\eta) \Downarrow v' \quad (e',\update\,n'\,\ide'\,v') \Downarrow w}{(\app{e_1}{e_2},\eta) \Downarrow w}$ \\[3mm]
+\end{tabular} \\[3mm]
+Zwischen den Funktionen $\lookup$ und $\update$ muss also offensichtlich folgender
+Zusammenhang bestehen:
+\[\begin{array}{rcl}
+  \lookup\,(\update\,\eta\,\ide\,v)\,\ide'
+  &=&
+  \begin{case}
+    v, & \text{falls $\ide = \ide'$} \\
+    \lookup\,\eta\,\ide', & \text{sonst}
+  \end{case}
+\end{array}\]
+
+
+\section{"Ubersetzung}
+
+Im Folgenden geben wir ein Schema an, wie man die "Ubersetzung in eine namenlose Umgebungssemantik durchf"uhrt.
+Dazu ben"otigt man
+\begin{itemize}
+\item eine Menge $\sEnv$ von \emph{statischen Umgebungen} $\Gamma$, die sog. \emph{"Ubersetzungskontexte},
+\item eine Menge $\sVal$ von \emph{statischen Werten} $\iota$, die sog. \emph{Indizes},
+\item eine Menge $\dEnv$ von \emph{dynamischen Umgebungen} $\rho$, und
+\item eine Menge $\dVal$ von \emph{dynamischen Werten} $\omega$,
+\end{itemize}
+sowie die folgenden 4 Funktionen:
+\[\begin{array}{rl}
+  \slookup: & \sEnv \to \Ide \to \sVal_\bot \\
+  \supdate: & \sEnv \to \Ide \to \sEnv \\
+  \dlookup: & \dEnv \to \sVal \to \dVal_\bot \\
+  \dupdate: & \dEnv \to \dVal \to \dEnv \\
+\end{array}\]
+Namenlose Ausdr"ucke $e^0 \in \Exp^0$ erh"alt man aus gew"ohnlichen Ausdr"ucken $e$, indem man bindende Vorkommen
+von Namen wegl"asst und angewandte Vorkommen durch statische Werte ersetzt. Die "Ubersetzungsrelation
+\[(\cdot \vdash \cdot \to \cdot) \subseteq \sEnv \times \Exp \times \Exp^0\]
+ist die kleinste Relation f"ur die gilt:
+\[\begin{array}{rcl}
+  \RULE{\slookup\,\Gamma\,\ide = \iota}{\Gamma \vdash \ide \to \iota}
+  &\quad\quad&
+  \RULE{(\supdate\,\Gamma\,\ide) \vdash e \to e^0}{\Gamma \vdash \abstr{\ide}{e} \to \abstr{}{e^0}} \\
+\end{array}\]
+und \emph{``straight-forward''} f"ur alle "ubrigen Ausdr"ucke.
+
+Die Semantik namenloser Ausdr"ucke wird mit Hilfe von dynamischen Umgebungen definiert, wobei die
+beiden entscheidenden Regeln wie folgt aussehen: \\[3mm]
+\begin{tabular}{rl}
+  \RN{Lookup} & $\RULE{\dlookup\,\rho\,\iota = \omega}{(\iota,\rho) \Downarrow \omega}$ \\[3mm]
+  \RN{Beta-V} & $\RULE{(e_1,\rho) \Downarrow (\abstr{}{e'},\rho') \quad (e_2,\rho) \Downarrow \omega' \quad (e',\dupdate\,\rho'\,\omega') \Downarrow \omega}{(\app{e_1}{e_2},\rho) \Downarrow \omega}$ \\[3mm]
+\end{tabular} \\[3mm]
+
+\end{document}

@@ -1,0 +1,306 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+\section{B"aume}
+
+Die folgenden Definitionen basieren auf \emph{``Grundlagen der Programmiersprachen''} von Loeckx,
+Mehlhorn und Willhelm.
+\begin{definition}[Baumbereiche und B"aume] \
+  \begin{enumerate}
+  \item Die partiellen Funktionen $\mathit{parent}$ und $\mathit{brother}$ sind definiert durch
+    \[\begin{array}{rl}
+      \mathit{parent}: & \N^* \pto \N^*, \\
+      & w \cdot n \mapsto w \\
+      \\
+      \mathit{brother}: & \N^* \pto \N^*, \\
+      & w \cdot (n+1) \mapsto w \cdot n \\
+    \end{array}\]
+    Die reflexive, transitive H"ulle von $\mathit{parent}$ hei"st $\mathit{ancestor}$.
+  \item Ein \emph{Baumbereich} $K$ ist eine endliche Teilmenge von $\N^*$, die abgeschlossen
+    ist unter der Funktion $\mathit{parent}$, d.h. $\parent{K} \subseteq K$. Die Elemente des
+    Baumbereichs hei"sen \emph{Knoten}.
+  \item Sei $D$ eine Menge. Ein \emph{$D$-Baum} (kurz \emph{Baum}) ist ein Paar $(K,\ell)$,
+    wobei $K$ ein Baumbereich ist, und $\ell$ eine totale Abbildung von $K$ nach $D$. Die
+    Abbildung $\ell$ hei"st die \emph{Beschriftung} des Baumes und $K$ sein \emph{Bereich}.
+    Die Menge aller $D$-B"aume bezeichnen wir mit $T_D$.
+  \item Ein Baumbereich $K$ hei"st \emph{vollst"andig}, wenn $K$ abgeschlossen ist unter der
+    Funktion $\mathit{brother}$, d.h. $\brother{K} \subseteq K$. Ein Baum $(K,\ell)$ hei"st
+    \emph{vollst"andig}, wenn sein Baumbereich $K$ vollst"andig ist.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}
+  Sei $D$ eine Menge. Die Funktionen $\mathit{leaves}$ und $\mathit{leafword}$ sind definiert durch
+  \[\begin{array}{rll}
+    \mathit{leaves}: & \powersetfin{\N^*} \to \powersetfin{\N^*}, \\
+    & \multicolumn{2}{l}{W \mapsto \{w \in W \mid \forall v \in \N^+.\,(w \cdot v) \not\in W\}.} \\
+    \\
+    \mathit{leafword}: & T_D \pto D^*, \\
+    & (K,\ell) \mapsto \ell(w_1)\ldots\ell(w_k) & \text{wenn $\{w_1,\ldots,w_k\}=\leaves{K}$} \\
+    && \text{mit $k \ge 1$ und $w_1 <_{\text{lex}} \ldots <_{\text{lex}} w_k$.} \\
+    \end{array}\]
+\end{definition}
+
+\begin{definition}[Teilbaum]
+  Sei $D$ eine Menge, $(K,\ell)$ ein $D$-Baum und $w \in K$ ein Knoten des Baums.
+  Der \emph{$w$-Teilbaum} $(K',\ell') = \subtree{(K,\ell)}{w}$ von $(K,\ell)$ ist definiert
+  durch
+  \[\begin{array}{rl}
+    \multicolumn{2}{l}{K' = \{v \in \N^* \mid w \cdot v \in K\}} \\
+    \ell': & K '\to D, \\
+    & v \mapsto \ell(w \cdot v).
+  \end{array}\]
+\end{definition}
+
+\begin{lemma}
+  Sei $D$ eine Menge, $(K,\ell)$ ein $D$-Baum und $w \in K$ ein Knoten des Baums. Dann gilt:
+  \begin{enumerate}
+  \item $\subtree{(K,\ell)}{w}$ ist ebenfalls ein $D$-Baum.
+  \item Wenn $(K,\ell)$ vollst"andig ist, so ist auch $\subtree{(K,\ell)}{w}$ vollst"andig.
+  \end{enumerate}
+\end{lemma}
+
+
+\section{Kontextfreie Grammatiken}
+
+Eine \emph{kontextfreie Grammatik} $G$ ist ein Quadrupel $(N,\Sigma,\to,S)$ mit
+\begin{enumerate}
+\item $\Sigma$ ist eine endliche, nicht-leere Menge von \emph{Terminalzeichen},
+\item $N$ ist eine endliche zu $\Sigma$ disjunkte Menge von \emph{Nichtterminalzeichen},
+\item $\to\ \subseteq N \times (N \uplus \Sigma)^*$ ist eine Relation von Produktionen,
+  wobei zu jedem $A \in S$ ein $w$ existieren muss, so dass $A \to w$, und
+\item $S \subseteq N$ ist eine nichtleere Menge von sogenannten \emph{Startsymbolen}.
+\end{enumerate}
+Die Worte aus $\Sigma^*$ hei"sen \emph{Terminalworte}, die aus $(N \uplus \Sigma)^*$ \emph{Satzformen}. Eine
+kontextfreie Grammatik hei"st \emph{$\varepsilon$-frei}, wenn sie keine Produktion der Form
+$A \to \varepsilon$ enth"alt.
+
+\begin{definition}[Ableitungen]
+  Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik. Wir definieren die bin"aren Relationen $\Rightarrow$
+  und $\Rightarrow^*$ auf der Menge der Satzformen $(\Sigma \uplus T)^*$ durch
+  \begin{enumerate}
+  \item $\alpha \Rightarrow \beta$ gdw. es ex. $\alpha_1,\alpha_2,\alpha_3\in (\Sigma \uplus T)^*$ und
+    $A \to \alpha_3$, so dass $\alpha = \alpha_1 A \alpha_2$ und $\beta = \alpha_1\alpha_2\alpha_3$.
+  \item $\Rightarrow^*$ ist die reflexive transitive H"ulle von $\Rightarrow$.
+  \end{enumerate}
+  Eine Folge $\alpha_0,\ldots,\alpha_n$ mit $\alpha_i \Rightarrow \alpha_{i+1}$ f"ur $0 \le i < n$ hei"st
+  \emph{Ableitung} von $\alpha_0$ nach $\alpha_n$, und $n$ hei"st die \emph{L"ange} der Ableitung.
+\end{definition}
+
+$L(A) = \{\alpha \in \Sigma^* \mid A \Rightarrow^* \alpha\}$ bezeichnet die Menge aller
+aus $A$ ableitbaren (Terminal-)W"orter.
+
+\begin{definition}[Ableitungsbaum]
+  Sei $G=(N,\Sigma,\to,S)$ eine kontextfreie Grammatik, $A \in N$ ein Nichtterminalzeichen und
+  $\alpha \in (N \uplus \Sigma)^*$ eine Satzform. Ein vollst"andiger Baum
+  $(K,\ell) \in T_{N \uplus \Sigma \uplus \{\varepsilon\}}$ hei"st
+  \emph{Ableitungsbaum von $A$ nach $\alpha$}, wenn gilt:
+  \begin{enumerate}
+  \item Die Beschriftung der Wurzel ist $A$, d.h. $\ell(\varepsilon)=A$.
+  \item F"ur jeden Knoten $w \in K$ mit Kindern $w1,\ldots,wn$, wobei $n \ge 1$, gilt
+    $\ell(w) \to \ell(w1)\ldots\ell(wn)$ und entweder
+    \begin{enumerate}
+    \item $\ell(wi)\ne\varepsilon$ f"ur alle $i=1,\ldots,n$, oder
+    \item $n = 1$ und $\ell(w1)=\varepsilon$.
+    \end{enumerate}
+  \item $\leafword{(K,\ell)} = \alpha$.
+  \end{enumerate}
+  Mit $T_A$ bezeichnen wir die Menge aller Ableitungsb"aume f"ur $A \Rightarrow^* \alpha$ mit
+  $\alpha \in \Sigma^*$.
+\end{definition}
+
+
+\section{Patterns}
+
+\begin{definition}[Patterns]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und sei
+  $V = (V_X)_{X\in N \uplus \Sigma}$ eine Familie von \emph{$G$-Variablenmengen}. F"ur
+  jedes $X \in N \uplus \Sigma$ ist die Menge $P(X)$ aller \emph{$X$-Pattern}
+  definiert als die kleinste Menge f"ur die gilt:
+  \begin{enumerate}
+  \item $X \in P(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item $\any \in P(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item $x^X \in P(X)$ f"ur alle $X \in N \uplus \Sigma$ und $x^X \in V_X$.
+  \item Wenn $A \to X_1 \ldots X_n$ mit $n \ge 1$ und $p_i \in P(X_i)$ f"ur alle $i=1,\ldots,n$,
+    dann gilt $(p_1 \ldots p_n) \in P(A)$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Patternmatching]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und
+  $A \in N$. Ein \emph{Patternmatching} ist eine Formel der Gestalt $(t,w) \vdash p \to s$,
+  wobei $p \in P(A)$, $t = T_A$ und $s$ eine Substitution. Ein solches
+  Patternmatching hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten
+  l"asst.
+  \begin{enumerate}
+  \item $((K,\ell),w) \vdash \any \to [\,]$.
+  \item $((K,\ell),w) \vdash \ell(w) \to [\,]$.
+  \item Wenn $x \in V_{\ell(w)}$, dann $((K,\ell),w) \vdash x \to [\subtree{(K,\ell)}{w}/x]$.
+  \item Wenn $w1,\ldots,wn$ die Kindknoten von $w$ sind, mit $n \ge 1$, $((K,\ell),wi) \vdash p_i \to s_i$ f"ur alle
+    $i=1,\ldots,n$ und $s = s_1 \oplus \ldots \oplus s_n$, dann gilt $((K,\ell),w) \vdash (p_1 \ldots p_n) \to s$.
+  \end{enumerate}
+\end{definition}
+
+
+\section{Konstruktoren}
+
+\begin{definition}[Konstruktoren]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und sei
+  $V = (V_X)_{X \in N \uplus \Sigma}$ eine Familie von \emph{$G$-Variablenmengen}. F"ur
+  jedes $X \in N \uplus \Sigma$ ist die Menge $\zeta(X)$ aller \emph{$X$-Konstruktoren}
+  definiert als die kleinste Menge f"ur die gilt:
+  \begin{enumerate}
+  \item $a \in \zeta(a)$ f"ur alle $a \in \Sigma$.
+  \item $x^X \in \zeta(X)$ f"ur alle $X \in N \uplus \Sigma$.
+  \item Wenn $A \to X_1 \ldots X_n$ mit $n \ge 1$ und $c_i \in \zeta(X_i)$ f"ur alle
+    $i=1,\ldots,n$, dann gilt $(c_1 \ldots c_n) \in \zeta(A)$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}[Konstruktion]
+  Sei $G = (N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $X \in N \uplus \Sigma$,
+  $c \in \zeta(X)$ und $s$ eine $G$-Substitution. Die
+  \emph{$(c,s)$-Konstruktion} $(K,\ell)$ ist induktiv definiert durch:
+  \begin{enumerate}
+  \item Wenn $c = a \in \Sigma$, dann
+    \[\begin{array}{rcl}
+      K &=& \{\varepsilon\} \\
+      \ell: & \multicolumn{2}{l}{K \to N \uplus \Sigma,} \\
+      & \multicolumn{2}{l}{\varepsilon \mapsto a.} \\
+    \end{array}\]
+  \item Wenn $c = x \in \dom{s}$, dann $(K,\ell) = s(x)$.
+  \item Wenn $c = (c_1 \ldots c_n)$ und existieren $(c_i,s)$-Konstruktionen $(K_i,\ell_i)$ f"ur alle
+    $i=1,\ldots,n$, dann
+    \[\begin{array}{rcl}
+      K &=& \{\varepsilon\} \cup \bigcup_{i=1,\ldots,n} \{i \cdot w \mid w \in K_i\} \\
+      \ell: & \multicolumn{2}{l}{K \to N \uplus \Sigma,} \\
+      & \multicolumn{2}{l}{\varepsilon \mapsto X,} \\
+      & \multicolumn{2}{l}{(i \cdot w) \mapsto \ell_i(w) \text{ f"ur alle $i=1,\ldots,n$ und $w \in K_i$.}}
+    \end{array}\]
+  \end{enumerate}
+\end{definition}
+
+\begin{lemma}
+  Sei $G$ eine $\varepsilon$-freie kontextfreie Grammatik, $c$ ein $G$-Konstruktor und
+  $s$ eine $G$-Substitution mit $\var{c} \subseteq \dom{s}$.
+  \begin{enumerate}
+  \item Es existiert genau eine $(c,s)$-Konstruktion.
+  \item Die $(c,s)$-Konstruktion ist ein $G$-Ableitungsbaum.
+  \end{enumerate}
+\end{lemma}
+
+
+\section{Spezifikationen}
+
+\begin{definition}[Regeln]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$.
+  \begin{enumerate}
+  \item Eine \emph{$(A,B^n,A)$-Regel} ist eine Formel der Gestalt $(p_0,p_1 \ldots p_n) \Uparrow c$ mit
+    $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$, $c \in \zeta(A)$ und $\var{c} \subseteq \bigcup_{i=0,\ldots,n} \var{p_i}$.
+    Die Menge aller solchen Regeln f"ur gegebenes $n \ge 0$ bezeichnen wir mit $(A,B^n,A)$.
+  \item Eine \emph{$(A,B^n,B)$-Regel} ist eine Formel der Gestaltl $(p_0,p_1 \ldots p_n) \Downarrow c$ mit
+    $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$, $c \in \zeta(B)$ und $\var{c} \subseteq \bigcup_{i=0,\ldots,n} \var{p_i}$.
+    Die Menge aller solchen Regeln f"ur gegebenes $n \ge 0$ bezeichnen wir mit $(A,B^n,B)$.
+  \end{enumerate}
+  Sei nun $(A,B^*,A)=\bigcup_{n \ge 0}(A,B^n,A)$ und $(A,B^*,B)=\bigcup_{n \ge 0}(A,B^n,B)$.
+\end{definition}
+
+\begin{definition}[Spezifikation]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik und $A,B \in S$.
+  Eine \emph{$(A,B)$-Spezifikation} $\Pi$ ist eine nicht-leere Menge von $(A,B^*,A) \cup (A,B^*,B)$.
+  Eine Spezifikation hei"st \emph{eindeutig}, wenn f"ur alle $p_0 \in P(A)$, $p_1,\ldots,p_n \in P(B)$
+  h"ochstens ein $c \in \zeta(A) \cup \zeta(B)$ existiert, so dass entweder
+  \begin{enumerate}
+  \item $(p_0,p_1 \ldots p_n) \Uparrow c$ und $c \in \zeta(A)$, oder
+  \item $(p_0,p_1 \ldots p_n) \Downarrow c$ und $c \in \zeta(B)$.
+  \end{enumerate}
+\end{definition}
+
+
+\pagebreak
+
+
+\section{Semantik}
+
+\begin{definition}[Transformationen]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$ und
+  $\Pi$ eine $(A,B)$-Spezifikation.
+  \begin{enumerate}
+  \item Sei $(p_0,p_1 \ldots p_n) \Uparrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
+    mit $(t_i,\varepsilon) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
+    Dann ist $(t_0,t_1 \ldots t_n) \Uparrow (c,s)$ eine \emph{$(T_A,T_B^n,T_A)_\Pi$-Transformation}. Die Menge aller
+    solchen $\Pi$-Transformationen f"ur gegebenes $n \ge 0$ und $\Pi$ bezeichnen wir mit $(T_A,T_B^n,T_A)_\Pi$.
+  \item Sei $(p_0,p_1 \ldots p_n) \Downarrow c$ eine Regel aus $\Pi$, $t_0 \in T_A$ und $t_1,\ldots,t_n \in T_B$
+    mit $(t_i,\epsilon_i) \vdash p_i \to s_i$ f"ur alle $i = 0,\ldots,n$ und $s = s_0 \oplus \ldots \oplus s_n$.
+    Dann ist $(t_0,t_1 \ldots t_n) \Downarrow (c,s)$ eine \emph{$(T_A,T_B^n,T_B)_\Pi$-Transformation}. Die Menge aller
+    solchen $\Pi$-Transformationen f"ur gegebenes $n \ge 0$ und $\Pi$ bezeichnen wir mit $(T_A,T_B^n,T_B)_\Pi$.
+  \end{enumerate}
+  Wir definieren weiter $(T_A,T_B^*,T_A)_\Pi=\bigcup_{n \ge 0}(T_A,T_B^n,T_A)_\Pi$ und \\
+  $(T_A,T_B^*,T_B)_\Pi=\bigcup_{n \ge 0}(T_A,T_B^n,T_B)_\Pi$.
+\end{definition}
+
+\begin{definition}[Semantik]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Die \emph{$(A,B,\Pi)$-Semantik} ist die kleinste
+  Menge $g \subseteq T_A \times T_B^* \times (T_A \uplus T_B)$, die alle $(T_A,T_B^*,T_A)_\Pi$- und
+  $(T_a,T_B^*,T_B)_\Pi$-Transformationen enth"alt.
+\end{definition}
+
+\begin{lemma}
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Wenn $\Pi$ eindeutig ist, dann ist die
+  $(A,B,\Pi)$-Semantik eine Funktion.
+\end{lemma}
+
+\begin{definition}[Interpreter]
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$,
+  $\Pi$ eine $(A,B)$-Spezifikation und $g \subseteq T_A \times T_B^* \times (T_A \uplus T_B)$ eine
+  $(A,B,\Pi)$-Semantik. Eine Relation $\Downarrow\ \subseteq T_A \times T_B$ hei"st
+  \emph{$(A,B,\Pi)$-Interpreter}, wenn sie die kleinste Relation ist, f"ur die gilt
+  (f"ur alle $n \ge 0$):
+  \begin{quote}
+    Wenn $a_i \Downarrow b_i$ f"ur $i=1,\ldots,n$
+    und $(a,b_1 \ldots b_{i-1},a_i) \in g$ f"ur \\
+    $i=1,\ldots,n$ und $(a,b_1 \ldots b_n,b) \in g$
+    dann $a \Downarrow b$.
+  \end{quote}
+\end{definition}
+
+Offensichtlich existiert zu jedem $\Pi$ nur h"ochstens ein einziger Interpreter.
+
+\begin{lemma}
+  Sei $G=(N,\Sigma,\to,S)$ eine $\varepsilon$-freie kontextfreie Grammatik, $A,B \in S$
+  und $\Pi$ eine $(A,B)$-Spezifikation. Wenn $\Pi$ eindeutig ist, dann ist der 
+  \emph{$(A,B,\Pi)$-Interpreter} eine Funktion. Diese wird dann \emph{eval} genannt.
+\end{lemma}
+
+
+\end{document}

@@ -1,0 +1,102 @@
+%%
+%% macros.tex - Useful LaTeX macros
+%%
+%% Copyright (c) 2006-2010 Benedikt Meurer <benedikt.meurer@googlemail.com>
+%% 
+
+
+%%
+%% Styles
+%%
+
+\newcommand{\nstyle}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\sstyle}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\semantic}[1]{\ensuremath{[\![#1]\!]}}
+
+
+%%
+%% Misc
+%%
+
+\newcommand{\pto}{\rightharpoonup}
+\newcommand{\powerset}[1]{\mathcal{P}(#1)}
+
+
+%%
+%% Functions
+%%
+
+\newcommand{\beh}{\nstyle{beh}}
+\newcommand{\obs}{\nstyle{obs}}
+
+
+%%
+%% Sets
+%%
+
+\renewcommand{\L}{\ensuremath{\mathcal L}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+
+\newcommand{\Exp}{\sstyle{Exp}}
+\newcommand{\Obs}{\sstyle{Obs}}
+\newcommand{\Prog}{\sstyle{Prog}}
+\newcommand{\Sem}{\sstyle{Sem}}
+
+
+%%
+%% Expressions
+%%
+
+\newcommand{\ide}{\ensuremath{\mathit{ide}}}
+\newcommand{\app}[2]{{#1}\,{#2}}
+\newcommand{\abstr}[2]{\lambda{#1}.\,{#2}}
+\newcommand{\ifte}[3]{\mathbf{if}\,{#1}\,\mathbf{then}\,{#2}\,\mathbf{else}\,{#3}}
+\newcommand{\letin}[3]{\mathbf{let}\,{#1}={#2}\,\mathbf{in}\,{#3}}
+
+
+%%
+%% Values
+%%
+
+\newcommand{\clov}[2]{\langle{#1},{#2}\rangle}
+\newcommand{\false}{\mathbf{false}}
+\newcommand{\true}{\mathbf{true}}
+
+
+%%
+%% Grammars
+%%
+
+\newenvironment{grammar}{\begin{array}{rrlll}}{\end{array}}
+
+\newcommand{\is}{& ::= &}
+\newcommand{\al}{\\ & \mid &}
+\newcommand{\nl}{\vspace{2mm}\\}
+
+
+%%
+%% Rules
+%%
+
+\newcommand{\RN}[1]{\mbox{{\sc (#1)}}}
+
+\newcommand{\RULE}[2]{\begin{array}{@{}c@{}} #1 \\ \hline #2 \end{array}}
+
+\newcommand{\da}[3]{{#1}\vdash{#2}\div{#3}}
+\newcommand{\ej}[3]{{#1}\vdash{#2}:{#3}}
+\newcommand{\match}[3]{{#1}\vdash{#2}\to{#3}}
+\newcommand{\Tjr}[2]{{#1}:{#2}}
+\newcommand{\Tjc}[3]{{#1}\vdash{#2}\div{#3}}
+
+
+%%
+%% Other environments
+%%
+
+\newenvironment{case}{\left\{\!\!\!\begin{array}{ll}}{\end{array}\right.}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "language"
+%%% End: 

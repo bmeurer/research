@@ -1,0 +1,246 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+
+%% Silbentrennung
+\hyphenation{%
+Re-kur-sions-sche-ma%
+}
+
+%% LaTeX macros
+\include{macros}
+
+\begin{document}
+
+
+\section{Rekursion}
+
+Wir betrachten im Folgenden Funktionen als spezielle Relationen, d.h. $\subseteq$ ordnet
+Funktionen basierend auf ihren Graphen.
+
+\begin{definition}[Rekursionsschema]
+  Seien $A,B$ disjunkte Mengen. Ein \emph{$(A,B)$-Rekursionsschema} ist eine Funktion
+  $\sigma: A \times B^* \pto A \uplus B$, geschrieben $\sigma: A \Rightarrow B$.
+\end{definition}
+
+\begin{definition}[Rekursion]
+  Sei $\sigma: A \Rightarrow B$ ein Rekursionsschema. Die durch $\sigma$ definierte \emph{Rekursion}
+  ist die kleinste Relation $\Lambda \sigma \subseteq A \times B$ f"ur die gilt:
+  \begin{enumerate}
+  \item Wenn $\sigma(a,\varepsilon) = b$, dann $(a,b) \in \Lambda \sigma$.
+  \item Wenn $n \ge 1$, $(a_i,b_i) \in \Lambda \sigma$ und $\sigma(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$,
+    und $\sigma(a,b_1 \ldots b_n) = b$, dann $(a,b) \in \Lambda \sigma$.
+  \end{enumerate}
+\end{definition}
+Diese induktive Definition von $\Lambda \sigma$ l"asst sich auch k"urzer notieren:
+\begin{quote}
+  F"ur alle $n \in \N$, $a, a_1,\ldots,a_n \in A$ und $b,b_1,\ldots,b_n\in B$ gilt: 
+  Wenn $(a_i,b_i)\in\Lambda\sigma$ und $\sigma(a,b_1 \ldots b_{i-1}) = a_i$ f"ur $i = 1,\ldots,n$ und
+  $\sigma(a,b_1 \ldots b_n) = b$, dann $(a,b)\in\Lambda \sigma$.
+\end{quote}
+Wie man leicht sieht, ist $\Lambda g$ wohldefiniert und eine Funktion.
+Eine Funktion $f : A \pto B$ hei"st \emph{rekursiv definierbar}, wenn ein Rekursions\-schema
+$\sigma: A \Rightarrow B$ existiert, so dass $f = \Lambda \sigma$.
+
+\begin{lemma}[Monotonie] \label{lemma:Monotonie}
+  F"ur alle $\sigma,\sigma': A \Rightarrow B$ gilt:
+  Wenn $\sigma \subseteq \sigma'$, dann $\Lambda \sigma \subseteq \Lambda \sigma'$.
+\end{lemma}
+
+\begin{proof}
+  Gelte also $\sigma \subseteq \sigma'$. Via Induktion "uber den Aufbau von $\Lambda\sigma$ l"asst sich nun zeigen,
+  dass $(a,b) \in \Lambda \sigma'$ wenn $(a,b) \in \Lambda \sigma$:
+  \begin{enumerate}
+  \item Wenn $\sigma(a,\varepsilon) = b$, dann gilt auch $\sigma'(a,\varepsilon)=b$ wegen
+    $\sigma\subseteq\sigma'$. Also folgt $(a,b) \in \Lambda \sigma'$.
+  \item Wenn $n \ge 1$, $(a_i,b_i) \in \Lambda \sigma$ und $\sigma(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$,
+    und $\sigma(a,b_1 \ldots b_n) = b$, dann folgt nach Induktionsannahme $(a_i,b_i)\in\Lambda \sigma'$
+    f"ur $i=1,\ldots,n$ und wegen $\sigma \subseteq \sigma'$ folgt $\sigma'(a,b_1 \ldots b_{i-1})=a_i$
+    f"ur $i=1,\ldots,n$ und $\sigma'(a,b_1 \ldots b_n) =b$. Also folgt insgesamt $(a,b) \in \Lambda \sigma'$.
+  \end{enumerate}
+\end{proof}
+
+\begin{definition}
+  Ein Rekursionsschema $\sigma: A \Rightarrow B$ hei"st \emph{kanonisch}, wenn
+  f"ur alle $n \in \N$, $a \in A$ und $b_1,\ldots,b_{n+1} \in B$ gilt:
+  \begin{quote}
+    Wenn $\sigma(a,b_1 \ldots b_{n+1}) \in A \uplus B$, dann gilt
+    $\sigma(a,b_1 \ldots b_i) \in A$ f"ur alle $i = 0,\ldots,n$.
+  \end{quote}
+\end{definition}
+
+\begin{lemma}
+  Zu jedem $\sigma: A \Rightarrow B$ existiert ein kanonisches $\sigma':A \Rightarrow B$ mit
+  $\sigma' \subseteq \sigma$ und $\Lambda \sigma' = \Lambda \sigma$.
+\end{lemma}
+
+\begin{proof}
+  W"ahle $\sigma' = \Can(\sigma)$ mit
+  \[\begin{array}{rll}
+    \Can(\sigma):& (A \times B^*) \pto A \uplus B, \\
+    & (a,\varepsilon) \mapsto \sigma(a,\varepsilon) \\
+    & (a,b_1 \ldots b_{n+1}) \mapsto \sigma(a,b_1 \ldots b_{n+1}) & \text{falls $\sigma(a,b_1 \ldots b_i)\in A$} \\
+    && \text{f"ur alle $i =0,\ldots,n$.}
+  \end{array}\]
+  Trivialerweise gilt $\sigma' = \Can(\sigma) \subseteq \sigma$ und $\sigma' = \Can(\sigma)$ ist nach
+  Konstruktion kanonisch. Weiterhin folgt $\Lambda \sigma' \subseteq \Lambda \sigma$ nach
+  Lemma~\ref{lemma:Monotonie}, und per Induktion "uber $\Lambda \sigma$ zeigen wir, dass auch
+  $\Lambda \sigma \subseteq \Lambda \sigma'$ gilt. Sei dazu $(a,b) \in \Lambda \sigma$, dann
+  gilt entweder:
+  \begin{enumerate}
+  \item $\sigma(a,\varepsilon)=b$, also auch $\sigma'(a,\varepsilon)=b$. Dann gilt insb. $(a,b)\in\Lambda\sigma'$.
+  \item Es gilt $(a_i,b_i)\in\Lambda \sigma$ und $\sigma(a,b_1 \ldots b_{i-1})=a_i$ f"ur $i=1,\ldots,n$ und
+    $\sigma(a,b_1 \ldots b_n) = b$. Dann folgt nach Induktionsannahme $(a_i,b_i) \in \Lambda \sigma'$ f"ur
+    $i=1,\ldots,n$. Nach Definition von $\sigma' = \Can(\sigma)$ folgt weiterhin $\sigma'(a,b_1 \ldots b_{i-1})=a_i$
+    f"ur $i=1,\ldots,n$ und $\sigma'(a,b_1 \ldots b_n)=b$. Also folgt insgesamt $(a,b) \in \Lambda\sigma'$.
+  \end{enumerate}
+\end{proof}
+
+\begin{corollary}
+  F"ur alle $\sigma,\sigma':A \Rightarrow B$ gilt:
+  \begin{enumerate}
+  \item $\Can(\sigma) \subseteq \sigma$.
+  \item $\Can(\Can(\sigma)) = \Can(\sigma)$.
+  \item Wenn $\sigma \subseteq \sigma'$, dann auch $\Can(\sigma) \subseteq \Can(\sigma')$.
+  \end{enumerate}
+\end{corollary}
+
+\begin{lemma}
+  Zu jeder rekursiv definierbaren Funktion $f$ existiert ein kanonisches Rekursionsschema $\sigma$,
+  so dass $f = \Lambda \sigma$ gilt.
+\end{lemma}
+Interessant ist anzumerken, dass dieses Rekursionsschema im Allgemeinen nicht eindeutig ist. Zum
+Beispiel besitzt die Fibonacci-Funktion mindestens zwei verschiedene, kanonische Rekursionsschemata;
+eines, welches zun"achst $x-1$ als n"achstes Argument liefert und ein anderes, welches zun"achst
+$x-2$ liefert.
+
+\begin{definition}
+  Zwei Rekursionsschemata $\sigma,\sigma':A \Rightarrow B$ hei"sen \emph{isomorph},
+  geschrieben $\sigma \equiv \sigma'$, wenn sie die gleiche Rekursion beschreiben,
+  d.h. wenn $\Lambda \sigma = \Lambda \sigma'$ gilt.
+\end{definition}
+Dann sind trivialerweise alle Rekursionsschemata rekursiv definierbarer Funktionen eindeutig
+bis auf Isomorphie; insbesondere sind die kanonischen Rekursionsschemata eindeutig bis auf
+Isomorphie.
+
+\begin{corollary}
+  Wenn $\sigma \equiv \sigma'$, dann $\Can(\sigma) \equiv \sigma'$.
+\end{corollary}
+
+
+\subsection{Implementierung}
+
+\begin{definition}[Implementierung]
+  Seien $A',B'$ disjunkte Mengen. Eine \emph{$(A,B)$-Implementierung} ist ein Tripel
+  $\gamma = (\phi,\sigma,\psi)$ mit
+  \begin{enumerate}
+  \item $\phi:A \pto A'$,
+  \item $\sigma: A' \Rightarrow B'$, und
+  \item $\psi:B' \pto B$.
+  \end{enumerate}
+  Die durch $\gamma$ \emph{implementierte Funktion $\Lambda\gamma: A \pto B$} ist definiert
+  durch\footnote{Hierbei ist $\circ$ die auf partielle Funktionen verallgemeinerte Komposition.}
+  \[\begin{array}{rcl}
+    \Lambda \gamma &=& \psi \circ (\Lambda \sigma) \circ \phi.
+  \end{array}\]
+\end{definition}
+Sei $f: A \pto B$. $\gamma$ hei"st \emph{Implementierung von $f$}, wenn $f = \Lambda \gamma$.
+Offensichtlich definiert jedes Rekursionsschema $\sigma:A \Rightarrow B$ eine triviale
+Implementierung $\gamma_\sigma = (\id_A,\sigma,\id_B)$.
+
+\begin{definition}
+  Zwei $(A,B)$-Implementierungen $\gamma$ und $\gamma'$ hei"sen \emph{isomorph}, geschrieben
+  $\gamma \equiv \gamma'$, wenn sie die gleiche Funktion implementieren, d.h. wenn
+  $\Lambda \gamma = \Lambda \gamma'$ gilt.
+\end{definition}
+
+
+\subsection{"Aquivalenz}
+
+\begin{definition}
+  Seien $f:A \pto B$ und $f':A' \pto B'$ rekursiv definierbare Funktionen und
+  sei $\sim\ \subseteq (A \times A') \uplus (B \times B')$. $f$ und $f'$ hei"sen
+  \emph{"aquivalent bzgl. $\sim$}, geschrieben $f \sim f'$, wenn f"ur
+  alle $a \sim a'$ entweder
+  \begin{enumerate}
+  \item $f(a)$ und $f'(a')$ sind undefiniert, oder
+  \item $f(a) \sim f'(a')$
+  \end{enumerate}
+  gilt.
+\end{definition}
+
+\begin{definition}
+  Seien $\sigma:A \Rightarrow B$, $\sigma': A' \Rightarrow B'$ und $\sim\ \subseteq (A \times A') \uplus (B \times B')$.
+  $\sigma$ und $\sigma'$ hei"sen \emph{"aquivalent bzgl. $\sim$}, geschrieben $\sigma \sim \sigma'$,
+  wenn f"ur alle $n \in \N$ gilt:
+  \begin{quote}
+    Wenn $a \sim a'$ und $b_i \sim b_i'$ f"ur $i=1,\ldots,n$, dann gilt entweder
+    \begin{enumerate}
+    \item $\sigma(a,b_1 \ldots b_n)$ und $\sigma'(a',b_1' \ldots b_n')$ sind undefiniert, oder
+    \item $\sigma(a,b_1 \ldots b_n) \sim \sigma'(a',b_1' \ldots b_n')$.
+    \end{enumerate}
+  \end{quote}
+\end{definition}
+
+\begin{corollary}
+  Wenn $\sigma \sim \sigma'$, dann $\Can(\sigma) \sim \Can(\sigma')$.
+\end{corollary}
+
+\begin{corollary} \label{corollary:Equiv}
+  Wenn $\sigma \sim \sigma'$, dann $\Lambda \sigma \sim \Lambda \sigma'$.
+\end{corollary}
+
+
+\section{Anwendungen}
+
+\subsection{"Aquivalenz zwischen Substitutions- und Umgebungssemantik}
+
+Sei $S: \Exp \Rightarrow \Val$ das Rekursionsschema der Substitutionssemantik und
+$U: \Exp \times \Env \Rightarrow \Val \times \Env$ das Rekursionsschema der Umgebungssemantik,
+wobei $\Val \subseteq \Exp$.
+Der intuitive Zusammenhang ist, dass jedes Paar $(e,\eta)$ Darstellung eines
+(abgeschlossenen) Ausdrucks ist. Sei dazu
+\[\begin{array}{rcl}
+  \tr(e,\eta) &=& e[\tr(e_1,\eta_1),\ldots,\tr(e_n,\eta_n)]
+\end{array}\]
+f"ur $\eta = [(e_1,\eta_1);\ldots;(e_n,\eta_n)]$. Dann definieren wir die "Aquivalenzrelation
+durch
+\[\begin{array}{rcl}
+  e_0 \sim (e,\eta) &\text{gdw.}& e_0 = \tr(e,\eta).
+\end{array}\]
+Nach Korollar~\ref{corollary:Equiv} gilt $\Lambda S \sim \Lambda U$, wenn $S \sim U$. Auf diese
+Weise bleibt uns die Induktion erspart und wir m"ussen lediglich zeigen, dass 
+\[\begin{array}{rcl}
+  S(\tr(e,\eta)) = \tr(U(e,eta))
+\end{array}\]
+f"ur alle $e,\eta$ gilt. Dann n"amlich folgt
+\[\begin{array}{rcl}
+  \Lambda S \circ \tr = \tr \circ \Lambda U.
+\end{array}\]
+Dies l"a"st sich per Fallunterscheidung nach der Form von $e$ leicht
+zeigen, ist aber immer noch recht m"uhsam, vorallem wenn $e$ ein Bezeichner ist.
+
+
+\end{document}

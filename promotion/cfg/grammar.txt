@@ -1,0 +1,111 @@
+domain id =
+  string
+;;
+
+domain operator =
+  Add
+| Sub
+| Mul
+;;
+
+domain constant =
+  Int of int
+| Bool of bool
+| Op of operator
+;;
+
+domain expression =
+  Const of constant
+| Id of id
+| Abstr of id * expression
+| App of expression * expression
+| Tuple of expression list
+;;
+
+domain environment =
+  Empty
+| Entry of id * value * environment
+;;
+
+domain value =
+  Value_const of constant
+| Value_app of operator * int
+| Value_closure of id * expression * environment
+| Value_tuple of value list
+;;
+
+
+ruleset Operator of operator * int * int to const =
+begin
+  rule (ADD) 
+    concludes (Add, z1, z2) to Int z
+    when (z1, z2) to z via IntegerAddition
+  ;;
+end
+
+
+ruleset Lookup of id * environment to value =
+begin
+  rule (FOUND)
+    concludes (id, Entry (id, v, _)) to v
+  ;;
+
+  rule (SKIP)
+    concludes (id, Entry (_, _, eta)) to v
+    when (id, eta) to v via Lookup
+  ;;
+end
+
+
+ruleset EvalTuple of expression list * environment to value list:
+
+rule (TUPLE-EMPTY) =
+  conclude ([], eta) to []
+;;
+
+rule (TUPLE-ENTRY) =
+  conclude (e :: el, eta) to v :: vl
+  when (e, eta) to v via Eval
+  and (el, eta) to vl via EvalTuple
+;;
+
+
+ruleset Eval of expression * environment to value:
+
+rule (CONST) =
+  conclude (Const (c), _) to Value_const c
+;;
+
+rule (ID) =
+  conclude (Id (id), eta) to v
+  when (id, eta) to v via Lookup
+;;
+
+rule (CLOSURE) =
+  conclude (Abstr (id, e), eta) to (Value_closure (id, e, eta))
+;;
+
+rule (OP-1) =
+  conclude (App (e1, e2), eta) to Value_app (op, z)
+  when (e1, eta) to Value_const (Op op) via Eval
+  and (e2, eta) to Value_const (Int z) via Eval
+;;
+
+rule (OP-2) =
+  conclude (App (e1, e2), eta) to Value_const c
+  when (e1, eta) to Value_app (op, z1) via Eval
+  and (e2, eta) to Value_const (Int z2) via Eval
+  and (op, z1, z2) to c via Operator
+;;
+
+rule (BETA-V) =
+  conclude (App (e1, e2), eta) to v
+  when (e1, eta) to (Value_closure (id', e', eta')) via Eval
+  and (e2, eta) to v' via Eval
+  and (e', Entry (id', e', eta')) to v via Eval
+;;
+
+rule (TUPLE) =
+  conclude (Tuple el, eta) to Value_tuple vl
+  when (el, eta) to vl via EvalTuple
+;;

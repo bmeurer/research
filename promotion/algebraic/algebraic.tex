@@ -1,0 +1,508 @@
+\documentclass[%
+  12pt,%
+  a4paper,%
+%  draft,%
+]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{array}
+\usepackage[american]{babel}
+\usepackage{color}
+\usepackage{enumerate}
+\usepackage[a4paper,%
+            colorlinks=false,%
+            final,%
+            pdfkeywords={},%
+            pdftitle={},%
+            pdfauthor={Benedikt Meurer},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{latexsym}
+\usepackage[final]{listings}
+\usepackage{makeidx}
+\usepackage{mathpartir}
+\usepackage{ngerman}
+\usepackage[standard,thmmarks]{ntheorem}
+\usepackage{stmaryrd}
+\usepackage{varwidth}
+
+%% LaTeX macros
+\include{macros}
+
+\DeclareMathOperator{\as}{\textbf{as}}
+\newcommand{\any}{\textbf{any}}
+\newcommand{\match}[3]{\textbf{match}\,{#1}\,\textbf{with}\,{#2}\,\textbf{in}\,{#3}}
+
+\newcommand{\tj}[2]{{#1}\div{#2}}
+\newcommand{\Tj}[3]{{#1}\vdash{#2}\div{#3}}
+
+\begin{document}
+
+
+\section*{Notationen}
+
+\begin{mathpar}
+  A^n = \underbrace{A \times \ldots \times A}_n
+  \and
+  A^* = \bigcup_{n \ge 0} A^n
+  \and
+  A^+ = \bigcup_{n \ge 1} A^n
+\end{mathpar}
+wobei $A^0 = \{\varepsilon\}$
+
+
+\section*{Abstrakte Syntax}
+
+Die Mengen $\Spec$ aller \emph{(Bindungs-)Spezifikationen} $\sigma$ und
+$\Type$ aller \emph{(Bindungs-)Typen} $\tau$ sind definiert durch die
+folgende kontextfreie Grammatik:
+\[\begin{grammar}
+  \sigma \in \Spec
+  \is \Dynamic
+  \al \Static{i} & i \ge 1
+  \nl
+  \tau \in \Type
+  \is \langle \sigma_1,\ldots,\sigma_n \rangle & n \ge 0
+  \nl
+\end{grammar}\]
+Eine Bindungsspezifikation $\gamma$ bzw. ein Bindungstyp $\tau$ hei"st \emph{g\"ultig bzgl. $k \in \N$},
+geschrieben $\sigma \preceq k$ bzw. $\tau \preceq k$, wenn sich dies mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule{%
+  }{%
+    \Dynamic \preceq k
+  }%
+  \and
+  \inferrule{%
+    i \le k
+  }{%
+    \Static{i} \preceq k
+  }%
+  \and
+  \inferrule{%
+    \sigma_1 \preceq k \\
+    \ldots \\
+    \sigma_n \preceq k
+  }{%
+    \langle \sigma_1,\ldots,\sigma_n \rangle \preceq k
+  }%
+\end{mathpar}
+Intuitiv bedeutet $\tau \preceq k$, dass alle statischen Spezifikationen in $\tau$ innerhalb des
+Intervalls $[1,k]$ liegen.
+
+Eine \emph{Syntaxsignatur} $\Psi = \langle \mathcal{C}, \delta \rangle$ besteht
+aus einer Menge $\mathcal{C}$ von \emph{Konstruktoren} $\zeta$ und einer
+(totalen) Funktion $\delta: \mathcal{C} \to \Type^*$, welche jedem Konstruktor
+eine Stelligkeit und damit verbundene Bindungstypen zuordnet.
+
+\subsection*{Terme und Regeln}
+
+Sei $\Var$ eine (unendliche) Menge von \emph{Variablen}.
+Die Mengen $\Term(\Psi)$ aller \emph{$\Psi$-Terme} $t$ und $\Case(\Psi)$ aller
+\emph{$\Psi$-F"alle} $\alpha$ sind definiert durch die folgende kontextfreie Grammatik
+\[\begin{grammar}
+  t \in \Term(\Psi)
+  \is X
+  \al t \langle t_1,\ldots,t_n \rangle & n \ge 1
+  \al \zeta(t_1,\ldots,t_n)
+  \al \match{t}{\zeta(X_1,\ldots,X_n)}{t'}
+  \nl
+  \alpha \in \Case(\Psi)
+  \is X_1,\ldots,X_n \Uparrow t & n \ge 1
+  \al X_1,\ldots,X_n \Downarrow t & n \ge 1
+  \nl
+\end{grammar}\]
+wobei vorausgesetzt wird, dass die $X_1,\ldots,X_n$ paarweise verschieden sind.
+Eine \emph{$\Psi$-Regelspezifikation} $r$ ist eine (mglw. unendliche)
+Menge von $\Psi$-F"allen.
+
+Eine \emph{Typbelegung} ist eine partielle, endliche Abbildung $\Gamma:\Var \pto \Type$.
+Ein \emph{Typurteil f"ur $\Psi$-Terme} ist eine Formel der Gestalt $\Tj{\Gamma}{t}{\tau}$, und
+hei"st \emph{g"ultig}, wenn es sich mit den folgenden Regeln herleiten l"a"st:
+\begin{mathpar}
+  \inferrule[(Var)]{%
+    \Gamma(X) = \tau
+  }{%
+    \Tj{\Gamma}{X}{\tau}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=(\tau_1,\ldots,\tau_n) \\
+    \Tj{\Gamma}{t_i}{\tau_i} \\
+    \tau_i \preceq n \\
+    i=1,\ldots,n
+  }{%
+    \Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(App)]{%
+    \Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle} \\
+    \Tj{\Gamma}{t_i}{\langle \rangle} \\
+    \sigma_i \preceq n \\
+    i=1,\ldots,n
+  }{%
+    \Tj{\Gamma}{t\langle t_1,\ldots,t_n \rangle}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(Match)]{%
+    \Tj{\Gamma}{t}{\langle \rangle} \\
+    \delta(\zeta)=(\tau_1,\ldots,\tau_n) \\
+    \Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}
+  }{%
+    \Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}
+  }%
+\end{mathpar}
+Ein Fall $\alpha$ hei"st \emph{g"ultig}, wenn gilt:
+\begin{mathpar}
+  \inferrule[(Arg)]{%
+    \Tj{[X_1:\langle \rangle,\ldots,X_n:\langle \rangle]}{t}{\langle\rangle}
+  }{%
+    X_1,\ldots,X_n \Uparrow t
+  }%
+  \and
+  \inferrule[(Res)]{%
+    \Tj{[X_1:\langle \rangle,\ldots,X_n:\langle \rangle]}{t}{\langle\rangle}
+  }{%
+    X_1,\ldots,X_n \Downarrow t
+  }%
+\end{mathpar}
+Und eine Regelspezifikation $r$ hei"st \emph{g"ultig}, wenn alle $\alpha \in r$
+g"ultig sind.
+
+
+\section*{Semantik}
+
+Eine \emph{$\Psi$-Implementierung} $\mathcal{D}$ ist eine Struktur $(D,\sem{\cdot}_D)$, bestehend aus
+\begin{itemize}
+\item einer nicht-leeren \emph{Tr\"agermenge $D$} mit Teilmengen $D^\tau \subseteq D$ f\"ur jeden Typ
+  $\tau \in \Type$, und
+\item einer \emph{Funktionsbelegung $\sem{\cdot}_D$}, welche den (Familien von) Funktionszeichen
+  $\App_n$ $(n \ge 1)$, $\Child_n^i$ $(n \ge i \ge 1)$, $\Compose_n$ $(n \ge 0)$ und $\Label$ Funktionen
+  nach folgendem Schema zuordnet:
+  \[\begin{array}{ll}
+    \sem{\App_n}_D: D \times \underbrace{D \times \ldots \times D}_n \pto D &
+    \sem{\Child_n^i}_D: D \pto D \\
+    \sem{\Compose_n}_D: \zeta \times \underbrace{D \times \ldots \times D}_n \pto D &
+    \sem{\Label}_D: D \pto \zeta \\
+  \end{array}\]
+\end{itemize}
+Eine Implementierung $\mathcal{D}$ hei"st \emph{g\"ultig}, wenn gilt:
+\begin{enumerate}
+\item Wenn $d_0 \in D^{\langle \sigma_1,\ldots,\sigma_n \rangle}$ und $d_i \in D^{\langle \rangle}$ f\"ur $i=1,\ldots,n$,
+  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\App_n}_D(d_0,d_1,\ldots,d_n)$.
+\item Wenn $\delta(\zeta) = (\tau_1,\ldots,\tau_n)$ und $d_i \in D^{\tau_i}$ f\"ur $i=1,\ldots,n$,
+  dann existiert ein $d \in D^{\langle \rangle}$, so dass $d = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$.
+\item Wenn $\delta(\zeta) = (\tau_1,\ldots,\tau_n)$, $d \in D^{\langle \rangle}$ und $\zeta = \sem{\Label}_D(d)$, dann
+  existieren $d_1 \in D^{\tau_1},\ldots,d_n \in D^{\tau_n}$, so dass $\sem{\Child_n^i}_D(d) = d_i$ f\"ur $i=1,\ldots,n$.
+\end{enumerate}
+Wir identifizieren $\mathcal{D}$ mit $D$.
+
+\subsection*{Semantik von Termen und F"allen}
+
+Eine \emph{$D$-Belegung} ist eine partielle, endliche Abbildung $\varrho: \Var \pto D$. Eine Belegung
+$\varrho$ hei"st \emph{g"ultig bzgl. einer Typbelegung $\Gamma$}, geschrieben $\Gamma \vdash \varrho$,
+wenn gilt:
+\begin{enumerate}
+\item $\dom(\Gamma) = \dom(\varrho)$
+\item $\varrho(X) \in D^{\Gamma(X)}$ f"ur alle $X \in \dom(\Gamma)$
+\end{enumerate}
+Die Menge aller g"ultigen Belegungen bzgl. $\Gamma$ bezeichnen wir mit $\Assn(\Gamma)$.
+\begin{lemma}
+  Wenn $\Gamma \vdash \varrho$ und $d \in D^\tau$, dann $\Gamma[\tau/X] \vdash \varrho[d/X]$.
+\end{lemma}
+\begin{proof}
+  Trivial.
+\end{proof}
+Jedem g"ultigen Typurteil $\Tj{\Gamma}{t}{\tau}$ wird wie folgt induktiv
+eine Semantik $D\sem{\Tj{\Gamma}{t}{\tau}}: \Assn(\Gamma) \pto D$ zugeordnet:
+\begin{itemize}
+\item $D\sem{\Tj{\Gamma}{X}{\tau}}\,\varrho = \varrho(X)$
+\item $D\sem{\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\langle \rangle}}\,\varrho
+  = \sem{\App_n}_D(d, d_1, \ldots, d_n)$ \\
+  falls $d = D\sem{\Tj{\Gamma}{t}{\langle\sigma_1,\ldots,\sigma_n\rangle}}\,\varrho$ \\
+  und $d_i = D\sem{\Tj{\Gamma}{t_i}{\langle \rangle}}\,\varrho$ f\"ur $i=1,\ldots,n$
+\item $D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho
+  = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)$ \\
+  falls $d_i = D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho$ f\"ur $i=1,\ldots,n$
+\item $D\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho
+  = d'$ \\
+  falls $d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho$, \\
+  $\sem{\Label}_D(d) = \zeta$, $d_i = \sem{\Child_n^i}_D(d)$ f"ur $i=1,\ldots,n$, \\
+  und $d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho[d_1/X_1]\ldots[d_n/X_n]\bigr)$
+\end{itemize}
+Jedem g"ultigen Fall $\alpha$ wird wie folgt eine Semantik
+$D\sem{\alpha} \subseteq D^+ \times \{\Uparrow,\Downarrow\} \times D$ zugeordnet:
+\begin{itemize}
+\item $D\sem{X_1,\ldots,X_n \Uparrow t} \\
+  =
+  \{(d_1,\ldots,d_n,\Uparrow,D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n) \mid
+    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ }
+  \}$
+\item $D\sem{X_1,\ldots,X_n \Downarrow t} \\
+  =
+  \{(d_1,\ldots,d_n,\Downarrow,D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n) \mid
+    \text{$d_1,\ldots,d_n \in D^{\langle \rangle}$ }
+  \}$
+\end{itemize}
+Analog wird jeder g"ultigen Regelspezifikation $r$ eine Semantik $D\sem{r} = \bigcup_{\alpha\in r}D\sem{\alpha}$
+zugeordnet.
+
+\begin{lemma}[Wohldefiniertheit der Semantik] \label{lem:Wohldefiniertheit_der_Semantik}
+  Sei $D$ eine g"ultige Implementierung.
+  \begin{enumerate}
+  \item Wenn $\Tj{\Gamma}{t}{\tau}$ und $\varrho \in \Assn(\Gamma)$, dann gilt:
+    \begin{enumerate}
+    \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$, dann $d \in D^\tau$.
+    \item Wenn $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d$ und $D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho = d'$,
+      dann $d = d'$.
+    \end{enumerate}
+
+  \item Wenn $\alpha$ g"ultig ist, dann gilt:
+    \begin{enumerate}
+    \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \end{enumerate}
+
+  \item Wenn $r$ g"ultig ist, dann gilt:
+    \begin{enumerate}
+    \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$,
+      dann $d_1,\ldots,d_n,d \in D^{\langle\rangle}$.
+    \end{enumerate}
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Sollte klar sein.
+\end{proof}
+
+\subsection*{"Aquivalenz}
+
+\begin{definition}["Aquivalenz von Implementierungen] \label{def:Aequivalenz_von_Implementierungen}
+  Seien $D$ und $E$ $\Psi$-Implementierungen und $\Delta \subseteq D \times E$. $D$ und $E$ hei"sen
+  \emph{$\Delta$-"aquivalent}, geschrieben $D \sim_\Delta E$, wenn $d \in D^\tau$ gdw. $e \in E^\tau$
+  f"ur alle $(d,e) \in \Delta$ und $\tau \in \Type$,
+  und f"ur alle $(\hat{d},\hat{e}),(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ gilt:
+  \begin{enumerate}
+  \item Wenn $\sem{\App_n}_D(\hat{d},d_1,\ldots,d_n) = d$ und $\sem{\App_n}_E(\hat{e},e_1,\ldots,e_n) = e$,
+    dann $(d,e) \in \Delta$.
+  \item Wenn $\sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n) = d$ und $\sem{\Compose_n}_E(\zeta,e_1,\ldots,e_n) = e$,
+    dann $(d,e) \in \Delta$.
+  \item Wenn $\sem{\Child_n^i}_D(\hat{d}) = d$ und $\sem{\Child_n^i}_E(\hat{e}) = e$,
+    dann $(d,e) \in \Delta$.
+  \item $\sem{\Label}_D(\hat{d}) = \zeta$ gdw. $\sem{\Label}_E(\hat{e}) = \zeta$.
+  \end{enumerate}
+\end{definition}
+Zwei Belegungen $\varrho_D: \Var \pto D$ und $\varrho_E: \Var \pto E$ hei"sen \emph{$\Delta$-"aquivalent},
+geschrieben $\varrho_D \sim_\Delta \varrho_E$, wenn gilt:
+\begin{enumerate}
+\item $\dom(\varrho_D) = \dom(\varrho_E)$
+\item $\bigl(\varrho_D(X),\varrho_E(X)\bigr) \in \Delta$ f"ur alle $X \in \dom(\varrho_D)$
+\end{enumerate}
+
+\begin{lemma} \label{lem:Aequivalenz_von_Termen}
+  Seien $D$, $E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen,
+  und $\varrho_D \sim_\Delta \varrho_E$ mit $\Gamma \vdash \varrho_D$ und $\Gamma \vdash \varrho_E$.
+  Wenn $\Tj{\Gamma}{t}{\tau}$, dann gilt genau eine der folgenden Aussagen:
+  \begin{enumerate}
+  \item
+    $\bigl( D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D, E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E \bigr) \in \Delta$
+  \item
+    $\bigl( D\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_D \bigr) \not\in D$
+    und $\bigl( E\sem{\Tj{\Gamma}{t}{\tau}}\,\varrho_E \bigr) \not\in E$
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Via Induktion "uber die L"ange der Herleitung des Typurteils $\Tj{\Gamma}{t}{\tau}$ und Fallunterscheidung
+  nach der zuletzt angewandten Typregel:
+  \begin{itemize}
+  \item $\Tj{\Gamma}{X}{\tau}$ mit \textsc{(Var)}
+
+    Klar, denn $\bigl(\varrho_D(X), \varrho_E(X)\bigr) \in \Delta$ nach Voraussetzung.
+
+  \item $\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\tau}$ mit \textsc{(Cons)}
+
+    Dann gilt $\delta(\zeta) = (\tau_1,\ldots,\tau_n)$ und $\Tj{\Gamma}{t_i}{\tau_i}$ 
+    f"ur $i=1,\ldots,n$. Nach I.V. gilt die Behauptung f"ur jedes $\Tj{\Gamma}{t_i}{\tau_i}$.
+    Angenommen es ex. $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$ mit
+    \begin{mathpar}
+      D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_D = d_i
+      \and
+      E\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_E = e_i
+    \end{mathpar}
+    f"ur $i=1,\ldots,n$, dann folgt wegen Lemma~\ref{lem:Wohldefiniertheit_der_Semantik}, dass
+    $d_i \in D^{\tau_i}$ und $e_i \in E^{\tau_i}$
+    f"ur $i=1,\ldots,n$, und da $D$ nach Voraussetzung g"ultig ist, existieren dar"uberhinaus
+    $d \in D^{\langle \rangle}$ und $e \in E^{\langle \rangle}$ mit
+    \begin{mathpar}
+      d
+      = \sem{\Compose_n}_D(\zeta,d_1,\ldots,d_n)
+      = D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_D
+      \and
+      e
+      = \sem{\Compose_n}_E(\zeta,e_1,\ldots,e_n)
+      = E\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_E
+    \end{mathpar}
+    und gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen} folgt $(d,e) \in \Delta$.
+
+    Gilt andererseits
+    $\bigl(D\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_D\bigr) \not\in D$
+    und
+    $\bigl(E\sem{\Tj{\Gamma}{t_i}{\tau_i}}\,\varrho_E\bigr) \not\in E$
+    f"ur mindestens ein $i \in \{1,\ldots,n\}$, so folgt unmittelbar, dass auch
+    \begin{mathpar}
+      \bigl(D\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_D\bigr) \not\in D
+      \and
+      \bigl(E\sem{\Tj{\Gamma}{\zeta(t_1,\ldots,t_n)}{\langle \rangle}}\,\varrho_E\bigr) \not\in E
+    \end{mathpar}
+    gilt.
+
+  \item $\Tj{\Gamma}{t \langle t_1,\ldots,t_n \rangle}{\tau}$ mit \textsc{(App)}
+
+    Analog zum vorangegangenen Fall der \textsc{(Cons)} Regel.
+
+  \item $\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}$ mit \textsc{(Match)}
+
+    Dann gilt $\Tj{\Gamma}{t}{\langle \rangle}$, $\delta(\zeta) = (\tau_1,\ldots,\tau_n)$
+    und $\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}$. Nach I.V. gilt die Behauptung
+    f"ur $\Tj{\Gamma}{t}{\langle \rangle}$. Angenommen ex. $(d,e) \in \Delta$ mit
+    \begin{mathpar}
+      d = D\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho_D
+      \and
+      e = E\sem{\Tj{\Gamma}{t}{\langle \rangle}}\,\varrho_E
+    \end{mathpar}
+    dann gilt $d \in D^{\langle \rangle}$ und $e \in E^{\langle \rangle}$
+    wegen Lemma~\ref{lem:Wohldefiniertheit_der_Semantik}. Nehmen wir weiterhin an, dass
+    $\sem{Label}_D(d) = \zeta$, dann gilt gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen}
+    auch $\sem{Label}_E(e) = \zeta$. Da $D$ nach Voraussetzung g"ultig ist, ex.
+    $d_1 \in D^{\tau_1},\ldots,d_n \in D^{\tau_n}$ und $e_1 \in E^{\tau_1},\ldots,e_n \in E^{\tau_n}$, so dass
+    \begin{mathpar}
+      d_i = \sem{\Child_n^i}_D(d)
+      \and
+      e_i = \sem{\Child_n^i}_E(e)
+    \end{mathpar}
+    f"ur $i=1,\ldots,n$. Wiederum wg. Definition~\ref{def:Aequivalenz_von_Implementierungen} folgt
+    daraus $(d_i,e_i) \in \Delta$ f"ur $i=1,\ldots,n$, also gilt insbesondere
+    \begin{mathpar}
+      \bigl(\varrho_D[d_1/X_1]\ldots[d_n/X_n]\bigr)
+      \sim_\Delta
+      \bigl(\varrho_E[e_1/X_1]\ldots[e_n/X_n]\bigr)
+    \end{mathpar}
+    und nach I.V. gilt die Behauptung auch f"ur $\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}$.
+    Angenommen ex. $(d',e')\in\Delta$ mit
+    \begin{mathpar}
+      d' = D\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho_D[d_1/X_1]\ldots[d_n/X_n]\bigr)
+      \and
+      e' = E\sem{\Tj{\Gamma[\tau_1/X_1]\ldots[\tau_n/X_n]}{t'}{\tau}}\,\bigl(\varrho_E[e_1/X_1]\ldots[e_n/X_n]\bigr)
+    \end{mathpar}
+    dann folgt unmittelbar die Behauptung.
+
+    Trifft eine der obigen Annahmen nicht zu, gilt trivialerweise
+    \begin{mathpar}
+      \bigl(D\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho_D\bigr) \not\in D
+      \and
+      \bigl(E\sem{\Tj{\Gamma}{\match{t}{\zeta(X_1,\ldots,X_n)}{t'}}{\tau}}\,\varrho_E\bigr) \not\in E
+    \end{mathpar}
+    was zu zeigen war.
+  \end{itemize}
+\end{proof}
+
+\begin{lemma} \label{lem:Aequivalenz_von_Faellen}
+  Seien $D, E$ g"ultige, $\Delta$-"aquivalente $\Psi$-Implementierungen, $\alpha$ ein
+  g"ultiger Fall, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
+  \begin{enumerate}
+  \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
+  \item Wenn $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{\alpha}$.
+  \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{\alpha}$.
+  \item Wenn $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{\alpha}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{\alpha}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Wir beweisen beispielhaft die erste Behauptung, die "ubrigen folgen analog.
+  Hier muss $\alpha$ von der Form $X_1,\ldots,X_n \Uparrow t$ sein, und nach Voraussetzung
+  gilt $d_1,\ldots,d_n \in D^{\langle \rangle}$ und
+  $d = D\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:d_i]_{i=1}^n$.
+  Gem"a"s Definition~\ref{def:Aequivalenz_von_Implementierungen} gilt $e_1,\ldots,e_n \in E^{\langle \rangle}$
+  und wegen Lemma~\ref{lem:Aequivalenz_von_Termen} ex. $e \in E$, so dass
+  $(d,e) \in \Delta$ mit $e = E\sem{\Tj{[X_i:\langle\rangle]_{i=1}^n}{t}{\langle \rangle}}\,[X_i:e_i]_{i=1}^n$.
+  Also gilt insbesondere $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{\alpha}$.
+\end{proof}
+
+\begin{lemma} \label{lem:Aqeuivalenz_von_Regeln}
+  Seien $D,E$ g"ultige $\Delta$-"aquivalente $\Psi$-Implementierungen, $r$ eine
+  g"ultige Regelspezifikation, und $(d_1,e_1),\ldots,(d_n,e_n) \in \Delta$. Dann gilt:
+  \begin{enumerate}
+  \item Wenn $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{r}$.
+  \item Wenn $(e_1,\ldots,e_n,\Uparrow,e) \in E\sem{r}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Uparrow,d) \in D\sem{r}$.
+  \item Wenn $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$, dann ex. $e \in E$ so dass
+    $(d,e) \in \Delta$ und $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{r}$.
+  \item Wenn $(e_1,\ldots,e_n,\Downarrow,e) \in E\sem{r}$, dann ex. $d \in D$ so dass
+    $(d,e) \in \Delta$ und $(d_1,\ldots,d_n,\Downarrow,d) \in D\sem{r}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Trivial.
+\end{proof}
+
+
+\section*{Anwendung: Subst.- $\leadsto$ Umgeb.-Modell}
+
+Sei $\Psi$ eine beliebige Syntaxsignatur, und $\Id$ eine (unendliche) Menge von
+\emph{Bezeichnern} $\id$. Die Menge $\Exp(\Psi)$ aller $\Psi$-Ausdr\"ucke $e$
+ist definiert durch:
+\[\begin{grammar}
+  e \in \Exp(\Psi)
+  \is \id
+  \al \zeta(e_1,\ldots,e_n)
+  \al \Lambda \id_1:\sigma_1,\ldots,\id_n:\sigma_n.e & n \ge 1
+  \nl
+\end{grammar}\]
+Ein \emph{Typurteil f\"ur $\Psi$-Ausdr\"ucke} ist eine Formel der Gestalt $\tj{e}{\tau}$. Ein solches
+Typurteil hei"st \emph{g\"ultig}, wenn es sich mit den folgenden Regeln herleiten
+l"a"st:
+\begin{mathpar}
+  \inferrule[(Id)]{%
+  }{%
+    \tj{\id}{\langle \rangle}
+  }%
+  \and
+  \inferrule[(Bind)]{%
+    \tj{e}{\langle \rangle}
+  }{%
+    \tj{\Lambda\id_1:\sigma_1,\ldots,\id_n:\sigma_n.e}{\langle \sigma_1,\ldots,\sigma_n \rangle}
+  }%
+  \and
+  \inferrule[(Cons)]{%
+    \delta(\zeta)=(\tau_1,\ldots,\tau_n) \\
+    \tj{e_i}{\tau_i} \\
+    \tau_i \preceq n \\
+    i=1,\ldots,n
+  }{%
+    \tj{\zeta(e_1,\ldots,e_n)}{\langle \rangle}
+  }%
+\end{mathpar}
+$\free(e)$ ist wie \"ublich definiert; ein Ausdruck $e$ hei"st \emph{abgeschlossen},
+wenn $\free(e) = \emptyset$. Ein \emph{Programm} ist ein abgeschlossener Ausdruck
+vom Typ $\langle \rangle$.
+
+\subsection*{Substitutionsmodell}
+
+
+\end{document}

@@ -1,0 +1,378 @@
+\documentclass[12pt,a2paper,draft]{article}
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[blocks]{authblk}
+\usepackage[english]{babel}
+\usepackage{color}
+\usepackage[colorlinks=false,%
+            pdfkeywords={TODO},%
+            pdftitle={TODO},%
+            pdfauthor={TODO},%
+            pdfsubject={},%
+            pdfdisplaydoctitle=true]{hyperref}
+\usepackage{mathpartir}
+\usepackage{ngerman} %TODO
+\usepackage{varwidth}
+
+\newcommand{\abstr}[2]{\ensuremath{\lambda{#1}.\,{#2}}}
+\newcommand{\app}[2]{\ensuremath{{#1}\,{#2}}}
+\newcommand{\rec}[2]{\ensuremath{{\normalfont\textsf{rec}}\,{#1}.\,{#2}}}
+\newcommand{\unit}{\ensuremath{\normalfont\textsf{unit}}}
+\newcommand{\Unit}{\ensuremath{\normalfont\textsf{Unit}}}
+
+\newcommand{\Tj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}:{#3}}}}
+\newcommand{\tj}[2]{\Tj{\emptyset}{#1}{#2}}
+\newcommand{\Pj}[3]{\mbox{\ensuremath{{#1}\vdash{#2}\rightarrow{#3}}}}
+\newcommand{\tree}[1]{\mathcal{D}(#1)}
+\newcommand{\rn}[1]{\mbox{\ensuremath{\textsc{(#1)}}}}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+
+\begin{document}
+
+\title{%
+  Typsicherheit in Rekursionssystemen
+}
+\author{Benedikt Meurer}
+\author{Kurt Sieber}
+\affil{%
+  Compilerbau und Softwareanalyse\\
+  Universit\"at Siegen\\
+  D-57072 Siegen, Germany\\
+  {\tt \{meurer,sieber\}@informatik.uni-siegen.de}
+}
+\date{}
+\maketitle
+\begin{abstract}
+  TODO
+\end{abstract}
+
+
+%% Metatheorie
+\section{Metatheorie}
+
+\begin{definition}[Rekursionssystem]
+  Seien $A$ und $B$ beliebige disjunkte Mengen. Eine \emph{$(A,B)$-Rekursionsregel}
+  ist eine Relation $R \subseteq A \times B^* \times (A \uplus B)$. Ein
+  \emph{$(A,B)$-Rekursionssystem} ist eine Menge $S$
+  von $(A,B)$-Rekursionsregeln.
+  Die durch $S$ definierte \emph{nat\"urliche Semantik} ist die kleinste Relation
+  $\Downarrow_S\ \subseteq A \times B$, f\"ur die gilt:
+  \begin{quote}
+    Wenn $R \in S$, $(a,b_1 \ldots b_{i-1},a_i) \in R$ und
+    $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und $(a,b_1 \ldots b_n,b) \in R$,
+    dann gilt auch $a \Downarrow_S b$.
+  \end{quote}
+\end{definition}
+
+\begin{definition}[Typsystem]
+  Ein \emph{$(A,B)$-Typsystem} $T$ besteht aus
+  \begin{itemize}
+  \item einer Menge \textsf{Type} von Typen $\tau$, und
+  \item Mengen $A^\tau \subseteq A$ und $B^\tau \subseteq B$ f\"ur jeden Typ $\tau \in \textsf{Type}$.
+  \end{itemize}
+\end{definition}
+
+\begin{definition}
+  Sei $S$ ein $(A,B)$-Rekursionssystem. Die Menge $\textsf{State}(S)$ aller
+  \emph{Rekursionszust\"ande} $st$ von $S$ ist definiert als
+  \begin{quote}
+    $\textsf{State}(S) = (A \cup B \cup S)^+$.
+  \end{quote}
+  Auf $\textsf{State}(S)$ sei eine \"Ubergangsrelation $\vdash_S$ definiert durch:
+  \begin{mathpar}
+    \inferrule[(AA)]{%
+      (a,\varepsilon,a') \in R
+    }{%
+      w\,a \vdash_S w\,a\,R\,a'
+    }
+    \and
+    \inferrule[(AB)]{%
+      (a,\varepsilon,b) \in R
+    }{%
+      w\,a \vdash_S w\,b
+    }
+    \and
+    \inferrule[(BB)]{%
+      (a,b_1 \ldots b_n,b) \in R
+    }{%
+      w\,a\,R\,b_1 \ldots b_n \vdash_S w\,b
+    }
+    \and
+    \inferrule[(BA)]{%
+      (a,b_1 \ldots b_n,a_{n+1}) \in R
+    }{%
+      w\,a\,R\,b_1 \ldots b_n \vdash_S w\,a\,R\,b_1 \ldots b_n\,a_{n+1}
+    }
+  \end{mathpar}
+  Eine \emph{Berechnung f\"ur $a$} ist eine maximale Folge $a \vdash_S \ldots$. Ist die Folge unendlich,
+  so sagen wir Berechnung \emph{divergiert}, ist die Folge endlich und der letzte Rekursionszustand ein
+  Resultat, so sagen wir die Berechnung \emph{terminiert}, ansonsten sagen wir die Berechnung \emph{bleibt
+  stecken}. $S$ hei"st \emph{deterministisch}, wenn zu jedem $a \in A$ exakt eine Berechnung existiert.
+\end{definition}
+
+\begin{definition}[Zwischenresultate]
+  $b_1,\ldots,b_n$ ($n \ge 0$) hei"sen \emph{Zwischenresultate f\"ur $a$ bzgl. $R$}, wenn
+  $a_1,\ldots,a_n$ existieren, so dass gilt:
+  \begin{itemize}
+  \item $a_i \Downarrow_S b_i$ f\"ur $i=1,\ldots,n$, und
+  \item $(a,b_1 \ldots b_{i-1}, a_i) \in R$ f\"ur $i = 1,\ldots,n$.
+  \end{itemize}
+\end{definition}
+
+\noindent
+(Intuitiv sind $b_1,\ldots,b_n$ die Resultate der ersten $n$ Pr\"amissen f\"ur $a$ in der
+Regel $R$).
+
+\begin{lemma}[Reachable states] \label{lemma:Reachable_states}
+  Wenn $a_0 \vdash^* st$ und $st'$ nicht-leeres Pr\"afix von $st$, dann gilt eine
+  der folgenden Aussagen:
+  \begin{enumerate}
+  \item[(1)] $st' = a_0$
+  \item[(2)] $st' \in B$
+  \item[(3)] $st'$ endet auf $a\,R\,b_1 \ldots b_n$ und $b_1,\ldots,b_n$ sind Zwischenresultate
+    f\"ur $a$ bzgl. $R$.
+  \item[(4)] $st'$ endet auf $a\,R\,b_1 \ldots b_n\,a'$, wobei $b_1,\ldots,b_n$ Zwischenresultate
+    f\"ur $a$ bzgl. $R$ sind und $(a,b_1 \ldots b_n,a') \in R$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  Induktion \"uber die L\"ange der Berechnung. I.A. trivial, f\"ur den
+  I.S. Fallunterscheidung nach der zuletzt angewendeten Regel:
+  \begin{itemize}
+  \item \rn{AA} $a_0 \vdash^* w\,a \vdash w\,a\,R\,a'$ mit $(a,\varepsilon,a') \in R$
+    
+    Nach I.V. hat jedes nicht-leere Pr\"afix von $w\,a$ die passende Form, f\"ur $w\,a\,R$
+    gilt trivialerweise $(3)$, f\"ur $w\,a\,R\,a'$ gilt $(4)$ wegen $(a,\varepsilon,a') \in R$.
+
+  \item \rn{BB} $a_0 \vdash^* w\,a\,R\,b_1 \ldots b_n \vdash w\,b$ mit $(a,b_1 \ldots b_n,b) \in R$
+
+    Nach I.V. hat jedes nicht-leere Pr\"afix von $w\,a$ die passende Form, also insbesondere auch
+    jedes nicht-leere Pr\"afix von $w$, wobei gilt entweder $w = \varepsilon$ oder $w$ endet
+    auf $a'\,R'\,b_1' \ldots b_m'$ und $b_1',\ldots,b_m'$ sind Zwischenresultate f\"ur $a'$ bzgl.
+    $R'$.
+    Der erste Fall ist klar, f\"ur den zweiten Fall gilt nach Voraussetzung $a \Downarrow b$,
+    also hat $w\,b$ die Form $(4)$.
+
+  \item \rn{AB} $a_0 \vdash^* w\,a \vdash w\,b$ mit $(a,\varepsilon,b) \in R$
+
+    analog zu \rn{BB}
+
+  \item \rn{BA} $a_0 \vdash^* w\,a\,R\,b_1 \ldots b_n \vdash w\,a\,R\,b_1 \ldots b_n\,a_{n+1}$
+
+    Folgt unmittelbar mit $(4)$ wegen $(a,b_1 \ldots b_n,a_{n+1}) \in R$.
+  \end{itemize}
+\end{proof}
+
+\begin{definition}[Programmiersprache]
+  Eine \emph{Programmiersprache} $\mathcal{L}$ ist ein Quadrupel $(A,B,S,T)$, wobei $S$ ein
+  $(A,B)$-Rekursionssystem und $T$ ein $(A,B)$-Typsystem ist. $\mathcal{L}$ hei"st \emph{typsicher},
+  wenn f\"ur jedes $a \in \bigcup_{\tau}A^\tau$ gilt: Es existiert keine Berechnung f\"ur $a$,
+  die stecken bleibt.
+\end{definition}
+
+Formal ist eine Programmiersprache typsicher, wenn aus $a \in A^\tau$ und $a \vdash^*_S st$ folgt,
+dass entweder $st \in B$ oder es ex. $st'$ mit $st \vdash_S st'$.
+
+\begin{lemma}[Typerhaltung f"ur Argumente] \label{lemma:Argument_preservation}
+  Wenn f\"ur alle $a \in A^\tau$, $(a,b_1 \ldots b_n,a') \in R$ mit $b_1,\ldots,b_n$ Zwischenresultate
+  f\"ur $a$ bzgl. $R$ ein $\tau'$ mit $a' \in A^{\tau'}$ existiert, dann gilt:
+  \begin{quote}
+    Wenn $a \vdash^* v\,a'\,w$ und $a \in A^\tau$, dann existiert ein $\tau'$ so dass $a' \in A^{\tau'}$.
+  \end{quote}
+\end{lemma}
+
+\begin{proof}
+  Straight-forward induction.
+\end{proof}
+
+\begin{theorem}[Meta-Theorem]
+  F\"ur Typsicherheit gen\"ugt zu zeigen:
+  \begin{enumerate}
+  \item \emph{Local Progress}
+
+    Wenn $a \in A^\tau$, dann ex. $R$ und $x \in A \cup B$ mit $(a,\varepsilon,x) \in R$.
+
+    Wenn $a \in A^\tau$ und $b_1,\ldots,b_n$ Zwischenresultate f\"ur $a$ bzgl. $R$ $(n \ge 1)$,
+    dann ex. $x \in A \cup B$ mit $(a,b_1 \ldots b_n,x) \in R$.
+
+  \item \emph{Local Preservation}
+
+    Wenn $a \in A^\tau$, $(a,b_1 \ldots b_n,a') \in R$ und $b_1,\ldots,b_n$ Zwischenresultate
+    f\"ur $a$ bzgl. $R$, dann ex. $\tau'$ mit $a' \in A^{\tau'}$.
+  \end{enumerate}
+\end{theorem}
+
+\noindent
+Zum Beweis von \emph{Local Preservation} im konkreten Anwendungsfall ben\"otigt man mit ziemlicher
+Sicherheit \emph{Preservation} \"uber big steps, also: Wenn $a \in A^\tau$ und $a \Downarrow b$,
+dann $b \in B^\tau$.
+
+\begin{proof}
+  Sei $a_0 \in A^{\tau_0}$ und $a_0 \vdash^* st$. Nach Lemma~\ref{lemma:Reachable_states} unterscheiden wir
+  nach der Form von $st$:
+  \begin{enumerate}
+  \item[(1,4)] $st = wa$
+
+    Wegen Lemma~\ref{lemma:Argument_preservation} ex. $\tau$ mit $a \in A^\tau$. Nach \emph{Local Progress}
+    ex. $R$, $x$ mit $(a,\varepsilon,x) \in R$, also in weiterer Schritt mit \rn{AB} oder \rn{AA} je nach Form
+    von $x$.
+
+  \item[(2)] $st \in B$
+
+    Klar.
+
+  \item[(3)] $st = w\,a\,R\,b_1 \ldots b_n$ und $b_1,\ldots,b_n$ sind Zwischenresultate f\"ur $a$ bzgl.
+    $R$.
+
+    Wg. Lemma~\ref{lemma:Argument_preservation} ex. $\tau$ mit $a \in A^\tau$, ex. nach \emph{Local Progress}
+    ein $x$ mit $(a,b_1 \ldots b_n,x) \in R$, und je nach Form von $x$ ein weiterer Schritt mit \rn{BA} oder \rn{BB}.
+  \end{enumerate}
+\end{proof}
+
+
+%% Anwendungsbeispiele
+\section{Anwendungsbeispiele}
+
+\begin{enumerate}
+\item $\mathcal{L}_2$ (ohne exceptions) $A = \textsf{Exp}$, $B = \textsf{Val}$
+\item $\mathcal{L}_2$ (mit exceptions) $A = \textsf{Exp}$, $B = \textsf{Exn} \cup \textsf{Val}$
+\item $\mathcal{L}_2$ (mit exceptions und states) $A = \textsf{Exp} \times \textsf{State}$,
+  $B = (\textsf{Exn} \cup \textsf{Val}) \times \textsf{State}$ \\
+  dazu: Schreibweisen, die es erlauben eine Relation $R$ durch exceptions und states
+  zu ``erweitern''.
+\end{enumerate}
+
+\subsection{Simply-typed $\lambda$-calculus with unit and recursion}
+
+This section describes the programming language considered in this paper,
+the simply typed $\lambda$-calculus with $\unit$ and general recursion, which
+presents the simplest possible functional language that exhibits run-time
+errors (closed expressions that ``go wrong'') and divergence. Figure~\ref{fig:Basic_syntax}
+shows the basic syntax of the programming language.
+
+\begin{figure}[htb]
+  \centering
+  \begin{tabular}{llcl}
+    Variables   & \multicolumn{3}{l}{$x,y,z,\ldots$} \\
+    Expressions & $e$ & $::=$ & $\unit \mid x \mid \abstr{x}{e} \mid \app{e_1}{e_2} \mid \rec{x}{e}$ \\
+    Values      & $v$ & $::=$ & $\unit \mid \abstr{x}{e}$
+  \end{tabular}
+  \caption{Basic syntax}
+  \label{fig:Basic_syntax}
+\end{figure}
+
+We write $e'[x \mapsto e]$ for the capture-avoiding substitution of $e$ for all free occurrences
+of $x$ in $e'$. The standard call-by-value semantics for this language is shown in
+figure~\ref{fig:Call_by_value_recursion_rules} as set of recursion rules.
+
+\begin{figure}[htb]
+  \centering
+  \[\begin{array}{rcl}
+    \textsc{Val} &:=& \{(v,\varepsilon,\underline{v})\} \\
+    \textsc{App} &:=& \{(\app{e_1}{e_2},\varepsilon,e_1)\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}},e_2)\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}}\,\underline{v},e[x \mapsto v])\} \\
+                 &\cup& \{(\app{e_1}{e_2},\underline{\abstr{x}{e}}\,\underline{v}\,\underline{v'},\underline{v'})\} \\
+    \textsc{Rec} &:=& \{(\rec{x}{e},\varepsilon,e[x \mapsto \rec{x}{e}])\} \\
+                 &\cup& \{(\rec{x}{e},\underline{v},\underline{v})\}
+  \end{array}\]
+  \caption{Call-by-value recursion rules}
+  \label{fig:Call_by_value_recursion_rules}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \begin{mathpar}
+    \inferrule[(T-Unit)]{}{\Tj{\Gamma}{\unit}{\Unit}}
+    \and
+    \inferrule[(T-Var)]{%
+      \Gamma(x) = \tau
+    }{%
+      \Tj{\Gamma}{x}{\tau}
+    }
+    \and
+    \inferrule[(T-Abstr)]{%
+      \Tj{\Gamma + \{x : \tau \}}{e}{\tau'}
+    }{%
+      \Tj{\Gamma}{\abstr{x}{e}}{\tau \to \tau'}
+    }
+    \\
+    \inferrule[(T-Rec)]{%
+      \Tj{\Gamma + \{x:\tau\}}{e}{\tau}
+    }{%
+      \Tj{\Gamma}{\rec{x}{e}}{\tau}
+    }
+    \and
+    \inferrule[(T-App)]{%
+      \Tj{\Gamma}{e_1}{\tau' \to \tau} \\
+      \Tj{\Gamma}{e_2}{\tau'}
+    }{%
+      \Tj{\Gamma}{\app{e_1}{e_2}}{\tau}
+    }
+  \end{mathpar}
+  \caption{Typing rules}
+  \label{fig:Typing_rules}
+\end{figure}
+
+\begin{lemma}[Preservation of types under substitution] \label{lemma:Preservation_of_types_under_substitution}
+  If $\Tj{\Gamma + \{x:\tau\}}{e'}{\tau'}$ and $\Tj{\Gamma}{e}{\tau}$,
+  then $\Tj{\Gamma}{e'[x \mapsto e]}{\tau'}$.
+\end{lemma}
+
+\begin{lemma}[Canonical Forms] \label{lemma:Canonical_Forms} \
+  \begin{enumerate}
+  \item If $\tj{v}{\Unit}$, then $v = \unit$.
+  \item If $\tj{v}{\tau' \to \tau}$, then $v = \abstr{x}{e}$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{lemma}[Preservation of types across big steps] \label{lemma:Preservation_of_types_across_big_steps}
+  If $\Tj{\Gamma}{e}{\tau}$ and $e \Downarrow \underline{v}$, then $\Tj{\Gamma}{v}{\tau}$.
+\end{lemma}
+
+\begin{proof}
+  Yep.
+\end{proof}
+
+\begin{theorem}[Local Progress] \
+  \begin{enumerate}
+  \item Wenn $\tj{e}{\tau}$ dann ex. $R$ und entweder $e'$ mit $(e,\varepsilon,e') \in R$
+    oder $v$ mit $(e,\varepsilon,\underline{v}) \in R$.
+  \item Wenn $\tj{e}{\tau}$ und $\underline{v_1},\ldots,\underline{v_n}$ Zwischenresultate
+    f\"ur $e$ bzgl. $R$ $(n \ge 1)$, dann ex. entweder $e'$ mit $(e,\underline{v_1}\ldots\underline{v_n},e') \in R$
+    oder ein $v$ mit $(e,\underline{v_1}\ldots\underline{v_n},v) \in R$.
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof} \
+  \begin{enumerate}
+  \item Klar.
+  \item Hier kommen nur \rn{T-App} und \rn{T-Rec} in Frage. F\"ur Applikationen braucht man
+    Lemma~\ref{lemma:Preservation_of_types_across_big_steps} (Preservation).
+  \end{enumerate}
+\end{proof}
+
+\begin{theorem}[Local Preservation]
+  Wenn $\tj{e}{\tau}$, $(e,\underline{v_1}\ldots\underline{v_n},e') \in R$ und
+  $\underline{v_1},\ldots,\underline{v_n}$ Zwischenresultate f\"ur $e$ bzgl. $R$, dann
+  ex. $\tau'$ so dass $\tj{e'}{\tau'}$.
+\end{theorem}
+
+\begin{proof}
+  Ebenfalls nur \rn{T-App} und \rn{T-Rec} m\"oglich, ben\"otigt
+  Lemma~\ref{lemma:Preservation_of_types_under_substitution}
+  und Lemma~\ref{lemma:Preservation_of_types_across_big_steps}.
+\end{proof}
+
+
+%% References
+\bibliographystyle{abbrv}
+\bibliography{citations}
+
+
+\end{document}
